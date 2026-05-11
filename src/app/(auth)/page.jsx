@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, LogIn, ShoppingBag, TrendingUp, Users } from "lucide-react";
+import ReCAPTCHA from "react-google-recaptcha";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -11,37 +12,84 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
+  const [captchaVerified, setCaptchaVerified] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState("");
 
-//  const handleLogin = async (e) => {
-//   e.preventDefault();
-//   setIsLoading(true);
-//   setError("");
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+  
 
-//   // Simulate API delay
-//   setTimeout(() => {
-//     // Fake validation
-//     if (email === "admin@socialseller.com") {
-//       const fakeData = {
-//         success: true,
-//         token: "dummy_token_123",
-//         role: "admin",
-//       };
+  if (!captchaVerified) {
+    setError("Please verify captcha");
+    return;
+  }
 
-//       document.cookie = `token=${fakeData.token}; path=/`;
+  setIsLoading(true);
+  setError("");
 
-//       if (fakeData.role === "admin") {
-//         router.push("/admin/dashboard");
-//       } else {
-//         router.push("/seller/dashboard");
-//       }
-//     } else {
-//       setError("Invalid email or password");
-//     }
+  try {
+    const res = await fetch(
+      "https://namami-infotech.com/Stepkaro/src/auth/login.php",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          identifier: email,
+          password,
+          captcha: captchaToken,
+        }),
+      }
+    );
 
-//     setIsLoading(false);
-//   }, 1000);
-// };
+    const data = await res.json();
 
+   if (data.success) {
+
+  // save tokens
+  localStorage.setItem(
+    "access_token",
+    data.access_token
+  );
+
+  localStorage.setItem(
+    "refresh_token",
+    data.refresh_token
+  );
+
+  // save minimal user info
+  localStorage.setItem(
+    "user",
+    JSON.stringify({
+      role: data.role,
+      email: email,
+    })
+  );
+
+  // redirect based on role
+  if (data.role === "admin") {
+    router.push("/admin/home");
+  }
+
+  else if (data.role === "seller") {
+    router.push("/seller/home");
+  }
+
+  else {
+    router.push("/");
+  }
+
+} else {
+
+  setError(data.message || "Login failed");
+}
+  } catch (err) {
+    setError("Server error");
+  } finally {
+    setIsLoading(false);
+  }
+};
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-teal-900 flex items-center justify-center p-4">
       {/* Animated background elements */}
@@ -66,28 +114,10 @@ export default function Login() {
             Manage your marketplace, track orders, and grow your business with powerful analytics.
           </p>
 
-          {/* Stats Cards */}
-          {/* <div className="grid grid-cols-2 gap-4 max-w-md lg:mx-0 mx-auto mt-8">
-            <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
-              <div className="flex items-center gap-2 text-teal-400 mb-1">
-                <ShoppingBag size={18} />
-                <span className="text-sm font-medium">Total Orders</span>
-              </div>
-              <div className="text-2xl font-bold text-white">733</div>
-              <div className="text-xs text-gray-400">+12.5% this week</div>
-            </div>
-            <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
-              <div className="flex items-center gap-2 text-teal-400 mb-1">
-                <Users size={18} />
-                <span className="text-sm font-medium">Active Users</span>
-              </div>
-              <div className="text-2xl font-bold text-white">14</div>
-              <div className="text-xs text-gray-400">+3 new this week</div>
-            </div>
-          </div> */}
+          
         </div>
 
-        {/* Login Form - Right Side */}
+     
         <div className="flex-1 w-full max-w-md">
           <div className="bg-slate-900/80 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl p-8 animate-fade-in-up animation-delay-200">
             <div className="text-center mb-8">
@@ -95,7 +125,7 @@ export default function Login() {
               <p className="text-gray-400 mt-2">Sign in to your account</p>
             </div>
 
-            <form  className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
               {error && (
                 <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3">
                   <p className="text-red-400 text-sm text-center">{error}</p>
@@ -144,6 +174,13 @@ export default function Login() {
                   Forgot password?
                 </a>
               </div>
+             <ReCAPTCHA
+  sitekey="6LflhNgsAAAAAPAp5TS5W-QxR2feOSikw3gGVKfR"
+  onChange={(token) => {
+    setCaptchaVerified(true);
+    setCaptchaToken(token);
+  }}
+/>
 
               <button
                 type="submit"
@@ -163,14 +200,12 @@ export default function Login() {
 
             <div className="mt-8 pt-6 border-t border-white/10">
               <div className="flex items-center justify-between text-sm text-gray-400">
-                {/* <span>Seller App + Web</span>
-                <span>Super Admin Panel</span>
-                <span>Buyer App</span> */}
+               
               </div>
             </div>
           </div>
 
-          {/* Demo Credentials Hint */}
+         
           <div className="mt-4 text-center text-xs text-gray-500">
             <p>Demo: admin@socialseller.com / any password</p>
           </div>
