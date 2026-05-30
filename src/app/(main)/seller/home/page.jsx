@@ -25,48 +25,7 @@ import {
 
 
 
-const recentOrdersData = [
-  {
-    id: "#1050",
-    customer: "Mumbai",
-    qty: "50 pairs",
-    status: "NEW",
-    amount: "₹12,500",
-    date: "2024-01-15",
-  },
-  {
-    id: "#1049",
-    customer: "Delhi",
-    qty: "12 pairs",
-    status: "ACCEPTED",
-    amount: "₹4,800",
-    date: "2024-01-14",
-  },
-  {
-    id: "#1048",
-    customer: "Chennai",
-    qty: "30 pairs",
-    status: "DISPATCHED",
-    amount: "₹9,600",
-    date: "2024-01-13",
-  },
-  {
-    id: "#1047",
-    customer: "Kolkata",
-    qty: "8 pairs",
-    status: "DELIVERED",
-    amount: "₹2,400",
-    date: "2024-01-12",
-  },
-  {
-    id: "#1046",
-    customer: "Bangalore",
-    qty: "15 pairs",
-    status: "PROCESSING",
-    amount: "₹6,000",
-    date: "2024-01-11",
-  },
-];
+
 
 
 
@@ -94,7 +53,7 @@ const getStatusIcon = (status) => {
 export default function SellerDashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState(null);
-  const [recentOrders, setRecentOrders] = useState(recentOrdersData);
+  const [recentOrders, setRecentOrders] = useState([]);
   const [bestSelling, setBestSelling] = useState([]);
   const [selectedPeriod, setSelectedPeriod] = useState("week");
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -125,7 +84,7 @@ useEffect(() => {
 
       const data = await response.json();
 
-      console.log("Dashboard Response:", data);
+     
       if (data.success) {
 
   setDashboardData(data.data);
@@ -133,6 +92,38 @@ useEffect(() => {
   setBestSelling(
     data.data.best_selling_products || []
   );
+
+  const ordersResponse = await fetch(
+  "https://namami-infotech.com/Stepkaro/src/vender/get_vendor_orders.php",
+  {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  }
+);
+
+const ordersData = await ordersResponse.json();
+
+if (ordersData.success) {
+
+  const latestOrders = (ordersData.data || [])
+    .slice(0, 5)
+    .map((order) => ({
+      id: `#${order.id}`,
+      customer:
+        order.city ||
+        order.customer_name ||
+        "Customer",
+      qty: `${order.total_quantity || 0} items`,
+      status: (order.status || "").toUpperCase(),
+      amount: `₹${order.total_amount || 0}`,
+      date: order.created_at || "",
+    }));
+
+  setRecentOrders(latestOrders);
+}
 }
 
     } catch (error) {
@@ -274,6 +265,11 @@ const stats = [
           return (
             <div
               key={index}
+               onClick={() =>
+    item.title === "Commission Reports"
+      ? router.push("/seller/payments")
+      : router.push("/seller/orders")
+  }
               className="group rounded-2xl bg-white/80 backdrop-blur-sm p-5 shadow-lg border border-violet-100 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
             >
               <div className="flex items-center justify-between">
@@ -372,13 +368,13 @@ const stats = [
               <p className="text-xs text-gray-500 mt-1">Top performers this month</p>
             </div>
 
-            <button
+            {/* <button
               onClick={handleManageProducts}
               className="text-sm font-medium text-violet-600 hover:text-violet-800 flex items-center gap-1 transition"
             >
               Manage
               <ChevronRight size={14} />
-            </button>
+            </button> */}
           </div>
 
           <div className="space-y-3">

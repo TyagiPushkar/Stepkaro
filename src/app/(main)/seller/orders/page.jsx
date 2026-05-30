@@ -533,7 +533,7 @@ const fetchOrders = async () => {
 
       {/* Filters */}
       <div className="mb-6 flex flex-wrap gap-3">
-        {["All", "NEW", "PROCESSING", "ACCEPTED", "DISPATCHED", "DELIVERED", "REJECTED"].map((status) => (
+        {["All", "NEW",  "ACCEPTED", "DISPATCHED", "DELIVERED", "REJECTED"].map((status) => (
           <button
             key={status}
             onClick={() => handleStatusFilter(status)}
