@@ -258,7 +258,7 @@ export default function CategoriesPage() {
       </div>
 
       {/* Stats Summary */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      {/* <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-xl p-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-teal-500/20 rounded-lg">
@@ -298,7 +298,7 @@ export default function CategoriesPage() {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Results Summary */}
       <div className="flex justify-between items-center">
@@ -334,9 +334,9 @@ export default function CategoriesPage() {
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Image</th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Category Name</th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Products</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Sub Categories</th>
+                {/* <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Sub Categories</th> */}
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Created</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
+                {/* <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th> */}
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
@@ -361,15 +361,15 @@ export default function CategoriesPage() {
                       <span className="text-sm text-white">{category.products}</span>
                     </td>
                     
-                    <td className="px-6 py-4">
+                    {/* <td className="px-6 py-4">
                       <span className="text-sm text-white">{category.sub}</span>
-                    </td>
+                    </td> */}
                     
                     <td className="px-6 py-4">
                       <span className="text-sm text-gray-400">{category.createdAt}</span>
                     </td>
                     
-                    <td className="px-6 py-4">
+                    {/* <td className="px-6 py-4">
                       <div className="flex gap-2">
                         <button 
                           onClick={() => openEditModal(category)}
@@ -386,7 +386,7 @@ export default function CategoriesPage() {
                           <Trash2 size={16} />
                         </button>
                       </div>
-                    </td>
+                    </td> */}
                   </tr>
                 ))
               ) : (

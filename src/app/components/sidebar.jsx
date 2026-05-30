@@ -16,6 +16,7 @@ import {
   Menu,
   X,
   User,
+  IndianRupee
 } from "lucide-react";
 
 import { useEffect, useState } from "react";
@@ -41,7 +42,8 @@ const sellerNavItems = [
   { name: "My Home", href: "/seller/home", icon: Home },
   { name: "My Products", href: "/seller/products", icon: Package },
   { name: "My Orders", href: "/seller/orders", icon: ShoppingCart },
-  { name: "Account", href: "/seller/account", icon: User },
+  { name: "Payments", href: "/seller/payments", icon:IndianRupee },
+   { name: "Account", href: "/seller/account", icon: User },
 ];
 
 export default function Sidebar() {
@@ -50,19 +52,18 @@ export default function Sidebar() {
   const [user, setUser] = useState(null);
 
   const pathname = usePathname();
+  const [loadingUser, setLoadingUser] = useState(true);
 
-  // =======================
-  // GET USER FROM STORAGE
-  // =======================
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
+ useEffect(() => {
+  const storedUser = localStorage.getItem("user");
 
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-  }, []);
+  if (storedUser) {
+    setUser(JSON.parse(storedUser));
+  }
 
-  const role = user?.role || "admin";
+  setLoadingUser(false);
+}, []);
+  const role = user?.role ;
 
   const navItems =
     role === "seller"
@@ -76,6 +77,10 @@ export default function Sidebar() {
     role === "seller"
       ? "bg-gradient-to-b from-violet-700 via-purple-700 to-fuchsia-600"
       : "bg-gradient-to-b from-indigo-950 via-blue-900 to-blue-700";
+
+      if (loadingUser) {
+  return null;
+}
 
   return (
     <>

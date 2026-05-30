@@ -4,14 +4,11 @@ import {
   Search, 
   Download, 
   Eye, 
-  Printer,
   CheckCircle,
   XCircle,
   Truck,
   Package,
   Clock,
-  Filter,
-  ChevronDown,
   ChevronLeft,
   ChevronRight
 } from "lucide-react";
@@ -24,19 +21,19 @@ export default function OrdersPage() {
 
   // Sample orders data
   const allOrders = [
-    { id: 113, customer: "Rajesh Kumar", phone: "9898967652", amount: "₹12,450", payment: "QR & Bank Transfer", date: "03 Apr 2026", time: "03:16", status: "pending" },
-    { id: 112, customer: "Priya Singh", phone: "9999773251", amount: "₹5,040", payment: "QR & Bank Transfer", date: "24 Mar 2026", time: "01:58", status: "confirmed" },
-    { id: 111, customer: "Amit Patel", phone: "9876543210", amount: "₹8,999", payment: "UPI", date: "20 Mar 2026", time: "14:30", status: "dispatched" },
-    { id: 110, customer: "Neha Gupta", phone: "9988776655", amount: "₹15,750", payment: "Card", date: "18 Mar 2026", time: "09:45", status: "transport" },
-    { id: 109, customer: "Vikram Sharma", phone: "9876541230", amount: "₹3,299", payment: "QR & Bank Transfer", date: "15 Mar 2026", time: "18:20", status: "accepted" },
-    { id: 108, customer: "Sunita Verma", phone: "9765432180", amount: "₹22,500", payment: "Bank Transfer", date: "12 Mar 2026", time: "11:00", status: "confirmed" },
-    { id: 107, customer: "Rahul Mehta", phone: "9654321870", amount: "₹1,299", payment: "UPI", date: "10 Mar 2026", time: "16:15", status: "rejected" },
-    { id: 106, customer: "Anjali Kapoor", phone: "9543218760", amount: "₹6,750", payment: "Card", date: "08 Mar 2026", time: "13:40", status: "transport" },
-    { id: 105, customer: "Manish Yadav", phone: "9432107650", amount: "₹4,200", payment: "QR & Bank Transfer", date: "05 Mar 2026", time: "10:30", status: "dispatched" },
-    { id: 104, customer: "Pooja Jain", phone: "9321096540", amount: "₹9,999", payment: "UPI", date: "03 Mar 2026", time: "19:00", status: "confirmed" },
-    { id: 103, customer: "Suresh Nair", phone: "9210985430", amount: "₹2,499", payment: "Card", date: "28 Feb 2026", time: "08:15", status: "accepted" },
-    { id: 102, customer: "Deepa Reddy", phone: "9109874320", amount: "₹18,750", payment: "Bank Transfer", date: "25 Feb 2026", time: "21:30", status: "transport" },
-    { id: 101, customer: "Arjun Singh", phone: "9098763210", amount: "₹7,500", payment: "QR & Bank Transfer", date: "22 Feb 2026", time: "12:45", status: "confirmed" },
+    { id: 113, customer: "Rajesh Kumar", phone: "9898967652", amount: "₹12,450", vendor: "Maniar Footwear", category: "Ladies Slipper", brand: "StepKaro", date: "03 Apr 2026", time: "03:16", status: "pending" },
+    { id: 112, customer: "Priya Singh", phone: "9999773251", amount: "₹5,040", vendor: "Maniar Footwear", category: "Ladies Slipper", brand: "StepKaro", date: "24 Mar 2026", time: "01:58", status: "confirmed" },
+    { id: 111, customer: "Amit Patel", phone: "9876543210", amount: "₹8,999", vendor: "Sports Hub", category: "Sports Shoes", brand: "Nike", date: "20 Mar 2026", time: "14:30", status: "dispatched" },
+    { id: 110, customer: "Neha Gupta", phone: "9988776655", amount: "₹15,750", vendor: "Kids Corner", category: "Kids Footwear", brand: "Bata", date: "18 Mar 2026", time: "09:45", status: "transport" },
+    { id: 109, customer: "Vikram Sharma", phone: "9876541230", amount: "₹3,299", vendor: "Formal World", category: "Formal Shoes", brand: "Clarks", date: "15 Mar 2026", time: "18:20", status: "accepted" },
+    { id: 108, customer: "Sunita Verma", phone: "9765432180", amount: "₹22,500", vendor: "Maniar Footwear", category: "Ladies Slipper", brand: "StepKaro", date: "12 Mar 2026", time: "11:00", status: "confirmed" },
+    { id: 107, customer: "Rahul Mehta", phone: "9654321870", amount: "₹1,299", vendor: "Sports Hub", category: "Sports Shoes", brand: "Adidas", date: "10 Mar 2026", time: "16:15", status: "rejected" },
+    { id: 106, customer: "Anjali Kapoor", phone: "9543218760", amount: "₹6,750", vendor: "Kids Corner", category: "Kids Footwear", brand: "Bata", date: "08 Mar 2026", time: "13:40", status: "transport" },
+    { id: 105, customer: "Manish Yadav", phone: "9432107650", amount: "₹4,200", vendor: "Formal World", category: "Formal Shoes", brand: "Hush Puppies", date: "05 Mar 2026", time: "10:30", status: "dispatched" },
+    { id: 104, customer: "Pooja Jain", phone: "9321096540", amount: "₹9,999", vendor: "Maniar Footwear", category: "Ladies Slipper", brand: "StepKaro", date: "03 Mar 2026", time: "19:00", status: "confirmed" },
+    { id: 103, customer: "Suresh Nair", phone: "9210985430", amount: "₹2,499", vendor: "Sports Hub", category: "Sports Shoes", brand: "Nike", date: "28 Feb 2026", time: "08:15", status: "accepted" },
+    { id: 102, customer: "Deepa Reddy", phone: "9109874320", amount: "₹18,750", vendor: "Kids Corner", category: "Kids Footwear", brand: "Puma", date: "25 Feb 2026", time: "21:30", status: "transport" },
+    { id: 101, customer: "Arjun Singh", phone: "9098763210", amount: "₹7,500", vendor: "Maniar Footwear", category: "Ladies Slipper", brand: "StepKaro", date: "22 Feb 2026", time: "12:45", status: "confirmed" },
   ];
 
   const filters = [
@@ -75,7 +72,10 @@ export default function OrdersPage() {
       filtered = filtered.filter(order => 
         order.id.toString().includes(query) ||
         order.customer.toLowerCase().includes(query) ||
-        order.phone.includes(query)
+        order.phone.includes(query) ||
+        order.vendor.toLowerCase().includes(query) ||
+        order.category.toLowerCase().includes(query) ||
+        order.brand.toLowerCase().includes(query)
       );
     }
     
@@ -96,13 +96,13 @@ export default function OrdersPage() {
   // Handle filter change
   const handleFilterChange = (filterValue) => {
     setSelectedFilter(filterValue);
-    setCurrentPage(1); // Reset to first page when filter changes
+    setCurrentPage(1);
   };
 
   // Handle search
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
-    setCurrentPage(1); // Reset to first page when search changes
+    setCurrentPage(1);
   };
 
   // Handle items per page change
@@ -113,27 +113,18 @@ export default function OrdersPage() {
 
   const handleAcceptOrder = (orderId) => {
     console.log(`Accept order ${orderId}`);
-    // Add your API call here
   };
 
   const handleRejectOrder = (orderId) => {
     console.log(`Reject order ${orderId}`);
-    // Add your API call here
   };
 
   const handleViewOrder = (orderId) => {
     console.log(`View order ${orderId}`);
-    // Add your navigation or modal logic here
-  };
-
-  const handlePrintInvoice = (orderId) => {
-    console.log(`Print invoice for order ${orderId}`);
-    // Add your print logic here
   };
 
   const handleExportOrders = () => {
     console.log("Exporting orders...");
-    // Add your export logic here
   };
 
   return (
@@ -156,27 +147,16 @@ export default function OrdersPage() {
         </div>
       </div>
 
-      {/* Search and Filter Bar */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={handleSearch}
-            placeholder="Search by order ID, customer name, or phone..."
-            className="w-full pl-10 pr-4 py-2.5 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
-          />
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <select className="px-4 py-2.5 bg-slate-800/50 border border-white/10 rounded-xl text-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500">
-            <option>Last 7 Days</option>
-            <option>Last 30 Days</option>
-            <option>Last 90 Days</option>
-            <option>All Time</option>
-          </select>
-        </div>
+      {/* Search Bar */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={handleSearch}
+          placeholder="Search by order ID, customer, phone, vendor, category, or brand..."
+          className="w-full pl-10 pr-4 py-2.5 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+        />
       </div>
 
       {/* Filters Row */}
@@ -243,10 +223,16 @@ export default function OrdersPage() {
                   Customer Info
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                  Amount
+                  Vendor
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                  Payment Mode
+                  Category
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  Brand
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  Amount
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                   Date & Time
@@ -256,9 +242,6 @@ export default function OrdersPage() {
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                   Actions
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                  Invoice
                 </th>
               </tr>
             </thead>
@@ -278,11 +261,19 @@ export default function OrdersPage() {
                       </td>
                       
                       <td className="px-6 py-4">
-                        <span className="text-sm font-semibold text-white">{order.amount}</span>
+                        <span className="text-sm text-gray-300">{order.vendor}</span>
                       </td>
                       
                       <td className="px-6 py-4">
-                        <span className="text-xs text-gray-300">{order.payment}</span>
+                        <span className="text-sm text-gray-300">{order.category}</span>
+                      </td>
+                      
+                      <td className="px-6 py-4">
+                        <span className="text-sm text-gray-300">{order.brand}</span>
+                      </td>
+                      
+                      <td className="px-6 py-4">
+                        <span className="text-sm font-semibold text-white">{order.amount}</span>
                       </td>
                       
                       <td className="px-6 py-4">
@@ -318,21 +309,12 @@ export default function OrdersPage() {
                           </button>
                         </div>
                       </td>
-                      
-                      <td className="px-6 py-4">
-                        <button 
-                          onClick={() => handlePrintInvoice(order.id)}
-                          className="p-2 text-gray-400 hover:text-teal-400 hover:bg-teal-500/20 rounded-lg transition-colors"
-                        >
-                          <Printer size={18} />
-                        </button>
-                      </td>
                     </tr>
                   );
                 })
               ) : (
                 <tr>
-                  <td colSpan="8" className="px-6 py-12 text-center">
+                  <td colSpan="9" className="px-6 py-12 text-center">
                     <Package size={48} className="text-gray-600 mx-auto mb-3" />
                     <p className="text-gray-400">No orders found</p>
                     <p className="text-sm text-gray-500 mt-1">Try adjusting your search or filter</p>

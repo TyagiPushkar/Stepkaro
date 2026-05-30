@@ -23,56 +23,7 @@ import {
   Plus,
 } from "lucide-react";
 
-const stats = [
-  {
-    title: "Pending Orders",
-    value: "18",
-    icon: Clock3,
-    color: "from-yellow-400 to-orange-500",
-    trend: "+5",
-    trendUp: true,
-  },
-  {
-    title: "Stock Out",
-    value: "7",
-    icon: AlertTriangle,
-    color: "from-red-400 to-pink-500",
-    trend: "-2",
-    trendUp: false,
-  },
-  {
-    title: "Best Selling",
-    value: "24",
-    icon: ShoppingBag,
-    color: "from-violet-500 to-purple-600",
-    trend: "+8",
-    trendUp: true,
-  },
-  {
-    title: "Revenue Summary",
-    value: "₹2,45,000",
-    icon: IndianRupee,
-    color: "from-emerald-400 to-green-600",
-    trend: "+12.5%",
-    trendUp: true,
-  },
-  {
-    title: "Total Orders",
-    value: "126",
-    icon: PackageCheck,
-    color: "from-sky-400 to-blue-600",
-    trend: "+18",
-    trendUp: true,
-  },
-  {
-    title: "Commission Reports",
-    value: "₹18,400",
-    icon: BadgePercent,
-    color: "from-fuchsia-500 to-pink-600",
-    trend: "+5.2%",
-    trendUp: true,
-  },
-];
+
 
 const recentOrdersData = [
   {
@@ -117,35 +68,7 @@ const recentOrdersData = [
   },
 ];
 
-const bestSellingData = [
-  {
-    id: 1,
-    name: "Ladies Slipper 101",
-    stock: "120 left",
-    sales: "240 sold",
-    revenue: "₹72,000",
-    rating: 4.8,
-    image: "👡",
-  },
-  {
-    id: 2,
-    name: "Kids Clogs",
-    stock: "Out of Stock",
-    sales: "198 sold",
-    revenue: "₹49,500",
-    rating: 4.6,
-    image: "👟",
-  },
-  {
-    id: 3,
-    name: "Men Sports Shoe",
-    stock: "52 left",
-    sales: "180 sold",
-    revenue: "₹90,000",
-    rating: 4.7,
-    image: "👞",
-  },
-];
+
 
 const getStatusColor = (status) => {
   const colors = {
@@ -172,20 +95,90 @@ export default function SellerDashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [recentOrders, setRecentOrders] = useState(recentOrdersData);
-  const [bestSelling, setBestSelling] = useState(bestSellingData);
+  const [bestSelling, setBestSelling] = useState([]);
   const [selectedPeriod, setSelectedPeriod] = useState("week");
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [dashboardData, setDashboardData] = useState(null);
 
-  useEffect(() => {
-    // Load user from localStorage
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    } else {
-      // Demo user if not logged in
-      setUser({ name: "Vendor", email: "vendor@stepkaro.com" });
+useEffect(() => {
+ 
+  const fetchDashboard = async () => {
+
+    try {
+
+      const token = localStorage.getItem("access_token");
+
+     
+      const response = await fetch(
+
+        "https://namami-infotech.com/Stepkaro/src/vender/vendor_dashboard.php",
+
+        {
+          method: "GET",
+
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      console.log("Dashboard Response:", data);
+      if (data.success) {
+
+  setDashboardData(data.data);
+
+  setBestSelling(
+    data.data.best_selling_products || []
+  );
+}
+
+    } catch (error) {
+
+      console.log("Dashboard Error:", error);
+
     }
-  }, []);
+  };
+
+  fetchDashboard();
+
+}, []);
+
+const stats = [
+
+  {
+    title: "Pending Orders",
+    value: dashboardData?.pending_orders || 0,
+    icon: Clock3,
+    color: "from-yellow-400 to-orange-500",
+  },
+
+  {
+    title: "Stock Out",
+    value: dashboardData?.stock_out || 0,
+    icon: AlertTriangle,
+    color: "from-red-400 to-pink-500",
+  },
+
+  
+
+  {
+    title: "Total Orders",
+    value: dashboardData?.total_orders || 0,
+    icon: PackageCheck,
+    color: "from-sky-400 to-blue-600",
+  },
+
+  {
+    title: "Commission Reports",
+    value: `₹${dashboardData?.commission_report?.commission || 0}`,
+    icon: BadgePercent,
+    color: "from-fuchsia-500 to-pink-600",
+  },
+
+];
 
   const handleRefresh = () => {
     setIsRefreshing(true);
@@ -195,7 +188,7 @@ export default function SellerDashboardPage() {
   };
 
   const handleViewOrder = (orderId) => {
-    router.push(`/orders/${orderId}`);
+    router.push(`orders`);
   };
 
   const handleAddProduct = () => {
@@ -203,7 +196,7 @@ export default function SellerDashboardPage() {
   };
 
   const handleViewAllOrders = () => {
-    router.push("/orders");
+    router.push("orders");
   };
 
   const handleManageProducts = () => {
@@ -250,15 +243,7 @@ export default function SellerDashboardPage() {
         </div>
 
         <div className="flex gap-3">
-          <select
-            value={selectedPeriod}
-            onChange={(e) => setSelectedPeriod(e.target.value)}
-            className="rounded-xl border border-violet-200 bg-white px-4 py-2 text-sm font-medium text-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-500"
-          >
-            <option value="week">Last 7 Days</option>
-            <option value="month">Last 30 Days</option>
-            <option value="year">Last Year</option>
-          </select>
+       
 
           <button
             onClick={handleExportReport}
@@ -278,18 +263,11 @@ export default function SellerDashboardPage() {
             Refresh
           </button>
 
-          <button
-            onClick={handleAddProduct}
-            className="rounded-xl bg-gradient-to-r from-violet-600 to-fuchsic-500 px-5 py-2 text-sm font-semibold text-white shadow-lg transition hover:scale-105 flex items-center gap-2"
-          >
-            <Plus size={16} />
-            Add Product
-          </button>
         </div>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
         {stats.map((item, index) => {
           const Icon = item.icon;
 
@@ -305,10 +283,7 @@ export default function SellerDashboardPage() {
                     {item.value}
                   </h2>
                   <div className="mt-2 flex items-center gap-1">
-                    <span className={`text-xs font-medium ${item.trendUp ? "text-green-600" : "text-red-600"}`}>
-                      {item.trend}
-                    </span>
-                    <span className="text-xs text-gray-400">vs last period</span>
+                   
                   </div>
                 </div>
 
@@ -407,110 +382,47 @@ export default function SellerDashboardPage() {
           </div>
 
           <div className="space-y-3">
-            {bestSelling.map((product, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between rounded-xl border border-violet-100 p-4 transition-all hover:bg-violet-50"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-violet-400 to-fuchsia-400 rounded-lg flex items-center justify-center text-xl">
-                    {product.image}
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">
-                      {product.name}
-                    </h3>
-                    <div className="flex items-center gap-2 mt-1">
-                      <div className="flex items-center gap-0.5">
-                        <Star size={12} className="fill-yellow-400 text-yellow-400" />
-                        <span className="text-xs text-gray-600">{product.rating}</span>
-                      </div>
-                      <span className="text-xs text-gray-400">•</span>
-                      <p className="text-xs text-gray-500">{product.sales}</p>
-                    </div>
-                  </div>
-                </div>
 
-                <div className="text-right">
-                  <p className="text-sm font-semibold text-green-600">
-                    {product.revenue}
-                  </p>
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-xs font-semibold ${getStockColor(product.stock)}`}
-                  >
-                    {product.stock}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
+  {bestSelling?.map((product, index) => (
 
-          {/* Quick Stats */}
-          <div className="mt-6 pt-4 border-t border-violet-100 grid grid-cols-3 gap-3">
-            <div className="text-center">
-              <p className="text-xs text-gray-500">Total Products</p>
-              <p className="text-lg font-bold text-gray-900">48</p>
-            </div>
-            <div className="text-center">
-              <p className="text-xs text-gray-500">Total Sales</p>
-              <p className="text-lg font-bold text-gray-900">618</p>
-            </div>
-            <div className="text-center">
-              <p className="text-xs text-gray-500">Avg. Rating</p>
-              <p className="text-lg font-bold text-gray-900">4.7 ★</p>
-            </div>
-          </div>
+    <div
+      key={index}
+      className="flex items-center justify-between rounded-xl border border-violet-100 p-4 transition-all hover:bg-violet-50"
+    >
+
+      <div className="flex items-center gap-3">
+
+        <img
+          src={product.image}
+          alt={product.article_name}
+          className="w-12 h-12 rounded-lg object-cover"
+        />
+
+        <div>
+
+          <h3 className="font-semibold text-gray-900">
+            {product.article_name}
+          </h3>
+
+          <p className="text-xs text-gray-500 mt-1">
+            {product.total_sold} sold
+          </p>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  ))}
+
+</div>
+
+         
         </div>
       </div>
 
-      {/* Additional Stats Row */}
-      <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 p-4 text-white shadow-lg">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm opacity-90">Wallet Balance</p>
-              <p className="text-2xl font-bold">₹24,500</p>
-            </div>
-            <Wallet size={24} className="opacity-90" />
-          </div>
-          <button className="mt-3 text-xs bg-white/20 rounded-lg px-3 py-1 hover:bg-white/30 transition">
-            Withdraw
-          </button>
-        </div>
-
-        <div className="rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 p-4 text-white shadow-lg">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm opacity-90">Pending Payout</p>
-              <p className="text-2xl font-bold">₹8,200</p>
-            </div>
-            <Clock3 size={24} className="opacity-90" />
-          </div>
-          <p className="text-xs opacity-80 mt-2">Next payout: 5 days</p>
-        </div>
-
-        <div className="rounded-xl bg-gradient-to-r from-orange-500 to-red-500 p-4 text-white shadow-lg">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm opacity-90">Returns</p>
-              <p className="text-2xl font-bold">12</p>
-            </div>
-            <XCircle size={24} className="opacity-90" />
-          </div>
-          <p className="text-xs opacity-80 mt-2">This month</p>
-        </div>
-
-        <div className="rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 p-4 text-white shadow-lg">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm opacity-90">Rating</p>
-              <p className="text-2xl font-bold">4.8 ★</p>
-            </div>
-            <Star size={24} className="opacity-90 fill-white" />
-          </div>
-          <p className="text-xs opacity-80 mt-2">Based on 342 reviews</p>
-        </div>
-      </div>
+     
     </div>
   );
 }

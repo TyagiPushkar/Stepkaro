@@ -1,13 +1,13 @@
 export default function HomePage() {
   const stats = [
-    { title: "Visitors", value: 0, icon: "👥", color: "blue", change: "+0%", trend: "up" },
-    { title: "Enquiries", value: 21, icon: "📧", color: "purple", change: "+5", trend: "up" },
-    { title: "Total Orders", value: 113, icon: "🛒", color: "teal", change: "+12", trend: "up" },
-    { title: "Live Products", value: 583, icon: "📦", color: "green", change: "+28", trend: "up" },
-    { title: "Out of Stock", value: 164, icon: "⚠️", color: "red", change: "-8", trend: "down" },
-    { title: "Users", value: 620, icon: "👤", color: "indigo", change: "+42", trend: "up" },
-    { title: "Shares", value: 0, icon: "🔗", color: "orange", change: "0", trend: "neutral" },
-    { title: "Revenue", value: "₹17,93,559", icon: "💰", color: "emerald", change: "+8.5%", trend: "up" },
+    // { title: "Visitors", value: 0, icon: "👥", color: "blue", change: "+0%", trend: "up" },
+    // { title: "Enquiries", value: 21, icon: "📧", color: "purple", change: "+5", trend: "up" },
+    { title: "Total Orders", value: 113, icon: "🛒", color: "teal" },
+    { title: "Live Products", value: 583, icon: "📦", color: "green" },
+    { title: "Out of Stock", value: 164, icon: "⚠️", color: "red" },
+    // { title: "Users", value: 620, icon: "👤", color: "indigo", change: "+42", trend: "up" },
+    // { title: "Shares", value: 0, icon: "🔗", color: "orange", change: "0", trend: "neutral" },
+    { title: "Revenue", value: "₹17,93,559", icon: "💰", color: "emerald" },
   ];
 
   const recentOrders = [
@@ -22,23 +22,23 @@ export default function HomePage() {
     switch (status) {
       case "Delivered": return "bg-green-500/20 text-green-400";
       case "Processing": return "bg-blue-500/20 text-blue-400";
-      case "Shipped": return "bg-purple-500/20 text-purple-400";
-      case "Pending": return "bg-yellow-500/20 text-yellow-400";
+      case "Ordered": return "bg-purple-500/20 text-purple-400";
+      case "Accepted": return "bg-yellow-500/20 text-yellow-400";
       default: return "bg-gray-500/20 text-gray-400";
     }
   };
 
-  const getTrendIcon = (trend) => {
-    if (trend === "up") return "↑";
-    if (trend === "down") return "↓";
-    return "→";
-  };
+  // const getTrendIcon = (trend) => {
+  //   if (trend === "up") return "↑";
+  //   if (trend === "down") return "↓";
+  //   return "→";
+  // };
 
-  const getTrendColor = (trend) => {
-    if (trend === "up") return "text-green-400";
-    if (trend === "down") return "text-red-400";
-    return "text-gray-400";
-  };
+  // const getTrendColor = (trend) => {
+  //   if (trend === "up") return "text-green-400";
+  //   if (trend === "down") return "text-red-400";
+  //   return "text-gray-400";
+  // };
 
   return (
     <div className="space-y-6">
@@ -50,11 +50,11 @@ export default function HomePage() {
         </div>
 
         <div className="flex gap-3">
-          <select className="bg-slate-800 border border-white/10 rounded-lg px-4 py-2 text-sm text-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500">
+          {/* <select className="bg-slate-800 border border-white/10 rounded-lg px-4 py-2 text-sm text-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500">
             <option>Last 7 Days</option>
             <option>Last 30 Days</option>
             <option>Last 90 Days</option>
-          </select>
+          </select> */}
           <button className="bg-teal-500/20 hover:bg-teal-500/30 border border-teal-500/30 rounded-lg px-4 py-2 text-sm text-teal-400 transition-colors">
             Export Report
           </button>
@@ -72,9 +72,9 @@ export default function HomePage() {
               <div className={`w-10 h-10 rounded-lg bg-${item.color}-500/20 flex items-center justify-center text-xl group-hover:scale-110 transition-transform`}>
                 {item.icon}
               </div>
-              <div className={`flex items-center gap-1 text-xs font-medium ${getTrendColor(item.trend)}`}>
+              <div className={`flex items-center gap-1 text-xs font-medium}`}>
                 {item.change}
-                <span>{getTrendIcon(item.trend)}</span>
+                
               </div>
             </div>
             <p className="text-2xl font-bold text-white mt-3">

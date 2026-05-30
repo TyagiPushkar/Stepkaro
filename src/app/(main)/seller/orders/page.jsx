@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Search,
@@ -22,90 +22,90 @@ import {
   IndianRupee,
 } from "lucide-react";
 
-const ordersData = [
-  {
-    id: "#1050",
-    customer: "Mumbai",
-    customerName: "Rajesh Kumar",
-    items: 3,
-    quantity: "50 pairs",
-    amount: 12500,
-    status: "NEW",
-    date: "2024-01-15",
-    time: "10:30 AM",
-    paymentMethod: "COD",
-    shippingAddress: "Andheri East, Mumbai - 400069",
-  },
-  {
-    id: "#1049",
-    customer: "Delhi",
-    customerName: "Priya Singh",
-    items: 2,
-    quantity: "24 pairs",
-    amount: 8400,
-    status: "ACCEPTED",
-    date: "2024-01-14",
-    time: "02:15 PM",
-    paymentMethod: "Prepaid",
-    shippingAddress: "Connaught Place, Delhi - 110001",
-  },
-  {
-    id: "#1048",
-    customer: "Chennai",
-    customerName: "Amit Patel",
-    items: 5,
-    quantity: "30 pairs",
-    amount: 15700,
-    status: "DISPATCHED",
-    date: "2024-01-13",
-    time: "09:45 AM",
-    paymentMethod: "COD",
-    shippingAddress: "T Nagar, Chennai - 600017",
-  },
-  {
-    id: "#1047",
-    customer: "Hyderabad",
-    customerName: "Sneha Reddy",
-    items: 1,
-    quantity: "10 pairs",
-    amount: 4200,
-    status: "REJECTED",
-    date: "2024-01-12",
-    time: "04:20 PM",
-    paymentMethod: "Prepaid",
-    shippingAddress: "Banjara Hills, Hyderabad - 500034",
-  },
-  {
-    id: "#1046",
-    customer: "Bangalore",
-    customerName: "Vikram Sharma",
-    items: 4,
-    quantity: "45 pairs",
-    amount: 18900,
-    status: "DELIVERED",
-    date: "2024-01-11",
-    time: "11:00 AM",
-    paymentMethod: "COD",
-    shippingAddress: "Indiranagar, Bangalore - 560038",
-  },
-  {
-    id: "#1045",
-    customer: "Kolkata",
-    customerName: "Meera Das",
-    items: 2,
-    quantity: "18 pairs",
-    amount: 7200,
-    status: "PROCESSING",
-    date: "2024-01-10",
-    time: "03:30 PM",
-    paymentMethod: "Wallet",
-    shippingAddress: "Salt Lake City, Kolkata - 700064",
-  },
-];
+// const ordersData = [
+//   {
+//     id: "#1050",
+//     customer: "Mumbai",
+//     customerName: "Rajesh Kumar",
+//     items: 3,
+//     quantity: "50 pairs",
+//     amount: 12500,
+//     status: "NEW",
+//     date: "2024-01-15",
+//     time: "10:30 AM",
+//     paymentMethod: "COD",
+//     shippingAddress: "Andheri East, Mumbai - 400069",
+//   },
+//   {
+//     id: "#1049",
+//     customer: "Delhi",
+//     customerName: "Priya Singh",
+//     items: 2,
+//     quantity: "24 pairs",
+//     amount: 8400,
+//     status: "ACCEPTED",
+//     date: "2024-01-14",
+//     time: "02:15 PM",
+//     paymentMethod: "Prepaid",
+//     shippingAddress: "Connaught Place, Delhi - 110001",
+//   },
+//   {
+//     id: "#1048",
+//     customer: "Chennai",
+//     customerName: "Amit Patel",
+//     items: 5,
+//     quantity: "30 pairs",
+//     amount: 15700,
+//     status: "DISPATCHED",
+//     date: "2024-01-13",
+//     time: "09:45 AM",
+//     paymentMethod: "COD",
+//     shippingAddress: "T Nagar, Chennai - 600017",
+//   },
+//   {
+//     id: "#1047",
+//     customer: "Hyderabad",
+//     customerName: "Sneha Reddy",
+//     items: 1,
+//     quantity: "10 pairs",
+//     amount: 4200,
+//     status: "REJECTED",
+//     date: "2024-01-12",
+//     time: "04:20 PM",
+//     paymentMethod: "Prepaid",
+//     shippingAddress: "Banjara Hills, Hyderabad - 500034",
+//   },
+//   {
+//     id: "#1046",
+//     customer: "Bangalore",
+//     customerName: "Vikram Sharma",
+//     items: 4,
+//     quantity: "45 pairs",
+//     amount: 18900,
+//     status: "DELIVERED",
+//     date: "2024-01-11",
+//     time: "11:00 AM",
+//     paymentMethod: "COD",
+//     shippingAddress: "Indiranagar, Bangalore - 560038",
+//   },
+//   {
+//     id: "#1045",
+//     customer: "Kolkata",
+//     customerName: "Meera Das",
+//     items: 2,
+//     quantity: "18 pairs",
+//     amount: 7200,
+//     status: "PROCESSING",
+//     date: "2024-01-10",
+//     time: "03:30 PM",
+//     paymentMethod: "Wallet",
+//     shippingAddress: "Salt Lake City, Kolkata - 700064",
+//   },
+// ];
 
 const statusConfig = {
   NEW: { label: "New", color: "bg-yellow-100 text-yellow-700", icon: Clock3, nextAction: "accept" },
-  PROCESSING: { label: "Processing", color: "bg-blue-100 text-blue-700", icon: Package, nextAction: "accept" },
+
   ACCEPTED: { label: "Accepted", color: "bg-indigo-100 text-indigo-700", icon: CheckCircle2, nextAction: "dispatch" },
   DISPATCHED: { label: "Dispatched", color: "bg-purple-100 text-purple-700", icon: Truck, nextAction: "deliver" },
   DELIVERED: { label: "Delivered", color: "bg-green-100 text-green-700", icon: CheckCircle2, nextAction: null },
@@ -114,7 +114,7 @@ const statusConfig = {
 
 export default function SellerOrdersPage() {
   const router = useRouter();
-  const [orders, setOrders] = useState(ordersData);
+  const [orders, setOrders] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
@@ -124,6 +124,78 @@ export default function SellerOrdersPage() {
   const [showActionModal, setShowActionModal] = useState(false);
   const [actionType, setActionType] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  useEffect(() => {
+  fetchOrders();
+}, [selectedStatus]);
+
+const fetchOrders = async () => {
+  try {
+
+    const token = localStorage.getItem("access_token");
+
+    const status =
+      selectedStatus === "All"
+        ? ""
+        : `?status=${selectedStatus.toLowerCase()}`;
+
+    const response = await fetch(
+      `https://namami-infotech.com/Stepkaro/src/vender/get_vendor_orders.php${status}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const result = await response.json();
+
+    console.log("API RESPONSE:", result);
+
+    if (result.success) {
+
+      const formattedOrders = result.data.map((item) => ({
+
+  id: `#${item.id}`,
+
+  customer: item.customer_name || "N/A",
+
+  customerName: item.customer_name || "N/A",
+
+  items: Number(item.total_items || 0),
+
+  quantity: Number(item.total_quantity || 0),
+
+  amount: Number(item.total_amount || 0),
+
+  status: item.status
+    ? item.status.toUpperCase()
+    : "NEW",
+
+  date: new Date(item.created_at)
+    .toLocaleDateString(),
+
+  time: new Date(item.created_at)
+    .toLocaleTimeString(),
+
+  paymentMethod: "Online",
+
+  shippingAddress: item.customer_phone || "-",
+
+}));
+
+      console.log("FORMATTED ORDERS:", formattedOrders);
+
+      setOrders(formattedOrders);
+    }
+
+  } catch (error) {
+
+    console.log("FETCH ERROR:", error);
+
+  }
+};
 
   // Filter orders
   const filteredOrders = useMemo(() => {
@@ -185,78 +257,107 @@ export default function SellerOrdersPage() {
     setShowActionModal(true);
   };
 
-  const confirmAction = () => {
+  const confirmAction = async () => {
+
+  try {
+
     setIsLoading(true);
-    setTimeout(() => {
-      setOrders(orders.map(order => {
-        if (order.id === selectedOrder.id) {
-          let newStatus = order.status;
-          switch(actionType) {
-            case "accept":
-              newStatus = order.status === "NEW" ? "ACCEPTED" : "PROCESSING";
-              break;
-            case "reject":
-              newStatus = "REJECTED";
-              break;
-            case "dispatch":
-              newStatus = "DISPATCHED";
-              break;
-          }
-          return { ...order, status: newStatus };
-        }
-        return order;
-      }));
-      setIsLoading(false);
+
+    const token =
+      localStorage.getItem("access_token");
+
+    let newStatus = "";
+
+    switch(actionType) {
+
+  case "accept":
+
+    newStatus = "accepted";
+
+    break;
+
+  case "reject":
+
+    newStatus = "rejected";
+
+    break;
+
+  case "dispatch":
+
+    newStatus = "dispatched";
+
+    break;
+
+  case "deliver":
+
+    newStatus = "delivered";
+
+    break;
+
+  default:
+
+    return;
+}
+
+    const response = await fetch(
+
+      "https://namami-infotech.com/Stepkaro/src/vender/update_order_status.php",
+
+      {
+        method: "POST",
+
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify({
+
+          order_id: Number(
+            selectedOrder.id.replace("#", "")
+          ),
+
+          status: newStatus,
+
+        }),
+      }
+    );
+
+    const result = await response.json();
+
+    console.log("UPDATE STATUS RESPONSE:", result);
+
+    if (result.success) {
+
+      fetchOrders();
+
       setShowActionModal(false);
+
       setSelectedOrder(null);
-    }, 500);
-  };
+
+    } else {
+
+      alert(result.message || "Failed to update order");
+
+    }
+
+  } catch (error) {
+
+    console.log("UPDATE STATUS ERROR:", error);
+
+  } finally {
+
+    setIsLoading(false);
+
+  }
+};
 
   const handleViewDetails = (order) => {
     setSelectedOrder(order);
     setShowDetailsModal(true);
   };
 
-  const handlePrintInvoice = (order) => {
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>Invoice ${order.id}</title>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 20px; }
-            .invoice-box { max-width: 800px; margin: auto; padding: 30px; border: 1px solid #eee; }
-            h2 { color: #333; }
-            .header { text-align: center; margin-bottom: 30px; }
-            .details { margin-bottom: 20px; }
-            .total { font-size: 18px; font-weight: bold; }
-          </style>
-        </head>
-        <body>
-          <div class="invoice-box">
-            <div class="header">
-              <h2>STEPKARO - Invoice</h2>
-              <p>Order ID: ${order.id}</p>
-            </div>
-            <div class="details">
-              <p><strong>Customer:</strong> ${order.customerName} (${order.customer})</p>
-              <p><strong>Shipping Address:</strong> ${order.shippingAddress}</p>
-              <p><strong>Items:</strong> ${order.items}</p>
-              <p><strong>Quantity:</strong> ${order.quantity}</p>
-              <p><strong>Amount:</strong> ₹${order.amount.toLocaleString()}</p>
-              <p><strong>Payment Method:</strong> ${order.paymentMethod}</p>
-              <p><strong>Date:</strong> ${order.date}</p>
-            </div>
-            <div class="total">
-              Total Amount: ₹${order.amount.toLocaleString()}
-            </div>
-          </div>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-    printWindow.print();
-  };
+ 
 
   const handleExportOrders = () => {
     const headers = ["Order ID", "Customer", "Customer Name", "Items", "Quantity", "Amount", "Status", "Date", "Payment Method"];
@@ -476,7 +577,7 @@ export default function SellerOrdersPage() {
             <thead className="bg-gradient-to-r from-violet-100 to-purple-100">
               <tr className="text-left text-sm text-violet-800">
                 <th className="px-6 py-4 font-semibold">Order ID</th>
-                <th className="px-6 py-4 font-semibold">Customer</th>
+               
                 <th className="px-6 py-4 font-semibold">Items</th>
                 <th className="px-6 py-4 font-semibold">Quantity</th>
                 <th className="px-6 py-4 font-semibold">Amount</th>
@@ -498,12 +599,7 @@ export default function SellerOrdersPage() {
                     <td className="px-6 py-5 font-semibold text-violet-900">
                       {order.id}
                     </td>
-                    <td className="px-6 py-5">
-                      <div>
-                        <p className="font-medium text-gray-900">{order.customerName}</p>
-                        <p className="text-xs text-gray-500">{order.customer}</p>
-                      </div>
-                    </td>
+                   
                     <td className="px-6 py-5 text-gray-700">
                       {order.items} items
                     </td>
@@ -533,13 +629,13 @@ export default function SellerOrdersPage() {
                           <Eye size={16} />
                         </button>
                         {getActionButton(order)}
-                        <button
+                        {/* <button
                           onClick={() => handlePrintInvoice(order)}
                           className="rounded-lg bg-gray-100 p-2 text-gray-700 transition hover:bg-gray-200"
                           title="Print Invoice"
                         >
                           <Printer size={16} />
-                        </button>
+                        </button> */}
                       </div>
                     </td>
                   </tr>
@@ -630,7 +726,7 @@ export default function SellerOrdersPage() {
             </div>
 
             <div className="flex gap-2 pt-2">
-              <button
+              {/* <button
                 onClick={() => {
                   setShowDetailsModal(false);
                   handlePrintInvoice(selectedOrder);
@@ -639,7 +735,7 @@ export default function SellerOrdersPage() {
               >
                 <Printer size={16} />
                 Print
-              </button>
+              </button> */}
               <button
                 onClick={() => setShowDetailsModal(false)}
                 className="flex-1 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700"

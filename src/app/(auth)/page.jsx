@@ -64,8 +64,14 @@ export default function Login() {
     JSON.stringify({
       role: data.role,
       email: email,
+       name: data.name,
     })
   );
+  document.cookie =
+  `role=${data.role}; path=/`;
+
+document.cookie =
+  `access_token=${data.access_token}; path=/`;
 
   // redirect based on role
   if (data.role === "admin") {

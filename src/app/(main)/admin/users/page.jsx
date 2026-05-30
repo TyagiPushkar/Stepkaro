@@ -1,23 +1,18 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { 
   Search, 
   Plus, 
   Edit, 
   Trash2, 
   Eye,
-  Wallet,
-  CreditCard,
-  Coins,
-  TrendingUp,
-  Users as UsersIcon,
   X,
   ChevronLeft,
   ChevronRight,
   Download,
-  Filter,
-  ChevronDown,
-  DollarSign
+  Users as UsersIcon,
+  CheckCircle,
+  XCircle
 } from "lucide-react";
 
 export default function UsersPage() {
@@ -31,115 +26,122 @@ export default function UsersPage() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
-  const [showWalletModal, setShowWalletModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [walletAmount, setWalletAmount] = useState("");
   
   // Form states
   const [formData, setFormData] = useState({
     name: "",
-    phone: "",
     email: "",
-    plan: "Free",
-    cod: 0,
-    prepaid: 0,
-    wallet: 0
+    phone: "",
+    role: "buyer",
+    address: "",
+    status: "not_approved"
   });
 
   // Users state
-  const [users, setUsers] = useState([
-    {
-      id: 80,
-      name: "Guest",
-      phone: "821060978",
-      email: "guest@example.com",
-      plan: "Free",
-      cod: 0,
-      prepaid: 0,
-      wallet: 0,
-      avatar: "👤",
-      createdAt: "2024-01-15",
-      totalOrders: 5,
-      totalSpent: 12450
-    },
-    {
-      id: 90,
-      name: "MANIAR FOOTWEAR",
-      phone: "8686386885",
-      email: "maniar@example.com",
-      plan: "Premium",
-      cod: 12500,
-      prepaid: 5000,
-      wallet: 2500,
-      avatar: "👔",
-      createdAt: "2024-01-10",
-      totalOrders: 28,
-      totalSpent: 175000
-    },
-    {
-      id: 81,
-      name: "Guest",
-      phone: "9811278725",
-      email: "guest2@example.com",
-      plan: "Free",
-      cod: 0,
-      prepaid: 0,
-      wallet: 0,
-      avatar: "👤",
-      createdAt: "2024-01-18",
-      totalOrders: 2,
-      totalSpent: 3299
-    },
-    {
-      id: 442,
-      name: "manav Footwear",
-      phone: "8781982078",
-      email: "manav@example.com",
-      plan: "Business",
-      cod: 45000,
-      prepaid: 25000,
-      wallet: 15000,
-      avatar: "👨",
-      createdAt: "2024-01-20",
-      totalOrders: 156,
-      totalSpent: 845000
-    },
-    {
-      id: 443,
-      name: "Priya Fashion",
-      phone: "9876543210",
-      email: "priya@example.com",
-      plan: "Premium",
-      cod: 32000,
-      prepaid: 18000,
-      wallet: 8000,
-      avatar: "👩",
-      createdAt: "2024-01-22",
-      totalOrders: 89,
-      totalSpent: 342000
-    },
-    {
-      id: 444,
-      name: "Rajesh Traders",
-      phone: "8765432109",
-      email: "rajesh@example.com",
-      plan: "Business",
-      cod: 125000,
-      prepaid: 75000,
-      wallet: 25000,
-      avatar: "👨‍💼",
-      createdAt: "2024-01-25",
-      totalOrders: 234,
-      totalSpent: 1250000
-    },
-  ]);
+  const [users, setUsers] = useState([]);
+
+const [loading, setLoading] =
+  useState(true);
+
+useEffect(() => {
+
+  const fetchUsers = async () => {
+
+    try {
+
+      const response = await fetch(
+        "https://namami-infotech.com/Stepkaro/src//home/get_vendor_and_buyer.php"
+      );
+
+      const result =
+        await response.json();
+
+      if (result.success) {
+
+        // buyers
+        const buyers =
+          result.data.buyers.map(
+            (buyer) => ({
+              id: buyer.id,
+              name: buyer.name,
+              email: buyer.email,
+              phone: buyer.phone,
+              role: "buyer",
+              address: buyer.address,
+              status: buyer.status,
+              avatar: "👤",
+              createdAt:
+                buyer.created_at,
+              type: "buyer",
+              rawData: buyer
+            })
+          );
+
+        // vendors
+        const vendors =
+          result.data.vendors.map(
+            (vendor) => ({
+              id: vendor.id,
+              name:
+                vendor.owner_name,
+              email: vendor.email,
+              phone: vendor.phone,
+              role: "seller",
+              address:
+                vendor.address,
+              status:
+                vendor.status ===
+                "active"
+                  ? "approved"
+                  : "not_approved",
+              avatar: "🏪",
+              createdAt:
+                vendor.created_at,
+              type: "vendor",
+              business_name:
+                vendor.business_name,
+              gst_number:
+                vendor.gst_number,
+              pan_number:
+                vendor.pan_number,
+              rawData: vendor
+            })
+          );
+
+        setUsers([
+          ...buyers,
+          ...vendors
+        ]);
+
+      }
+
+    } catch (error) {
+
+      console.log(
+        "Error fetching users:",
+        error
+      );
+
+    } finally {
+
+      setLoading(false);
+
+    }
+
+  };
+
+  fetchUsers();
+
+}, []);
 
   // Filters
   const filters = [
     { label: "All Users", value: "all", count: users.length, color: "teal" },
-    { label: "Free Plan", value: "Free", count: users.filter(u => u.plan === "Free").length, color: "gray" },
-    { label: "Premium Plan", value: "Premium", count: users.filter(u => u.plan === "Premium").length, color: "blue" },
-    { label: "Business Plan", value: "Business", count: users.filter(u => u.plan === "Business").length, color: "purple" },
+    { label: "Sellers", value: "seller", count: users.filter(u => u.role === "seller").length, color: "blue" },
+    { label: "Buyers", value: "buyer", count: users.filter(u => u.role === "buyer").length, color: "green" },
+    { label: "Approved", value: "approved", count: users.filter(u => u.status === "approved").length, color: "emerald" },
+    { label: "Not Approved", value: "not_approved", count: users.filter(u => u.status === "not_approved").length, color: "red" },
   ];
 
   // Filter users
@@ -147,15 +149,18 @@ export default function UsersPage() {
     let filtered = users;
     
     if (selectedFilter !== "all") {
-      filtered = filtered.filter(u => u.plan === selectedFilter);
+      filtered = filtered.filter(u => 
+        u.role === selectedFilter || u.status === selectedFilter
+      );
     }
     
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(u => 
         u.name.toLowerCase().includes(query) ||
-        u.phone.includes(query) ||
         u.email.toLowerCase().includes(query) ||
+        u.phone.includes(query) ||
+        u.address.toLowerCase().includes(query) ||
         u.id.toString().includes(query)
       );
     }
@@ -183,9 +188,17 @@ export default function UsersPage() {
     setCurrentPage(1);
   };
 
+  // Toggle user status (approved/not_approved)
+  const toggleStatus = (userId, currentStatus) => {
+    const newStatus = currentStatus === "approved" ? "not_approved" : "approved";
+    setUsers(users.map(user => 
+      user.id === userId ? { ...user, status: newStatus } : user
+    ));
+  };
+
   // Add new user
   const handleAddUser = () => {
-    if (!formData.name.trim() || !formData.phone.trim()) {
+    if (!formData.name.trim() || !formData.email.trim() || !formData.phone.trim()) {
       alert("Please fill all required fields");
       return;
     }
@@ -194,20 +207,17 @@ export default function UsersPage() {
     const newUser = {
       id: newId,
       name: formData.name,
+      email: formData.email,
       phone: formData.phone,
-      email: formData.email || `${formData.name.toLowerCase()}@example.com`,
-      plan: formData.plan,
-      cod: 0,
-      prepaid: 0,
-      wallet: 0,
-      avatar: "👤",
-      createdAt: new Date().toISOString().split("T")[0],
-      totalOrders: 0,
-      totalSpent: 0
+      role: formData.role,
+      address: formData.address,
+      status: formData.status,
+      avatar: formData.role === "seller" ? "👨" : "👩",
+      createdAt: new Date().toISOString().split("T")[0]
     };
     setUsers([...users, newUser]);
     setShowAddModal(false);
-    setFormData({ name: "", phone: "", email: "", plan: "Free", cod: 0, prepaid: 0, wallet: 0 });
+    setFormData({ name: "", email: "", phone: "", role: "buyer", address: "", status: "not_approved" });
   };
 
   // Edit user
@@ -217,9 +227,11 @@ export default function UsersPage() {
         ? { 
             ...user, 
             name: formData.name,
-            phone: formData.phone,
             email: formData.email,
-            plan: formData.plan
+            phone: formData.phone,
+            role: formData.role,
+            address: formData.address,
+            status: formData.status
           }
         : user
     ));
@@ -234,24 +246,6 @@ export default function UsersPage() {
     setSelectedUser(null);
   };
 
-  // Add wallet
-  const handleAddWallet = () => {
-    const amount = parseFloat(walletAmount);
-    if (isNaN(amount) || amount <= 0) {
-      alert("Please enter a valid amount");
-      return;
-    }
-    
-    setUsers(users.map(user => 
-      user.id === selectedUser.id 
-        ? { ...user, wallet: user.wallet + amount }
-        : user
-    ));
-    setShowWalletModal(false);
-    setWalletAmount("");
-    setSelectedUser(null);
-  };
-
   // Open modals
   const openViewModal = (user) => {
     setSelectedUser(user);
@@ -262,12 +256,11 @@ export default function UsersPage() {
     setSelectedUser(user);
     setFormData({
       name: user.name,
-      phone: user.phone,
       email: user.email,
-      plan: user.plan,
-      cod: user.cod,
-      prepaid: user.prepaid,
-      wallet: user.wallet
+      phone: user.phone,
+      role: user.role,
+      address: user.address,
+      status: user.status
     });
     setShowEditModal(true);
   };
@@ -277,25 +270,17 @@ export default function UsersPage() {
     setShowDeleteModal(true);
   };
 
-  const openWalletModal = (user) => {
-    setSelectedUser(user);
-    setShowWalletModal(true);
-  };
-
   // Export to CSV
   const handleExportCSV = () => {
-    const headers = ["ID", "Name", "Phone", "Email", "Plan", "COD Orders", "Prepaid Orders", "Wallet Balance", "Total Orders", "Total Spent", "Joined Date"];
+    const headers = ["ID", "Name", "Email", "Phone", "Role", "Address", "Status", "Joined Date"];
     const csvData = users.map(user => [
       user.id,
       user.name,
-      user.phone,
       user.email,
-      user.plan,
-      user.cod,
-      user.prepaid,
-      user.wallet,
-      user.totalOrders,
-      user.totalSpent,
+      user.phone,
+      user.role,
+      user.address,
+      user.status === "approved" ? "Approved" : "Not Approved",
       user.createdAt
     ]);
     
@@ -309,16 +294,18 @@ export default function UsersPage() {
     URL.revokeObjectURL(url);
   };
 
-  // Get plan badge color
-  const getPlanBadge = (plan) => {
-    switch(plan) {
-      case "Premium":
-        return "bg-blue-500/20 text-blue-400";
-      case "Business":
-        return "bg-purple-500/20 text-purple-400";
-      default:
-        return "bg-gray-500/20 text-gray-400";
-    }
+  // Get role badge color
+  const getRoleBadge = (role) => {
+    return role === "seller" 
+      ? "bg-blue-500/20 text-blue-400" 
+      : "bg-green-500/20 text-green-400";
+  };
+
+  // Get status badge color
+  const getStatusBadge = (status) => {
+    return status === "approved" 
+      ? "bg-emerald-500/20 text-emerald-400" 
+      : "bg-red-500/20 text-red-400";
   };
 
   // Modal component
@@ -340,10 +327,18 @@ export default function UsersPage() {
   };
 
   // Stats summary
-  const totalCod = users.reduce((sum, u) => sum + u.cod, 0);
-  const totalPrepaid = users.reduce((sum, u) => sum + u.prepaid, 0);
-  const totalWallet = users.reduce((sum, u) => sum + u.wallet, 0);
+  const totalUsers = users.length;
+  const totalSellers = users.filter(u => u.role === "seller").length;
+  const totalBuyers = users.filter(u => u.role === "buyer").length;
+  const notApproved = users.filter(u => u.status === "not_approved").length;
 
+  if (loading) {
+  return (
+    <div className="text-white p-6">
+      Loading users...
+    </div>
+  );
+}
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -392,7 +387,7 @@ export default function UsersPage() {
               <UsersIcon size={20} className="text-teal-400" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">{users.length}</p>
+              <p className="text-2xl font-bold text-white">{totalUsers}</p>
               <p className="text-xs text-gray-400">Total Users</p>
             </div>
           </div>
@@ -401,11 +396,11 @@ export default function UsersPage() {
         <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-xl p-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-500/20 rounded-lg">
-              <CreditCard size={20} className="text-blue-400" />
+              <UsersIcon size={20} className="text-blue-400" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">₹{totalCod.toLocaleString()}</p>
-              <p className="text-xs text-gray-400">COD Orders</p>
+              <p className="text-2xl font-bold text-white">{totalSellers}</p>
+              <p className="text-xs text-gray-400">Sellers</p>
             </div>
           </div>
         </div>
@@ -413,23 +408,23 @@ export default function UsersPage() {
         <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-xl p-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-green-500/20 rounded-lg">
-              <TrendingUp size={20} className="text-green-400" />
+              <UsersIcon size={20} className="text-green-400" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">₹{totalPrepaid.toLocaleString()}</p>
-              <p className="text-xs text-gray-400">Prepaid Orders</p>
+              <p className="text-2xl font-bold text-white">{totalBuyers}</p>
+              <p className="text-xs text-gray-400">Buyers</p>
             </div>
           </div>
         </div>
         
         <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-xl p-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-purple-500/20 rounded-lg">
-              <Wallet size={20} className="text-purple-400" />
+            <div className="p-2 bg-red-500/20 rounded-lg">
+              <XCircle size={20} className="text-red-400" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">₹{totalWallet.toLocaleString()}</p>
-              <p className="text-xs text-gray-400">Wallet Balance</p>
+              <p className="text-2xl font-bold text-white">{notApproved}</p>
+              <p className="text-xs text-gray-400">Not Approved</p>
             </div>
           </div>
         </div>
@@ -493,64 +488,66 @@ export default function UsersPage() {
             <thead className="bg-slate-800/50 border-b border-white/10">
               <tr>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">ID</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">User Info</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Plan</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">COD</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Prepaid</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Wallet</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Add Wallet</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Name</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Email</th>
+                {/* <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Phone</th> */}
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Role</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Address</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
               {currentUsers.length > 0 ? (
                 currentUsers.map((user) => (
-                  <tr key={user.id} className="hover:bg-white/5 transition-colors">
+                 <tr key={`${user.type}-${user.id}`} className="hover:bg-white/5 transition-colors">
                     <td className="px-6 py-4">
                       <span className="text-sm text-gray-300">#{user.id}</span>
                     </td>
                     
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-teal-500/20 to-blue-500/20 rounded-full flex items-center justify-center text-xl border border-white/10">
+                        <div className="w-8 h-8 bg-gradient-to-br from-teal-500/20 to-blue-500/20 rounded-full flex items-center justify-center text-base border border-white/10">
                           {user.avatar}
                         </div>
-                        <div>
-                          <p className="text-sm font-medium text-white cursor-pointer hover:text-teal-400 transition-colors">
-                            {user.name}
-                          </p>
-                          <p className="text-xs text-gray-400 mt-0.5">{user.phone}</p>
-                          <p className="text-xs text-gray-500">{user.email}</p>
-                        </div>
+                        <p className="text-sm font-medium text-white">{user.name}</p>
                       </div>
                     </td>
                     
                     <td className="px-6 py-4">
-                      <span className={`text-xs px-2 py-1 rounded-full ${getPlanBadge(user.plan)}`}>
-                        {user.plan}
+                      <p className="text-sm text-gray-300">{user.email}</p>
+                    </td>
+                    
+                    
+                    
+                    <td className="px-6 py-4">
+                      <span className={`text-xs px-2 py-1 rounded-full ${getRoleBadge(user.role)}`}>
+                        {user.role === "seller" ? "Seller" : "Buyer"}
                       </span>
                     </td>
                     
                     <td className="px-6 py-4">
-                      <span className="text-sm text-white">₹{user.cod.toLocaleString()}</span>
+                      <p className="text-sm text-gray-400 max-w-xs truncate">{user.address}</p>
                     </td>
                     
                     <td className="px-6 py-4">
-                      <span className="text-sm text-white">₹{user.prepaid.toLocaleString()}</span>
-                    </td>
-                    
-                    <td className="px-6 py-4">
-                      <span className="text-sm font-semibold text-teal-400">₹{user.wallet.toLocaleString()}</span>
-                    </td>
-                    
-                    <td className="px-6 py-4">
-                      <button 
-                        onClick={() => openWalletModal(user)}
-                        className="bg-teal-500/20 hover:bg-teal-500/30 text-teal-400 px-3 py-1.5 rounded-lg text-xs flex items-center gap-1 transition-colors"
-                      >
-                        <Wallet size={12} />
-                        Add Wallet
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => toggleStatus(user.id, user.status)}
+                          className={`relative h-6 w-12 rounded-full transition ${
+                            user.status === "approved" ? "bg-emerald-500" : "bg-red-500"
+                          }`}
+                        >
+                          <span
+                            className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition ${
+                              user.status === "approved" ? "left-6" : "left-0.5"
+                            }`}
+                          />
+                        </button>
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${getStatusBadge(user.status)}`}>
+                          {user.status === "approved" ? "Approved" : "Not Approved"}
+                        </span>
+                      </div>
                     </td>
                     
                     <td className="px-6 py-4">
@@ -645,17 +642,7 @@ export default function UsersPage() {
             />
           </div>
           <div>
-            <label className="text-sm text-gray-400 block mb-1">Phone Number *</label>
-            <input
-              type="tel"
-              value={formData.phone}
-              onChange={(e) => setFormData({...formData, phone: e.target.value})}
-              className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-              placeholder="Enter phone number"
-            />
-          </div>
-          <div>
-            <label className="text-sm text-gray-400 block mb-1">Email</label>
+            <label className="text-sm text-gray-400 block mb-1">Email *</label>
             <input
               type="email"
               value={formData.email}
@@ -664,16 +651,46 @@ export default function UsersPage() {
               placeholder="Enter email address"
             />
           </div>
+          {/* <div>
+            <label className="text-sm text-gray-400 block mb-1">Phone Number *</label>
+            <input
+              type="tel"
+              value={formData.phone}
+              onChange={(e) => setFormData({...formData, phone: e.target.value})}
+              className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+              placeholder="Enter phone number"
+            />
+          </div> */}
           <div>
-            <label className="text-sm text-gray-400 block mb-1">Plan</label>
+            <label className="text-sm text-gray-400 block mb-1">Role</label>
             <select
-              value={formData.plan}
-              onChange={(e) => setFormData({...formData, plan: e.target.value})}
+              value={formData.role}
+              onChange={(e) => setFormData({...formData, role: e.target.value})}
               className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
             >
-              <option value="Free">Free</option>
-              <option value="Premium">Premium</option>
-              <option value="Business">Business</option>
+              <option value="buyer">Buyer</option>
+              <option value="seller">Seller</option>
+            </select>
+          </div>
+          <div>
+            <label className="text-sm text-gray-400 block mb-1">Address</label>
+            <textarea
+              value={formData.address}
+              onChange={(e) => setFormData({...formData, address: e.target.value})}
+              className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+              placeholder="Enter address"
+              rows="2"
+            />
+          </div>
+          <div>
+            <label className="text-sm text-gray-400 block mb-1">Status</label>
+            <select
+              value={formData.status}
+              onChange={(e) => setFormData({...formData, status: e.target.value})}
+              className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+            >
+              <option value="not_approved">Not Approved</option>
+              <option value="approved">Approved</option>
             </select>
           </div>
           <button
@@ -698,15 +715,6 @@ export default function UsersPage() {
             />
           </div>
           <div>
-            <label className="text-sm text-gray-400 block mb-1">Phone Number</label>
-            <input
-              type="tel"
-              value={formData.phone}
-              onChange={(e) => setFormData({...formData, phone: e.target.value})}
-              className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-            />
-          </div>
-          <div>
             <label className="text-sm text-gray-400 block mb-1">Email</label>
             <input
               type="email"
@@ -715,16 +723,44 @@ export default function UsersPage() {
               className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
             />
           </div>
+          {/* <div>
+            <label className="text-sm text-gray-400 block mb-1">Phone Number</label>
+            <input
+              type="tel"
+              value={formData.phone}
+              onChange={(e) => setFormData({...formData, phone: e.target.value})}
+              className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+            />
+          </div> */}
           <div>
-            <label className="text-sm text-gray-400 block mb-1">Plan</label>
+            <label className="text-sm text-gray-400 block mb-1">Role</label>
             <select
-              value={formData.plan}
-              onChange={(e) => setFormData({...formData, plan: e.target.value})}
+              value={formData.role}
+              onChange={(e) => setFormData({...formData, role: e.target.value})}
               className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
             >
-              <option value="Free">Free</option>
-              <option value="Premium">Premium</option>
-              <option value="Business">Business</option>
+              <option value="buyer">Buyer</option>
+              <option value="seller">Seller</option>
+            </select>
+          </div>
+          <div>
+            <label className="text-sm text-gray-400 block mb-1">Address</label>
+            <textarea
+              value={formData.address}
+              onChange={(e) => setFormData({...formData, address: e.target.value})}
+              className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+              rows="2"
+            />
+          </div>
+          <div>
+            <label className="text-sm text-gray-400 block mb-1">Status</label>
+            <select
+              value={formData.status}
+              onChange={(e) => setFormData({...formData, status: e.target.value})}
+              className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+            >
+              <option value="not_approved">Not Approved</option>
+              <option value="approved">Approved</option>
             </select>
           </div>
           <button
@@ -740,11 +776,6 @@ export default function UsersPage() {
       <Modal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} title="Delete User">
         <p className="text-gray-300 mb-6">
           Are you sure you want to delete <span className="text-white font-semibold">{selectedUser?.name}</span>?
-          {selectedUser?.wallet > 0 && (
-            <span className="text-yellow-400 block mt-2">
-              ⚠️ This user has ₹{selectedUser.wallet} in wallet balance. This will be lost.
-            </span>
-          )}
           This action cannot be undone.
         </p>
         <div className="flex gap-3">
@@ -773,8 +804,8 @@ export default function UsersPage() {
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-white">{selectedUser.name}</h3>
-                <p className="text-sm text-gray-400">{selectedUser.phone}</p>
-                <p className="text-xs text-gray-500">{selectedUser.email}</p>
+                <p className="text-sm text-gray-400">{selectedUser.email}</p>
+                <p className="text-xs text-gray-500">{selectedUser.phone}</p>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -783,88 +814,28 @@ export default function UsersPage() {
                 <p className="text-sm font-semibold text-white">#{selectedUser.id}</p>
               </div>
               <div>
-                <p className="text-xs text-gray-500">Plan</p>
-                <span className={`text-xs px-2 py-1 rounded-full ${getPlanBadge(selectedUser.plan)}`}>
-                  {selectedUser.plan}
+                <p className="text-xs text-gray-500">Role</p>
+                <span className={`text-xs px-2 py-1 rounded-full ${getRoleBadge(selectedUser.role)}`}>
+                  {selectedUser.role === "seller" ? "Seller" : "Buyer"}
                 </span>
               </div>
               <div>
-                <p className="text-xs text-gray-500">COD Orders</p>
-                <p className="text-lg font-semibold text-white">₹{selectedUser.cod.toLocaleString()}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500">Prepaid Orders</p>
-                <p className="text-lg font-semibold text-white">₹{selectedUser.prepaid.toLocaleString()}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500">Wallet Balance</p>
-                <p className="text-lg font-semibold text-teal-400">₹{selectedUser.wallet.toLocaleString()}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500">Total Orders</p>
-                <p className="text-lg font-semibold text-white">{selectedUser.totalOrders}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500">Total Spent</p>
-                <p className="text-lg font-semibold text-white">₹{selectedUser.totalSpent.toLocaleString()}</p>
+                <p className="text-xs text-gray-500">Status</p>
+                <span className={`text-xs px-2 py-1 rounded-full ${getStatusBadge(selectedUser.status)}`}>
+                  {selectedUser.status === "approved" ? "Approved" : "Not Approved"}
+                </span>
               </div>
               <div>
                 <p className="text-xs text-gray-500">Joined Date</p>
                 <p className="text-sm text-white">{selectedUser.createdAt}</p>
               </div>
+              <div className="col-span-2">
+                <p className="text-xs text-gray-500">Address</p>
+                <p className="text-sm text-white">{selectedUser.address}</p>
+              </div>
             </div>
           </div>
         )}
-      </Modal>
-
-      {/* Add Wallet Modal */}
-      <Modal isOpen={showWalletModal} onClose={() => setShowWalletModal(false)} title="Add Wallet Balance">
-        <div className="space-y-4">
-          <div>
-            <label className="text-sm text-gray-400 block mb-1">User</label>
-            <p className="text-white font-medium">{selectedUser?.name}</p>
-            <p className="text-xs text-gray-500">Current Balance: ₹{selectedUser?.wallet.toLocaleString()}</p>
-          </div>
-          <div>
-            <label className="text-sm text-gray-400 block mb-1">Amount to Add (₹)</label>
-            <div className="relative">
-              <DollarSign size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-              <input
-                type="number"
-                value={walletAmount}
-                onChange={(e) => setWalletAmount(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-                placeholder="Enter amount"
-              />
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setWalletAmount("100")}
-              className="flex-1 py-1 bg-slate-700 hover:bg-slate-600 text-gray-300 rounded-lg text-sm"
-            >
-              +₹100
-            </button>
-            <button
-              onClick={() => setWalletAmount("500")}
-              className="flex-1 py-1 bg-slate-700 hover:bg-slate-600 text-gray-300 rounded-lg text-sm"
-            >
-              +₹500
-            </button>
-            <button
-              onClick={() => setWalletAmount("1000")}
-              className="flex-1 py-1 bg-slate-700 hover:bg-slate-600 text-gray-300 rounded-lg text-sm"
-            >
-              +₹1000
-            </button>
-          </div>
-          <button
-            onClick={handleAddWallet}
-            className="w-full py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg transition-colors"
-          >
-            Add to Wallet
-          </button>
-        </div>
       </Modal>
     </div>
   );

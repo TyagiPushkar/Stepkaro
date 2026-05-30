@@ -6,7 +6,6 @@ import {
   Edit, 
   Trash2, 
   Package,
-  Grid,
   X,
   ChevronLeft,
   ChevronRight,
@@ -41,56 +40,44 @@ export default function CollectionsPage() {
     {
       id: 2,
       name: "Top Picks",
-      products: 7,
       description: "Our most popular products curated just for you",
       image: "⭐",
       createdAt: "2024-01-15",
-      status: "active"
     },
     {
       id: 1,
       name: "New Arrivals",
-      products: 623,
       description: "Fresh arrivals just landed in store",
       image: "🆕",
       createdAt: "2024-01-10",
-      status: "active"
     },
     {
       id: 3,
       name: "Under ₹50",
-      products: 1,
       description: "Budget-friendly products under ₹50",
       image: "💰",
       createdAt: "2024-01-18",
-      status: "active"
     },
     {
       id: 4,
       name: "Above ₹100",
-      products: 3,
       description: "Premium products above ₹100",
       image: "💎",
       createdAt: "2024-01-20",
-      status: "inactive"
     },
     {
       id: 5,
       name: "Summer Sale",
-      products: 45,
       description: "Hot summer deals you can't miss",
       image: "☀️",
       createdAt: "2024-01-22",
-      status: "active"
     },
     {
       id: 6,
       name: "Winter Collection",
-      products: 32,
       description: "Stay warm with our winter specials",
       image: "❄️",
       createdAt: "2024-01-25",
-      status: "active"
     },
   ]);
 
@@ -136,11 +123,9 @@ export default function CollectionsPage() {
     const newCollection = {
       id: newId,
       name: formData.name,
-      products: 0,
       description: formData.description || "No description",
       image: formData.imagePreview || "📁",
       createdAt: new Date().toISOString().split("T")[0],
-      status: "active"
     };
     setCollections([...collections, newCollection]);
     setShowAddModal(false);
@@ -174,15 +159,6 @@ export default function CollectionsPage() {
     setCollections(collections.filter(col => col.id !== selectedCollection.id));
     setShowDeleteModal(false);
     setSelectedCollection(null);
-  };
-
-  // Toggle collection status
-  const toggleStatus = (collectionId) => {
-    setCollections(collections.map(col => 
-      col.id === collectionId 
-        ? { ...col, status: col.status === "active" ? "inactive" : "active" }
-        : col
-    ));
   };
 
   // Open modals
@@ -221,13 +197,11 @@ export default function CollectionsPage() {
 
   // Export to CSV
   const handleExportCSV = () => {
-    const headers = ["ID", "Collection Name", "Description", "Products", "Status", "Created At"];
+    const headers = ["ID", "Collection Name", "Description", "Created At"];
     const csvData = collections.map(col => [
       col.id,
       col.name,
       col.description,
-      col.products,
-      col.status,
       col.createdAt
     ]);
     
@@ -239,13 +213,6 @@ export default function CollectionsPage() {
     a.download = `collections_${new Date().toISOString().split("T")[0]}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-  };
-
-  // Get status badge
-  const getStatusBadge = (status) => {
-    return status === "active" 
-      ? "bg-green-500/20 text-green-400" 
-      : "bg-red-500/20 text-red-400";
   };
 
   // Modal component
@@ -265,10 +232,6 @@ export default function CollectionsPage() {
       </div>
     );
   };
-
-  // Stats summary
-  const totalProducts = collections.reduce((sum, col) => sum + col.products, 0);
-  const activeCollections = collections.filter(col => col.status === "active").length;
 
   return (
     <div className="space-y-6">
@@ -310,45 +273,6 @@ export default function CollectionsPage() {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-xl p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-teal-500/20 rounded-lg">
-              <Layers size={20} className="text-teal-400" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-white">{collections.length}</p>
-              <p className="text-xs text-gray-400">Total Collections</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-xl p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-500/20 rounded-lg">
-              <Package size={20} className="text-blue-400" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-white">{totalProducts}</p>
-              <p className="text-xs text-gray-400">Total Products</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-xl p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-green-500/20 rounded-lg">
-              <Grid size={20} className="text-green-400" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-white">{activeCollections}</p>
-              <p className="text-xs text-gray-400">Active Collections</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Results Summary */}
       <div className="flex justify-between items-center">
         <p className="text-sm text-gray-400">
@@ -382,8 +306,7 @@ export default function CollectionsPage() {
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">ID</th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Image</th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Collection Name</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Products</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Description</th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Created</th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
               </tr>
@@ -403,25 +326,11 @@ export default function CollectionsPage() {
                     </td>
                     
                     <td className="px-6 py-4">
-                      <div>
-                        <p className="text-sm font-medium text-white">{collection.name}</p>
-                        <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">{collection.description}</p>
-                      </div>
+                      <p className="text-sm font-medium text-white">{collection.name}</p>
                     </td>
                     
                     <td className="px-6 py-4">
-                      <span className="text-sm text-white">{collection.products}</span>
-                    </td>
-                    
-                    <td className="px-6 py-4">
-                      <button 
-                        onClick={() => toggleStatus(collection.id)}
-                        className="relative w-10 h-5 bg-gray-700 rounded-full transition-colors"
-                      >
-                        <div className={`absolute w-4 h-4 bg-teal-400 rounded-full top-0.5 transition-all duration-300 ${
-                          collection.status === "active" ? "left-5" : "left-0.5"
-                        }`} />
-                      </button>
+                      <p className="text-sm text-gray-400 max-w-md truncate">{collection.description}</p>
                     </td>
                     
                     <td className="px-6 py-4">
@@ -452,12 +361,12 @@ export default function CollectionsPage() {
                           <Trash2 size={16} />
                         </button>
                       </div>
-                     </td>
-                   </tr>
+                    </td>
+                  </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="7" className="px-6 py-12 text-center">
+                  <td colSpan="6" className="px-6 py-12 text-center">
                     <Layers size={48} className="text-gray-600 mx-auto mb-3" />
                     <p className="text-gray-400">No collections found</p>
                     <p className="text-sm text-gray-500 mt-1">Try adjusting your search or create a new collection</p>
@@ -640,11 +549,6 @@ export default function CollectionsPage() {
       <Modal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} title="Delete Collection">
         <p className="text-gray-300 mb-6">
           Are you sure you want to delete <span className="text-white font-semibold">{selectedCollection?.name}</span>?
-          {selectedCollection?.products > 0 && (
-            <span className="text-red-400 block mt-2">
-              ⚠️ This collection has {selectedCollection.products} products. Deleting it will remove these products from this collection.
-            </span>
-          )}
           This action cannot be undone.
         </p>
         <div className="flex gap-3">
@@ -680,21 +584,9 @@ export default function CollectionsPage() {
               <p className="text-xs text-gray-500">Description</p>
               <p className="text-sm text-white mt-1">{selectedCollection.description}</p>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-xs text-gray-500">Products</p>
-                <p className="text-lg font-semibold text-white">{selectedCollection.products}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500">Status</p>
-                <span className={`text-xs px-2 py-1 rounded-full ${getStatusBadge(selectedCollection.status)}`}>
-                  {selectedCollection.status === "active" ? "Active" : "Inactive"}
-                </span>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500">Created Date</p>
-                <p className="text-sm text-white">{selectedCollection.createdAt}</p>
-              </div>
+            <div>
+              <p className="text-xs text-gray-500">Created Date</p>
+              <p className="text-sm text-white">{selectedCollection.createdAt}</p>
             </div>
           </div>
         )}
