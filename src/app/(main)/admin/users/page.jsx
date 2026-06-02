@@ -51,7 +51,7 @@ useEffect(() => {
     try {
 
       const response = await fetch(
-        "https://namami-infotech.com/Stepkaro/src//home/get_vendor_and_buyer.php"
+        "https://namami-infotech.com/Stepkaro/src/home/get_vendor_and_buyer.php"
       );
 
       const result =

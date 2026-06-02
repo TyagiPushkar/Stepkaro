@@ -1,13 +1,13 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation"; // Add this import
-import { 
-  Search, 
-  Plus, 
-  Upload, 
-  Download, 
-  Eye, 
-  Edit, 
+import {
+  Search,
+  Plus,
+  Upload,
+  Download,
+  Eye,
+  Edit,
   Trash2,
   Package,
   CheckCircle,
@@ -15,8 +15,9 @@ import {
   AlertCircle,
   ChevronLeft,
   ChevronRight,
-  X
+  X,
 } from "lucide-react";
+import api from "@/app/utils/api";
 
 export default function ProductsPage() {
   const router = useRouter(); // Add this for navigation
@@ -24,7 +25,7 @@ export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
-  
+
   // Modal states
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -32,7 +33,8 @@ export default function ProductsPage() {
   const [showViewModal, setShowViewModal] = useState(false);
   const [showBulkImportModal, setShowBulkImportModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  
+  const [products, setProducts] = useState([]);
+
   // Form states for add/edit
   const [formData, setFormData] = useState({
     name: "",
@@ -40,111 +42,99 @@ export default function ProductsPage() {
     qty: "",
     price: "",
     status: "active",
-    stock: "in_stock"
+    stock: "in_stock",
   });
-
+  const token = localStorage.getItem("access_token");
   // Products state
-  const [products, setProducts] = useState([
-    {
-      id: 1,
-      name: "CHUTKI BUTTERFLY | LOOSE",
-      category: "Kids Clogs",
-      qty: 1,
-      orders: 45,
-      returns: 2,
-      revenue: 12450,
-      status: "active",
-      stock: "in_stock",
-      image: "👡",
-      price: 12450,
-    },
-    {
-      id: 2,
-      name: "ZIGZAG MOUSE | 5X8 | LOOSE",
-      category: "Ladies sleeper",
-      qty: 5,
-      orders: 128,
-      returns: 5,
-      revenue: 64000,
-      status: "active",
-      stock: "in_stock",
-      image: "👠",
-      price: 12800,
-    },
-    {
-      id: 3,
-      name: "ZIGZAG KNOT | 5X8 | LOOSE",
-      category: "Ladies sleeper",
-      qty: 4,
-      orders: 98,
-      returns: 3,
-      revenue: 43120,
-      status: "active",
-      stock: "in_stock",
-      image: "👡",
-      price: 10780,
-    },
-    {
-      id: 4,
-      name: "Premium Leather Sandals",
-      category: "Men's Footwear",
-      qty: 0,
-      orders: 67,
-      returns: 4,
-      revenue: 33500,
-      status: "inactive",
-      stock: "out_of_stock",
-      image: "👞",
-      price: 5000,
-    },
-    {
-      id: 5,
-      name: "Kids Running Shoes",
-      category: "Kids Footwear",
-      qty: 12,
-      orders: 234,
-      returns: 8,
-      revenue: 117000,
-      status: "active",
-      stock: "in_stock",
-      image: "👟",
-      price: 5000,
-    },
-  ]);
+  useEffect(() => {
+    const getProducts = async () => {
+      try {
+        // setLoading(true);
+        // Hamein koi header bhejne ki zaroorat nahi hai, api.js apne aap token laga dega!
+        const response = await api.get(
+          "https://namami-infotech.com/Stepkaro/src/product/get_all_products.php",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
+        setProducts(response.data.data); // Backend se aaya hua array state mein daal do
+        console.log("Products fetched successfully:", response.data.data);
+      } catch (error) {
+        console.error("Products fetch karne mein dikkat aayi:", error);
+      } finally {
+        // setLoading(false);
+      }
+    };
+
+    getProducts();
+  }, []);
 
   // Calculate counts
   const allProductsCount = products.length;
-  const activeCount = products.filter(p => p.status === "active").length;
-  const inactiveCount = products.filter(p => p.status === "inactive").length;
-  const outOfStockCount = products.filter(p => p.stock === "out_of_stock" || p.qty === 0).length;
+  const activeCount = products.filter((p) => p.status === "active").length;
+  const inactiveCount = products.filter((p) => p.status === "inactive").length;
+  const productsListingRequestedCount = 0; // Placeholder for listing requested count
+  const outOfStockCount = products.filter(
+    (p) => p.stock === "out_of_stock" || p.qty === 0,
+  ).length;
 
   const filters = [
-    { label: "All Product", value: "all", count: allProductsCount, icon: Package, color: "teal" },
-    { label: "Active Product", value: "active", count: activeCount, icon: CheckCircle, color: "green" },
-    { label: "In-Active Product", value: "inactive", count: inactiveCount, icon: XCircle, color: "red" },
+    {
+      label: "All Product",
+      value: "all",
+      count: allProductsCount,
+      icon: Package,
+      color: "teal",
+    },
+    {
+      label: "Products Listing Requested",
+      value: "listing_requested",
+      count: 0,
+      icon: AlertCircle,
+      color: "yellow",
+    },
+    {
+      label: "Active Product",
+      value: "active",
+      count: activeCount,
+      icon: CheckCircle,
+      color: "green",
+    },
+    {
+      label: "In-Active Product",
+      value: "inactive",
+      count: inactiveCount,
+      icon: XCircle,
+      color: "red",
+    },
   ];
 
   // Filter products
   const filteredProducts = useMemo(() => {
     let filtered = products;
-    
+
     if (selectedFilter === "active") {
-      filtered = filtered.filter(p => p.status === "active");
+      filtered = filtered.filter((p) => p.status === "active");
     } else if (selectedFilter === "inactive") {
-      filtered = filtered.filter(p => p.status === "inactive");
+      filtered = filtered.filter((p) => p.status === "inactive");
     } else if (selectedFilter === "out_of_stock") {
-      filtered = filtered.filter(p => p.stock === "out_of_stock" || p.qty === 0);
-    }
-    
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(p => 
-        p.name.toLowerCase().includes(query) ||
-        p.category.toLowerCase().includes(query) ||
-        p.id.toString().includes(query)
+      filtered = filtered.filter(
+        (p) => p.stock === "out_of_stock" || p.qty === 0,
       );
     }
-    
+
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (p) =>
+          p.name.toLowerCase().includes(query) ||
+          p.category.toLowerCase().includes(query) ||
+          p.id.toString().includes(query),
+      );
+    }
+
     return filtered;
   }, [selectedFilter, searchQuery, products]);
 
@@ -170,16 +160,21 @@ export default function ProductsPage() {
 
   // Toggle product status
   const toggleStatus = (productId) => {
-    setProducts(products.map(product => 
-      product.id === productId 
-        ? { ...product, status: product.status === "active" ? "inactive" : "active" }
-        : product
-    ));
+    setProducts(
+      products.map((product) =>
+        product.id === productId
+          ? {
+              ...product,
+              status: product.status === "active" ? "inactive" : "active",
+            }
+          : product,
+      ),
+    );
   };
 
   // Add new product
   const handleAddProduct = () => {
-    const newId = Math.max(...products.map(p => p.id), 0) + 1;
+    const newId = Math.max(...products.map((p) => p.id), 0) + 1;
     const newProduct = {
       id: newId,
       name: formData.name,
@@ -195,33 +190,52 @@ export default function ProductsPage() {
     };
     setProducts([...products, newProduct]);
     setShowAddModal(false);
-    setFormData({ name: "", category: "", qty: "", price: "", status: "active", stock: "in_stock" });
+    setFormData({
+      name: "",
+      category: "",
+      qty: "",
+      price: "",
+      status: "active",
+      stock: "in_stock",
+    });
   };
 
   // Edit product
   const handleEditProduct = () => {
-    setProducts(products.map(product => 
-      product.id === selectedProduct.id 
-        ? { 
-            ...product, 
-            name: formData.name,
-            category: formData.category,
-            qty: parseInt(formData.qty) || 0,
-            price: parseInt(formData.price) || 0,
-            revenue: (parseInt(formData.price) || 0) * (parseInt(formData.qty) || 0),
-            status: formData.status,
-            stock: parseInt(formData.qty) === 0 ? "out_of_stock" : "in_stock"
-          }
-        : product
-    ));
+    setProducts(
+      products.map((product) =>
+        product.id === selectedProduct.id
+          ? {
+              ...product,
+              name: formData.name,
+              category: formData.category,
+              qty: parseInt(formData.qty) || 0,
+              price: parseInt(formData.price) || 0,
+              revenue:
+                (parseInt(formData.price) || 0) * (parseInt(formData.qty) || 0),
+              status: formData.status,
+              stock: parseInt(formData.qty) === 0 ? "out_of_stock" : "in_stock",
+            }
+          : product,
+      ),
+    );
     setShowEditModal(false);
     setSelectedProduct(null);
-    setFormData({ name: "", category: "", qty: "", price: "", status: "active", stock: "in_stock" });
+    setFormData({
+      name: "",
+      category: "",
+      qty: "",
+      price: "",
+      status: "active",
+      stock: "in_stock",
+    });
   };
 
   // Delete product
   const handleDeleteProduct = () => {
-    setProducts(products.filter(product => product.id !== selectedProduct.id));
+    setProducts(
+      products.filter((product) => product.id !== selectedProduct.id),
+    );
     setShowDeleteModal(false);
     setSelectedProduct(null);
   };
@@ -240,7 +254,7 @@ export default function ProductsPage() {
       qty: product.qty.toString(),
       price: product.price?.toString() || "0",
       status: product.status,
-      stock: product.stock
+      stock: product.stock,
     });
     setShowEditModal(true);
   };
@@ -253,8 +267,17 @@ export default function ProductsPage() {
 
   // Export to CSV
   const handleExportCSV = () => {
-    const headers = ["ID", "Product Name", "Category", "Quantity", "Orders", "Returns", "Revenue", "Status"];
-    const csvData = products.map(p => [
+    const headers = [
+      "ID",
+      "Product Name",
+      "Category",
+      "Quantity",
+      "Orders",
+      "Returns",
+      "Revenue",
+      "Status",
+    ];
+    const csvData = products.map((p) => [
       p.id,
       p.name,
       p.category,
@@ -262,10 +285,12 @@ export default function ProductsPage() {
       p.orders,
       p.returns,
       p.revenue,
-      p.status
+      p.status,
     ]);
-    
-    const csvContent = [headers, ...csvData].map(row => row.join(",")).join("\n");
+
+    const csvContent = [headers, ...csvData]
+      .map((row) => row.join(","))
+      .join("\n");
     const blob = new Blob([csvContent], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -288,7 +313,7 @@ export default function ProductsPage() {
           const cols = rows[i].split(",");
           if (cols.length >= 4) {
             newProducts.push({
-              id: Math.max(...products.map(p => p.id), 0) + i,
+              id: Math.max(...products.map((p) => p.id), 0) + i,
               name: cols[0],
               category: cols[1],
               qty: parseInt(cols[2]) || 0,
@@ -326,7 +351,10 @@ export default function ProductsPage() {
         <div className="bg-slate-800 rounded-xl border border-white/10 w-full max-w-md max-h-[90vh] overflow-y-auto">
           <div className="flex justify-between items-center p-4 border-b border-white/10">
             <h2 className="text-lg font-semibold text-white">{title}</h2>
-            <button onClick={onClose} className="p-1 text-gray-400 hover:text-white">
+            <button
+              onClick={onClose}
+              className="p-1 text-gray-400 hover:text-white"
+            >
               <X size={20} />
             </button>
           </div>
@@ -342,13 +370,18 @@ export default function ProductsPage() {
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white">Products</h1>
-          <p className="text-gray-400 text-sm mt-1">Manage your product catalog</p>
+          <p className="text-gray-400 text-sm mt-1">
+            Manage your product catalog
+          </p>
         </div>
 
         {/* Action Buttons */}
         <div className="flex flex-wrap gap-3">
           <div className="relative flex-1 lg:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
+            <Search
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
+              size={18}
+            />
             <input
               type="text"
               value={searchQuery}
@@ -357,24 +390,24 @@ export default function ProductsPage() {
               className="w-full pl-10 pr-4 py-2 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
             />
           </div>
-          
-          <button 
+
+          <button
             onClick={() => setShowAddModal(true)}
             className="bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-colors"
           >
             <Plus size={16} />
             New Product
           </button>
-          
-          <button 
+
+          <button
             onClick={() => setShowBulkImportModal(true)}
             className="bg-slate-800 hover:bg-slate-700 text-gray-300 px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-colors border border-white/10"
           >
             <Upload size={16} />
             Bulk Import
           </button>
-          
-          <button 
+
+          <button
             onClick={handleExportCSV}
             className="bg-slate-800 hover:bg-slate-700 text-gray-300 px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-colors border border-white/10"
           >
@@ -401,11 +434,13 @@ export default function ProductsPage() {
             >
               <Icon size={16} />
               {filter.label}
-              <span className={`px-2 py-0.5 rounded-full text-xs ${
-                isActive 
-                  ? `bg-${filter.color}-500/30 text-${filter.color}-400`
-                  : "bg-slate-700 text-gray-400"
-              }`}>
+              <span
+                className={`px-2 py-0.5 rounded-full text-xs ${
+                  isActive
+                    ? `bg-${filter.color}-500/30 text-${filter.color}-400`
+                    : "bg-slate-700 text-gray-400"
+                }`}
+              >
                 {filter.count}
               </span>
             </button>
@@ -416,13 +451,20 @@ export default function ProductsPage() {
       {/* Results Summary */}
       <div className="flex justify-between items-center">
         <p className="text-sm text-gray-400">
-          Showing <span className="text-white">{filteredProducts.length > 0 ? startIndex + 1 : 0}</span> to{" "}
-          <span className="text-white">{Math.min(endIndex, filteredProducts.length)}</span> of{" "}
-          <span className="text-white">{filteredProducts.length}</span> products
+          Showing{" "}
+          <span className="text-white">
+            {filteredProducts.length > 0 ? startIndex + 1 : 0}
+          </span>{" "}
+          to{" "}
+          <span className="text-white">
+            {Math.min(endIndex, filteredProducts.length)}
+          </span>{" "}
+          of <span className="text-white">{filteredProducts.length}</span>{" "}
+          products
         </p>
         <div className="flex items-center gap-2">
           <span className="text-sm text-gray-400">Show:</span>
-          <select 
+          <select
             value={itemsPerPage}
             onChange={(e) => {
               setItemsPerPage(Number(e.target.value));
@@ -443,15 +485,39 @@ export default function ProductsPage() {
           <table className="w-full">
             <thead className="bg-slate-800/50 border-b border-white/10">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">S.No</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Product Info</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Quantity</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Orders</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Returns</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Revenue</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Stock</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  S.No
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  Product Info
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  Quantity
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  Owner
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  Price
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  Orders
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  Returns
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  Revenue
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  Stock
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
@@ -459,86 +525,130 @@ export default function ProductsPage() {
                 currentProducts.map((product, index) => {
                   const stockBadge = getStockBadge(product.stock, product.qty);
                   return (
-                    <tr key={product.id} className="hover:bg-white/5 transition-colors">
+                    <tr
+                      key={product.id}
+                      className="hover:bg-white/5 transition-colors"
+                    >
                       <td className="px-6 py-4">
-                        <span className="text-sm text-gray-300">{startIndex + index + 1}</span>
-                       </td>
-                      
+                        <span className="text-sm text-gray-300">
+                          {startIndex + index + 1}
+                        </span>
+                      </td>
+
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           {/* Make image clickable */}
-                          <div 
+                          <div
                             onClick={() => goToProductDetail(product.id)}
-                            className="w-10 h-10 bg-gradient-to-br from-teal-500/20 to-blue-500/20 rounded-lg flex items-center justify-center text-xl border border-white/10 cursor-pointer hover:scale-110 transition-transform"
+                            className="w-10 h-10 bg-gradient-to-br from-teal-500/20 to-blue-500/20 rounded-lg flex items-center justify-center text-xl border border-white/10 cursor-pointer hover:scale-110 transition-transform overflow-hidden" // 👈 overflow-hidden add kiya
                           >
-                            {product.image}
+                            <img
+                              src={product.image}
+                              /* Agar article_name na mile toh sirf blank string ya koi solid name bina 'image' word ke use karo */
+                              alt={product.article_name || "Product"}
+                              className="w-full h-full object-cover"
+                            />
                           </div>
+
                           <div>
                             {/* Make product name clickable */}
-                            <p 
+                            <p
                               onClick={() => goToProductDetail(product.id)}
                               className="text-sm font-medium text-white cursor-pointer hover:text-teal-400 transition-colors"
                             >
-                              {product.name}
+                              {product.article_name}
                             </p>
-                            <p className="text-xs text-gray-400 mt-0.5">{product.category}</p>
+                            <p className="text-xs text-gray-400 mt-0.5">
+                              {product.category_name}
+                            </p>
                           </div>
                         </div>
-                       </td>
-                      
+                      </td>
+
                       <td className="px-6 py-4">
-                        <span className={`text-sm font-medium ${product.qty === 0 ? "text-red-400" : "text-white"}`}>
-                          {product.qty}
+                        <span
+                          className={`text-sm font-medium ${product.qty === 0 ? "text-red-400" : "text-white"}`}
+                        >
+                          {product.stock_quantity}
                         </span>
-                       </td>
-                      
+                      </td>
                       <td className="px-6 py-4">
-                        <span className="text-sm text-white">{product.orders}</span>
-                       </td>
-                      
+                        <span className="text-sm text-white">
+                          {product.owner_name}
+                        </span>
+                      </td>
                       <td className="px-6 py-4">
-                        <span className="text-sm text-white">{product.returns}</span>
-                       </td>
-                      
+                        <div className="flex flex-col">
+                          <span className="text-xs text-gray-400 line-through">
+                            ₹{product.price || 0}
+                          </span>
+
+                          <span className="text-sm font-semibold text-green-400">
+                            ₹{product.selling_price || 0}
+                          </span>
+                        </div>
+                      </td>
+
                       <td className="px-6 py-4">
-                        <span className="text-sm font-semibold text-teal-400">₹{product.revenue.toLocaleString()}</span>
-                       </td>
-                      
+                        <span className="text-sm text-white">
+                          {product.orders}
+                        </span>
+                      </td>
+
                       <td className="px-6 py-4">
-                        <span className={`text-xs px-2 py-1 rounded-full ${stockBadge.color}`}>
+                        <span className="text-sm text-white">
+                          {product.returns}
+                        </span>
+                      </td>
+
+                      <td className="px-6 py-4">
+                        <span className="text-sm font-semibold text-teal-400">
+                          {/* ₹{product.revenue.toLocaleString()} */}
+                          {product.commission}%
+                        </span>
+                      </td>
+
+                      <td className="px-6 py-4">
+                        <span
+                          className={`text-xs px-2 py-1 rounded-full ${stockBadge.color}`}
+                        >
                           {stockBadge.label}
                         </span>
-                       </td>
-                      
+                      </td>
+
                       <td className="px-6 py-4">
-                        <button 
+                        <button
                           onClick={() => toggleStatus(product.id)}
                           className="relative w-10 h-5 bg-gray-700 rounded-full transition-colors"
                         >
-                          <div className={`absolute w-4 h-4 bg-teal-400 rounded-full top-0.5 transition-all duration-300 ${
-                            product.status === "active" ? "left-5" : "left-0.5"
-                          }`} />
+                          <div
+                            className={`absolute w-4 h-4 bg-teal-400 rounded-full top-0.5 transition-all duration-300 ${
+                              product.status === "active"
+                                ? "left-5"
+                                : "left-0.5"
+                            }`}
+                          />
                         </button>
-                       </td>
-                      
+                      </td>
+
                       <td className="px-6 py-4">
                         <div className="flex gap-2">
                           {/* View button - navigate to detail page */}
-                          <button 
+                          <button
                             onClick={() => goToProductDetail(product.id)}
                             className="p-1.5 text-gray-400 hover:text-teal-400 hover:bg-teal-500/20 rounded-lg transition-colors"
                             title="View Details"
                           >
                             <Eye size={16} />
                           </button>
-                          <button 
+                          <button
                             onClick={() => openEditModal(product)}
                             className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors"
                             title="Edit Product"
                           >
                             <Edit size={16} />
                           </button>
-                          <button 
+                          <button
                             onClick={() => openDeleteModal(product)}
                             className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
                             title="Delete Product"
@@ -546,8 +656,7 @@ export default function ProductsPage() {
                             <Trash2 size={16} />
                           </button>
                         </div>
-                       </td>
-                      
+                      </td>
                     </tr>
                   );
                 })
@@ -556,14 +665,16 @@ export default function ProductsPage() {
                   <td colSpan="9" className="px-6 py-12 text-center">
                     <Package size={48} className="text-gray-600 mx-auto mb-3" />
                     <p className="text-gray-400">No products found</p>
-                    <p className="text-sm text-gray-500 mt-1">Try adjusting your search or filter</p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Try adjusting your search or filter
+                    </p>
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
-        
+
         {/* Pagination */}
         {filteredProducts.length > 0 && totalPages > 1 && (
           <div className="px-6 py-4 border-t border-white/10 flex justify-center gap-2">
@@ -575,7 +686,7 @@ export default function ProductsPage() {
               <ChevronLeft size={16} />
               Previous
             </button>
-            
+
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
               <button
                 key={page}
@@ -589,7 +700,7 @@ export default function ProductsPage() {
                 {page}
               </button>
             ))}
-            
+
             <button
               onClick={() => goToPage(currentPage + 1)}
               disabled={currentPage === totalPages}
@@ -604,14 +715,22 @@ export default function ProductsPage() {
 
       {/* Rest of your modals remain the same */}
       {/* Add Product Modal */}
-      <Modal isOpen={showAddModal} onClose={() => setShowAddModal(false)} title="Add New Product">
+      <Modal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        title="Add New Product"
+      >
         <div className="space-y-4">
           <div>
-            <label className="text-sm text-gray-400 block mb-1">Product Name</label>
+            <label className="text-sm text-gray-400 block mb-1">
+              Product Name
+            </label>
             <input
               type="text"
               value={formData.name}
-              onChange={(e) => setFormData({...formData, name: e.target.value})}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
               className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
               placeholder="Enter product name"
             />
@@ -621,7 +740,9 @@ export default function ProductsPage() {
             <input
               type="text"
               value={formData.category}
-              onChange={(e) => setFormData({...formData, category: e.target.value})}
+              onChange={(e) =>
+                setFormData({ ...formData, category: e.target.value })
+              }
               className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
               placeholder="Enter category"
             />
@@ -631,17 +752,23 @@ export default function ProductsPage() {
             <input
               type="number"
               value={formData.qty}
-              onChange={(e) => setFormData({...formData, qty: e.target.value})}
+              onChange={(e) =>
+                setFormData({ ...formData, qty: e.target.value })
+              }
               className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
               placeholder="Enter quantity"
             />
           </div>
           <div>
-            <label className="text-sm text-gray-400 block mb-1">Price (₹)</label>
+            <label className="text-sm text-gray-400 block mb-1">
+              Price (₹)
+            </label>
             <input
               type="number"
               value={formData.price}
-              onChange={(e) => setFormData({...formData, price: e.target.value})}
+              onChange={(e) =>
+                setFormData({ ...formData, price: e.target.value })
+              }
               className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
               placeholder="Enter price"
             />
@@ -650,7 +777,9 @@ export default function ProductsPage() {
             <label className="text-sm text-gray-400 block mb-1">Status</label>
             <select
               value={formData.status}
-              onChange={(e) => setFormData({...formData, status: e.target.value})}
+              onChange={(e) =>
+                setFormData({ ...formData, status: e.target.value })
+              }
               className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
             >
               <option value="active">Active</option>
@@ -667,14 +796,22 @@ export default function ProductsPage() {
       </Modal>
 
       {/* Edit Product Modal */}
-      <Modal isOpen={showEditModal} onClose={() => setShowEditModal(false)} title="Edit Product">
+      <Modal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        title="Edit Product"
+      >
         <div className="space-y-4">
           <div>
-            <label className="text-sm text-gray-400 block mb-1">Product Name</label>
+            <label className="text-sm text-gray-400 block mb-1">
+              Product Name
+            </label>
             <input
               type="text"
               value={formData.name}
-              onChange={(e) => setFormData({...formData, name: e.target.value})}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
               className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
             />
           </div>
@@ -683,7 +820,9 @@ export default function ProductsPage() {
             <input
               type="text"
               value={formData.category}
-              onChange={(e) => setFormData({...formData, category: e.target.value})}
+              onChange={(e) =>
+                setFormData({ ...formData, category: e.target.value })
+              }
               className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
             />
           </div>
@@ -692,16 +831,22 @@ export default function ProductsPage() {
             <input
               type="number"
               value={formData.qty}
-              onChange={(e) => setFormData({...formData, qty: e.target.value})}
+              onChange={(e) =>
+                setFormData({ ...formData, qty: e.target.value })
+              }
               className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
             />
           </div>
           <div>
-            <label className="text-sm text-gray-400 block mb-1">Price (₹)</label>
+            <label className="text-sm text-gray-400 block mb-1">
+              Price (₹)
+            </label>
             <input
               type="number"
               value={formData.price}
-              onChange={(e) => setFormData({...formData, price: e.target.value})}
+              onChange={(e) =>
+                setFormData({ ...formData, price: e.target.value })
+              }
               className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
             />
           </div>
@@ -709,7 +854,9 @@ export default function ProductsPage() {
             <label className="text-sm text-gray-400 block mb-1">Status</label>
             <select
               value={formData.status}
-              onChange={(e) => setFormData({...formData, status: e.target.value})}
+              onChange={(e) =>
+                setFormData({ ...formData, status: e.target.value })
+              }
               className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
             >
               <option value="active">Active</option>
@@ -726,9 +873,17 @@ export default function ProductsPage() {
       </Modal>
 
       {/* Delete Product Modal */}
-      <Modal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} title="Delete Product">
+      <Modal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        title="Delete Product"
+      >
         <p className="text-gray-300 mb-6">
-          Are you sure you want to delete <span className="text-white font-semibold">{selectedProduct?.name}</span>? This action cannot be undone.
+          Are you sure you want to delete{" "}
+          <span className="text-white font-semibold">
+            {selectedProduct?.name}
+          </span>
+          ? This action cannot be undone.
         </p>
         <div className="flex gap-3">
           <button
@@ -747,10 +902,17 @@ export default function ProductsPage() {
       </Modal>
 
       {/* Bulk Import Modal */}
-      <Modal isOpen={showBulkImportModal} onClose={() => setShowBulkImportModal(false)} title="Bulk Import Products">
+      <Modal
+        isOpen={showBulkImportModal}
+        onClose={() => setShowBulkImportModal(false)}
+        title="Bulk Import Products"
+      >
         <div className="space-y-4">
           <p className="text-gray-400 text-sm">
-            Upload a CSV file with columns: <span className="text-white">Product Name, Category, Quantity, Price</span>
+            Upload a CSV file with columns:{" "}
+            <span className="text-white">
+              Product Name, Category, Quantity, Price
+            </span>
           </p>
           <div className="border-2 border-dashed border-white/20 rounded-lg p-8 text-center">
             <Upload size={32} className="text-gray-500 mx-auto mb-3" />
@@ -761,7 +923,10 @@ export default function ProductsPage() {
               className="text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:bg-teal-500/20 file:text-teal-400 hover:file:bg-teal-500/30"
             />
           </div>
-          <a href="#" className="text-sm text-teal-400 hover:text-teal-300 block text-center">
+          <a
+            href="#"
+            className="text-sm text-teal-400 hover:text-teal-300 block text-center"
+          >
             Download sample CSV template
           </a>
         </div>
