@@ -13,6 +13,7 @@ import {
   ChevronRight,
   Loader2,
 } from "lucide-react";
+import axios from "axios";
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
@@ -169,7 +170,6 @@ export default function OrdersPage() {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentOrders = filteredOrders.slice(startIndex, endIndex);
-
   const goToPage = (page) => {
     setCurrentPage(Math.max(1, Math.min(page, totalPages)));
   };
@@ -189,8 +189,35 @@ export default function OrdersPage() {
     setCurrentPage(1);
   };
 
-  const handleAcceptOrder = (orderId) => {
+  const handleAcceptOrder = async (orderId) => {
     console.log(`Accept order ${orderId}`);
+    try {
+      const response = await axios.put(
+        "https://namami-infotech.com/Stepkaro/src/order/admin_approve_order.php",
+        {
+          order_id: orderId,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        },
+      );
+
+      if (response.data?.success) {
+        console.log("Order updated successfully");
+
+        // optional UI update
+        // e.g. refresh list or update state
+      } else {
+        console.log(response.data?.message || "Failed to update order");
+      }
+    } catch (error) {
+      console.error("API Error:", error);
+      console.log(error.response?.data?.message || "Server error");
+    }
   };
 
   const handleRejectOrder = (orderId) => {
@@ -391,9 +418,9 @@ export default function OrdersPage() {
                             src={getImageUrl(order.product_image)}
                             alt="Product"
                             className="w-8 h-8 rounded-md object-cover border border-gray-700"
-                            onError={(e) => {
-                              e.target.src = "/placeholder.png";
-                            }}
+                            // onError={(e) => {
+                            //   e.target.src = "/placeholder.png";
+                            // }}
                           />
 
                           <span className="text-sm font-medium text-white">
