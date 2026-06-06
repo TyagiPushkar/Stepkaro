@@ -15,6 +15,15 @@ import {
 } from "lucide-react";
 import axios from "axios";
 
+const allowedStatuses = [
+  "processing",
+  "rejected",
+  "dispatched",
+  "packed",
+  "shipped",
+  "delivered",
+];
+
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -170,6 +179,11 @@ export default function OrdersPage() {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentOrders = filteredOrders.slice(startIndex, endIndex);
+
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [viewLoading, setViewLoading] = useState(false);
+
   const goToPage = (page) => {
     setCurrentPage(Math.max(1, Math.min(page, totalPages)));
   };
@@ -189,19 +203,20 @@ export default function OrdersPage() {
     setCurrentPage(1);
   };
 
-  const handleAcceptOrder = async (orderId) => {
-    console.log(`Accept order ${orderId}`);
+  const handleUpdateOrderStatus = async (orderId, status) => {
+    console.log(`${status} order ${orderId}`);
+
     try {
       const response = await axios.put(
-        "https://namami-infotech.com/Stepkaro/src/order/admin_approve_order.php",
+        "https://namami-infotech.com/Stepkaro/src/order/admin_update_order_status.php",
         {
           order_id: orderId,
+          status: status,
         },
         {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
-            Accept: "application/json",
           },
         },
       );
@@ -209,8 +224,11 @@ export default function OrdersPage() {
       if (response.data?.success) {
         console.log("Order updated successfully");
 
-        // optional UI update
-        // e.g. refresh list or update state
+        setOrders((prev) =>
+          prev.map((order) =>
+            order.order_id === orderId ? { ...order, status } : order,
+          ),
+        );
       } else {
         console.log(response.data?.message || "Failed to update order");
       }
@@ -224,10 +242,6 @@ export default function OrdersPage() {
     console.log(`Reject order ${orderId}`);
   };
 
-  const handleViewOrder = (orderId) => {
-    console.log(`View order ${orderId}`);
-  };
-
   const handleExportOrders = () => {
     console.log("Exporting orders...");
   };
@@ -239,6 +253,30 @@ export default function OrdersPage() {
     }
 
     return `https://namami-infotech.com/${image}`;
+  };
+
+  const handleViewOrder = async (orderId) => {
+    try {
+      setViewLoading(true);
+      setViewModalOpen(true);
+
+      const response = await axios.get(
+        `https://your-api/get_order_details.php?order_id=${orderId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (response.data?.success) {
+        setSelectedOrder(response.data.data);
+      }
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setViewLoading(false);
+    }
   };
 
   return (
@@ -485,21 +523,60 @@ export default function OrdersPage() {
 
                       <td className="px-6 py-4">
                         <div className="flex gap-2">
-                          <button
-                            onClick={() => handleRejectOrder(order.order_id)}
-                            className="px-3 py-1.5 text-xs bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors"
-                          >
-                            Reject
-                          </button>
-                          <button
-                            onClick={() => handleAcceptOrder(order.order_id)}
-                            className="px-3 py-1.5 text-xs bg-teal-500/20 hover:bg-teal-500/30 text-teal-400 rounded-lg transition-colors"
-                          >
-                            Accept
-                          </button>
-                          <button
+                          {order.status === "pending" ? (
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() =>
+                                  handleUpdateOrderStatus(
+                                    order.order_id,
+                                    "rejected",
+                                  )
+                                }
+                                className="px-3 py-1.5 text-xs bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg"
+                              >
+                                Reject
+                              </button>
+
+                              <button
+                                onClick={() =>
+                                  handleUpdateOrderStatus(
+                                    order.order_id,
+                                    "processing",
+                                  )
+                                }
+                                className="px-3 py-1.5 text-xs bg-teal-500/20 hover:bg-teal-500/30 text-teal-400 rounded-lg"
+                              >
+                                Accept
+                              </button>
+                            </div>
+                          ) : (
+                            <select
+                              value={order.status}
+                              onChange={(e) =>
+                                handleUpdateOrderStatus(
+                                  order.order_id,
+                                  e.target.value,
+                                )
+                              }
+                              className="bg-slate-800 border border-slate-600 text-white text-xs rounded-lg px-3 py-2"
+                            >
+                              {allowedStatuses.map((status) => (
+                                <option key={status} value={status}>
+                                  {status.charAt(0).toUpperCase() +
+                                    status.slice(1)}
+                                </option>
+                              ))}
+                            </select>
+                          )}
+                          {/* <button
                             onClick={() => handleViewOrder(order.order_id)}
                             className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                          >
+                            <Eye size={16} />
+                          </button> */}
+                          <button
+                            onClick={() => handleViewOrder(order.order_id)}
+                            className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg"
                           >
                             <Eye size={16} />
                           </button>
