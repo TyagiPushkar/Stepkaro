@@ -396,7 +396,8 @@ export default function ProductsPage() {
 
   // Navigate to product detail page
   const goToProductDetail = (productId) => {
-    router.push(`/products/${productId}`);
+    console.log("Navigating to product detail for ID:", productId);
+    router.push(`/admin/products/${productId}`);
   };
 
   // Open edit modal
@@ -854,14 +855,14 @@ export default function ProductsPage() {
                       <td className="px-6 py-4">
                         <div className="flex gap-2">
                           <button
-                            onClick={() => goToProductDetail(product.id)}
+                            onClick={() => openEditModal(product)}
                             className="p-1.5 text-gray-400 hover:text-teal-400 hover:bg-teal-500/20 rounded-lg transition-colors"
                             title="View Details"
                           >
                             <Eye size={16} />
                           </button>
                           <button
-                            onClick={() => openEditModal(product)}
+                            onClick={() => goToProductDetail(product.id)}
                             className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors"
                             title="Edit Product"
                           >
