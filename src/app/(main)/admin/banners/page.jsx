@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { 
   Plus, 
   Edit, 
@@ -38,72 +38,39 @@ export default function BannersPage() {
     status: "active"
   });
 
-  // Banners state
-  const [banners, setBanners] = useState([
-    {
-      id: 30,
-      title: "Summer Sale Banner",
-      image: "🌞",
-      imageUrl: "/banner1.png",
-      position: "HEADER",
-      link: "/summer-sale",
-      status: "active",
-      clicks: 1250,
-      views: 8450,
-      createdAt: "2024-01-15"
-    },
-    {
-      id: 31,
-      title: "New Arrivals",
-      image: "🆕",
-      imageUrl: "/banner2.png",
-      position: "HEADER",
-      link: "/new-arrivals",
-      status: "active",
-      clicks: 890,
-      views: 5200,
-      createdAt: "2024-01-18"
-    },
-    {
-      id: 32,
-      title: "Festival Special",
-      image: "🎉",
-      imageUrl: "/banner3.png",
-      position: "SIDEBAR",
-      link: "/festival-sale",
-      status: "inactive",
-      clicks: 340,
-      views: 2100,
-      createdAt: "2024-01-20"
-    },
-    {
-      id: 33,
-      title: "Weekend Flash Sale",
-      image: "⚡",
-      imageUrl: "/banner4.png",
-      position: "FOOTER",
-      link: "/flash-sale",
-      status: "active",
-      clicks: 2100,
-      views: 15200,
-      createdAt: "2024-01-22"
-    },
-    {
-      id: 34,
-      title: "Clearance Sale",
-      image: "🏷️",
-      imageUrl: "/banner5.png",
-      position: "HEADER",
-      link: "/clearance",
-      status: "active",
-      clicks: 560,
-      views: 3800,
-      createdAt: "2024-01-25"
-    },
-  ]);
+ const [banners, setBanners] = useState([]);
+const [loading, setLoading] = useState(true);
 
   // Position options
   const positions = ["HEADER", "SIDEBAR", "FOOTER", "POPUP", "MOBILE"];
+  const fetchBanners = async () => {
+  try {
+    const token = localStorage.getItem("access_token");
+
+    const response = await fetch(
+      "https://namami-infotech.com/Stepkaro/src/banner/get_banner.php",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const result = await response.json();
+
+    if (result.success) {
+      setBanners(result.data || []);
+    }
+  } catch (error) {
+    console.log(error);
+  } finally {
+    setLoading(false);
+  }
+};
+
+useEffect(() => {
+  fetchBanners();
+}, []);
 
   // Filter banners
   const filteredBanners = useMemo(() => {
@@ -112,7 +79,7 @@ export default function BannersPage() {
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(banner => 
-        banner.title.toLowerCase().includes(query) ||
+        banner.name.toLowerCase().includes(query) ||
         banner.position.toLowerCase().includes(query) ||
         banner.id.toString().includes(query)
       );
@@ -136,70 +103,204 @@ export default function BannersPage() {
     setCurrentPage(1);
   };
 
-  // Add new banner
-  const handleAddBanner = () => {
-    if (!formData.title.trim()) {
-      alert("Please enter banner title");
-      return;
+  const handleAddBanner = async () => {
+
+  if (!formData.title.trim()) {
+    alert("Banner name is required");
+    return;
+  }
+
+  if (!formData.imagePreview) {
+    alert("Banner image is required");
+    return;
+  }
+
+  try {
+
+    const token = localStorage.getItem("access_token");
+
+    const response = await fetch(
+      "https://namami-infotech.com/Stepkaro/src/banner/create_banner.php",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: formData.title,
+          image: formData.imagePreview,
+          link: formData.link,
+          status: formData.status === "active" ? 1 : 0,
+          sort_order: 0,
+        }),
+      }
+    );
+
+    const result = await response.json();
+
+    if (result.success) {
+
+      setShowAddModal(false);
+
+      setFormData({
+        title: "",
+        position: "HEADER",
+        link: "",
+        image: null,
+        imagePreview: null,
+        status: "active",
+      });
+
+      fetchBanners();
+
+    } else {
+
+      alert(result.message);
+
     }
-    
-    const newId = Math.max(...banners.map(b => b.id), 0) + 1;
-    const newBanner = {
-      id: newId,
-      title: formData.title,
-      image: formData.imagePreview || "📸",
-      imageUrl: "/banner-placeholder.png",
-      position: formData.position,
-      link: formData.link || "#",
-      status: formData.status,
-      clicks: 0,
-      views: 0,
-      createdAt: new Date().toISOString().split("T")[0]
-    };
-    setBanners([...banners, newBanner]);
-    setShowAddModal(false);
-    setFormData({ title: "", position: "HEADER", link: "", image: null, imagePreview: null, status: "active" });
-  };
 
-  // Edit banner
-  const handleEditBanner = () => {
-    if (!formData.title.trim()) {
-      alert("Please enter banner title");
-      return;
+  } catch (error) {
+
+    console.log(error);
+
+  }
+};
+
+  const handleEditBanner = async () => {
+
+  if (!formData.title.trim()) {
+    alert("Banner name is required");
+    return;
+  }
+
+  if (!formData.imagePreview) {
+    alert("Banner image is required");
+    return;
+  }
+
+  try {
+
+    const token = localStorage.getItem("access_token");
+
+    const response = await fetch(
+      "https://namami-infotech.com/Stepkaro/src/banner/update_banner.php",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          banner_id: selectedBanner.id,
+          name: formData.title,
+          image: formData.imagePreview,
+          link: formData.link,
+          sort_order: 0,
+          status: formData.status === "active" ? 1 : 0,
+        }),
+      }
+    );
+
+    const result = await response.json();
+
+    if (result.success) {
+
+      setShowEditModal(false);
+
+      setSelectedBanner(null);
+
+      fetchBanners();
+
+    } else {
+
+      alert(result.message);
+
     }
-    
-    setBanners(banners.map(banner => 
-      banner.id === selectedBanner.id 
-        ? { 
-            ...banner, 
-            title: formData.title,
-            position: formData.position,
-            link: formData.link,
-            image: formData.imagePreview || banner.image,
-            status: formData.status
-          }
-        : banner
-    ));
-    setShowEditModal(false);
-    setSelectedBanner(null);
-    setFormData({ title: "", position: "HEADER", link: "", image: null, imagePreview: null, status: "active" });
-  };
 
-  // Delete banner
-  const handleDeleteBanner = () => {
-    setBanners(banners.filter(banner => banner.id !== selectedBanner.id));
-    setShowDeleteModal(false);
-    setSelectedBanner(null);
-  };
+  } catch (error) {
 
-  // Toggle banner status
-  const toggleStatus = (bannerId) => {
-    setBanners(banners.map(banner => 
-      banner.id === bannerId 
-        ? { ...banner, status: banner.status === "active" ? "inactive" : "active" }
-        : banner
-    ));
-  };
+    console.log(error);
+
+  }
+};
+
+  const handleDeleteBanner = async () => {
+
+  try {
+
+    const token = localStorage.getItem("access_token");
+
+    const response = await fetch(
+      "https://namami-infotech.com/Stepkaro/src/banner/delete_banner.php",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          banner_id: selectedBanner.id,
+        }),
+      }
+    );
+
+    const result = await response.json();
+
+    if (result.success) {
+
+      setShowDeleteModal(false);
+
+      setSelectedBanner(null);
+
+      fetchBanners();
+
+    } else {
+
+      alert(result.message);
+
+    }
+
+  } catch (error) {
+
+    console.log(error);
+
+  }
+};
+
+ const toggleStatus = async (banner) => {
+  try {
+
+    const token = localStorage.getItem("access_token");
+
+    const response = await fetch(
+      "https://namami-infotech.com/Stepkaro/src/banner/update_banner_status.php",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          banner_id: banner.id,
+          status: Number(banner.status) === 1 ? 0 : 1,
+        }),
+      }
+    );
+
+    const result = await response.json();
+
+    if (result.success) {
+      fetchBanners();
+    } else {
+      alert(result.message);
+    }
+
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 
   // Open modals
   const openPreviewModal = (banner) => {
@@ -210,7 +311,7 @@ export default function BannersPage() {
   const openEditModal = (banner) => {
     setSelectedBanner(banner);
     setFormData({
-      title: banner.title,
+      title: banner.name,
       position: banner.position,
       link: banner.link,
       image: null,
@@ -225,29 +326,54 @@ export default function BannersPage() {
     setShowDeleteModal(true);
   };
 
-  // Handle image upload
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData({ ...formData, imagePreview: reader.result });
-      };
-      reader.readAsDataURL(file);
+ const handleImageUpload = async (e) => {
+  const file = e.target.files[0];
+
+  if (!file) return;
+
+  try {
+    const token = localStorage.getItem("access_token");
+
+    const uploadData = new FormData();
+
+    uploadData.append("image", file);
+
+    const response = await fetch(
+      "https://namami-infotech.com/Stepkaro/src/banner/upload_banner_image.php",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: uploadData,
+      }
+    );
+
+    const result = await response.json();
+
+    if (result.success) {
+      setFormData({
+        ...formData,
+        imagePreview: result.image_url,
+      });
+    } else {
+      alert(result.message);
     }
-  };
+  } catch (error) {
+    console.log(error);
+  }
+};
 
   // Export to CSV
   const handleExportCSV = () => {
-    const headers = ["ID", "Title", "Position", "Link", "Status", "Clicks", "Views", "Created At"];
+    const headers = ["ID", "Title", "Position", "Link", "Status",  "Created At"];
     const csvData = banners.map(banner => [
       banner.id,
-      banner.title,
+      banner.name,
       banner.position,
       banner.link,
       banner.status,
-      banner.clicks,
-      banner.views,
+    
       banner.createdAt
     ]);
     
@@ -286,9 +412,6 @@ export default function BannersPage() {
       : "bg-red-500/20 text-red-400";
   };
 
-  // Stats summary
-  const totalViews = banners.reduce((sum, b) => sum + b.views, 0);
-  const totalClicks = banners.reduce((sum, b) => sum + b.clicks, 0);
   const activeBanners = banners.filter(b => b.status === "active").length;
 
   // Modal component
@@ -355,57 +478,7 @@ export default function BannersPage() {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-xl p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-teal-500/20 rounded-lg">
-              <Layout size={20} className="text-teal-400" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-white">{banners.length}</p>
-              <p className="text-xs text-gray-400">Total Banners</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-xl p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-green-500/20 rounded-lg">
-              <Eye size={20} className="text-green-400" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-white">{totalViews.toLocaleString()}</p>
-              <p className="text-xs text-gray-400">Total Views</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-xl p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-500/20 rounded-lg">
-              <Eye size={20} className="text-blue-400" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-white">{totalClicks.toLocaleString()}</p>
-              <p className="text-xs text-gray-400">Total Clicks</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-xl p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-purple-500/20 rounded-lg">
-              <AlertCircle size={20} className="text-purple-400" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-white">{activeBanners}</p>
-              <p className="text-xs text-gray-400">Active Banners</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
+      
       {/* Results Summary */}
       <div className="flex justify-between items-center">
         <p className="text-sm text-gray-400">
@@ -451,26 +524,35 @@ export default function BannersPage() {
                     className="cursor-pointer"
                   >
                     <div className="w-32 h-20 bg-gradient-to-br from-teal-500/20 to-blue-500/20 rounded-lg flex items-center justify-center text-3xl border border-white/10 hover:scale-105 transition-transform">
-                      {banner.image}
+                      <img
+  src={banner.image}
+  alt={banner.name}
+  className="w-full h-full object-cover rounded-lg"
+/>
                     </div>
                   </div>
                   
                   {/* Banner Details */}
                   <div className="flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="text-sm font-medium text-white">{banner.title}</h3>
+                      <h3 className="text-sm font-medium text-white">{banner.name}</h3>
                       <span className={`text-xs px-2 py-0.5 rounded-full ${getPositionBadge(banner.position)}`}>
                         {banner.position}
                       </span>
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${getStatusBadge(banner.status)}`}>
-                        {banner.status}
-                      </span>
+                      <span
+  className={`text-xs px-2 py-0.5 rounded-full ${
+    Number(banner.status) === 1
+      ? "bg-green-500/20 text-green-400"
+      : "bg-red-500/20 text-red-400"
+  }`}
+>
+  {Number(banner.status) === 1 ? "Active" : "Inactive"}
+</span>
                     </div>
                     <div className="flex gap-4 mt-2 text-xs">
                       <span className="text-gray-500">Link: {banner.link}</span>
-                      <span className="text-gray-500">Views: {banner.views.toLocaleString()}</span>
-                      <span className="text-gray-500">Clicks: {banner.clicks.toLocaleString()}</span>
-                      <span className="text-gray-500">CTR: {banner.views > 0 ? ((banner.clicks / banner.views) * 100).toFixed(1) : 0}%</span>
+                    
+                     
                     </div>
                   </div>
                 </div>
@@ -478,12 +560,12 @@ export default function BannersPage() {
                 {/* Right side - Actions */}
                 <div className="flex items-center gap-3">
                   <button 
-                    onClick={() => toggleStatus(banner.id)}
+                  onClick={() => toggleStatus(banner)}
                     className="relative w-10 h-5 bg-gray-700 rounded-full transition-colors"
-                    title={banner.status === "active" ? "Deactivate" : "Activate"}
+                    title={Number(banner.status) === 1 ? "Active" : "Inactive"}
                   >
                     <div className={`absolute w-4 h-4 bg-teal-400 rounded-full top-0.5 transition-all duration-300 ${
-                      banner.status === "active" ? "left-5" : "left-0.5"
+                      Number(banner.status) === 1 ? "left-5" : "left-0.5"
                     }`} />
                   </button>
                   
@@ -604,9 +686,13 @@ export default function BannersPage() {
             <div className="border-2 border-dashed border-white/20 rounded-lg p-4 text-center hover:border-teal-500/50 transition-colors">
               {formData.imagePreview ? (
                 <div className="relative inline-block">
-                  <div className="w-32 h-20 bg-gradient-to-br from-teal-500/20 to-blue-500/20 rounded-lg flex items-center justify-center text-3xl">
-                    {formData.imagePreview}
-                  </div>
+                 <div className="w-32 h-20 rounded-lg overflow-hidden">
+  <img
+    src={formData.imagePreview}
+    alt="Banner"
+    className="w-full h-full object-cover"
+  />
+</div>
                   <button
                     type="button"
                     onClick={() => setFormData({...formData, imagePreview: null})}
@@ -693,9 +779,13 @@ export default function BannersPage() {
             <div className="border-2 border-dashed border-white/20 rounded-lg p-4 text-center hover:border-teal-500/50 transition-colors">
               {formData.imagePreview ? (
                 <div className="relative inline-block">
-                  <div className="w-32 h-20 bg-gradient-to-br from-teal-500/20 to-blue-500/20 rounded-lg flex items-center justify-center text-3xl">
-                    {formData.imagePreview}
-                  </div>
+                 <div className="w-32 h-20 rounded-lg overflow-hidden">
+  <img
+    src={formData.imagePreview}
+    alt="Banner"
+    className="w-full h-full object-cover"
+  />
+</div>
                   <button
                     type="button"
                     onClick={() => setFormData({...formData, imagePreview: null})}
@@ -744,11 +834,7 @@ export default function BannersPage() {
       <Modal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} title="Delete Banner">
         <p className="text-gray-300 mb-6">
           Are you sure you want to delete <span className="text-white font-semibold">{selectedBanner?.title}</span>?
-          {selectedBanner?.views > 0 && (
-            <span className="text-yellow-400 block mt-2">
-              ⚠️ This banner has {selectedBanner.views.toLocaleString()} views and {selectedBanner.clicks.toLocaleString()} clicks. Deleting will remove all analytics data.
-            </span>
-          )}
+         
           This action cannot be undone.
         </p>
         <div className="flex gap-3">
@@ -773,13 +859,16 @@ export default function BannersPage() {
           <div className="space-y-4">
             <div className="flex justify-center">
               <div className="w-full max-w-md bg-gradient-to-br from-teal-500/20 to-blue-500/20 rounded-xl p-8 text-center border border-white/10">
-                <div className="text-6xl mb-4">{selectedBanner.image}</div>
-                <h3 className="text-xl font-bold text-white">{selectedBanner.title}</h3>
+               <img
+  src={selectedBanner.image}
+  alt={selectedBanner.name}
+  className="w-full max-h-64 object-cover rounded-lg mb-4"
+/>
+                <h3 className="text-xl font-bold text-white">{selectedBanner.name}</h3>
                 <p className="text-gray-400 mt-2">Position: {selectedBanner.position}</p>
                 <p className="text-gray-400">Link: {selectedBanner.link}</p>
                 <div className="mt-4 flex justify-center gap-4">
-                  <span className="text-xs text-gray-500">Views: {selectedBanner.views.toLocaleString()}</span>
-                  <span className="text-xs text-gray-500">Clicks: {selectedBanner.clicks.toLocaleString()}</span>
+                 
                 </div>
               </div>
             </div>
@@ -792,18 +881,21 @@ export default function BannersPage() {
                 </div>
                 <div>
                   <p className="text-xs text-gray-500">Status</p>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${getStatusBadge(selectedBanner.status)}`}>
-                    {selectedBanner.status}
-                  </span>
+                 <span
+  className={`text-xs px-2 py-0.5 rounded-full ${
+    Number(selectedBanner.status) === 1
+      ? "bg-green-500/20 text-green-400"
+      : "bg-red-500/20 text-red-400"
+  }`}
+>
+  {Number(selectedBanner.status) === 1 ? "Active" : "Inactive"}
+</span>
                 </div>
                 <div>
                   <p className="text-xs text-gray-500">Created Date</p>
                   <p className="text-white">{selectedBanner.createdAt}</p>
                 </div>
-                <div>
-                  <p className="text-xs text-gray-500">CTR</p>
-                  <p className="text-white">{selectedBanner.views > 0 ? ((selectedBanner.clicks / selectedBanner.views) * 100).toFixed(1) : 0}%</p>
-                </div>
+               
               </div>
             </div>
           </div>

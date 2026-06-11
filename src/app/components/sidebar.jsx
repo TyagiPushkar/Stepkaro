@@ -30,7 +30,7 @@ const adminNavItems = [
   { name: "Orders", href: "/admin/orders", icon: ShoppingCart },
   { name: "Category", href: "/admin/categories", icon: Tag },
   { name: "Users", href: "/admin/users", icon: Users },
-  { name: "Collections", href: "/admin/collections", icon: Layers },
+  // { name: "Collections", href: "/admin/collections", icon: Layers },
   { name: "Banners", href: "/admin/banners", icon: ImageIcon },
   { name: "Settings", href: "/admin/settings", icon: Settings },
 ];
