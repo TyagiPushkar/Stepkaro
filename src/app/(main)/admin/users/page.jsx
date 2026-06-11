@@ -1,10 +1,10 @@
 "use client";
 import { useState, useMemo, useEffect } from "react";
-import { 
-  Search, 
-  Plus, 
-  Edit, 
-  Trash2, 
+import {
+  Search,
+  Plus,
+  Edit,
+  Trash2,
   Eye,
   X,
   ChevronLeft,
@@ -12,7 +12,7 @@ import {
   Download,
   Users as UsersIcon,
   CheckCircle,
-  XCircle
+  XCircle,
 } from "lucide-react";
 
 export default function UsersPage() {
@@ -20,14 +20,14 @@ export default function UsersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [selectedFilter, setSelectedFilter] = useState("all");
-  
+
   // Modal states
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
-  
+
   // Form states
   const [formData, setFormData] = useState({
     name: "",
@@ -35,136 +35,126 @@ export default function UsersPage() {
     phone: "",
     role: "buyer",
     address: "",
-    status: "not_approved"
+    status: "not_approved",
   });
 
   // Users state
   const [users, setUsers] = useState([]);
 
-const [loading, setLoading] =
-  useState(true);
+  const [loading, setLoading] = useState(true);
 
-useEffect(() => {
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await fetch(
+          "https://namami-infotech.com/Stepkaro/src/home/get_vendor_and_buyer.php",
+        );
 
-  const fetchUsers = async () => {
+        const result = await response.json();
 
-    try {
+        if (result.success) {
+          // buyers
+          const buyers = result.data.buyers.map((buyer) => ({
+            id: buyer.id,
+            name: buyer.name,
+            email: buyer.email,
+            phone: buyer.phone,
+            role: "buyer",
+            address: buyer.address,
+            status: buyer.status,
+            avatar: "👤",
+            createdAt: buyer.created_at,
+            type: "buyer",
+            rawData: buyer,
+          }));
 
-      const response = await fetch(
-        "https://namami-infotech.com/Stepkaro/src/home/get_vendor_and_buyer.php"
-      );
+          // vendors
+          const vendors = result.data.vendors.map((vendor) => ({
+            id: vendor.id,
+            name: vendor.owner_name,
+            email: vendor.email,
+            phone: vendor.phone,
+            role: "seller",
+            address: vendor.address,
+            status: vendor.status,
+            avatar: "🏪",
+            createdAt: vendor.created_at,
+            type: "vendor",
+            business_name: vendor.business_name,
+            gst_number: vendor.gst_number,
+            pan_number: vendor.pan_number,
+            rawData: vendor,
+          }));
 
-      const result =
-        await response.json();
-
-      if (result.success) {
-
-        // buyers
-        const buyers =
-          result.data.buyers.map(
-            (buyer) => ({
-              id: buyer.id,
-              name: buyer.name,
-              email: buyer.email,
-              phone: buyer.phone,
-              role: "buyer",
-              address: buyer.address,
-              status: buyer.status,
-              avatar: "👤",
-              createdAt:
-                buyer.created_at,
-              type: "buyer",
-              rawData: buyer
-            })
-          );
-
-        // vendors
-        const vendors =
-          result.data.vendors.map(
-            (vendor) => ({
-              id: vendor.id,
-              name:
-                vendor.owner_name,
-              email: vendor.email,
-              phone: vendor.phone,
-              role: "seller",
-              address:
-                vendor.address,
-              status:
-                vendor.status ===
-                "active"
-                  ? "approved"
-                  : "not_approved",
-              avatar: "🏪",
-              createdAt:
-                vendor.created_at,
-              type: "vendor",
-              business_name:
-                vendor.business_name,
-              gst_number:
-                vendor.gst_number,
-              pan_number:
-                vendor.pan_number,
-              rawData: vendor
-            })
-          );
-
-        setUsers([
-          ...buyers,
-          ...vendors
-        ]);
-
+          setUsers([...buyers, ...vendors]);
+        }
+      } catch (error) {
+        console.log("Error fetching users:", error);
+      } finally {
+        setLoading(false);
       }
+    };
 
-    } catch (error) {
-
-      console.log(
-        "Error fetching users:",
-        error
-      );
-
-    } finally {
-
-      setLoading(false);
-
-    }
-
-  };
-
-  fetchUsers();
-
-}, []);
+    fetchUsers();
+  }, []);
 
   // Filters
   const filters = [
     { label: "All Users", value: "all", count: users.length, color: "teal" },
-    { label: "Sellers", value: "seller", count: users.filter(u => u.role === "seller").length, color: "blue" },
-    { label: "Buyers", value: "buyer", count: users.filter(u => u.role === "buyer").length, color: "green" },
-    { label: "Approved", value: "approved", count: users.filter(u => u.status === "approved").length, color: "emerald" },
-    { label: "Not Approved", value: "not_approved", count: users.filter(u => u.status === "not_approved").length, color: "red" },
+    {
+      label: "Pending Requests",
+      value: "pending",
+      count: users.filter((u) => u.status === "pending").length,
+      color: "yellow",
+    },
+    {
+      label: "Sellers",
+      value: "seller",
+      count: users.filter((u) => u.role === "seller").length,
+      color: "blue",
+    },
+    {
+      label: "Buyers",
+      value: "buyer",
+      count: users.filter((u) => u.role === "buyer").length,
+      color: "green",
+    },
+    {
+      label: "Approved",
+      value: "approved",
+      count: users.filter((u) => u.status === "approved").length,
+      color: "emerald",
+    },
+    {
+      label: "Not Approved",
+      value: "not_approved",
+      count: users.filter((u) => u.status === "not_approved").length,
+      color: "red",
+    },
   ];
 
   // Filter users
   const filteredUsers = useMemo(() => {
     let filtered = users;
-    
+
     if (selectedFilter !== "all") {
-      filtered = filtered.filter(u => 
-        u.role === selectedFilter || u.status === selectedFilter
+      filtered = filtered.filter(
+        (u) => u.role === selectedFilter || u.status === selectedFilter,
       );
     }
-    
+
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(u => 
-        u.name.toLowerCase().includes(query) ||
-        u.email.toLowerCase().includes(query) ||
-        u.phone.includes(query) ||
-        u.address.toLowerCase().includes(query) ||
-        u.id.toString().includes(query)
+      filtered = filtered.filter(
+        (u) =>
+          u.name.toLowerCase().includes(query) ||
+          u.email.toLowerCase().includes(query) ||
+          u.phone.includes(query) ||
+          u.address.toLowerCase().includes(query) ||
+          u.id.toString().includes(query),
       );
     }
-    
+
     return filtered;
   }, [selectedFilter, searchQuery, users]);
 
@@ -189,21 +179,26 @@ useEffect(() => {
   };
 
   // Toggle user status (approved/not_approved)
-  const toggleStatus = (userId, currentStatus) => {
-    const newStatus = currentStatus === "approved" ? "not_approved" : "approved";
-    setUsers(users.map(user => 
-      user.id === userId ? { ...user, status: newStatus } : user
-    ));
+  const handleAcceptStatus = (userId, newStatus) => {
+    setUsers(
+      users.map((user) =>
+        user.id === userId ? { ...user, status: newStatus } : user,
+      ),
+    );
   };
 
   // Add new user
   const handleAddUser = () => {
-    if (!formData.name.trim() || !formData.email.trim() || !formData.phone.trim()) {
+    if (
+      !formData.name.trim() ||
+      !formData.email.trim() ||
+      !formData.phone.trim()
+    ) {
       alert("Please fill all required fields");
       return;
     }
-    
-    const newId = Math.max(...users.map(u => u.id), 0) + 1;
+
+    const newId = Math.max(...users.map((u) => u.id), 0) + 1;
     const newUser = {
       id: newId,
       name: formData.name,
@@ -213,35 +208,44 @@ useEffect(() => {
       address: formData.address,
       status: formData.status,
       avatar: formData.role === "seller" ? "👨" : "👩",
-      createdAt: new Date().toISOString().split("T")[0]
+      createdAt: new Date().toISOString().split("T")[0],
     };
     setUsers([...users, newUser]);
     setShowAddModal(false);
-    setFormData({ name: "", email: "", phone: "", role: "buyer", address: "", status: "not_approved" });
+    setFormData({
+      name: "",
+      email: "",
+      phone: "",
+      role: "buyer",
+      address: "",
+      status: "not_approved",
+    });
   };
 
   // Edit user
   const handleEditUser = () => {
-    setUsers(users.map(user => 
-      user.id === selectedUser.id 
-        ? { 
-            ...user, 
-            name: formData.name,
-            email: formData.email,
-            phone: formData.phone,
-            role: formData.role,
-            address: formData.address,
-            status: formData.status
-          }
-        : user
-    ));
+    setUsers(
+      users.map((user) =>
+        user.id === selectedUser.id
+          ? {
+              ...user,
+              name: formData.name,
+              email: formData.email,
+              phone: formData.phone,
+              role: formData.role,
+              address: formData.address,
+              status: formData.status,
+            }
+          : user,
+      ),
+    );
     setShowEditModal(false);
     setSelectedUser(null);
   };
 
   // Delete user
   const handleDeleteUser = () => {
-    setUsers(users.filter(user => user.id !== selectedUser.id));
+    setUsers(users.filter((user) => user.id !== selectedUser.id));
     setShowDeleteModal(false);
     setSelectedUser(null);
   };
@@ -260,7 +264,7 @@ useEffect(() => {
       phone: user.phone,
       role: user.role,
       address: user.address,
-      status: user.status
+      status: user.status,
     });
     setShowEditModal(true);
   };
@@ -272,8 +276,17 @@ useEffect(() => {
 
   // Export to CSV
   const handleExportCSV = () => {
-    const headers = ["ID", "Name", "Email", "Phone", "Role", "Address", "Status", "Joined Date"];
-    const csvData = users.map(user => [
+    const headers = [
+      "ID",
+      "Name",
+      "Email",
+      "Phone",
+      "Role",
+      "Address",
+      "Status",
+      "Joined Date",
+    ];
+    const csvData = users.map((user) => [
       user.id,
       user.name,
       user.email,
@@ -281,10 +294,12 @@ useEffect(() => {
       user.role,
       user.address,
       user.status === "approved" ? "Approved" : "Not Approved",
-      user.createdAt
+      user.createdAt,
     ]);
-    
-    const csvContent = [headers, ...csvData].map(row => row.join(",")).join("\n");
+
+    const csvContent = [headers, ...csvData]
+      .map((row) => row.join(","))
+      .join("\n");
     const blob = new Blob([csvContent], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -296,15 +311,15 @@ useEffect(() => {
 
   // Get role badge color
   const getRoleBadge = (role) => {
-    return role === "seller" 
-      ? "bg-blue-500/20 text-blue-400" 
+    return role === "seller"
+      ? "bg-blue-500/20 text-blue-400"
       : "bg-green-500/20 text-green-400";
   };
 
   // Get status badge color
   const getStatusBadge = (status) => {
-    return status === "approved" 
-      ? "bg-emerald-500/20 text-emerald-400" 
+    return status === "approved"
+      ? "bg-emerald-500/20 text-emerald-400"
       : "bg-red-500/20 text-red-400";
   };
 
@@ -316,7 +331,10 @@ useEffect(() => {
         <div className="bg-slate-800 rounded-xl border border-white/10 w-full max-w-md max-h-[90vh] overflow-y-auto">
           <div className="flex justify-between items-center p-4 border-b border-white/10">
             <h2 className="text-lg font-semibold text-white">{title}</h2>
-            <button onClick={onClose} className="p-1 text-gray-400 hover:text-white">
+            <button
+              onClick={onClose}
+              className="p-1 text-gray-400 hover:text-white"
+            >
               <X size={20} />
             </button>
           </div>
@@ -328,30 +346,32 @@ useEffect(() => {
 
   // Stats summary
   const totalUsers = users.length;
-  const totalSellers = users.filter(u => u.role === "seller").length;
-  const totalBuyers = users.filter(u => u.role === "buyer").length;
-  const notApproved = users.filter(u => u.status === "not_approved").length;
+  const requested = users.filter((u) => u.status === "pending").length;
+  const totalSellers = users.filter((u) => u.role === "seller").length;
+  const totalBuyers = users.filter((u) => u.role === "buyer").length;
+  const notApproved = users.filter((u) => u.status === "not_approved").length;
 
   if (loading) {
-  return (
-    <div className="text-white p-6">
-      Loading users...
-    </div>
-  );
-}
+    return <div className="text-white p-6">Loading users...</div>;
+  }
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white">Users</h1>
-          <p className="text-gray-400 text-sm mt-1">Manage your platform users</p>
+          <p className="text-gray-400 text-sm mt-1">
+            Manage your platform users
+          </p>
         </div>
 
         {/* Action Buttons */}
         <div className="flex flex-wrap gap-3">
           <div className="relative flex-1 lg:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
+            <Search
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
+              size={18}
+            />
             <input
               type="text"
               value={searchQuery}
@@ -360,16 +380,16 @@ useEffect(() => {
               className="w-full pl-10 pr-4 py-2 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
             />
           </div>
-          
-          <button 
+
+          <button
             onClick={() => setShowAddModal(true)}
             className="bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-colors"
           >
             <Plus size={16} />
             Create User
           </button>
-          
-          <button 
+
+          <button
             onClick={handleExportCSV}
             className="bg-slate-800 hover:bg-slate-700 text-gray-300 px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-colors border border-white/10"
           >
@@ -392,7 +412,19 @@ useEffect(() => {
             </div>
           </div>
         </div>
-        
+        {/* total pending requests */}
+        <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-xl p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-teal-500/20 rounded-lg">
+              <UsersIcon size={20} className="text-red-400" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-white">{requested}</p>
+              <p className="text-xs text-gray-400">Pending Requests</p>
+            </div>
+          </div>
+        </div>
+
         <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-xl p-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-500/20 rounded-lg">
@@ -404,7 +436,7 @@ useEffect(() => {
             </div>
           </div>
         </div>
-        
+
         <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-xl p-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-green-500/20 rounded-lg">
@@ -416,7 +448,7 @@ useEffect(() => {
             </div>
           </div>
         </div>
-        
+
         <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-xl p-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-red-500/20 rounded-lg">
@@ -445,11 +477,13 @@ useEffect(() => {
               }`}
             >
               {filter.label}
-              <span className={`px-2 py-0.5 rounded-full text-xs ${
-                isActive 
-                  ? `bg-${filter.color}-500/30 text-${filter.color}-400`
-                  : "bg-slate-700 text-gray-400"
-              }`}>
+              <span
+                className={`px-2 py-0.5 rounded-full text-xs ${
+                  isActive
+                    ? `bg-${filter.color}-500/30 text-${filter.color}-400`
+                    : "bg-slate-700 text-gray-400"
+                }`}
+              >
                 {filter.count}
               </span>
             </button>
@@ -460,13 +494,19 @@ useEffect(() => {
       {/* Results Summary */}
       <div className="flex justify-between items-center">
         <p className="text-sm text-gray-400">
-          Showing <span className="text-white">{filteredUsers.length > 0 ? startIndex + 1 : 0}</span> to{" "}
-          <span className="text-white">{Math.min(endIndex, filteredUsers.length)}</span> of{" "}
-          <span className="text-white">{filteredUsers.length}</span> users
+          Showing{" "}
+          <span className="text-white">
+            {filteredUsers.length > 0 ? startIndex + 1 : 0}
+          </span>{" "}
+          to{" "}
+          <span className="text-white">
+            {Math.min(endIndex, filteredUsers.length)}
+          </span>{" "}
+          of <span className="text-white">{filteredUsers.length}</span> users
         </p>
         <div className="flex items-center gap-2">
           <span className="text-sm text-gray-400">Show:</span>
-          <select 
+          <select
             value={itemsPerPage}
             onChange={(e) => {
               setItemsPerPage(Number(e.target.value));
@@ -487,92 +527,151 @@ useEffect(() => {
           <table className="w-full">
             <thead className="bg-slate-800/50 border-b border-white/10">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">ID</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Name</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Email</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  ID
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  Name
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  Email
+                </th>
                 {/* <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Phone</th> */}
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Role</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Address</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  Role
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  Address
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
               {currentUsers.length > 0 ? (
                 currentUsers.map((user) => (
-                 <tr key={`${user.type}-${user.id}`} className="hover:bg-white/5 transition-colors">
+                  <tr
+                    key={`${user.type}-${user.id}`}
+                    className="hover:bg-white/5 transition-colors"
+                  >
                     <td className="px-6 py-4">
                       <span className="text-sm text-gray-300">#{user.id}</span>
                     </td>
-                    
+
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 bg-gradient-to-br from-teal-500/20 to-blue-500/20 rounded-full flex items-center justify-center text-base border border-white/10">
                           {user.avatar}
                         </div>
-                        <p className="text-sm font-medium text-white">{user.name}</p>
+                        <p className="text-sm font-medium text-white">
+                          {user.name}
+                        </p>
                       </div>
                     </td>
-                    
+
                     <td className="px-6 py-4">
                       <p className="text-sm text-gray-300">{user.email}</p>
                     </td>
-                    
-                    
-                    
+
                     <td className="px-6 py-4">
-                      <span className={`text-xs px-2 py-1 rounded-full ${getRoleBadge(user.role)}`}>
+                      <span
+                        className={`text-xs px-2 py-1 rounded-full ${getRoleBadge(user.role)}`}
+                      >
                         {user.role === "seller" ? "Seller" : "Buyer"}
                       </span>
                     </td>
-                    
+
                     <td className="px-6 py-4">
-                      <p className="text-sm text-gray-400 max-w-xs truncate">{user.address}</p>
+                      <p className="text-sm text-gray-400 max-w-xs truncate">
+                        {user.address}
+                      </p>
                     </td>
-                    
+
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => toggleStatus(user.id, user.status)}
-                          className={`relative h-6 w-12 rounded-full transition ${
-                            user.status === "approved" ? "bg-emerald-500" : "bg-red-500"
-                          }`}
-                        >
-                          <span
-                            className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition ${
-                              user.status === "approved" ? "left-6" : "left-0.5"
+                      {user.status === "pending" ? (
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() =>
+                              handleAcceptStatus(user.id, user.role, "approved")
+                            }
+                            className="px-3 py-1 text-xs rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition"
+                          >
+                            Accept
+                          </button>
+
+                          <button
+                            onClick={() =>
+                              handleAcceptStatus(user.id, "rejected")
+                            }
+                            className="px-3 py-1 text-xs rounded-lg bg-red-500 text-white hover:bg-red-600 transition"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() =>
+                              handleAcceptStatus(
+                                user.id,
+                                user.status === "approved"
+                                  ? "rejected"
+                                  : "approved",
+                              )
+                            }
+                            className={`relative h-6 w-12 rounded-full transition ${
+                              user.status === "approved"
+                                ? "bg-emerald-500"
+                                : "bg-red-500"
                             }`}
-                          />
-                        </button>
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${getStatusBadge(user.status)}`}>
-                          {user.status === "approved" ? "Approved" : "Not Approved"}
-                        </span>
-                      </div>
+                          >
+                            <span
+                              className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition ${
+                                user.status === "approved"
+                                  ? "left-6"
+                                  : "left-0.5"
+                              }`}
+                            />
+                          </button>
+
+                          <span
+                            className={`text-xs px-2 py-0.5 rounded-full ${getStatusBadge(
+                              user.status,
+                            )}`}
+                          >
+                            {user.status === "approved" ? "active" : "inactive"}
+                          </span>
+                        </div>
+                      )}
                     </td>
-                    
+
                     <td className="px-6 py-4">
                       <div className="flex gap-2">
-                        <button 
+                        <button
                           onClick={() => openViewModal(user)}
                           className="p-1.5 text-gray-400 hover:text-teal-400 hover:bg-teal-500/20 rounded-lg transition-colors"
                           title="View Details"
                         >
                           <Eye size={16} />
                         </button>
-                        <button 
+                        <button
                           onClick={() => openEditModal(user)}
                           className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors"
                           title="Edit User"
                         >
                           <Edit size={16} />
                         </button>
-                        <button 
+                        {/* <button
                           onClick={() => openDeleteModal(user)}
                           className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
                           title="Delete User"
                         >
                           <Trash2 size={16} />
-                        </button>
+                        </button> */}
                       </div>
                     </td>
                   </tr>
@@ -580,16 +679,21 @@ useEffect(() => {
               ) : (
                 <tr>
                   <td colSpan="8" className="px-6 py-12 text-center">
-                    <UsersIcon size={48} className="text-gray-600 mx-auto mb-3" />
+                    <UsersIcon
+                      size={48}
+                      className="text-gray-600 mx-auto mb-3"
+                    />
                     <p className="text-gray-400">No users found</p>
-                    <p className="text-sm text-gray-500 mt-1">Try adjusting your search or create a new user</p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Try adjusting your search or create a new user
+                    </p>
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
-        
+
         {/* Pagination */}
         {filteredUsers.length > 0 && totalPages > 1 && (
           <div className="px-6 py-4 border-t border-white/10 flex justify-center gap-2">
@@ -601,7 +705,7 @@ useEffect(() => {
               <ChevronLeft size={16} />
               Previous
             </button>
-            
+
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
               <button
                 key={page}
@@ -615,7 +719,7 @@ useEffect(() => {
                 {page}
               </button>
             ))}
-            
+
             <button
               onClick={() => goToPage(currentPage + 1)}
               disabled={currentPage === totalPages}
@@ -629,14 +733,22 @@ useEffect(() => {
       </div>
 
       {/* Add User Modal */}
-      <Modal isOpen={showAddModal} onClose={() => setShowAddModal(false)} title="Create New User">
+      <Modal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        title="Create New User"
+      >
         <div className="space-y-4">
           <div>
-            <label className="text-sm text-gray-400 block mb-1">Full Name *</label>
+            <label className="text-sm text-gray-400 block mb-1">
+              Full Name *
+            </label>
             <input
               type="text"
               value={formData.name}
-              onChange={(e) => setFormData({...formData, name: e.target.value})}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
               className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
               placeholder="Enter full name"
             />
@@ -646,7 +758,9 @@ useEffect(() => {
             <input
               type="email"
               value={formData.email}
-              onChange={(e) => setFormData({...formData, email: e.target.value})}
+              onChange={(e) =>
+                setFormData({ ...formData, email: e.target.value })
+              }
               className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
               placeholder="Enter email address"
             />
@@ -665,7 +779,9 @@ useEffect(() => {
             <label className="text-sm text-gray-400 block mb-1">Role</label>
             <select
               value={formData.role}
-              onChange={(e) => setFormData({...formData, role: e.target.value})}
+              onChange={(e) =>
+                setFormData({ ...formData, role: e.target.value })
+              }
               className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
             >
               <option value="buyer">Buyer</option>
@@ -676,7 +792,9 @@ useEffect(() => {
             <label className="text-sm text-gray-400 block mb-1">Address</label>
             <textarea
               value={formData.address}
-              onChange={(e) => setFormData({...formData, address: e.target.value})}
+              onChange={(e) =>
+                setFormData({ ...formData, address: e.target.value })
+              }
               className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
               placeholder="Enter address"
               rows="2"
@@ -686,7 +804,9 @@ useEffect(() => {
             <label className="text-sm text-gray-400 block mb-1">Status</label>
             <select
               value={formData.status}
-              onChange={(e) => setFormData({...formData, status: e.target.value})}
+              onChange={(e) =>
+                setFormData({ ...formData, status: e.target.value })
+              }
               className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
             >
               <option value="not_approved">Not Approved</option>
@@ -703,14 +823,22 @@ useEffect(() => {
       </Modal>
 
       {/* Edit User Modal */}
-      <Modal isOpen={showEditModal} onClose={() => setShowEditModal(false)} title="Edit User">
+      <Modal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        title="Edit User"
+      >
         <div className="space-y-4">
           <div>
-            <label className="text-sm text-gray-400 block mb-1">Full Name</label>
+            <label className="text-sm text-gray-400 block mb-1">
+              Full Name
+            </label>
             <input
               type="text"
               value={formData.name}
-              onChange={(e) => setFormData({...formData, name: e.target.value})}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
               className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
             />
           </div>
@@ -719,7 +847,9 @@ useEffect(() => {
             <input
               type="email"
               value={formData.email}
-              onChange={(e) => setFormData({...formData, email: e.target.value})}
+              onChange={(e) =>
+                setFormData({ ...formData, email: e.target.value })
+              }
               className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
             />
           </div>
@@ -736,7 +866,9 @@ useEffect(() => {
             <label className="text-sm text-gray-400 block mb-1">Role</label>
             <select
               value={formData.role}
-              onChange={(e) => setFormData({...formData, role: e.target.value})}
+              onChange={(e) =>
+                setFormData({ ...formData, role: e.target.value })
+              }
               className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
             >
               <option value="buyer">Buyer</option>
@@ -747,7 +879,9 @@ useEffect(() => {
             <label className="text-sm text-gray-400 block mb-1">Address</label>
             <textarea
               value={formData.address}
-              onChange={(e) => setFormData({...formData, address: e.target.value})}
+              onChange={(e) =>
+                setFormData({ ...formData, address: e.target.value })
+              }
               className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
               rows="2"
             />
@@ -756,7 +890,9 @@ useEffect(() => {
             <label className="text-sm text-gray-400 block mb-1">Status</label>
             <select
               value={formData.status}
-              onChange={(e) => setFormData({...formData, status: e.target.value})}
+              onChange={(e) =>
+                setFormData({ ...formData, status: e.target.value })
+              }
               className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
             >
               <option value="not_approved">Not Approved</option>
@@ -773,10 +909,15 @@ useEffect(() => {
       </Modal>
 
       {/* Delete User Modal */}
-      <Modal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} title="Delete User">
+      <Modal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        title="Delete User"
+      >
         <p className="text-gray-300 mb-6">
-          Are you sure you want to delete <span className="text-white font-semibold">{selectedUser?.name}</span>?
-          This action cannot be undone.
+          Are you sure you want to delete{" "}
+          <span className="text-white font-semibold">{selectedUser?.name}</span>
+          ? This action cannot be undone.
         </p>
         <div className="flex gap-3">
           <button
@@ -795,7 +936,11 @@ useEffect(() => {
       </Modal>
 
       {/* View User Modal */}
-      <Modal isOpen={showViewModal} onClose={() => setShowViewModal(false)} title="User Details">
+      <Modal
+        isOpen={showViewModal}
+        onClose={() => setShowViewModal(false)}
+        title="User Details"
+      >
         {selectedUser && (
           <div className="space-y-4">
             <div className="flex items-center gap-4 pb-4 border-b border-white/10">
@@ -803,7 +948,9 @@ useEffect(() => {
                 {selectedUser.avatar}
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-white">{selectedUser.name}</h3>
+                <h3 className="text-lg font-semibold text-white">
+                  {selectedUser.name}
+                </h3>
                 <p className="text-sm text-gray-400">{selectedUser.email}</p>
                 <p className="text-xs text-gray-500">{selectedUser.phone}</p>
               </div>
@@ -811,18 +958,26 @@ useEffect(() => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-xs text-gray-500">User ID</p>
-                <p className="text-sm font-semibold text-white">#{selectedUser.id}</p>
+                <p className="text-sm font-semibold text-white">
+                  #{selectedUser.id}
+                </p>
               </div>
               <div>
                 <p className="text-xs text-gray-500">Role</p>
-                <span className={`text-xs px-2 py-1 rounded-full ${getRoleBadge(selectedUser.role)}`}>
+                <span
+                  className={`text-xs px-2 py-1 rounded-full ${getRoleBadge(selectedUser.role)}`}
+                >
                   {selectedUser.role === "seller" ? "Seller" : "Buyer"}
                 </span>
               </div>
               <div>
                 <p className="text-xs text-gray-500">Status</p>
-                <span className={`text-xs px-2 py-1 rounded-full ${getStatusBadge(selectedUser.status)}`}>
-                  {selectedUser.status === "approved" ? "Approved" : "Not Approved"}
+                <span
+                  className={`text-xs px-2 py-1 rounded-full ${getStatusBadge(selectedUser.status)}`}
+                >
+                  {selectedUser.status === "approved"
+                    ? "Approved"
+                    : "Not Approved"}
                 </span>
               </div>
               <div>

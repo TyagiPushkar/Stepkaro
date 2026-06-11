@@ -16,7 +16,7 @@ import {
   Menu,
   X,
   User,
-  IndianRupee
+  IndianRupee,
 } from "lucide-react";
 
 import { useEffect, useState } from "react";
@@ -32,6 +32,7 @@ const adminNavItems = [
   { name: "Users", href: "/admin/users", icon: Users },
   // { name: "Collections", href: "/admin/collections", icon: Layers },
   { name: "Banners", href: "/admin/banners", icon: ImageIcon },
+  { name: "Account", href: "/admin/accounts", icon: User },
   { name: "Settings", href: "/admin/settings", icon: Settings },
 ];
 
@@ -42,8 +43,8 @@ const sellerNavItems = [
   { name: "My Home", href: "/seller/home", icon: Home },
   { name: "My Products", href: "/seller/products", icon: Package },
   { name: "My Orders", href: "/seller/orders", icon: ShoppingCart },
-  { name: "Payments", href: "/seller/payments", icon:IndianRupee },
-   { name: "Account", href: "/seller/account", icon: User },
+  { name: "Payments", href: "/seller/payments", icon: IndianRupee },
+  { name: "Account", href: "/seller/account", icon: User },
 ];
 
 export default function Sidebar() {
@@ -54,21 +55,18 @@ export default function Sidebar() {
   const pathname = usePathname();
   const [loadingUser, setLoadingUser] = useState(true);
 
- useEffect(() => {
-  const storedUser = localStorage.getItem("user");
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
 
-  if (storedUser) {
-    setUser(JSON.parse(storedUser));
-  }
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
 
-  setLoadingUser(false);
-}, []);
-  const role = user?.role ;
+    setLoadingUser(false);
+  }, []);
+  const role = user?.role;
 
-  const navItems =
-    role === "seller"
-      ? sellerNavItems
-      : adminNavItems;
+  const navItems = role === "seller" ? sellerNavItems : adminNavItems;
 
   // =======================
   // THEME
@@ -78,9 +76,9 @@ export default function Sidebar() {
       ? "bg-gradient-to-b from-violet-700 via-purple-700 to-fuchsia-600"
       : "bg-gradient-to-b from-indigo-950 via-blue-900 to-blue-700";
 
-      if (loadingUser) {
-  return null;
-}
+  if (loadingUser) {
+    return null;
+  }
 
   return (
     <>
@@ -123,15 +121,11 @@ export default function Sidebar() {
               <div>
                 <h1 className="text-xl font-bold text-white">
                   Step
-                  <span className="text-blue-300">
-                    Karo
-                  </span>
+                  <span className="text-blue-300">Karo</span>
                 </h1>
 
                 <p className="text-xs text-white/70 mt-0.5">
-                  {role === "seller"
-                    ? "Seller Dashboard"
-                    : "Admin Dashboard"}
+                  {role === "seller" ? "Seller Dashboard" : "Admin Dashboard"}
                 </p>
               </div>
             </Link>
@@ -148,16 +142,13 @@ export default function Sidebar() {
           {/* Navigation */}
           <nav className="flex-1 p-4 space-y-1">
             {navItems.map((item) => {
-              const isActive =
-                pathname === item.href;
+              const isActive = pathname === item.href;
 
               return (
                 <Link
                   key={item.name}
                   href={item.href}
-                  onClick={() =>
-                    setSidebarOpen(false)
-                  }
+                  onClick={() => setSidebarOpen(false)}
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200
                   ${
                     isActive
@@ -167,9 +158,7 @@ export default function Sidebar() {
                 >
                   <item.icon size={18} />
 
-                  <span className="font-medium text-sm">
-                    {item.name}
-                  </span>
+                  <span className="font-medium text-sm">{item.name}</span>
 
                   {isActive && (
                     <div className="ml-auto w-1.5 h-1.5 bg-white rounded-full" />
@@ -191,9 +180,7 @@ export default function Sidebar() {
                   {user?.name || "Admin User"}
                 </p>
 
-                <p className="text-xs text-white/70">
-                  {role}
-                </p>
+                <p className="text-xs text-white/70">{role}</p>
               </div>
             </div>
           </div>
