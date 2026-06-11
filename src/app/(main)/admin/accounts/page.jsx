@@ -1,7 +1,7 @@
 export default function AccountsPage() {
-  return <div>Admin Accounts Page</div>;
+  return (
+    <div>
+      <h1>Admin Accounts</h1>
+    </div>
+  );
 }
-
-// OR if using arrow function
-// const AccountsPage = () => <div>Admin Accounts Page</div>;
-// export default AccountsPage;
