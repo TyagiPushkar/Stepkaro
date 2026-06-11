@@ -1,6 +1,6 @@
 // app/(main)/categories/page.jsx
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo , useEffect} from "react";
 import { 
   Search, 
   Plus, 
@@ -24,7 +24,7 @@ export default function CategoriesPage() {
   // Modal states
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+ 
   const [selectedCategory, setSelectedCategory] = useState(null);
   
   // Form states
@@ -34,41 +34,8 @@ export default function CategoriesPage() {
     imagePreview: null
   });
 
-  // Categories state
-  const [categories, setCategories] = useState([
-    {
-      id: 4,
-      name: "Kids Clogs",
-      products: 71,
-      sub: 0,
-      image: "👶",
-      createdAt: "2024-01-15"
-    },
-    {
-      id: 1,
-      name: "Gents Clogs",
-      products: 82,
-      sub: 0,
-      image: "👨",
-      createdAt: "2024-01-10"
-    },
-    {
-      id: 3,
-      name: "Ladies Clogs",
-      products: 36,
-      sub: 0,
-      image: "👩",
-      createdAt: "2024-01-12"
-    },
-    {
-      id: 7,
-      name: "Gents Sandal",
-      products: 21,
-      sub: 0,
-      image: "👞",
-      createdAt: "2024-01-18"
-    },
-  ]);
+  const [categories, setCategories] = useState([]);
+const [loading, setLoading] = useState(true);
 
   // Filter categories
   const filteredCategories = useMemo(() => {
@@ -85,7 +52,34 @@ export default function CategoriesPage() {
     return filtered;
   }, [searchQuery, categories]);
 
-  // Pagination
+const fetchCategories = async () => {
+  try {
+    const token = localStorage.getItem("access_token");
+
+    const response = await fetch(
+      "https://namami-infotech.com/Stepkaro/src/category/get_categories.php",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const result = await response.json();
+
+    if (result.success) {
+      setCategories(result.data || []);
+    }
+  } catch (error) {
+    console.log(error);
+  } finally {
+    setLoading(false);
+  }
+};
+
+useEffect(() => {
+  fetchCategories();
+}, []);
   const totalPages = Math.ceil(filteredCategories.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
@@ -99,55 +93,101 @@ export default function CategoriesPage() {
     setSearchQuery(e.target.value);
     setCurrentPage(1);
   };
-
-  // Add new category
-  const handleAddCategory = () => {
+const handleAddCategory = async () => {
+  try {
+    const token = localStorage.getItem("access_token");
     if (!formData.name.trim()) {
-      alert("Please enter category name");
-      return;
-    }
-    
-    const newId = Math.max(...categories.map(c => c.id), 0) + 1;
-    const newCategory = {
-      id: newId,
-      name: formData.name,
-      products: 0,
-      sub: 0,
-      image: formData.imagePreview || "📁",
-      createdAt: new Date().toISOString().split("T")[0]
-    };
-    setCategories([...categories, newCategory]);
-    setShowAddModal(false);
-    setFormData({ name: "", image: null, imagePreview: null });
-  };
+  alert("Category name is required");
+  return;
+}
 
-  // Edit category
-  const handleEditCategory = () => {
+if (!formData.imagePreview) {
+  alert("Category image is required");
+  return;
+}
+
+    const response = await fetch(
+      "https://namami-infotech.com/Stepkaro/src/category/create_category.php",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          image: formData.imagePreview || null,
+          status: 1,
+        }),
+      }
+    );
+
+    const result = await response.json();
+
+    if (result.success) {
+      setShowAddModal(false);
+
+      setFormData({
+        name: "",
+        image: null,
+        imagePreview: null,
+      });
+
+      fetchCategories();
+    } else {
+      alert(result.message);
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+ const handleEditCategory = async () => {
+  try {
+    const token = localStorage.getItem("access_token");
     if (!formData.name.trim()) {
-      alert("Please enter category name");
-      return;
-    }
-    
-    setCategories(categories.map(cat => 
-      cat.id === selectedCategory.id 
-        ? { 
-            ...cat, 
-            name: formData.name,
-            image: formData.imagePreview || cat.image
-          }
-        : cat
-    ));
-    setShowEditModal(false);
-    setSelectedCategory(null);
-    setFormData({ name: "", image: null, imagePreview: null });
-  };
+  alert("Category name is required");
+  return;
+}
 
-  // Delete category
-  const handleDeleteCategory = () => {
-    setCategories(categories.filter(cat => cat.id !== selectedCategory.id));
-    setShowDeleteModal(false);
-    setSelectedCategory(null);
-  };
+if (!formData.imagePreview) {
+  alert("Category image is required");
+  return;
+}
+
+    const response = await fetch(
+      "https://namami-infotech.com/Stepkaro/src/category/update_category.php",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          category_id: selectedCategory.id,
+          name: formData.name,
+          image: formData.imagePreview ||null,
+          status: selectedCategory.status || 1,
+        }),
+      }
+    );
+
+    const result = await response.json();
+
+    if (result.success) {
+      setShowEditModal(false);
+      setSelectedCategory(null);
+
+      fetchCategories();
+    } else {
+      alert(result.message);
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+  
 
   // Open edit modal
   const openEditModal = (category) => {
@@ -160,24 +200,44 @@ export default function CategoriesPage() {
     setShowEditModal(true);
   };
 
-  // Open delete modal
-  const openDeleteModal = (category) => {
-    setSelectedCategory(category);
-    setShowDeleteModal(true);
-  };
+ 
+const handleImageUpload = async (e) => {
+  const file = e.target.files[0];
 
-  // Handle image upload
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData({ ...formData, imagePreview: reader.result });
-      };
-      reader.readAsDataURL(file);
+  if (!file) return;
+
+  try {
+    const token = localStorage.getItem("access_token");
+
+    const uploadData = new FormData();
+
+    uploadData.append("image", file);
+
+    const response = await fetch(
+      "https://namami-infotech.com/Stepkaro/src/category/upload_category_image.php",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: uploadData,
+      }
+    );
+
+    const result = await response.json();
+
+    if (result.success) {
+      setFormData({
+        ...formData,
+        imagePreview: result.image_url,
+      });
+    } else {
+      alert(result.message);
     }
-  };
-
+  } catch (error) {
+    console.log(error);
+  }
+};
   // Export to CSV
   const handleExportCSV = () => {
     const headers = ["ID", "Category Name", "Products", "Sub Categories", "Created At"];
@@ -349,7 +409,17 @@ export default function CategoriesPage() {
                     
                     <td className="px-6 py-4">
                       <div className="w-10 h-10 bg-gradient-to-br from-teal-500/20 to-blue-500/20 rounded-lg flex items-center justify-center text-xl border border-white/10">
-                        {category.image}
+                      {category.image ? (
+  <img
+    src={category.image}
+    alt={category.name}
+    className="w-10 h-10 rounded-lg object-cover"
+  />
+) : (
+  <div className="w-10 h-10 bg-slate-700 rounded-lg flex items-center justify-center">
+    <ImageIcon size={18} className="text-gray-400" />
+  </div>
+)}
                       </div>
                     </td>
                     
@@ -366,27 +436,17 @@ export default function CategoriesPage() {
                     </td> */}
                     
                     <td className="px-6 py-4">
-                      <span className="text-sm text-gray-400">{category.createdAt}</span>
+                      <span className="text-sm text-gray-400">{category.created_at}</span>
                     </td>
                     
-                    {/* <td className="px-6 py-4">
-                      <div className="flex gap-2">
-                        <button 
-                          onClick={() => openEditModal(category)}
-                          className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors"
-                          title="Edit Category"
-                        >
-                          <Edit size={16} />
-                        </button>
-                        <button 
-                          onClick={() => openDeleteModal(category)}
-                          className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
-                          title="Delete Category"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </td> */}
+                    <td className="px-6 py-4">
+  <button
+    onClick={() => openEditModal(category)}
+    className="p-2 text-blue-400 hover:bg-blue-500/20 rounded-lg"
+  >
+    <Edit size={16} />
+  </button>
+</td>
                   </tr>
                 ))
               ) : (
@@ -460,9 +520,11 @@ export default function CategoriesPage() {
             <div className="border-2 border-dashed border-white/20 rounded-lg p-4 text-center hover:border-teal-500/50 transition-colors">
               {formData.imagePreview ? (
                 <div className="relative inline-block">
-                  <div className="w-16 h-16 bg-gradient-to-br from-teal-500/20 to-blue-500/20 rounded-lg flex items-center justify-center text-3xl">
-                    {formData.imagePreview}
-                  </div>
+                 <img
+  src={formData.imagePreview}
+  alt="Preview"
+  className="w-16 h-16 rounded-lg object-cover"
+/>
                   <button
                     type="button"
                     onClick={() => setFormData({...formData, imagePreview: null})}
@@ -489,6 +551,7 @@ export default function CategoriesPage() {
           
           <button
             onClick={handleAddCategory}
+             disabled={!formData.name.trim() || !formData.imagePreview}
             className="w-full py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg transition-colors"
           >
             Create Category
@@ -514,9 +577,11 @@ export default function CategoriesPage() {
             <div className="border-2 border-dashed border-white/20 rounded-lg p-4 text-center hover:border-teal-500/50 transition-colors">
               {formData.imagePreview ? (
                 <div className="relative inline-block">
-                  <div className="w-16 h-16 bg-gradient-to-br from-teal-500/20 to-blue-500/20 rounded-lg flex items-center justify-center text-3xl">
-                    {formData.imagePreview}
-                  </div>
+                  <img
+  src={formData.imagePreview}
+  alt="Preview"
+  className="w-16 h-16 rounded-lg object-cover"
+/>
                   <button
                     type="button"
                     onClick={() => setFormData({...formData, imagePreview: null})}
@@ -542,6 +607,7 @@ export default function CategoriesPage() {
           
           <button
             onClick={handleEditCategory}
+            disabled={!formData.name.trim() || !formData.imagePreview}
             className="w-full py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg transition-colors"
           >
             Save Changes
@@ -549,32 +615,7 @@ export default function CategoriesPage() {
         </div>
       </Modal>
 
-      {/* Delete Category Modal */}
-      <Modal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} title="Delete Category">
-        <p className="text-gray-300 mb-6">
-          Are you sure you want to delete <span className="text-white font-semibold">{selectedCategory?.name}</span>?
-          {selectedCategory?.products > 0 && (
-            <span className="text-red-400 block mt-2">
-              ⚠️ This category has {selectedCategory.products} products. Deleting it may affect these products.
-            </span>
-          )}
-          This action cannot be undone.
-        </p>
-        <div className="flex gap-3">
-          <button
-            onClick={() => setShowDeleteModal(false)}
-            className="flex-1 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleDeleteCategory}
-            className="flex-1 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
-          >
-            Delete
-          </button>
-        </div>
-      </Modal>
+      
     </div>
   );
 }
