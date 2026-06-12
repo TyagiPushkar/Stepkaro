@@ -16,6 +16,9 @@ import {
   X,
   Check,
 } from "lucide-react";
+import ProductFormModal from "@/app/components/shared/ProductFormModel";
+
+// import ProductFormModal from "../../../components/shared/ProductFormModal";
 
 export default function SellerProductsPage() {
   const router = useRouter();
@@ -360,6 +363,16 @@ export default function SellerProductsPage() {
       formData.append("origin", newProduct.origin);
       formData.append("stock_quantity", newProduct.stock_quantity);
       formData.append("status", newProduct.status);
+      formData.append("min_size", newProduct.min_size);
+      formData.append("max_size", newProduct.max_size);
+
+
+    if (newProduct.image) {
+      formData.append("image", newProduct.image); // 👈 Verify if your backend expects "image" or "product_img"
+    }
+    
+
+
 
       let url = "https://namami-infotech.com/Stepkaro/src/product/vendor_add_product.php";
       if (isEditing && editProduct) {
@@ -408,17 +421,48 @@ export default function SellerProductsPage() {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
         <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-          <div className="flex justify-between items-center p-5 border-b sticky top-0 bg-white">
-            <div>
+
+          <div className="flex justify-between items-center p-5 border-b sticky top-0 bg-white z-10">
+            <div className="flex items-center gap-4">
+            {/* <div>
               <h2 className="text-xl font-bold text-gray-900">Product Details</h2>
               <p className="text-sm text-gray-500">ID: #{product.id}</p>
             </div>
             <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100">
               <X size={20} />
+            </button> */}
+          {/* </div> */}
+
+          {/* <div className="p-6"> */}
+          
+          {product.image && (
+              <div className="mb-6 h-16 w-16 bg-gray-100 rounded-xl overflow-hidden flex items-center justify-cente  border">
+                <img 
+                  src={product.image.startsWith('http') ? product.image : `https://namami-infotech.com/Stepkaro/${product.image}`} 
+                  alt={product.name} 
+                  className="h-full h-full object-cover"
+                  onError={(e) => {
+                    // Fail-safe fall back layout if server asset absolute route returns a 404 broken link
+                    e.target.src = "https://placehold.co/300x200?text=No+Image+Available";
+                  }}
+                />
+              </div>
+            )}
+
+              {/* Product details tracking strings shifted directly right next to the picture banner */}
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Product Details</h2>
+                <p className="text-sm text-gray-500">ID: #{product.id}</p>
+              </div>
+            </div>
+            <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 self-start mt-1">
+              <X size={20} />
             </button>
           </div>
-          <div className="p-6">
-            <div className="mb-6 pb-4 border-b">
+
+            <div className="p-6">
+           
+            <div className="mb-6 ">
               <h3 className="text-lg font-semibold text-gray-900">{product.name}</h3>
               <div className="flex items-center gap-3 mt-2">
                 <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${product.stock ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>
@@ -707,7 +751,7 @@ export default function SellerProductsPage() {
       </div>
 
       {/* Add/Edit Product Modal */}
-      {showAddModal && (
+      {/* {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
           <div className="bg-slate-800 rounded-2xl border border-white/10 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-slate-800 border-b border-white/10 px-6 py-4 flex justify-between items-center">
@@ -846,7 +890,17 @@ export default function SellerProductsPage() {
             </div>
           </div>
         </div>
-      )}
+      )} */}
+
+      <ProductFormModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        isEditing={isEditing}
+        newProduct={newProduct}
+        setNewProduct={setNewProduct}
+        filterOptions={filterOptions}
+        onSubmit={submitProduct}
+      />
 
       {/* View Product Modal */}
       <ViewProductModal isOpen={showViewModal} onClose={() => setShowViewModal(false)} product={selectedProduct} />
