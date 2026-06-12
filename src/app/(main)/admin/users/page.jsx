@@ -180,6 +180,7 @@ export default function UsersPage() {
 
   // Toggle user status (approved/not_approved)
   const handleAcceptStatus = (userId, newStatus) => {
+    console.log(`Changing status of user ${userId} to ${newStatus}`);
     setUsers(
       users.map((user) =>
         user.id === userId ? { ...user, status: newStatus } : user,

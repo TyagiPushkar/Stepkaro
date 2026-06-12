@@ -23,12 +23,6 @@ import {
   Plus,
 } from "lucide-react";
 
-
-
-
-
-
-
 const getStatusColor = (status) => {
   const colors = {
     NEW: "bg-yellow-100 text-yellow-700",
@@ -41,12 +35,17 @@ const getStatusColor = (status) => {
 };
 
 const getStatusIcon = (status) => {
-  switch(status) {
-    case "NEW": return Clock3;
-    case "ACCEPTED": return CheckCircle;
-    case "DISPATCHED": return Truck;
-    case "DELIVERED": return PackageCheck;
-    default: return Package;
+  switch (status) {
+    case "NEW":
+      return Clock3;
+    case "ACCEPTED":
+      return CheckCircle;
+    case "DISPATCHED":
+      return Truck;
+    case "DELIVERED":
+      return PackageCheck;
+    default:
+      return Package;
   }
 };
 
@@ -59,117 +58,96 @@ export default function SellerDashboardPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [dashboardData, setDashboardData] = useState(null);
 
-useEffect(() => {
- 
-  const fetchDashboard = async () => {
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      try {
+        const token = localStorage.getItem("access_token");
 
-    try {
+        const response = await fetch(
+          "https://namami-infotech.com/Stepkaro/src/vender/vendor_dashboard.php",
 
-      const token = localStorage.getItem("access_token");
+          {
+            method: "GET",
 
-     
-      const response = await fetch(
-
-        "https://namami-infotech.com/Stepkaro/src/vender/vendor_dashboard.php",
-
-        {
-          method: "GET",
-
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
           },
+        );
+
+        const data = await response.json();
+
+        if (data.success) {
+          setDashboardData(data.data);
+
+          setBestSelling(data.data.best_selling_products || []);
+
+          const ordersResponse = await fetch(
+            "https://namami-infotech.com/Stepkaro/src/vender/get_vendor_orders.php",
+            {
+              method: "GET",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            },
+          );
+
+          const ordersData = await ordersResponse.json();
+
+          if (ordersData.success) {
+            const latestOrders = (ordersData.data || [])
+              .slice(0, 5)
+              .map((order) => ({
+                id: `#${order.id}`,
+                customer: order.city || order.customer_name || "Customer",
+                qty: `${order.total_quantity || 0} items`,
+                status: (order.status || "").toUpperCase(),
+                amount: `₹${order.total_amount || 0}`,
+                date: order.created_at || "",
+              }));
+
+            setRecentOrders(latestOrders);
+          }
         }
-      );
+      } catch (error) {
+        console.log("Dashboard Error:", error);
+      }
+    };
 
-      const data = await response.json();
+    fetchDashboard();
+  }, []);
 
-     
-      if (data.success) {
-
-  setDashboardData(data.data);
-
-  setBestSelling(
-    data.data.best_selling_products || []
-  );
-
-  const ordersResponse = await fetch(
-  "https://namami-infotech.com/Stepkaro/src/vender/get_vendor_orders.php",
-  {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
+  const stats = [
+    {
+      title: "Pending Orders",
+      value: dashboardData?.pending_orders || 0,
+      icon: Clock3,
+      color: "from-yellow-400 to-orange-500",
     },
-  }
-);
 
-const ordersData = await ordersResponse.json();
+    {
+      title: "Stock Out",
+      value: dashboardData?.stock_out || 0,
+      icon: AlertTriangle,
+      color: "from-red-400 to-pink-500",
+    },
 
-if (ordersData.success) {
+    {
+      title: "Total Orders",
+      value: dashboardData?.total_orders || 0,
+      icon: PackageCheck,
+      color: "from-sky-400 to-blue-600",
+    },
 
-  const latestOrders = (ordersData.data || [])
-    .slice(0, 5)
-    .map((order) => ({
-      id: `#${order.id}`,
-      customer:
-        order.city ||
-        order.customer_name ||
-        "Customer",
-      qty: `${order.total_quantity || 0} items`,
-      status: (order.status || "").toUpperCase(),
-      amount: `₹${order.total_amount || 0}`,
-      date: order.created_at || "",
-    }));
-
-  setRecentOrders(latestOrders);
-}
-}
-
-    } catch (error) {
-
-      console.log("Dashboard Error:", error);
-
-    }
-  };
-
-  fetchDashboard();
-
-}, []);
-
-const stats = [
-
-  {
-    title: "Pending Orders",
-    value: dashboardData?.pending_orders || 0,
-    icon: Clock3,
-    color: "from-yellow-400 to-orange-500",
-  },
-
-  {
-    title: "Stock Out",
-    value: dashboardData?.stock_out || 0,
-    icon: AlertTriangle,
-    color: "from-red-400 to-pink-500",
-  },
-
-  
-
-  {
-    title: "Total Orders",
-    value: dashboardData?.total_orders || 0,
-    icon: PackageCheck,
-    color: "from-sky-400 to-blue-600",
-  },
-
-  {
-    title: "Commission Reports",
-    value: `₹${dashboardData?.commission_report?.commission || 0}`,
-    icon: BadgePercent,
-    color: "from-fuchsia-500 to-pink-600",
-  },
-
-];
+    {
+      title: "Commission Reports",
+      value: `₹${dashboardData?.commission_report?.commission || 0}`,
+      icon: BadgePercent,
+      color: "from-fuchsia-500 to-pink-600",
+    },
+  ];
 
   const handleRefresh = () => {
     setIsRefreshing(true);
@@ -202,8 +180,10 @@ const stats = [
       products: bestSelling,
       generatedAt: new Date().toISOString(),
     };
-    
-    const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: "application/json" });
+
+    const blob = new Blob([JSON.stringify(reportData, null, 2)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -234,8 +214,6 @@ const stats = [
         </div>
 
         <div className="flex gap-3">
-       
-
           <button
             onClick={handleExportReport}
             className="rounded-xl border border-violet-200 bg-white px-4 py-2 text-sm font-medium text-violet-700 transition hover:bg-violet-50 flex items-center gap-2"
@@ -250,10 +228,12 @@ const stats = [
               isRefreshing ? "animate-spin" : ""
             }`}
           >
-            <RefreshCw size={16} className={isRefreshing ? "animate-spin" : ""} />
+            <RefreshCw
+              size={16}
+              className={isRefreshing ? "animate-spin" : ""}
+            />
             Refresh
           </button>
-
         </div>
       </div>
 
@@ -265,22 +245,22 @@ const stats = [
           return (
             <div
               key={index}
-               onClick={() =>
-    item.title === "Commission Reports"
-      ? router.push("/seller/payments")
-      : router.push("/seller/orders")
-  }
+              onClick={() =>
+                item.title === "Commission Reports"
+                  ? router.push("/seller/payments")
+                  : router.push("/seller/orders")
+              }
               className="group rounded-2xl bg-white/80 backdrop-blur-sm p-5 shadow-lg border border-violet-100 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
             >
               <div className="flex items-center justify-between">
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-500">{item.title}</p>
+                  <p className="text-sm font-medium text-gray-500">
+                    {item.title}
+                  </p>
                   <h2 className="mt-2 text-2xl font-bold text-gray-900">
                     {item.value}
                   </h2>
-                  <div className="mt-2 flex items-center gap-1">
-                   
-                  </div>
+                  <div className="mt-2 flex items-center gap-1"></div>
                 </div>
 
                 <div
@@ -365,7 +345,9 @@ const stats = [
                 <TrendingUp size={20} />
                 Best Selling Products
               </h2>
-              <p className="text-xs text-gray-500 mt-1">Top performers this month</p>
+              <p className="text-xs text-gray-500 mt-1">
+                Top performers this month
+              </p>
             </div>
 
             {/* <button
@@ -378,47 +360,33 @@ const stats = [
           </div>
 
           <div className="space-y-3">
+            {bestSelling?.map((product, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between rounded-xl border border-violet-100 p-4 transition-all hover:bg-violet-50"
+              >
+                <div className="flex items-center gap-3">
+                  <img
+                    src={product.image}
+                    alt={product.article_name}
+                    className="w-12 h-12 rounded-lg object-cover"
+                  />
 
-  {bestSelling?.map((product, index) => (
+                  <div>
+                    <h3 className="font-semibold text-gray-900">
+                      {product.article_name}
+                    </h3>
 
-    <div
-      key={index}
-      className="flex items-center justify-between rounded-xl border border-violet-100 p-4 transition-all hover:bg-violet-50"
-    >
-
-      <div className="flex items-center gap-3">
-
-        <img
-          src={product.image}
-          alt={product.article_name}
-          className="w-12 h-12 rounded-lg object-cover"
-        />
-
-        <div>
-
-          <h3 className="font-semibold text-gray-900">
-            {product.article_name}
-          </h3>
-
-          <p className="text-xs text-gray-500 mt-1">
-            {product.total_sold} sold
-          </p>
-
-        </div>
-
-      </div>
-
-    </div>
-
-  ))}
-
-</div>
-
-         
+                    <p className="text-xs text-gray-500 mt-1">
+                      {product.total_sold} sold
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
-
-     
     </div>
   );
 }

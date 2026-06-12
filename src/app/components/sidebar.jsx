@@ -33,7 +33,8 @@ const adminNavItems = [
   // { name: "Collections", href: "/admin/collections", icon: Layers },
   { name: "Banners", href: "/admin/banners", icon: ImageIcon },
   { name: "Account", href: "/admin/accounts", icon: User },
-  { name: "Settings", href: "/admin/settings", icon: Settings },
+  // { name: "Settings", href: "/admin/settings", icon: Settings },
+  // { name: "Logout", href: "/admin/logout", icon: IndianRupee },
 ];
 
 // =======================
@@ -45,6 +46,7 @@ const sellerNavItems = [
   { name: "My Orders", href: "/seller/orders", icon: ShoppingCart },
   { name: "Payments", href: "/seller/payments", icon: IndianRupee },
   { name: "Account", href: "/seller/account", icon: User },
+  // { name: "Logout", href: "/seller/logout", icon: IndianRupee },
 ];
 
 export default function Sidebar() {

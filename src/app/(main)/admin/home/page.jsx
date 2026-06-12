@@ -1,12 +1,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
-
+import { useRouter } from "next/navigation";
 export default function HomePage() {
   const [dashboard, setDashboard] = useState(null);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const router = useRouter();
+
+  const handleLogout = () => {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("token"); // safety (agar aur naam se saved ho)
+
+    router.push("/"); // home redirect
+  };
 
   const token =
     typeof window !== "undefined"
@@ -178,6 +186,13 @@ export default function HomePage() {
       <div>
         <h1 className="text-2xl font-bold text-white">Dashboard</h1>
         <p className="text-gray-400 text-sm">Super Admin overview panel</p>
+
+        <button
+          onClick={handleLogout}
+          className="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg transition-colors mt-3"
+        >
+          Logout
+        </button>
       </div>
 
       {/* STATS GRID */}
