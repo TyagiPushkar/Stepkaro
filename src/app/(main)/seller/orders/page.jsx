@@ -157,7 +157,8 @@ const fetchOrders = async () => {
 
       const formattedOrders = result.data.map((item) => ({
 
-  id: `#${item.id}`,
+  // id: `#${item.id}`,
+    id: item.order_id ? item.order_id.toString() : "0",
 
   customer: item.customer_name || "N/A",
 
@@ -182,7 +183,19 @@ const fetchOrders = async () => {
   paymentMethod: "Online",
 
   shippingAddress: item.customer_phone || "-",
+   
+  thumbnailImg: item.items && item.items[0] && item.items[0].image 
+          ? item.items[0].image 
+          : "",
 
+  firstArticleName: item.items && item.items[0] && item.items[0].article_name 
+          ? item.items[0].article_name 
+          : "Unknown Product",
+
+  commission: item.items && item.items[0] && item.items[0].commission !== null && item.items[0].commission !== undefined
+          ? item.items[0].commission.toString() 
+          : "0", 
+  productsList: item.items || []    
 }));
 
       console.log("FORMATTED ORDERS:", formattedOrders);
@@ -434,11 +447,29 @@ const fetchOrders = async () => {
   };
 
   // Modal Component
-  const Modal = ({ isOpen, onClose, title, children }) => {
+  // const Modal = ({ isOpen, onClose, title, children }) => {
+  //   if (!isOpen) return null;
+  //   return (
+  //     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+  //       <div className="bg-white rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+  //         <div className="flex justify-between items-center p-4 border-b">
+  //           <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+  //           <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-600">
+  //             ✕
+  //           </button>
+  //         </div>
+  //         <div className="p-4">{children}</div>
+  //       </div>
+  //     </div>
+  //   );
+  // };
+
+  const Modal = ({ isOpen, onClose, title, children, maxWidth = "max-w-4xl" }) => {
     if (!isOpen) return null;
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-        <div className="bg-white rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+        {/* 🎯 MaxWidth is now dynamic instead of hardcoded to max-w-md */}
+        <div className={`bg-white rounded-2xl w-full ${maxWidth} max-h-[90vh] overflow-y-auto shadow-2xl`}>
           <div className="flex justify-between items-center p-4 border-b">
             <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
             <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-600">
@@ -516,7 +547,7 @@ const fetchOrders = async () => {
       </div>
 
       {/* Quick Stats Row */}
-      <div className="mb-6 flex flex-wrap gap-3">
+      {/* <div className="mb-6 flex flex-wrap gap-3">
         <div className="flex items-center gap-2 rounded-xl bg-white px-4 py-2 shadow-sm">
           <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
           <span className="text-sm text-gray-600">Pending: {pendingCount}</span>
@@ -529,7 +560,7 @@ const fetchOrders = async () => {
           <div className="w-2 h-2 rounded-full bg-purple-500"></div>
           <span className="text-sm text-gray-600">Dispatched: {orders.filter(o => o.status === "DISPATCHED").length}</span>
         </div>
-      </div>
+      </div> */}
 
       {/* Filters */}
       <div className="mb-6 flex flex-wrap gap-3">
@@ -580,6 +611,7 @@ const fetchOrders = async () => {
                
                 <th className="px-6 py-4 font-semibold">Items</th>
                 <th className="px-6 py-4 font-semibold">Quantity</th>
+                <th className="px-6 py-4 font-semibold">Commission</th>
                 <th className="px-6 py-4 font-semibold">Amount</th>
                 <th className="px-6 py-4 font-semibold">Date</th>
                 <th className="px-6 py-4 font-semibold">Status</th>
@@ -597,15 +629,61 @@ const fetchOrders = async () => {
                     className="border-t border-violet-100 text-sm hover:bg-violet-50/60 transition"
                   >
                     <td className="px-6 py-5 font-semibold text-violet-900">
-                      {order.id}
+
+                     <div className="flex items-center gap-3">
+                        
+                        {/* 📦 DYNAMIC IMAGE THUMBNAIL LAYOUT WRAPPER */}
+                        <div className="w-10 h-10 rounded-lg bg-slate-100 border border-violet-100 overflow-hidden shrink-0 shadow-sm relative flex items-center justify-center">
+                          <img
+                            src={
+                              order.thumbnailImg && order.thumbnailImg.trim() !== ""
+                                ? order.thumbnailImg.startsWith("http")
+                                  ? order.thumbnailImg
+                                  : order.thumbnailImg.startsWith("Stepkaro/")
+                                    ? `https://namami-infotech.com/${order.thumbnailImg}`
+                                    : `https://namami-infotech.com/Stepkaro/${order.thumbnailImg}`
+                                : "https://placehold.co/40x40?text=📦"
+                            }
+                            alt="Product preview"
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              // If image fails or path doesn't point to a real file, fallback gracefully
+                              e.target.src = "https://placehold.co/40x40?text=📦";
+                            }}
+                          />
+                        </div>
+
+                        {/* ORDER ID LABEL TOKEN */}
+                        <span className="text-violet-900 font-semibold">
+                          #{order.id}
+                        </span>
+
+                      </div>
                     </td>
                    
-                    <td className="px-6 py-5 text-gray-700">
+                    {/* <td className="px-6 py-5 text-gray-700">
                       {order.items} items
+                    </td> */}
+                    <td className="px-6 py-5 text-gray-700 font-medium max-w-[180px] truncate" title={order.firstArticleName}>
+                      {order.firstArticleName}
+                      
+                      {/* If there's more than 1 item, dynamically calculate the leftover count */}
+                      {order.items > 1 && (
+                        <span className="text-xs text-violet-500 block mt-0.5 font-normal">
+                          +{order.items - 1} more item{order.items > 2 ? 's' : ''}
+                        </span>
+                      )}
                     </td>
+
+
                     <td className="px-6 py-5 text-gray-700">
                       {order.quantity}
                     </td>
+                     <td className="px-6 py-5">
+                      <span className="text-sm font-medium text-purple-600 bg-purple-50 px-2.5 py-1 rounded-md border border-purple-100">
+                        {parseFloat(order.commission)}%
+                      </span>
+                    </td> 
                     <td className="px-6 py-5 font-semibold text-gray-900">
                       ₹{order.amount.toLocaleString()}
                     </td>
@@ -690,7 +768,7 @@ const fetchOrders = async () => {
 
       {/* Order Details Modal */}
       <Modal isOpen={showDetailsModal} onClose={() => setShowDetailsModal(false)} title="Order Details">
-        {selectedOrder && (
+        {/* {selectedOrder && (
           <div className="space-y-4">
             <div className="bg-violet-50 rounded-xl p-4">
               <div className="flex justify-between items-start">
@@ -702,18 +780,18 @@ const fetchOrders = async () => {
                   {selectedOrder.status}
                 </span>
               </div>
-            </div>
+            </div> */}
 
-            <div>
+            {/* <div>
               <h3 className="text-sm font-semibold text-gray-700 mb-2">Customer Information</h3>
               <div className="space-y-2">
                 <p className="text-sm"><span className="text-gray-500">Name:</span> {selectedOrder.customerName}</p>
                 <p className="text-sm"><span className="text-gray-500">Location:</span> {selectedOrder.customer}</p>
                 <p className="text-sm"><span className="text-gray-500">Address:</span> {selectedOrder.shippingAddress}</p>
               </div>
-            </div>
+            </div> */}
 
-            <div>
+            {/* <div>
               <h3 className="text-sm font-semibold text-gray-700 mb-2">Order Details</h3>
               <div className="grid grid-cols-2 gap-2">
                 <p className="text-sm"><span className="text-gray-500">Items:</span> {selectedOrder.items}</p>
@@ -723,9 +801,9 @@ const fetchOrders = async () => {
                 <p className="text-sm"><span className="text-gray-500">Date:</span> {selectedOrder.date}</p>
                 <p className="text-sm"><span className="text-gray-500">Time:</span> {selectedOrder.time}</p>
               </div>
-            </div>
+            </div> */}
 
-            <div className="flex gap-2 pt-2">
+            
               {/* <button
                 onClick={() => {
                   setShowDetailsModal(false);
@@ -736,12 +814,165 @@ const fetchOrders = async () => {
                 <Printer size={16} />
                 Print
               </button> */}
+
+
+              {/* <div className="flex gap-2 pt-2">
               <button
                 onClick={() => setShowDetailsModal(false)}
                 className="flex-1 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700"
               >
                 Close
               </button>
+            </div>
+          </div>
+        )} */}
+
+        {selectedOrder && (
+          <div className="space-y-5 w-full mx-auto">
+            <div className="bg-gradient-to-r from-violet-50 to-purple-50 border border-violet-100 rounded-xl p-5 shadow-sm">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-wider text-violet-500">Order Reference</p>
+                  <p className="text-2xl font-bold text-violet-950 mt-0.5">#{selectedOrder.id}</p>
+                </div>
+                <span className={`rounded-full px-3.5 py-1 text-xs font-bold shadow-sm ${statusConfig[selectedOrder.status]?.color || 'bg-gray-100 text-gray-700'}`}>
+                  {selectedOrder.status}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 mt-4 pt-3 border-t border-violet-200/50 text-xs text-gray-600">
+                <p><span className="text-gray-400 font-medium">Payment Method:</span> <span className="font-semibold text-gray-800">{selectedOrder.paymentMethod}</span></p>
+                <p className="text-right"><span className="text-gray-400 font-medium">Order Date:</span> <span className="font-semibold text-gray-800">{selectedOrder.date}</span></p>
+                <p><span className="text-gray-400 font-medium">Total Amount:</span> <span className="font-bold text-emerald-600">₹{selectedOrder.amount.toLocaleString()}</span></p>
+                <p className="text-right"><span className="text-gray-400 font-medium">Order Time:</span> <span className="font-semibold text-gray-800">{selectedOrder.time}</span></p>
+              </div>
+            </div>
+
+            {/* DYNAMIC PRODUCT LIST BREAKDOWN */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wide flex items-center gap-2">
+                <span className="w-1.5 h-3.5 bg-violet-600 rounded-full inline-block"></span>
+                Ordered Items Breakdown ({selectedOrder.productsList?.length || 0})
+              </h3>
+
+              {selectedOrder.productsList && selectedOrder.productsList.length > 0 ? (
+                selectedOrder.productsList.map((prod, idx) => {
+                  const productImgUrl = prod.image && prod.image.trim() !== ""
+                    ? (prod.image.startsWith("http") ? prod.image : `https://namami-infotech.com/Stepkaro/${prod.image.replace("Stepkaro/", "")}`)
+                    : "https://placehold.co/100x100?text=📦";
+
+                  return (
+                    <div key={idx} className="bg-white border border-gray-200/80 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200">
+                      <div className="bg-gray-50/70 p-3.5 border-b border-gray-100 flex gap-4 items-center">
+                        <div className="w-12 h-12 rounded-lg bg-white border border-gray-200 overflow-hidden shrink-0 shadow-xs relative">
+                          <img src={productImgUrl} alt="Ordered Item" className="w-full h-full object-cover" onError={(e) => { e.target.src = "https://placehold.co/100x100?text=📦"; }} />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-bold text-violet-600 tracking-wide uppercase">{prod.brand_name || "Generic Brand"}</p>
+                          <p className="font-bold text-gray-900 text-sm truncate mt-0.5">{prod.article_name || "Unnamed Product Line"}</p>
+                        </div>
+                        <div className="text-right shrink-0 bg-violet-100/60 border border-violet-200/50 rounded-lg px-2.5 py-1">
+                          <p className="text-xs text-violet-700 font-medium">Item Qty</p>
+                          <p className="text-sm font-black text-violet-950 text-center">{prod.quantity || 1}</p>
+                        </div>
+                      </div>
+
+
+                      <div className="grid grid-cols-2 border-b border-gray-100 bg-white">
+                        
+                        {/* 👥 LEFT COLUMN (50% WIDTH) */}
+                        <div className="p-4 space-y-3.5">
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-violet-500/80">Category</span>
+                            <span className="text-[14px] font-bold text-slate-800">{prod.category_name || "—"}</span>
+                          </div>
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Gender Target</span>
+                            <span className="text-[14px] font-semibold text-slate-700 capitalize">{prod.gender || "—"}</span>
+                          </div>
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Color Scheme</span>
+                            <span className="text-[14px] font-semibold text-slate-700 capitalize">{prod.color || "—"}</span>
+                          </div>
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Material</span>
+                            <span className="text-[14px] font-semibold text-slate-700">{prod.material || "—"}</span>
+                          </div>
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Product Added</span>
+                            <span className="text-[13px] font-medium text-slate-600">{prod.created_at ? new Date(prod.created_at).toLocaleDateString() : "—"}</span>
+                          </div>
+                        </div>
+
+                        {/* 📦 RIGHT COLUMN (50% WIDTH) - Separated by a sharp structural border */}
+                        <div className="p-4 space-y-3.5 border-l border-gray-100 bg-slate-50/30">
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-purple-500">Size Variant</span>
+                            <span className="text-[15px] font-black text-purple-700">{prod.variant || "—"}</span>
+                          </div>
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Packing Type</span>
+                            <span className="text-[14px] font-semibold text-slate-700">{prod.packing_type || "Loose"}</span>
+                          </div>
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Pairs Per Carton</span>
+                            <span className="text-[14px] font-bold text-slate-800">{prod.pairs_per_ctn || "—"}</span>
+                          </div>
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Vendor Commission</span>
+                            <div>
+                              <span className="inline-block text-[13px] font-bold text-amber-700 bg-amber-50 border border-amber-100 rounded px-2 py-0.5 mt-0.5">
+                                {prod.commission ? `${parseFloat(prod.commission)}%` : "0%"}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Item Status</span>
+                            <div>
+                              <span className="inline-block text-[13px] font-bold text-emerald-700 bg-emerald-50 rounded px-2 py-0.5 mt-0.5 capitalize">
+                                {prod.status || "—"}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                      </div>
+
+                      <div className="bg-gray-50/50 px-3.5 py-2.5 flex justify-between items-center text-xs">
+                        <div>
+                          <span className="text-gray-400 font-medium">Unit Selling Price: </span>
+                          <span className="font-bold text-gray-900">₹{prod.selling_price ? Number(prod.selling_price).toLocaleString() : (prod.price ? Number(prod.price).toLocaleString() : "0")}</span>
+                        </div>
+                        {/* <div className="text-right">
+                          <span className="text-gray-500 font-bold">Line Total Cost: </span>
+                          <span className="text-sm font-black text-teal-600 bg-teal-50 border border-teal-100 rounded-lg px-2 py-0.5">₹{Number(prod.total_price || 0).toLocaleString()}</span>
+                        </div> */}
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="p-6 text-center bg-gray-50 rounded-xl border border-dashed border-gray-200 text-sm text-gray-400">
+                  No comprehensive itemized breakdown records available for this order reference item.
+                </div>
+              )}
+            </div>
+
+            {/* 🎯 HIGHLIGHTED CHANGE: REPLACED GENERIC AGGREGATE TEXT LABELS */}
+            <div className="bg-gray-900 text-white rounded-xl p-4 shadow-inner flex justify-between items-center text-sm">
+              <div>
+                  <p className="text-gray-400 font-medium">Total Products Enclosed</p>
+                  <p className="font-semibold text-purple-300 mt-0.5">
+                    {selectedOrder.items} Line Items / Total Quantity: {selectedOrder.quantity}
+                  </p>
+              </div>
+              <div className="text-right">
+                <p className="text-gray-400 text-xs">Grand Total Net Payable</p>
+                <p className="font-black text-xl mt-0.5 text-emerald-400">₹{selectedOrder.amount.toLocaleString()}</p>
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-1">
+              <button onClick={() => setShowDetailsModal(false)} className="w-full py-3 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-bold transition-all duration-150 shadow-md shadow-violet-200 text-sm">Close View Screen</button>
             </div>
           </div>
         )}
