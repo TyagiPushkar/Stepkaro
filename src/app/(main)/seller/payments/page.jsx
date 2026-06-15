@@ -143,7 +143,8 @@ export default function SellerPaymentsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+      // <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+       <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-pink-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-500 mx-auto mb-4"></div>
           <p className="text-gray-400">Loading payment data...</p>
@@ -153,8 +154,9 @@ export default function SellerPaymentsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
-      {/* Success Toast */}
+    // <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
+     <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-pink-50 p-6">
+    {/* Success Toast */}
       {showSuccess && (
         <div className="fixed top-20 right-6 z-50 bg-emerald-500/90 backdrop-blur-sm text-white px-4 py-3 rounded-lg flex items-center gap-2 shadow-lg">
           <CheckCircle size={18} />
@@ -176,14 +178,14 @@ export default function SellerPaymentsPage() {
         <div className="flex gap-3">
           <button
             onClick={handleExport}
-            className="flex items-center gap-2 rounded-xl border border-white/10 bg-slate-800 px-4 py-2 text-sm font-medium text-gray-300 transition hover:bg-slate-700"
+            className="flex items-center gap-2 rounded-xl border border-violet-200 bg-white px-4 py-2 text-sm font-medium text-violet-700 transition hover:bg-violet-50"
           >
             <Download size={16} />
             Export Report
           </button>
           <button
             onClick={handleRefresh}
-            className="flex items-center gap-2 rounded-xl border border-white/10 bg-slate-800 px-4 py-2 text-sm font-medium text-gray-300 transition hover:bg-slate-700"
+            className="flex items-center gap-2 rounded-xl border border-violet-200 bg-white px-4 py-2 text-sm font-medium text-violet-700 transition hover:bg-violet-50"
           >
             <RefreshCw size={16} />
             Refresh
@@ -198,12 +200,13 @@ export default function SellerPaymentsPage() {
           return (
             <div
               key={index}
-              className="group rounded-2xl bg-slate-800/50 backdrop-blur-sm border border-white/10 p-5 shadow-lg hover:border-teal-500/30 transition-all duration-300 hover:scale-[1.02]"
+             className="group rounded-2xl bg-white border border-violet-100 p-5 shadow-md hover:border-violet-300 transition-all duration-300 hover:scale-[1.02]"
+              // className="group rounded-2xl bg-slate-800/50 backdrop-blur-sm border border-white/10 p-5 shadow-lg hover:border-teal-500/30 transition-all duration-300 hover:scale-[1.02]"
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-400">{item.title}</p>
-                  <h2 className="mt-2 text-2xl font-bold text-white">{item.value}</h2>
+                  <p className="text-sm font-semibold text-gray-400">{item.title}</p>
+                  <h2 className="mt-2 text-2xl font-bold text-gray-900">{item.value}</h2>
                 </div>
                 <div
                   className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-r ${item.color} text-white shadow-lg group-hover:scale-110 transition-transform duration-300`}
@@ -217,12 +220,14 @@ export default function SellerPaymentsPage() {
       </div>
 
       {/* Pending Payments Table */}
-      <div className="mt-8 rounded-2xl bg-slate-800/50 backdrop-blur-sm border border-white/10 shadow-lg overflow-hidden">
+
+      {/* <div className="mt-8 rounded-2xl bg-slate-800/50 backdrop-blur-sm border border-white/10 shadow-lg overflow-hidden"> */}
+      <div className="mt-8 rounded-2xl bg-white border border-violet-100 shadow-lg overflow-hidden">
         <div className="px-6 py-4 border-b border-white/10">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-semibold text-white">Pending Payments</h2>
-              <p className="text-sm text-gray-400 mt-1">Orders waiting for settlement</p>
+              <h2 className="text-xl font-semibold text--gray-900">Pending Payments</h2>
+              <p className="text-sm text-gray-500 mt-1">Orders waiting for settlement</p>
             </div>
             <div className="flex items-center gap-2">
               <Clock size={16} className="text-amber-400" />
@@ -234,8 +239,11 @@ export default function SellerPaymentsPage() {
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-slate-800/80 border-b border-white/10">
-              <tr className="text-left text-sm text-gray-400">
+
+            {/* <thead className="bg-slate-800/80 border-b border-white/10"> */}
+             <thead className="bg-gradient-to-r from-violet-50 to-purple-50 border-b border-violet-100">
+              {/* <tr className="text-left text-sm text-gray-400"> */}
+               <tr className="text-left text-xs uppercase tracking-wider text-violet-800">
                 <th className="px-6 py-4 font-semibold">Order ID</th>
                 <th className="px-6 py-4 font-semibold">Order Amount</th>
                 <th className="px-6 py-4 font-semibold">Commission</th>
@@ -245,17 +253,18 @@ export default function SellerPaymentsPage() {
                 <th className="px-6 py-4 font-semibold">Expected Date</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
+            {/* <tbody className="divide-y divide-white/5"> */}
+            <tbody className="divide-y divide-violet-100 text-sm">
               {pendingPayments.length > 0 ? (
                 pendingPayments.map((item) => (
-                  <tr key={item.id} className="hover:bg-white/5 transition-colors">
-                    <td className="px-6 py-4 text-sm font-medium text-white">
+                  <tr key={item.id} className="hover:bg-violet-50/40 transition-colors">
+                    <td className="px-6 py-4 text-sm font-bold text-violet-900">
                       #{item.order_id}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-300">
+                    <td className="px-6 py-4 text-sm text-gray-700 font font-medium">
                       ₹{item.total_amount?.toLocaleString()}
                     </td>
-                    <td className="px-6 py-4 text-sm text-fuchsia-400">
+                    <td className="px-6 py-4 text-sm text-fuchsia-600">
                       ₹{item.commission_amount?.toLocaleString()}
                     </td>
                     <td className="px-6 py-4 text-sm font-semibold text-teal-400">
@@ -267,7 +276,7 @@ export default function SellerPaymentsPage() {
                         Pending
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-400">
+                    <td className="px-6 py-4 text-sm text-gray-600">
                       {item.order_date || item.created_at?.split(" ")[0]}
                     </td>
                     <td className="px-6 py-4 text-sm text-amber-400">
@@ -289,15 +298,18 @@ export default function SellerPaymentsPage() {
       </div>
 
       {/* Payment History Table */}
-      <div className="mt-8 rounded-2xl bg-slate-800/50 backdrop-blur-sm border border-white/10 shadow-lg overflow-hidden">
-        <div className="px-6 py-4 border-b border-white/10">
-          <h2 className="text-xl font-semibold text-white">Payment History</h2>
+      {/* <div className="mt-8 rounded-2xl bg-slate-800/50 backdrop-blur-sm border border-white/10 shadow-lg overflow-hidden"> */}
+      <div className="mt-8 rounded-2xl bg-white border border-violet-100 shadow-lg overflow-hidden">
+        {/* <div className="px-6 py-4 border-b border-white/10"> */}
+        <div className="px-6 py-4 border-b border-violet-100">
+          <h2 className="text-xl font-semibold text-gray-900">Payment History</h2>
           <p className="text-sm text-gray-400 mt-1">Recent transactions and settlements</p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-slate-800/80 border-b border-white/10">
-              <tr className="text-left text-sm text-gray-400">
+            {/* <thead className="bg-slate-800/80 border-b border-white/10"> */}
+             <thead className="bg-gradient-to-r from-violet-50 to-purple-50 border-b border-violet-100">
+              <tr className="text-left text-sm text-violet-800">
                 <th className="px-6 py-4 font-semibold">Order ID</th>
                 <th className="px-6 py-4 font-semibold">Amount</th>
                 <th className="px-6 py-4 font-semibold">Commission</th>
@@ -306,23 +318,23 @@ export default function SellerPaymentsPage() {
                 <th className="px-6 py-4 font-semibold">Date</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
+            <tbody className="divide-y divide-violet-100">
               {paymentHistory.length > 0 ? (
                 paymentHistory.map((item) => {
                   const statusBadge = getPaymentStatusBadge(item.payment_status);
                   const StatusIcon = statusBadge.icon;
                   return (
-                    <tr key={item.id} className="hover:bg-white/5 transition-colors">
-                      <td className="px-6 py-4 text-sm font-medium text-white">
+                    <tr key={item.id} className="hover:bg-violet-50/50 transition-colors">
+                      <td className="px-6 py-4 text-sm font-medium text--violet-900">
                         #{item.order_id}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-300">
+                      <td className="px-6 py-4 text-sm text-gray-700">
                         ₹{item.total_amount?.toLocaleString()}
                       </td>
-                      <td className="px-6 py-4 text-sm text-fuchsia-400">
+                      <td className="px-6 py-4 text-sm text-fuchsia-600">
                         ₹{item.commission_amount?.toLocaleString()}
                       </td>
-                      <td className="px-6 py-4 text-sm font-semibold text-teal-400">
+                      <td className="px-6 py-4 text-sm font-semibold text-teal-600">
                         ₹{item.payout_amount?.toLocaleString()}
                       </td>
                       <td className="px-6 py-4">
@@ -331,7 +343,7 @@ export default function SellerPaymentsPage() {
                           {statusBadge.label}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-400">
+                      <td className="px-6 py-4 text-sm text-gray-500">
                         {item.payment_date || item.created_at?.split(" ")[0]}
                       </td>
                     </tr>
@@ -339,7 +351,7 @@ export default function SellerPaymentsPage() {
                 })
               ) : (
                 <tr>
-                  <td colSpan="6" className="px-6 py-12 text-center text-gray-400">
+                  <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
                     No payment history found
                   </td>
                 </tr>
@@ -350,15 +362,19 @@ export default function SellerPaymentsPage() {
       </div>
 
       {/* Monthly Sales Report Table */}
-      <div className="mt-8 rounded-2xl bg-slate-800/50 backdrop-blur-sm border border-white/10 shadow-lg overflow-hidden">
-        <div className="px-6 py-4 border-b border-white/10">
-          <h2 className="text-xl font-semibold text-white">Monthly Sales Report</h2>
-          <p className="text-sm text-gray-400 mt-1">Sales and commission breakdown by month</p>
+      {/* <div className="mt-8 rounded-2xl bg-slate-800/50 backdrop-blur-sm border border-white/10 shadow-lg overflow-hidden"> */}
+
+      <div className="mt-8 rounded-2xl bg-white border border-violet-100 shadow-lg overflow-hidden">
+        {/* <div className="px-6 py-4 border-b border-white/10"> */}
+        <div className="px-6 py-4 border-b border-violet-100">
+          <h2 className="text-xl font-semibold text-gray-900">Monthly Sales Report</h2>
+          <p className="text-sm text-gray-500 mt-1">Sales and commission breakdown by month</p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-slate-800/80 border-b border-white/10">
-              <tr className="text-left text-sm text-gray-400">
+            {/* <thead className="bg-slate-800/80 border-b border-white/10"> */}
+            <thead className="bg-gradient-to-r from-violet-50 to-purple-50 border-b border-violet-100">
+              <tr className="text-left text-sm text-violet-800">
                 <th className="px-6 py-4 font-semibold">Month</th>
                 <th className="px-6 py-4 font-semibold">Orders</th>
                 <th className="px-6 py-4 font-semibold">Total Sales</th>
@@ -366,23 +382,23 @@ export default function SellerPaymentsPage() {
                 <th className="px-6 py-4 font-semibold">Net Payout</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
+            <tbody className="divide-y divide-violet-100">
               {monthlySales.length > 0 ? (
                 monthlySales.map((item, index) => (
-                  <tr key={index} className="hover:bg-white/5 transition-colors">
-                    <td className="px-6 py-4 text-sm font-medium text-white">
+                  <tr key={index} className="hover:bg-violet-50/50 transition-colors">
+                    <td className="px-6 py-4 text-sm font-medium text-violet-900">
                       {item.month}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-300">
+                    <td className="px-6 py-4 text-sm text-gray-700">
                       {item.total_orders}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-300">
+                    <td className="px-6 py-4 text-sm text-gray-700">
                       ₹{item.total_sales?.toLocaleString()}
                     </td>
-                    <td className="px-6 py-4 text-sm text-fuchsia-400">
+                    <td className="px-6 py-4 text-sm text-fuchsia-600">
                       ₹{item.total_commission?.toLocaleString()}
                     </td>
-                    <td className="px-6 py-4 text-sm font-semibold text-teal-400">
+                    <td className="px-6 py-4 text-sm font-semibold text-teal-600">
                       ₹{item.total_payout?.toLocaleString()}
                     </td>
                   </tr>

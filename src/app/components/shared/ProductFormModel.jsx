@@ -121,7 +121,7 @@ useEffect(() => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
       <div className="bg-slate-800 rounded-2xl border border-white/10 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-slate-800 border-b border-white/10 px-6 py-4 flex justify-between items-center">
+        <div className="sticky top-0 z-50 bg-slate-800 border-b border-white/10 px-6 py-4 flex justify-between items-center">
           <h2 className="text-xl font-bold text-white">
             {isEditing ? "Edit Product" : "Add Product"}
           </h2>
@@ -240,11 +240,12 @@ useEffect(() => {
                 </div>
                 ) :(
                    
-                    <div className="ml-auto pr-2">
-                    <span className="text-xs bg-white/5 border border-white/10 px-3 py-1.5 rounded-lg text-gray-400 font-medium select-none">
-                      Photo Cannot Be Changed
-                    </span>
-                  </div>
+                  //   <div className="ml-auto pr-2">
+                  //   <span className="text-xs bg-white/5 border border-white/10 px-3 py-1.5 rounded-lg text-gray-400 font-medium select-none">
+                  //     Photo Cannot Be Changed
+                  //   </span>
+                  // </div>
+                  null
                 )}
                     
 
