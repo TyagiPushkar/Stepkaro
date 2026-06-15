@@ -32,6 +32,7 @@ export function normalizeProduct(product) {
     category: product.category || product.category_name || "—",
     brand: product.brand || product.brand_name || "—",
     size:
+      product.variant ||
       product.size ||
       (product.min_size && product.max_size
         ? `${product.min_size}-${product.max_size}`
@@ -141,7 +142,7 @@ export default function ViewProductModal({
     { icon: Tag, label: "Category", value: p.category },
     { icon: Package, label: "Brand", value: p.brand },
     { icon: Hash, label: "Article", value: p.article },
-    { icon: Layers, label: "Size", value: p.size },
+    { icon: Layers, label: "Size/Variant", value: p.size },
     { icon: Palette, label: "Color", value: p.color },
     { icon: Box, label: "Material", value: p.material },
     { icon: Package, label: "Packing Type", value: p.packingType },

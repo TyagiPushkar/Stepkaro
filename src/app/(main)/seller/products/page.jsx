@@ -97,7 +97,11 @@ export default function SellerProductsPage() {
           category: p.category_name,
           brand: p.brand_name,
           article: p.article_name,
-          size: p.min_size && p.max_size ? `${p.min_size}-${p.max_size}` : p.size,
+          size: p.variant && p.variant.trim() !== "" 
+            ? p.variant 
+           : (p.min_size && p.max_size ? `${p.min_size}-${p.max_size}` : p.size || "—"),
+           min_size: p.min_size,
+           max_size : p.max_size,
           color: p.color,
           material: p.material,
           packingType: p.packing_type,
@@ -107,6 +111,7 @@ export default function SellerProductsPage() {
           gender: p.gender,
           description: p.description,
           status: p.status,
+           commission: p.commission || "0",
         }));
         setProducts(formattedProducts);
       }
@@ -277,12 +282,35 @@ export default function SellerProductsPage() {
 
   const handleEditProduct = (product) => {
     // Parse size range if exists
-    let minSize = "";
-    let maxSize = "";
-    if (product.size && product.size.includes("-")) {
-      const [min, max] = product.size.split("-");
-      minSize = min;
-      maxSize = max;
+    // let minSize = "";
+    // let maxSize = "";
+      
+    let extractedMin = "";
+    let extractedMax = "";
+    // if (product.size && product.size.includes("-")) {
+    //   const [min, max] = product.size.split("-");
+    //   minSize = min;
+    //   maxSize = max;
+    // }
+      
+    if (product.size && product.size.toLowerCase().includes("x")) {
+      const parts = product.size.toLowerCase().split("x");
+      if (parts.length === 2) {
+        extractedMin = parts[0].trim();
+        extractedMax = parts[1].trim();
+      }
+    }
+
+    else if (product.size && product.size.includes("-")) {
+      const parts = product.size.split("-");
+      if (parts.length === 2) {
+        extractedMin = parts[0].trim();
+        extractedMax = parts[1].trim();
+      }
+    }
+    else {
+      extractedMin = product.min_size || "";
+      extractedMax = product.max_size || "";
     }
 
     setEditProduct(product);
@@ -293,8 +321,8 @@ export default function SellerProductsPage() {
       price: product.price || "",
       brand_name: product.brand || "",
       category_name: product.category || "",
-      min_size: minSize,
-      max_size: maxSize,
+      // min_size: minSize,
+      // max_size: maxSize,
       gender: product.gender || "",
       color: product.color || "",
       material: product.material || "",
@@ -303,6 +331,12 @@ export default function SellerProductsPage() {
       origin: product.origin || "Made in India",
       stock_quantity: product.quantity || "",
       status: product.status || "inactive",
+      image: product.image || "",
+      // min_size: product.min_size || "",
+      // max_size: product.max_size || "",
+
+       min_size: extractedMin,
+       max_size: extractedMax,
     });
     setIsEditing(true);
     setShowAddModal(true);
@@ -369,9 +403,7 @@ export default function SellerProductsPage() {
     if (newProduct.image) {
       formData.append("image", newProduct.image); // 👈 Verify if your backend expects "image" or "product_img"
     }
-    
-
-
+  
 
       let url = "https://namami-infotech.com/Stepkaro/src/product/vendor_add_product.php";
       if (isEditing && editProduct) {
@@ -412,6 +444,8 @@ export default function SellerProductsPage() {
   const totalProducts = products.length;
   const activeProducts = products.filter(p => p.stock === true).length;
   const inactiveProducts = products.filter(p => p.stock === false).length;
+  const outOfStockProducts = products.filter(p => Number(p.quantity || 0) === 0).length;
+
 
   if (!isMounted) {
     return (
@@ -450,7 +484,7 @@ export default function SellerProductsPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 p-4 text-white">
           <p className="text-xs opacity-90">Total Products</p>
           <p className="text-2xl font-bold">{totalProducts}</p>
@@ -462,6 +496,11 @@ export default function SellerProductsPage() {
         <div className="rounded-xl bg-gradient-to-r from-red-500 to-orange-500 p-4 text-white">
           <p className="text-xs opacity-90">Inactive Products</p>
           <p className="text-2xl font-bold">{inactiveProducts}</p>
+        </div>
+         
+         <div className="rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 p-4 text-white shadow-lg">
+          <p className="text-xs opacity-90">Out of Stock</p>
+          <p className="text-2xl font-bold">{outOfStockProducts}</p>
         </div>
       </div>
 
@@ -510,6 +549,7 @@ export default function SellerProductsPage() {
                 <th className="px-6 py-4 font-semibold">ID</th>
                 <th className="px-6 py-4 font-semibold">Product Name</th>
                 <th className="px-6 py-4 font-semibold">Category</th>
+                <th className="px-6 py-4 font-semibold">Commission</th>
                 <th className="px-6 py-4 font-semibold">Price</th>
                 <th className="px-6 py-4 font-semibold">Quantity</th>
                 <th className="px-6 py-4 font-semibold">Status</th>
@@ -525,6 +565,11 @@ export default function SellerProductsPage() {
                   </td>
                   <td className="px-6 py-4">
                     <span className="text-sm text-violet-600">{product.category}</span>
+                  </td>
+                   <td className="px-6 py-4">
+                    <span className="text-sm font-medium text-purple-600 bg-purple-50 px-2.5 py-1 rounded-md border border-purple-100">
+                      {product.commission}%
+                    </span>
                   </td>
                   <td className="px-6 py-4">
                     <span className="text-sm font-semibold text-teal-600">₹{product.price}</span>
