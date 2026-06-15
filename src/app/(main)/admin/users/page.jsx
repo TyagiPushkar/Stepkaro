@@ -27,6 +27,14 @@ export default function UsersPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [showApprovalModal, setShowApprovalModal] = useState(false);
+
+const [approvalData, setApprovalData] = useState({
+  wallet_value: "",
+  minimum_order_value: "",
+});
+
+const [approvalUser, setApprovalUser] = useState(null);
 
   // Form states
   const [formData, setFormData] = useState({
@@ -35,7 +43,7 @@ export default function UsersPage() {
     phone: "",
     role: "buyer",
     address: "",
-    status: "not_approved",
+    status: "pending",
   });
 
   // Users state
@@ -120,17 +128,16 @@ export default function UsersPage() {
       color: "green",
     },
     {
-      label: "Approved",
-      value: "approved",
-      count: users.filter((u) => u.status === "approved").length,
-      color: "emerald",
-    },
-    {
-      label: "Not Approved",
-      value: "not_approved",
-      count: users.filter((u) => u.status === "not_approved").length,
-      color: "red",
-    },
+  label: "Active",
+  value: "active",
+  count: users.filter((u) => u.status === "active").length,
+},
+
+{
+  label: "Inactive",
+  value: "inactive",
+  count: users.filter((u) => u.status === "inactive").length,
+},
   ];
 
   // Filter users
@@ -177,72 +184,190 @@ export default function UsersPage() {
     setSelectedFilter(filterValue);
     setCurrentPage(1);
   };
+  const openApprovalModal = (user) => {
+  setApprovalUser(user);
 
-  // Toggle user status (approved/not_approved)
-  const handleAcceptStatus = (userId, newStatus) => {
-    console.log(`Changing status of user ${userId} to ${newStatus}`);
-    setUsers(
-      users.map((user) =>
-        user.id === userId ? { ...user, status: newStatus } : user,
-      ),
-    );
-  };
+  setApprovalData({
+    wallet_value: "",
+    minimum_order_value: "",
+  });
 
-  // Add new user
-  const handleAddUser = () => {
-    if (
-      !formData.name.trim() ||
-      !formData.email.trim() ||
-      !formData.phone.trim()
-    ) {
-      alert("Please fill all required fields");
-      return;
+  setShowApprovalModal(true);
+};
+
+ 
+
+const approveUser = async () => {
+
+  const token = localStorage.getItem("access_token");
+
+  try {
+
+    console.log("Approve clicked");
+    console.log("approvalUser", approvalUser);
+    console.log("approvalData", approvalData);
+
+    if (approvalUser.role === "buyer") {
+
+      if (approvalData.wallet_value) {
+
+        const walletResponse = await fetch(
+          "https://namami-infotech.com/Stepkaro/src/super_admin/set_wallet_user.php",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              buyer_id: approvalUser.id,
+              wallet_value: approvalData.wallet_value,
+            }),
+          }
+        );
+
+        const walletResult = await walletResponse.json();
+
+        console.log("Wallet Response", walletResult);
+      }
+
+      const statusResponse = await fetch(
+        "https://namami-infotech.com/Stepkaro/src/admin/update_user_status_admin.php",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            user_type: "buyer",
+            id: approvalUser.id,
+            status: "active",
+          }),
+        }
+      );
+
+      const statusResult = await statusResponse.json();
+
+      console.log("Status Response", statusResult);
+
+    } else {
+
+      if (approvalData.minimum_order_value) {
+
+        const minimumResponse = await fetch(
+          "https://namami-infotech.com/Stepkaro/src/admin/set_vendor_minimum_order.php",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              vendor_id: approvalUser.id,
+              minimum_order_value:
+                approvalData.minimum_order_value,
+            }),
+          }
+        );
+
+        const minimumResult = await minimumResponse.json();
+
+        console.log(
+          "Minimum Order Response",
+          minimumResult
+        );
+      }
+
+      const statusResponse = await fetch(
+        "https://namami-infotech.com/Stepkaro/src/admin/update_user_status_admin.php",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            user_type: "vendor",
+            id: approvalUser.id,
+            status: "active",
+          }),
+        }
+      );
+
+      const statusResult = await statusResponse.json();
+
+      console.log("Status Response", statusResult);
     }
 
-    const newId = Math.max(...users.map((u) => u.id), 0) + 1;
-    const newUser = {
-      id: newId,
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      role: formData.role,
-      address: formData.address,
-      status: formData.status,
-      avatar: formData.role === "seller" ? "👨" : "👩",
-      createdAt: new Date().toISOString().split("T")[0],
-    };
-    setUsers([...users, newUser]);
-    setShowAddModal(false);
-    setFormData({
-      name: "",
-      email: "",
-      phone: "",
-      role: "buyer",
-      address: "",
-      status: "not_approved",
-    });
-  };
+    setShowApprovalModal(false);
+
+window.location.reload();
+
+  
+
+  } catch (error) {
+
+    console.log("Approve Error", error);
+
+  }
+};
+
+ 
+  // const handleAddUser = () => {
+  //   if (
+  //     !formData.name.trim() ||
+  //     !formData.email.trim() ||
+  //     !formData.phone.trim()
+  //   ) {
+  //     alert("Please fill all required fields");
+  //     return;
+  //   }
+
+  //   const newId = Math.max(...users.map((u) => u.id), 0) + 1;
+  //   const newUser = {
+  //     id: newId,
+  //     name: formData.name,
+  //     email: formData.email,
+  //     phone: formData.phone,
+  //     role: formData.role,
+  //     address: formData.address,
+  //     status: formData.status,
+  //     avatar: formData.role === "seller" ? "👨" : "👩",
+  //     createdAt: new Date().toISOString().split("T")[0],
+  //   };
+  //   setUsers([...users, newUser]);
+  //   setShowAddModal(false);
+  //   setFormData({
+  //     name: "",
+  //     email: "",
+  //     phone: "",
+  //     role: "buyer",
+  //     address: "",
+  //     status: "pending",
+  //   });
+  // };
 
   // Edit user
-  const handleEditUser = () => {
-    setUsers(
-      users.map((user) =>
-        user.id === selectedUser.id
-          ? {
-              ...user,
-              name: formData.name,
-              email: formData.email,
-              phone: formData.phone,
-              role: formData.role,
-              address: formData.address,
-              status: formData.status,
-            }
-          : user,
-      ),
-    );
-    setShowEditModal(false);
-    setSelectedUser(null);
-  };
+  // const handleEditUser = () => {
+  //   setUsers(
+  //     users.map((user) =>
+  //       user.id === selectedUser.id
+  //         ? {
+  //             ...user,
+  //             name: formData.name,
+  //             email: formData.email,
+  //             phone: formData.phone,
+  //             role: formData.role,
+  //             address: formData.address,
+  //             status: formData.status,
+  //           }
+  //         : user,
+  //     ),
+  //   );
+  //   setShowEditModal(false);
+  //   setSelectedUser(null);
+  // };
 
   // Delete user
   const handleDeleteUser = () => {
@@ -294,7 +419,7 @@ export default function UsersPage() {
       user.phone,
       user.role,
       user.address,
-      user.status === "approved" ? "Approved" : "Not Approved",
+      user.status ,
       user.createdAt,
     ]);
 
@@ -316,14 +441,17 @@ export default function UsersPage() {
       ? "bg-blue-500/20 text-blue-400"
       : "bg-green-500/20 text-green-400";
   };
+const getStatusBadge = (status) => {
+  if (status === "active") {
+    return "bg-emerald-500/20 text-emerald-400";
+  }
 
-  // Get status badge color
-  const getStatusBadge = (status) => {
-    return status === "approved"
-      ? "bg-emerald-500/20 text-emerald-400"
-      : "bg-red-500/20 text-red-400";
-  };
+  if (status === "pending") {
+    return "bg-yellow-500/20 text-yellow-400";
+  }
 
+  return "bg-red-500/20 text-red-400";
+};
   // Modal component
   const Modal = ({ isOpen, onClose, title, children }) => {
     if (!isOpen) return null;
@@ -344,13 +472,47 @@ export default function UsersPage() {
       </div>
     );
   };
+  const updateUserStatus = async (user, status) => {
+
+  const token = localStorage.getItem("access_token");
+
+  try {
+
+    await fetch(
+      "https://namami-infotech.com/Stepkaro/src/admin/update_user_status_admin.php",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_type:
+            user.role === "buyer"
+              ? "buyer"
+              : "vendor",
+          id: user.id,
+          status,
+        }),
+      }
+    );
+
+    window.location.reload();
+
+  } catch (error) {
+    console.log(error);
+  }
+};
 
   // Stats summary
-  const totalUsers = users.length;
+  
   const requested = users.filter((u) => u.status === "pending").length;
   const totalSellers = users.filter((u) => u.role === "seller").length;
   const totalBuyers = users.filter((u) => u.role === "buyer").length;
-  const notApproved = users.filter((u) => u.status === "not_approved").length;
+ const inactiveUsers =
+  users.filter(
+    (u) => u.status === "inactive"
+  ).length;
 
   if (loading) {
     return <div className="text-white p-6">Loading users...</div>;
@@ -382,13 +544,13 @@ export default function UsersPage() {
             />
           </div>
 
-          <button
+          {/* <button
             onClick={() => setShowAddModal(true)}
             className="bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-colors"
           >
             <Plus size={16} />
             Create User
-          </button>
+          </button> */}
 
           <button
             onClick={handleExportCSV}
@@ -402,22 +564,12 @@ export default function UsersPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-xl p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-teal-500/20 rounded-lg">
-              <UsersIcon size={20} className="text-teal-400" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-white">{totalUsers}</p>
-              <p className="text-xs text-gray-400">Total Users</p>
-            </div>
-          </div>
-        </div>
+       
         {/* total pending requests */}
         <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-xl p-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-teal-500/20 rounded-lg">
-              <UsersIcon size={20} className="text-red-400" />
+              <UsersIcon size={20} className="text-yellow-400" />
             </div>
             <div>
               <p className="text-2xl font-bold text-white">{requested}</p>
@@ -456,8 +608,8 @@ export default function UsersPage() {
               <XCircle size={20} className="text-red-400" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">{notApproved}</p>
-              <p className="text-xs text-gray-400">Not Approved</p>
+              <p className="text-2xl font-bold text-white">{inactiveUsers}</p>
+              <p className="text-xs text-gray-400">Inactive Users</p>
             </div>
           </div>
         </div>
@@ -596,43 +748,41 @@ export default function UsersPage() {
                       {user.status === "pending" ? (
                         <div className="flex items-center gap-2">
                           <button
-                            onClick={() =>
-                              handleAcceptStatus(user.id, user.role, "approved")
-                            }
+                            onClick={() => openApprovalModal(user)}
                             className="px-3 py-1 text-xs rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition"
                           >
-                            Accept
+                            Accept Request
                           </button>
 
                           <button
-                            onClick={() =>
-                              handleAcceptStatus(user.id, "rejected")
-                            }
+                           onClick={() =>
+  updateUserStatus(user, "inactive")
+}
                             className="px-3 py-1 text-xs rounded-lg bg-red-500 text-white hover:bg-red-600 transition"
                           >
-                            Reject
+                            Reject Request
                           </button>
                         </div>
                       ) : (
                         <div className="flex items-center gap-2">
                           <button
-                            onClick={() =>
-                              handleAcceptStatus(
-                                user.id,
-                                user.status === "approved"
-                                  ? "rejected"
-                                  : "approved",
-                              )
-                            }
+                           onClick={() =>
+  updateUserStatus(
+    user,
+    user.status === "active"
+      ? "inactive"
+      : "active"
+  )
+}
                             className={`relative h-6 w-12 rounded-full transition ${
-                              user.status === "approved"
+                              user.status === "active"
                                 ? "bg-emerald-500"
                                 : "bg-red-500"
                             }`}
                           >
                             <span
                               className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition ${
-                                user.status === "approved"
+                                user.status === "active"
                                   ? "left-6"
                                   : "left-0.5"
                               }`}
@@ -644,7 +794,7 @@ export default function UsersPage() {
                               user.status,
                             )}`}
                           >
-                            {user.status === "approved" ? "active" : "inactive"}
+                            {user.status }
                           </span>
                         </div>
                       )}
@@ -733,181 +883,8 @@ export default function UsersPage() {
         )}
       </div>
 
-      {/* Add User Modal */}
-      <Modal
-        isOpen={showAddModal}
-        onClose={() => setShowAddModal(false)}
-        title="Create New User"
-      >
-        <div className="space-y-4">
-          <div>
-            <label className="text-sm text-gray-400 block mb-1">
-              Full Name *
-            </label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
-              }
-              className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-              placeholder="Enter full name"
-            />
-          </div>
-          <div>
-            <label className="text-sm text-gray-400 block mb-1">Email *</label>
-            <input
-              type="email"
-              value={formData.email}
-              onChange={(e) =>
-                setFormData({ ...formData, email: e.target.value })
-              }
-              className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-              placeholder="Enter email address"
-            />
-          </div>
-          {/* <div>
-            <label className="text-sm text-gray-400 block mb-1">Phone Number *</label>
-            <input
-              type="tel"
-              value={formData.phone}
-              onChange={(e) => setFormData({...formData, phone: e.target.value})}
-              className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-              placeholder="Enter phone number"
-            />
-          </div> */}
-          <div>
-            <label className="text-sm text-gray-400 block mb-1">Role</label>
-            <select
-              value={formData.role}
-              onChange={(e) =>
-                setFormData({ ...formData, role: e.target.value })
-              }
-              className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-            >
-              <option value="buyer">Buyer</option>
-              <option value="seller">Seller</option>
-            </select>
-          </div>
-          <div>
-            <label className="text-sm text-gray-400 block mb-1">Address</label>
-            <textarea
-              value={formData.address}
-              onChange={(e) =>
-                setFormData({ ...formData, address: e.target.value })
-              }
-              className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-              placeholder="Enter address"
-              rows="2"
-            />
-          </div>
-          <div>
-            <label className="text-sm text-gray-400 block mb-1">Status</label>
-            <select
-              value={formData.status}
-              onChange={(e) =>
-                setFormData({ ...formData, status: e.target.value })
-              }
-              className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-            >
-              <option value="not_approved">Not Approved</option>
-              <option value="approved">Approved</option>
-            </select>
-          </div>
-          <button
-            onClick={handleAddUser}
-            className="w-full py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg transition-colors"
-          >
-            Create User
-          </button>
-        </div>
-      </Modal>
-
-      {/* Edit User Modal */}
-      <Modal
-        isOpen={showEditModal}
-        onClose={() => setShowEditModal(false)}
-        title="Edit User"
-      >
-        <div className="space-y-4">
-          <div>
-            <label className="text-sm text-gray-400 block mb-1">
-              Full Name
-            </label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
-              }
-              className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-            />
-          </div>
-          <div>
-            <label className="text-sm text-gray-400 block mb-1">Email</label>
-            <input
-              type="email"
-              value={formData.email}
-              onChange={(e) =>
-                setFormData({ ...formData, email: e.target.value })
-              }
-              className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-            />
-          </div>
-          {/* <div>
-            <label className="text-sm text-gray-400 block mb-1">Phone Number</label>
-            <input
-              type="tel"
-              value={formData.phone}
-              onChange={(e) => setFormData({...formData, phone: e.target.value})}
-              className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-            />
-          </div> */}
-          <div>
-            <label className="text-sm text-gray-400 block mb-1">Role</label>
-            <select
-              value={formData.role}
-              onChange={(e) =>
-                setFormData({ ...formData, role: e.target.value })
-              }
-              className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-            >
-              <option value="buyer">Buyer</option>
-              <option value="seller">Seller</option>
-            </select>
-          </div>
-          <div>
-            <label className="text-sm text-gray-400 block mb-1">Address</label>
-            <textarea
-              value={formData.address}
-              onChange={(e) =>
-                setFormData({ ...formData, address: e.target.value })
-              }
-              className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-              rows="2"
-            />
-          </div>
-          <div>
-            <label className="text-sm text-gray-400 block mb-1">Status</label>
-            <select
-              value={formData.status}
-              onChange={(e) =>
-                setFormData({ ...formData, status: e.target.value })
-              }
-              className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-            >
-              <option value="not_approved">Not Approved</option>
-              <option value="approved">Approved</option>
-            </select>
-          </div>
-          <button
-            onClick={handleEditUser}
-            className="w-full py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg transition-colors"
-          >
-            Save Changes
-          </button>
-        </div>
-      </Modal>
+   
+      
 
       {/* Delete User Modal */}
       <Modal
@@ -935,6 +912,72 @@ export default function UsersPage() {
           </button>
         </div>
       </Modal>
+      <Modal
+  isOpen={showApprovalModal}
+  onClose={() => setShowApprovalModal(false)}
+  title={
+    approvalUser?.role === "buyer"
+      ? "Approve Buyer"
+      : "Approve Seller"
+  }
+>
+  <div className="space-y-4">
+
+    {approvalUser?.role === "buyer" ? (
+
+      <div>
+        <label className="text-sm text-gray-400 block mb-1">
+          Minimum Wallet Balance (Optional)
+        </label>
+
+   <input
+  type="text"
+  inputMode="numeric"
+  value={approvalData.wallet_value ?? ""}
+  onChange={(e) =>
+    setApprovalData((prev) => ({
+      ...prev,
+      wallet_value: e.target.value,
+    }))
+  }
+  className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
+  placeholder="Enter minimum wallet balance"
+/>
+      </div>
+
+    ) : (
+
+      <div>
+        <label className="text-sm text-gray-400 block mb-1">
+          Minimum Cart Value (Optional)
+        </label>
+
+    <input
+  type="text"
+  inputMode="numeric"
+  value={approvalData.minimum_order_value ?? ""}
+  onChange={(e) =>
+    setApprovalData((prev) => ({
+      ...prev,
+      minimum_order_value: e.target.value,
+    }))
+  }
+  className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
+  placeholder="Enter minimum cart value"
+/>
+      </div>
+
+    )}
+
+    <button
+      onClick={approveUser}
+      className="w-full py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg"
+    >
+      Approve User
+    </button>
+
+  </div>
+</Modal>
 
       {/* View User Modal */}
       <Modal
@@ -976,9 +1019,7 @@ export default function UsersPage() {
                 <span
                   className={`text-xs px-2 py-1 rounded-full ${getStatusBadge(selectedUser.status)}`}
                 >
-                  {selectedUser.status === "approved"
-                    ? "Approved"
-                    : "Not Approved"}
+                  {selectedUser.status}
                 </span>
               </div>
               <div>
