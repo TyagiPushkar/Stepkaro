@@ -17,8 +17,7 @@ import {
   Check,
 } from "lucide-react";
 import ProductFormModal from "@/app/components/shared/ProductFormModel";
-
-// import ProductFormModal from "../../../components/shared/ProductFormModal";
+import ViewProductModal from "@/app/components/shared/ViewProductModal";
 
 export default function SellerProductsPage() {
   const router = useRouter();
@@ -414,130 +413,6 @@ export default function SellerProductsPage() {
   const activeProducts = products.filter(p => p.stock === true).length;
   const inactiveProducts = products.filter(p => p.stock === false).length;
 
-  // View Product Modal
-  const ViewProductModal = ({ isOpen, onClose, product }) => {
-    if (!isOpen || !product) return null;
-
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-        <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-
-          <div className="flex justify-between items-center p-5 border-b sticky top-0 bg-white z-10">
-            <div className="flex items-center gap-4">
-            {/* <div>
-              <h2 className="text-xl font-bold text-gray-900">Product Details</h2>
-              <p className="text-sm text-gray-500">ID: #{product.id}</p>
-            </div>
-            <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100">
-              <X size={20} />
-            </button> */}
-          {/* </div> */}
-
-          {/* <div className="p-6"> */}
-          
-          {product.image && (
-              <div className="mb-6 h-16 w-16 bg-gray-100 rounded-xl overflow-hidden flex items-center justify-cente  border">
-                <img 
-                  src={product.image.startsWith('http') ? product.image : `https://namami-infotech.com/Stepkaro/${product.image}`} 
-                  alt={product.name} 
-                  className="h-full h-full object-cover"
-                  onError={(e) => {
-                    // Fail-safe fall back layout if server asset absolute route returns a 404 broken link
-                    e.target.src = "https://placehold.co/300x200?text=No+Image+Available";
-                  }}
-                />
-              </div>
-            )}
-
-              {/* Product details tracking strings shifted directly right next to the picture banner */}
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">Product Details</h2>
-                <p className="text-sm text-gray-500">ID: #{product.id}</p>
-              </div>
-            </div>
-            <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 self-start mt-1">
-              <X size={20} />
-            </button>
-          </div>
-
-            <div className="p-6">
-           
-            <div className="mb-6 ">
-              <h3 className="text-lg font-semibold text-gray-900">{product.name}</h3>
-              <div className="flex items-center gap-3 mt-2">
-                <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${product.stock ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>
-                  {product.stock ? "Active" : "Inactive"}
-                </span>
-                <span className="text-sm text-gray-500">Quantity: {product.quantity}</span>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div className="space-y-4">
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <p className="text-xs text-gray-500 mb-1">Category</p>
-                  <p className="text-md font-medium text-gray-900">{product.category}</p>
-                </div>
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <p className="text-xs text-gray-500 mb-1">Brand</p>
-                  <p className="text-md font-medium text-gray-900">{product.brand}</p>
-                </div>
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <p className="text-xs text-gray-500 mb-1">Article</p>
-                  <p className="text-md font-medium text-gray-900">{product.article}</p>
-                </div>
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <p className="text-xs text-gray-500 mb-1">Size</p>
-                  <p className="text-md font-medium text-gray-900">{product.size}</p>
-                </div>
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <p className="text-xs text-gray-500 mb-1">Color</p>
-                  <p className="text-md font-medium text-gray-900">{product.color}</p>
-                </div>
-              </div>
-              <div className="space-y-4">
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <p className="text-xs text-gray-500 mb-1">Material</p>
-                  <p className="text-md font-medium text-gray-900">{product.material}</p>
-                </div>
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <p className="text-xs text-gray-500 mb-1">Packing Type</p>
-                  <p className="text-md font-medium text-gray-900">{product.packingType}</p>
-                </div>
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <p className="text-xs text-gray-500 mb-1">Pairs per CTN</p>
-                  <p className="text-md font-medium text-gray-900">{product.pairsPerCTN}</p>
-                </div>
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <p className="text-xs text-gray-500 mb-1">Origin</p>
-                  <p className="text-md font-medium text-gray-900">{product.origin}</p>
-                </div>
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <p className="text-xs text-gray-500 mb-1">Price</p>
-                  <p className="text-lg font-bold text-teal-600">₹{product.price}</p>
-                </div>
-              </div>
-            </div>
-            <div className="mt-6 flex gap-3">
-              <button
-                onClick={() => {
-                  onClose();
-                  handleEditProduct(product);
-                }}
-                className="flex-1 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 flex items-center justify-center gap-2"
-              >
-                <Pencil size={16} />
-                Edit Product
-              </button>
-              <button onClick={onClose} className="flex-1 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   if (!isMounted) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-pink-50 p-6">
@@ -902,8 +777,13 @@ export default function SellerProductsPage() {
         onSubmit={submitProduct}
       />
 
-      {/* View Product Modal */}
-      <ViewProductModal isOpen={showViewModal} onClose={() => setShowViewModal(false)} product={selectedProduct} />
+      <ViewProductModal
+        isOpen={showViewModal}
+        onClose={() => setShowViewModal(false)}
+        product={selectedProduct}
+        variant="seller"
+        onEdit={handleEditProduct}
+      />
     </div>
   );
 }

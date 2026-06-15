@@ -14,6 +14,7 @@ import {
   Loader2,
 } from "lucide-react";
 import axios from "axios";
+import ViewOrderDetailsModal from "@/app/components/shared/ViewOrderDetailsModal";
 
 const allowedStatuses = [
   "processing",
@@ -182,7 +183,6 @@ export default function OrdersPage() {
 
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [viewLoading, setViewLoading] = useState(false);
 
   const goToPage = (page) => {
     setCurrentPage(Math.max(1, Math.min(page, totalPages)));
@@ -255,28 +255,9 @@ export default function OrdersPage() {
     return `https://namami-infotech.com/${image}`;
   };
 
-  const handleViewOrder = async (orderId) => {
-    try {
-      setViewLoading(true);
-      setViewModalOpen(true);
-
-      const response = await axios.get(
-        `https://your-api/get_order_details.php?order_id=${orderId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-
-      if (response.data?.success) {
-        setSelectedOrder(response.data.data);
-      }
-    } catch (err) {
-      console.log(err);
-    } finally {
-      setViewLoading(false);
-    }
+  const handleViewOrder = (order) => {
+    setSelectedOrder(order);
+    setViewModalOpen(true);
   };
 
   return (
@@ -568,15 +549,10 @@ export default function OrdersPage() {
                               ))}
                             </select>
                           )}
-                          {/* <button
-                            onClick={() => handleViewOrder(order.order_id)}
-                            className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-                          >
-                            <Eye size={16} />
-                          </button> */}
                           <button
-                            onClick={() => handleViewOrder(order.order_id)}
-                            className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg"
+                            onClick={() => handleViewOrder(order)}
+                            className="p-1.5 text-gray-400 hover:text-teal-400 hover:bg-teal-500/20 rounded-lg transition-colors"
+                            title="View Order Details"
                           >
                             <Eye size={16} />
                           </button>
@@ -657,6 +633,15 @@ export default function OrdersPage() {
           </div>
         )}
       </div>
+
+      <ViewOrderDetailsModal
+        isOpen={viewModalOpen}
+        onClose={() => setViewModalOpen(false)}
+        order={selectedOrder}
+        variant="admin"
+        showFinancials={true}
+        token={token || ""}
+      />
     </div>
   );
 }

@@ -20,6 +20,7 @@ import {
   ThumbsDown,
 } from "lucide-react";
 import api from "@/app/utils/api";
+import ViewProductModal from "@/app/components/shared/ViewProductModal";
 
 export default function ProductsPage() {
   const router = useRouter();
@@ -418,6 +419,11 @@ export default function ProductsPage() {
   const openDeleteModal = (product) => {
     setSelectedProduct(product);
     setShowDeleteModal(true);
+  };
+
+  const handleViewProduct = (product) => {
+    setSelectedProduct(product);
+    setShowViewModal(true);
   };
 
   // Export to CSV
@@ -855,9 +861,9 @@ export default function ProductsPage() {
                       <td className="px-6 py-4">
                         <div className="flex gap-2">
                           <button
-                            onClick={() => openEditModal(product)}
+                            onClick={() => handleViewProduct(product)}
                             className="p-1.5 text-gray-400 hover:text-teal-400 hover:bg-teal-500/20 rounded-lg transition-colors"
-                            title="View Details"
+                            title="View Product"
                           >
                             <Eye size={16} />
                           </button>
@@ -1132,6 +1138,14 @@ export default function ProductsPage() {
           </button>
         </div>
       </Modal>
+
+      <ViewProductModal
+        isOpen={showViewModal}
+        onClose={() => setShowViewModal(false)}
+        product={selectedProduct}
+        variant="admin"
+        onEdit={(product) => goToProductDetail(product.id)}
+      />
 
       {/* Bulk Import Modal */}
       <Modal

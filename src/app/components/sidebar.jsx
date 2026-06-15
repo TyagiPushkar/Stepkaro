@@ -17,6 +17,7 @@ import {
   X,
   User,
   IndianRupee,
+  Wallet,
 } from "lucide-react";
 
 import { useEffect, useState } from "react";
@@ -32,7 +33,7 @@ const adminNavItems = [
   { name: "Users", href: "/admin/users", icon: Users },
   // { name: "Collections", href: "/admin/collections", icon: Layers },
   { name: "Banners", href: "/admin/banners", icon: ImageIcon },
-  // { name: "Account", href: "/admin/accounts", icon: User },
+  { name: "Accounts", href: "/admin/accounts", icon: Wallet },
   // { name: "Settings", href: "/admin/settings", icon: Settings },
   // { name: "Logout", href: "/admin/logout", icon: IndianRupee },
 ];
