@@ -79,7 +79,7 @@ export default function ProductDetailPage() {
     "Accessories",
     "Kids Wear",
   ];
-  const brands = ["TARZAN", "Adidas", "Nike", "Puma"];
+  // const brands = ["TARZAN", "Adidas", "Nike", "Puma"];
   // Next.js client-side par safe checking ke liye localstorage pick kiya
   const token = localStorage.getItem("access_token");
 
@@ -153,7 +153,7 @@ export default function ProductDetailPage() {
           ]);
 
           if (product.image) {
-            const baseUrl = "https://namami-infotech.com/";
+            const baseUrl = "https://namami-infotech.com/Stepkaro/";
             setThumbnailPreview(`${baseUrl}${product.image}`);
           }
         } else {
@@ -742,6 +742,7 @@ export default function ProductDetailPage() {
               <div className="border-2 border-dashed border-white/20 rounded-xl p-4 text-center hover:border-teal-500/50 transition-colors">
                 {thumbnailPreview ? (
                   <div className="relative inline-block">
+                    {/* console.log("Thumbnail Preview URL:", thumbnailPreview); */}
                     <img
                       src={thumbnailPreview}
                       alt="Live Preview"

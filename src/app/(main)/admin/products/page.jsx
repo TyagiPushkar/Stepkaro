@@ -22,6 +22,29 @@ import {
 import api from "@/app/utils/api";
 import ViewProductModal from "@/app/components/shared/ViewProductModal";
 
+const normalizeProductImageUrl = (image) => {
+  if (!image) return "/placeholder.png";
+  const trimmed = String(image).trim();
+
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    return trimmed;
+  }
+
+  if (trimmed.startsWith("/Stepkaro")) {
+    return `https://namami-infotech.com${trimmed}`;
+  }
+
+  if (trimmed.startsWith("Stepkaro")) {
+    return `https://namami-infotech.com/${trimmed}`;
+  }
+
+  if (trimmed.startsWith("uploads/")) {
+    return `https://namami-infotech.com/${trimmed}`;
+  }
+
+  return `https://namami-infotech.com/${trimmed}`;
+};
+
 export default function ProductsPage() {
   const router = useRouter();
   const [selectedFilter, setSelectedFilter] = useState("all");
@@ -741,7 +764,7 @@ export default function ProductsPage() {
                             className="w-10 h-10 bg-gradient-to-br from-teal-500/20 to-blue-500/20 rounded-lg flex items-center justify-center text-xl border border-white/10 cursor-pointer hover:scale-110 transition-transform overflow-hidden"
                           >
                             <img
-                              src={product.image || "/placeholder.png"}
+                              src={normalizeProductImageUrl(product.image)}
                               alt={product.article_name || "Product"}
                               className="w-full h-full object-cover"
                             />
