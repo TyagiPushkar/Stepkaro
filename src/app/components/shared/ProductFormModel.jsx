@@ -121,7 +121,7 @@ useEffect(() => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
       <div className="bg-slate-800 rounded-2xl border border-white/10 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-slate-800 border-b border-white/10 px-6 py-4 flex justify-between items-center">
+        <div className="sticky top-0 z-50 bg-slate-800 border-b border-white/10 px-6 py-4 flex justify-between items-center">
           <h2 className="text-xl font-bold text-white">
             {isEditing ? "Edit Product" : "Add Product"}
           </h2>
@@ -154,19 +154,38 @@ useEffect(() => {
                   {previewUrl ? (
                     <img 
                     //   src={previewUrl} 
-                     src=
-                     { newProduct.image instanceof File
-                        ? previewUrl
-                        :typeof newProduct.image === "string" && newProduct.image.trim() !== ""
-                         ?(newProduct.image.startsWith("http")  ? newProduct.image : `https://namami-infotech.com/Stepkaro/${newProduct.image}`)
-                        // : `https://namami-infotech.com/Stepkaro/${newProduct.image}` 
-                        : "https://placehold.co/80x80?text=No+Photo"
+                    //  src=
+                    //  { newProduct.image instanceof File
+                    //     ? previewUrl
+                    //     :typeof newProduct.image === "string" && newProduct.image.trim() !== ""
+                    //      ?(newProduct.image.startsWith("http")  ? newProduct.image : `https://namami-infotech.com/Stepkaro/${newProduct.image}`)
+                    //     // : `https://namami-infotech.com/Stepkaro/${newProduct.image}` 
+                    //     : "https://placehold.co/80x80?text=No+Photo"
+                    //   }
+                    //   alt="Preview" 
+                    //   className="w-full h-full object-cover"
+                    //   onError={(e) => {
+                    //     e.target.src = "https://placehold.co/80x80?text=No+Photo";
+                    //   }} 
+                      
+                    src={
+                        newProduct.image instanceof File
+                          ? previewUrl
+                          : typeof newProduct.image === "string" && newProduct.image.trim() !== ""
+                            ? newProduct.image.startsWith("http")
+                              ? newProduct.image
+                              : newProduct.image.startsWith("Stepkaro/")
+                                ? `https://namami-infotech.com/${newProduct.image}` //  If data already contains Stepkaro/, do not double append it
+                                : `https://namami-infotech.com/Stepkaro/${newProduct.image}` //  Otherwise, add the base route normally
+                            : "https://placehold.co/80x80?text=No+Photo"
                       }
                       alt="Preview" 
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         e.target.src = "https://placehold.co/80x80?text=No+Photo";
-                      }} 
+                      }}
+
+
                     />
                   ) : (
                     <div className="flex flex-col items-center gap-1 text-gray-500">
@@ -221,11 +240,12 @@ useEffect(() => {
                 </div>
                 ) :(
                    
-                    <div className="ml-auto pr-2">
-                    <span className="text-xs bg-white/5 border border-white/10 px-3 py-1.5 rounded-lg text-gray-400 font-medium select-none">
-                      Photo Cannot Be Changed
-                    </span>
-                  </div>
+                  //   <div className="ml-auto pr-2">
+                  //   <span className="text-xs bg-white/5 border border-white/10 px-3 py-1.5 rounded-lg text-gray-400 font-medium select-none">
+                  //     Photo Cannot Be Changed
+                  //   </span>
+                  // </div>
+                  null
                 )}
                     
 
@@ -444,7 +464,7 @@ useEffect(() => {
               placeholder="Min Size *"
               className={getFieldClass("min_size")}
             //   className="px-4 py-2.5 bg-slate-900 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500"
-              value={newProduct.min_size}
+              value={newProduct.min_size || ""}
               onChange={(e) =>
                 setNewProduct({ ...newProduct, min_size: e.target.value })
               }
@@ -454,7 +474,7 @@ useEffect(() => {
               placeholder="Max Size *"
             //   className="px-4 py-2.5 bg-slate-900 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500"
              className={getFieldClass("max_size")} 
-              value={newProduct.max_size}
+              value={newProduct.max_size || ""}
               onChange={(e) =>
                 setNewProduct({ ...newProduct, max_size: e.target.value })
               }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import axios from "axios";
 import {
   Wallet,
@@ -26,16 +26,33 @@ import ViewOrderDetailsModal from "@/app/components/shared/ViewOrderDetailsModal
 const API_BASE = "https://namami-infotech.com/Stepkaro/src";
 
 const PAYMENT_STATUSES = [
-  { value: "pending", label: "Pending", color: "bg-yellow-500/20 text-yellow-400" },
-  { value: "processing", label: "Processing", color: "bg-blue-500/20 text-blue-400" },
+  {
+    value: "pending",
+    label: "Pending",
+    color: "bg-yellow-500/20 text-yellow-400",
+  },
+  {
+    value: "processing",
+    label: "Processing",
+    color: "bg-blue-500/20 text-blue-400",
+  },
   { value: "paid", label: "Paid", color: "bg-emerald-500/20 text-emerald-400" },
-  { value: "partial", label: "Partial", color: "bg-orange-500/20 text-orange-400" },
+  {
+    value: "partial",
+    label: "Partial",
+    color: "bg-orange-500/20 text-orange-400",
+  },
   { value: "failed", label: "Failed", color: "bg-red-500/20 text-red-400" },
 ];
 
 const getStatusBadge = (status) => {
   const found = PAYMENT_STATUSES.find((s) => s.value === status?.toLowerCase());
-  return found || { label: status || "Unknown", color: "bg-gray-500/20 text-gray-400" };
+  return (
+    found || {
+      label: status || "Unknown",
+      color: "bg-gray-500/20 text-gray-400",
+    }
+  );
 };
 
 const getOrderFinancials = (order) => {
@@ -46,9 +63,42 @@ const getOrderFinancials = (order) => {
   const payStatus = (
     order.vendor_payment_status ||
     order.payment_status ||
+    order.status ||
     "pending"
   ).toLowerCase();
   return { amount, commission, payout, payStatus, commissionRate };
+};
+
+const normalizeAdminOrder = (order) => ({
+  ...order,
+  status:
+    order.status ??
+    order.payment_status ??
+    order.vendor_payment_status ??
+    "pending",
+  payment_status:
+    order.payment_status ??
+    order.status ??
+    order.vendor_payment_status ??
+    "pending",
+  vendor_payment_status:
+    order.vendor_payment_status ??
+    order.payment_status ??
+    order.status ??
+    "pending",
+  items: order.items ?? [],
+  article_name: order.article_name ?? order.product_name ?? order.name ?? "—",
+  business_name: order.business_name ?? order.vendor_business_name ?? "—",
+  owner_name: order.owner_name ?? order.vendor_name ?? "—",
+  owner_phone: order.owner_phone ?? order.vendor_phone ?? "—",
+  user_name: order.user_name ?? order.customer_name ?? "—",
+  user_phone: order.user_phone ?? order.customer_phone ?? "—",
+  product_image: order.product_image ?? order.image ?? "",
+});
+
+const normalizeOrdersResponse = (payload) => {
+  const list = payload?.data ?? payload?.orders ?? payload ?? [];
+  return Array.isArray(list) ? list.map(normalizeAdminOrder) : [];
 };
 
 const formatCurrency = (amount) =>
@@ -58,7 +108,8 @@ const buildFallbackFromOrders = (dashboard, orders) => {
   const vendorMap = {};
 
   orders.forEach((order) => {
-    const vendorId = order.vendor_id || order.owner_id || order.owner_name || "unknown";
+    const vendorId =
+      order.vendor_id || order.owner_id || order.owner_name || "unknown";
     const key = String(vendorId);
 
     if (!vendorMap[key]) {
@@ -83,7 +134,11 @@ const buildFallbackFromOrders = (dashboard, orders) => {
     const commissionRate = parseFloat(order.commission) || 10;
     const commission = (amount * commissionRate) / 100;
     const payout = amount - commission;
-    const payStatus = (order.vendor_payment_status || order.payment_status || "pending").toLowerCase();
+    const payStatus = (
+      order.vendor_payment_status ||
+      order.payment_status ||
+      "pending"
+    ).toLowerCase();
 
     vendorMap[key].total_orders += 1;
     vendorMap[key].gross_amount += amount;
@@ -97,7 +152,10 @@ const buildFallbackFromOrders = (dashboard, orders) => {
     }
 
     const orderDate = order.created_at?.split(" ")[0];
-    if (!vendorMap[key].last_order_date || orderDate > vendorMap[key].last_order_date) {
+    if (
+      !vendorMap[key].last_order_date ||
+      orderDate > vendorMap[key].last_order_date
+    ) {
       vendorMap[key].last_order_date = orderDate;
     }
   });
@@ -110,7 +168,10 @@ const buildFallbackFromOrders = (dashboard, orders) => {
   });
 
   const totalPaid = settlements.reduce((sum, v) => sum + v.paid_amount, 0);
-  const totalPending = settlements.reduce((sum, v) => sum + v.pending_amount, 0);
+  const totalPending = settlements.reduce(
+    (sum, v) => sum + v.pending_amount,
+    0,
+  );
 
   return {
     summary: {
@@ -119,11 +180,174 @@ const buildFallbackFromOrders = (dashboard, orders) => {
       pending_vendor_payouts: dashboard?.pendingPayments || totalPending,
       total_paid_to_vendors: totalPaid,
       total_vendors: settlements.length,
-      pending_settlements: settlements.filter((v) => v.payment_status === "pending").length,
+      pending_settlements: settlements.filter(
+        (v) => v.payment_status === "pending",
+      ).length,
     },
     settlements,
     paymentHistory: [],
   };
+};
+
+const DEMO_ACCOUNTS_DATA = {
+  summary: {
+    total_revenue: 276500,
+    admin_revenue: 41250,
+    pending_vendor_payouts: 120000,
+    total_paid_to_vendors: 155750,
+    total_vendors: 5,
+    pending_settlements: 2,
+  },
+  settlements: [
+    {
+      vendor_id: 101,
+      vendor_name: "Neha Sharma",
+      business_name: "CraftKart",
+      owner_phone: "9876543210",
+      total_orders: 24,
+      gross_amount: 84200,
+      commission_amount: 8420,
+      payout_amount: 75780,
+      paid_amount: 45200,
+      pending_amount: 30580,
+      payment_status: "partial",
+      due_date: "2026-06-10",
+    },
+    {
+      vendor_id: 102,
+      vendor_name: "Amit Verma",
+      business_name: "ElecHub",
+      owner_phone: "9123456789",
+      total_orders: 18,
+      gross_amount: 62500,
+      commission_amount: 6250,
+      payout_amount: 56250,
+      paid_amount: 56250,
+      pending_amount: 0,
+      payment_status: "paid",
+      due_date: "2026-06-08",
+    },
+    {
+      vendor_id: 103,
+      vendor_name: "Priya Joshi",
+      business_name: "HomeStyle",
+      owner_phone: "9012345678",
+      total_orders: 12,
+      gross_amount: 35000,
+      commission_amount: 3500,
+      payout_amount: 31500,
+      paid_amount: 0,
+      pending_amount: 31500,
+      payment_status: "pending",
+      due_date: "2026-06-14",
+    },
+    {
+      vendor_id: 104,
+      vendor_name: "Sunil Rao",
+      business_name: "FreshMart",
+      owner_phone: "9988776655",
+      total_orders: 20,
+      gross_amount: 64500,
+      commission_amount: 6450,
+      payout_amount: 58050,
+      paid_amount: 58050,
+      pending_amount: 0,
+      payment_status: "paid",
+      due_date: "2026-06-09",
+    },
+    {
+      vendor_id: 105,
+      vendor_name: "Leena Patel",
+      business_name: "StyleStreet",
+      owner_phone: "9090909090",
+      total_orders: 10,
+      gross_amount: 35000,
+      commission_amount: 3500,
+      payout_amount: 31500,
+      paid_amount: 6600,
+      pending_amount: 24900,
+      payment_status: "partial",
+      due_date: "2026-06-12",
+    },
+  ],
+  paymentHistory: [
+    {
+      id: 1,
+      vendor_name: "Amit Verma",
+      amount: 56250,
+      payment_reference: "UTR123456",
+      status: "paid",
+      payment_date: "2026-06-08",
+    },
+    {
+      id: 2,
+      vendor_name: "Sunil Rao",
+      amount: 58050,
+      payment_reference: "UTR123457",
+      status: "paid",
+      payment_date: "2026-06-09",
+    },
+    {
+      id: 3,
+      vendor_name: "Neha Sharma",
+      amount: 45200,
+      payment_reference: "UTR123458",
+      status: "partial",
+      payment_date: "2026-06-10",
+    },
+  ],
+  orders: [
+    {
+      order_id: 1205,
+      article_name: "Handmade Decor",
+      owner_name: "Neha Sharma",
+      business_name: "CraftKart",
+      total_amount: "1800",
+      commission: "10",
+      vendor_payment_status: "partial",
+      created_at: "2026-06-13 11:12:00",
+    },
+    {
+      order_id: 1209,
+      article_name: "Organic Spices Pack",
+      owner_name: "Amit Verma",
+      business_name: "ElecHub",
+      total_amount: "2500",
+      commission: "10",
+      vendor_payment_status: "paid",
+      created_at: "2026-06-11 09:05:00",
+    },
+    {
+      order_id: 1212,
+      article_name: "Luxury Bedsheet",
+      owner_name: "Priya Joshi",
+      business_name: "HomeStyle",
+      total_amount: "4200",
+      commission: "10",
+      vendor_payment_status: "pending",
+      created_at: "2026-06-14 14:33:00",
+    },
+    {
+      order_id: 1215,
+      article_name: "Organic Fruit Basket",
+      owner_name: "Sunil Rao",
+      business_name: "FreshMart",
+      total_amount: "1800",
+      commission: "10",
+      vendor_payment_status: "paid",
+      created_at: "2026-06-09 12:10:00",
+    },
+    {
+      order_id: 1220,
+      article_name: "Branded Sneakers",
+      owner_name: "Leena Patel",
+      business_name: "StyleStreet",
+      total_amount: "7000",
+      commission: "10",
+      vendor_payment_status: "partial",
+      created_at: "2026-06-12 16:25:00",
+    },
+  ],
 };
 
 export default function AdminAccountsPage() {
@@ -134,6 +358,7 @@ export default function AdminAccountsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [usingFallback, setUsingFallback] = useState(false);
+  const [fallbackMessage, setFallbackMessage] = useState("");
   const [toast, setToast] = useState(null);
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -157,53 +382,89 @@ export default function AdminAccountsPage() {
   const [ordersPage, setOrdersPage] = useState(1);
   const ordersPerPage = 8;
 
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem("access_token") || "" : "";
+  const token = useMemo(
+    () =>
+      typeof window !== "undefined"
+        ? localStorage.getItem("access_token") || ""
+        : "",
+    [],
+  );
 
-  const headers = {
-    Authorization: token ? `Bearer ${token}` : "",
-    "Content-Type": "application/json",
-  };
+  const headers = useMemo(
+    () => ({
+      Authorization: token ? `Bearer ${token}` : "",
+      "Content-Type": "application/json",
+    }),
+    [token],
+  );
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   };
 
-  const fetchAccountsData = async () => {
+  const setDemoMode = useCallback(() => {
+    setSummary(DEMO_ACCOUNTS_DATA.summary);
+    setSettlements(DEMO_ACCOUNTS_DATA.settlements);
+    setPaymentHistory(DEMO_ACCOUNTS_DATA.paymentHistory);
+    setOrders(DEMO_ACCOUNTS_DATA.orders);
+    setUsingFallback(true);
+    setFallbackMessage(
+      "Showing demo accounts data because the API request failed.",
+    );
+    setError(null);
+  }, []);
+
+  const fetchAccountsData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const ordersRes = await fetch(`${API_BASE}/order/admin_get_orders.php`, { headers });
+      const ordersRes = await fetch(`${API_BASE}/order/admin_get_orders.php`, {
+        headers,
+      });
       const ordersData = ordersRes.ok ? await ordersRes.json() : null;
-      if (ordersData?.success) {
-        setOrders(ordersData.data || []);
+      const normalizedOrders = normalizeOrdersResponse(ordersData);
+      if (normalizedOrders.length) {
+        setOrders(normalizedOrders);
       }
+      console.log("Dashboard fetch orders data:", normalizedOrders);
 
       const [summaryRes, settlementsRes, historyRes] = await Promise.all([
         fetch(`${API_BASE}/super_admin/get_accounts_summary.php`, { headers }),
-        fetch(`${API_BASE}/super_admin/get_vendor_settlements.php`, { headers }),
+        fetch(`${API_BASE}/super_admin/get_vendor_settlements.php`, {
+          headers,
+        }),
         fetch(`${API_BASE}/super_admin/get_payment_history.php`, { headers }),
       ]);
 
       const summaryData = summaryRes.ok ? await summaryRes.json() : null;
-      const settlementsData = settlementsRes.ok ? await settlementsRes.json() : null;
+      const settlementsData = settlementsRes.ok
+        ? await settlementsRes.json()
+        : null;
       const historyData = historyRes.ok ? await historyRes.json() : null;
 
+      console.log("Dashboard fetch summary data:", summaryData);
+      console.log("Dashboard fetch settlements data:", settlementsData);
+      console.log("Dashboard fetch payment history data:", historyData);
+
       if (summaryData?.success && settlementsData?.success) {
-        setSummary(summaryData.data);
+        setSummary(summaryData.summary);
         setSettlements(settlementsData.data || []);
-        setPaymentHistory(historyData?.success ? historyData.data || [] : []);
+        setPaymentHistory([]);
         setUsingFallback(false);
+        setFallbackMessage("");
         return;
       }
 
-      const dashRes = await fetch(`${API_BASE}/super_admin/dashboard.php`, { headers });
-      const dashData = await dashRes.json();
+      const dashRes = await fetch(`${API_BASE}/super_admin/dashboard.php`, {
+        headers,
+      });
+      const dashData = dashRes.ok ? await dashRes.json() : { success: false };
 
       if (!dashData.success && !ordersData?.success) {
-        throw new Error("Failed to load accounts data");
+        setDemoMode();
+        return;
       }
 
       const fallback = buildFallbackFromOrders(
@@ -215,12 +476,15 @@ export default function AdminAccountsPage() {
       setSettlements(fallback.settlements);
       setPaymentHistory(fallback.paymentHistory);
       setUsingFallback(true);
+      setFallbackMessage(
+        "Showing computed data from orders — dedicated accounts API not yet available.",
+      );
     } catch (err) {
-      setError(err.message || "Failed to load accounts");
+      setDemoMode();
     } finally {
       setLoading(false);
     }
-  };
+  }, [headers, setDemoMode]);
 
   const handleViewOrder = (order) => {
     setSelectedOrder(order);
@@ -235,8 +499,11 @@ export default function AdminAccountsPage() {
   const ordersTotalPages = Math.ceil(orders.length / ordersPerPage);
 
   useEffect(() => {
-    fetchAccountsData();
-  }, []);
+    const loadData = async () => {
+      await fetchAccountsData();
+    };
+    void loadData();
+  }, [fetchAccountsData]);
 
   const stats = [
     {
@@ -280,7 +547,8 @@ export default function AdminAccountsPage() {
       {
         label: "Processing",
         value: "processing",
-        count: settlements.filter((s) => s.payment_status === "processing").length,
+        count: settlements.filter((s) => s.payment_status === "processing")
+          .length,
       },
       {
         label: "Paid",
@@ -332,7 +600,10 @@ export default function AdminAccountsPage() {
   const openPayModal = (settlement) => {
     setSelectedSettlement(settlement);
     setPayForm({
-      status: settlement.payment_status === "pending" ? "paid" : settlement.payment_status,
+      status:
+        settlement.payment_status === "pending"
+          ? "paid"
+          : settlement.payment_status,
       paid_amount: settlement.pending_amount?.toString() || "",
       payment_reference: "",
       payment_date: new Date().toISOString().split("T")[0],
@@ -419,7 +690,9 @@ export default function AdminAccountsPage() {
     }
     setSettlements((prev) =>
       prev.map((s) =>
-        s.vendor_id === settlement.vendor_id ? { ...s, payment_status: newStatus } : s,
+        s.vendor_id === settlement.vendor_id
+          ? { ...s, payment_status: newStatus }
+          : s,
       ),
     );
     showToast(`Status updated to ${newStatus}`);
@@ -427,8 +700,15 @@ export default function AdminAccountsPage() {
   };
 
   const handleExport = () => {
-    const data = { summary, settlements, paymentHistory, exported_at: new Date().toISOString() };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const data = {
+      summary,
+      settlements,
+      paymentHistory,
+      exported_at: new Date().toISOString(),
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -442,7 +722,10 @@ export default function AdminAccountsPage() {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
-          <Loader2 size={40} className="text-teal-500 animate-spin mx-auto mb-3" />
+          <Loader2
+            size={40}
+            className="text-teal-500 animate-spin mx-auto mb-3"
+          />
           <p className="text-gray-400">Loading accounts data...</p>
         </div>
       </div>
@@ -484,14 +767,17 @@ export default function AdminAccountsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Accounts & Settlements</h1>
+          <h1 className="text-2xl font-bold text-white">
+            Accounts & Settlements
+          </h1>
           <p className="text-gray-400 text-sm mt-1">
             Manage vendor payouts, revenue tracking & payment status
           </p>
           {usingFallback && (
             <p className="text-xs text-amber-400 mt-1 flex items-center gap-1">
               <AlertCircle size={12} />
-              Showing computed data from orders — dedicated accounts API not yet available
+              {fallbackMessage ||
+                "Showing computed data from orders — dedicated accounts API not yet available"}
             </p>
           )}
         </div>
@@ -525,11 +811,13 @@ export default function AdminAccountsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-400">{item.title}</p>
-                  <h2 className="mt-1 text-2xl font-bold text-white">{item.value}</h2>
+                  <h2 className="mt-1 text-2xl font-bold text-white">
+                    {item.value}
+                  </h2>
                   <p className="text-xs text-gray-500 mt-1">{item.subtitle}</p>
                 </div>
                 <div
-                  className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-r ${item.color} text-white`}
+                  className={`flex h-12 w-12 items-center justify-center rounded-xl bg-linear-to-r ${item.color} text-white`}
                 >
                   <Icon size={22} />
                 </div>
@@ -542,7 +830,9 @@ export default function AdminAccountsPage() {
       {/* Quick Summary Row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="bg-slate-900/50 border border-white/10 rounded-xl p-4 text-center">
-          <p className="text-2xl font-bold text-white">{summary?.total_vendors || settlements.length}</p>
+          <p className="text-2xl font-bold text-white">
+            {summary?.total_vendors || settlements.length}
+          </p>
           <p className="text-xs text-gray-400 mt-1">Total Vendors</p>
         </div>
         <div className="bg-slate-900/50 border border-white/10 rounded-xl p-4 text-center">
@@ -568,7 +858,10 @@ export default function AdminAccountsPage() {
 
       {/* Search */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
+        <Search
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
+          size={18}
+        />
         <input
           type="text"
           value={searchQuery}
@@ -614,7 +907,9 @@ export default function AdminAccountsPage() {
       {/* Vendor Settlements Table */}
       <div className="bg-slate-900/50 border border-white/10 rounded-xl overflow-hidden">
         <div className="px-6 py-4 border-b border-white/10">
-          <h2 className="text-lg font-semibold text-white">Vendor Payment Settlements</h2>
+          <h2 className="text-lg font-semibold text-white">
+            Vendor Payment Settlements
+          </h2>
           <p className="text-sm text-gray-400 mt-1">
             Amount to pay each vendor, due dates & payment status
           </p>
@@ -661,7 +956,10 @@ export default function AdminAccountsPage() {
                 currentSettlements.map((item) => {
                   const badge = getStatusBadge(item.payment_status);
                   return (
-                    <tr key={item.vendor_id} className="hover:bg-white/5 transition-colors">
+                    <tr
+                      key={item.vendor_id}
+                      className="hover:bg-white/5 transition-colors"
+                    >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 rounded-lg bg-teal-500/20 flex items-center justify-center">
@@ -677,12 +975,14 @@ export default function AdminAccountsPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-300">{item.total_orders}</td>
+                      <td className="px-6 py-4 text-sm text-gray-300">
+                        {item.total_orders}
+                      </td>
                       <td className="px-6 py-4 text-sm text-white">
                         {formatCurrency(item.gross_amount)}
                       </td>
                       <td className="px-6 py-4 text-sm text-fuchsia-400">
-                        {formatCurrency(item.commission_amount)}
+                        {formatCurrency(item.commission)}
                       </td>
                       <td className="px-6 py-4 text-sm font-semibold text-teal-400">
                         {formatCurrency(item.payout_amount)}
@@ -700,7 +1000,9 @@ export default function AdminAccountsPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`text-xs px-2 py-1 rounded-full ${badge.color}`}>
+                        <span
+                          className={`text-xs px-2 py-1 rounded-full ${badge.color}`}
+                        >
                           {badge.label}
                         </span>
                       </td>
@@ -717,7 +1019,9 @@ export default function AdminAccountsPage() {
                           )}
                           <select
                             value={item.payment_status}
-                            onChange={(e) => handleQuickStatusUpdate(item, e.target.value)}
+                            onChange={(e) =>
+                              handleQuickStatusUpdate(item, e.target.value)
+                            }
                             disabled={updatingId === item.vendor_id}
                             className="bg-slate-800 border border-slate-600 text-white text-xs rounded-lg px-2 py-1.5 disabled:opacity-50"
                           >
@@ -747,8 +1051,9 @@ export default function AdminAccountsPage() {
         {filteredSettlements.length > 0 && (
           <div className="px-6 py-4 border-t border-white/10 flex flex-col sm:flex-row justify-between items-center gap-4">
             <p className="text-sm text-gray-400">
-              Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredSettlements.length)} of{" "}
-              {filteredSettlements.length} vendors
+              Showing {startIndex + 1} to{" "}
+              {Math.min(startIndex + itemsPerPage, filteredSettlements.length)}{" "}
+              of {filteredSettlements.length} vendors
             </p>
             <div className="flex items-center gap-2">
               <select
@@ -774,7 +1079,9 @@ export default function AdminAccountsPage() {
                 {currentPage} / {totalPages || 1}
               </span>
               <button
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(totalPages, p + 1))
+                }
                 disabled={currentPage === totalPages || totalPages === 0}
                 className="px-3 py-1.5 text-sm bg-slate-800 text-gray-400 rounded-lg disabled:opacity-50"
               >
@@ -789,7 +1096,9 @@ export default function AdminAccountsPage() {
       <div className="bg-slate-900/50 border border-white/10 rounded-xl overflow-hidden">
         <div className="px-6 py-4 border-b border-white/10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div>
-            <h2 className="text-lg font-semibold text-white">Order-wise Payouts</h2>
+            <h2 className="text-lg font-semibold text-white">
+              Order-wise Payouts
+            </h2>
             <p className="text-sm text-gray-400 mt-1">
               Per-order revenue, commission & vendor payout details
             </p>
@@ -832,19 +1141,28 @@ export default function AdminAccountsPage() {
                   const fin = getOrderFinancials(order);
                   const payBadge = getStatusBadge(fin.payStatus);
                   return (
-                    <tr key={order.order_id} className="hover:bg-white/5 transition-colors">
+                    <tr
+                      key={order.order_id}
+                      className="hover:bg-white/5 transition-colors"
+                    >
                       <td className="px-6 py-4">
-                        <p className="text-sm font-medium text-white">#{order.order_id}</p>
+                        <p className="text-sm font-medium text-white">
+                          #{order.order_id}
+                        </p>
                         <p className="text-xs text-gray-500 mt-0.5">
                           {order.created_at?.split(" ")[0] || "—"}
                         </p>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-300 max-w-[140px] truncate">
+                      <td className="px-6 py-4 text-sm text-gray-300 max-w-35 truncate">
                         {order.article_name || "—"}
                       </td>
                       <td className="px-6 py-4">
-                        <p className="text-sm text-white">{order.owner_name || "—"}</p>
-                        <p className="text-xs text-gray-500">{order.business_name || ""}</p>
+                        <p className="text-sm text-white">
+                          {order.owner_name || "—"}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {order.business_name || ""}
+                        </p>
                       </td>
                       <td className="px-6 py-4 text-sm text-white">
                         {formatCurrency(fin.amount)}
@@ -856,7 +1174,9 @@ export default function AdminAccountsPage() {
                         {formatCurrency(fin.payout)}
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`text-xs px-2 py-1 rounded-full ${payBadge.color}`}>
+                        <span
+                          className={`text-xs px-2 py-1 rounded-full ${payBadge.color}`}
+                        >
                           {payBadge.label}
                         </span>
                       </td>
@@ -874,7 +1194,10 @@ export default function AdminAccountsPage() {
                 })
               ) : (
                 <tr>
-                  <td colSpan="8" className="px-6 py-10 text-center text-gray-400">
+                  <td
+                    colSpan="8"
+                    className="px-6 py-10 text-center text-gray-400"
+                  >
                     No orders found for payout tracking
                   </td>
                 </tr>
@@ -895,7 +1218,9 @@ export default function AdminAccountsPage() {
               {ordersPage} / {ordersTotalPages}
             </span>
             <button
-              onClick={() => setOrdersPage((p) => Math.min(ordersTotalPages, p + 1))}
+              onClick={() =>
+                setOrdersPage((p) => Math.min(ordersTotalPages, p + 1))
+              }
               disabled={ordersPage === ordersTotalPages}
               className="px-3 py-1.5 text-sm bg-slate-800 text-gray-400 rounded-lg disabled:opacity-50"
             >
@@ -908,8 +1233,12 @@ export default function AdminAccountsPage() {
       {/* Payment History */}
       <div className="bg-slate-900/50 border border-white/10 rounded-xl overflow-hidden">
         <div className="px-6 py-4 border-b border-white/10">
-          <h2 className="text-lg font-semibold text-white">Recent Payment History</h2>
-          <p className="text-sm text-gray-400 mt-1">Completed vendor payout transactions</p>
+          <h2 className="text-lg font-semibold text-white">
+            Recent Payment History
+          </h2>
+          <p className="text-sm text-gray-400 mt-1">
+            Completed vendor payout transactions
+          </p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -935,7 +1264,9 @@ export default function AdminAccountsPage() {
             <tbody className="divide-y divide-white/5">
               {paymentHistory.length > 0 ? (
                 paymentHistory.map((item, idx) => {
-                  const badge = getStatusBadge(item.status || item.payment_status);
+                  const badge = getStatusBadge(
+                    item.status || item.payment_status,
+                  );
                   return (
                     <tr key={item.id || idx} className="hover:bg-white/5">
                       <td className="px-6 py-4 text-sm text-white">
@@ -948,21 +1279,32 @@ export default function AdminAccountsPage() {
                         {item.payment_reference || "—"}
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`text-xs px-2 py-1 rounded-full ${badge.color}`}>
+                        <span
+                          className={`text-xs px-2 py-1 rounded-full ${badge.color}`}
+                        >
                           {badge.label}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-400">
-                        {item.payment_date || item.created_at?.split(" ")[0] || "—"}
+                        {item.payment_date ||
+                          item.created_at?.split(" ")[0] ||
+                          "—"}
                       </td>
                     </tr>
                   );
                 })
               ) : (
                 <tr>
-                  <td colSpan="5" className="px-6 py-8 text-center text-gray-400">
-                    <CreditCard size={32} className="mx-auto mb-2 text-gray-600" />
-                    No payment history yet — payments will appear here after vendor settlements
+                  <td
+                    colSpan="5"
+                    className="px-6 py-8 text-center text-gray-400"
+                  >
+                    <CreditCard
+                      size={32}
+                      className="mx-auto mb-2 text-gray-600"
+                    />
+                    No payment history yet — payments will appear here after
+                    vendor settlements
                   </td>
                 </tr>
               )}
@@ -978,7 +1320,8 @@ export default function AdminAccountsPage() {
             <div className="p-4 border-b border-white/10">
               <h2 className="text-lg font-semibold text-white">Pay Vendor</h2>
               <p className="text-sm text-gray-400 mt-1">
-                {selectedSettlement.business_name || selectedSettlement.vendor_name}
+                {selectedSettlement.business_name ||
+                  selectedSettlement.vendor_name}
               </p>
             </div>
             <div className="p-4 space-y-4">
@@ -998,10 +1341,14 @@ export default function AdminAccountsPage() {
               </div>
 
               <div>
-                <label className="text-sm text-gray-400 block mb-1">Payment Status</label>
+                <label className="text-sm text-gray-400 block mb-1">
+                  Payment Status
+                </label>
                 <select
                   value={payForm.status}
-                  onChange={(e) => setPayForm({ ...payForm, status: e.target.value })}
+                  onChange={(e) =>
+                    setPayForm({ ...payForm, status: e.target.value })
+                  }
                   className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
                 >
                   {PAYMENT_STATUSES.map((s) => (
@@ -1013,42 +1360,61 @@ export default function AdminAccountsPage() {
               </div>
 
               <div>
-                <label className="text-sm text-gray-400 block mb-1">Amount to Pay (₹)</label>
+                <label className="text-sm text-gray-400 block mb-1">
+                  Amount to Pay (₹)
+                </label>
                 <input
                   type="number"
                   value={payForm.paid_amount}
-                  onChange={(e) => setPayForm({ ...payForm, paid_amount: e.target.value })}
+                  onChange={(e) =>
+                    setPayForm({ ...payForm, paid_amount: e.target.value })
+                  }
                   className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
                   placeholder="Enter amount"
                 />
               </div>
 
               <div>
-                <label className="text-sm text-gray-400 block mb-1">Payment Reference / UTR</label>
+                <label className="text-sm text-gray-400 block mb-1">
+                  Payment Reference / UTR
+                </label>
                 <input
                   type="text"
                   value={payForm.payment_reference}
-                  onChange={(e) => setPayForm({ ...payForm, payment_reference: e.target.value })}
+                  onChange={(e) =>
+                    setPayForm({
+                      ...payForm,
+                      payment_reference: e.target.value,
+                    })
+                  }
                   className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
                   placeholder="Transaction ID or UTR number"
                 />
               </div>
 
               <div>
-                <label className="text-sm text-gray-400 block mb-1">Payment Date</label>
+                <label className="text-sm text-gray-400 block mb-1">
+                  Payment Date
+                </label>
                 <input
                   type="date"
                   value={payForm.payment_date}
-                  onChange={(e) => setPayForm({ ...payForm, payment_date: e.target.value })}
+                  onChange={(e) =>
+                    setPayForm({ ...payForm, payment_date: e.target.value })
+                  }
                   className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
                 />
               </div>
 
               <div>
-                <label className="text-sm text-gray-400 block mb-1">Notes (optional)</label>
+                <label className="text-sm text-gray-400 block mb-1">
+                  Notes (optional)
+                </label>
                 <textarea
                   value={payForm.notes}
-                  onChange={(e) => setPayForm({ ...payForm, notes: e.target.value })}
+                  onChange={(e) =>
+                    setPayForm({ ...payForm, notes: e.target.value })
+                  }
                   className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
                   rows={2}
                   placeholder="Any notes about this payment"
