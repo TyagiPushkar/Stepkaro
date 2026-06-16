@@ -600,13 +600,13 @@ export default function ProductsPage() {
             />
           </div>
 
-          <button
+          {/* <button
             onClick={() => setShowAddModal(true)}
             className="bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-colors"
           >
             <Plus size={16} />
             New Product
-          </button>
+          </button> */}
 
           <button
             onClick={() => setShowBulkImportModal(true)}
