@@ -68,7 +68,7 @@ export default function ProductDetailPage() {
     },
   ]);
 
-  const [thumbnail, setThumbnail] = useState(null);
+ 
   const [thumbnailPreview, setThumbnailPreview] = useState("");
   const [additionalImages, setAdditionalImages] = useState([]);
 
@@ -206,12 +206,12 @@ export default function ProductDetailPage() {
       // );
       formData.append("material", productInfo.material);
       formData.append("origin", productInfo.origin);
-      formData.append("commission", productInfo.commission);
+    formData.append(
+  "commission",
+  productInfo.commission || 0
+);
 
-      // image file (IMPORTANT)
-      if (thumbnail && thumbnail instanceof File) {
-        formData.append("image", thumbnail);
-      }
+    
 
       const response = await axios.post(
         "https://namami-infotech.com/Stepkaro/src/product/admin_update_product_details.php",
@@ -271,13 +271,7 @@ export default function ProductDetailPage() {
     );
   };
 
-  const handleThumbnailUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setThumbnail(file); // ✅ REAL FILE STORE KARO
-      setThumbnailPreview(URL.createObjectURL(file)); // preview
-    }
-  };
+ 
 
   if (loading) {
     return (
@@ -739,41 +733,19 @@ export default function ProductDetailPage() {
               <label className="text-sm text-gray-400 block mb-2">
                 Primary Image Thumbnail
               </label>
-              <div className="border-2 border-dashed border-white/20 rounded-xl p-4 text-center hover:border-teal-500/50 transition-colors">
-                {thumbnailPreview ? (
-                  <div className="relative inline-block">
-                    {/* console.log("Thumbnail Preview URL:", thumbnailPreview); */}
-                    <img
-                      src={thumbnailPreview}
-                      alt="Live Preview"
-                      className="w-40 h-40 object-cover rounded-lg"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setThumbnail(null);
-                        setThumbnailPreview("");
-                      }}
-                      className="absolute -top-2 -right-2 p-1 bg-red-500 rounded-full text-white hover:bg-red-600"
-                    >
-                      <X size={12} />
-                    </button>
-                  </div>
-                ) : (
-                  <label className="cursor-pointer block">
-                    <Upload size={32} className="text-gray-500 mx-auto mb-2" />
-                    <p className="text-sm text-gray-400">
-                      Upload replacement image resource
-                    </p>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleThumbnailUpload}
-                      className="hidden"
-                    />
-                  </label>
-                )}
-              </div>
+              <div className="border border-white/10 rounded-xl p-4">
+  {thumbnailPreview ? (
+    <img
+      src={thumbnailPreview}
+      alt="Product"
+      className="w-40 h-40 object-cover rounded-lg"
+    />
+  ) : (
+    <p className="text-gray-400 text-sm">
+      No image available
+    </p>
+  )}
+</div>
             </div>
           </div>
         </div>

@@ -28,7 +28,7 @@ export default function HomePage() {
   };
 
   const handleBecomeVendor = () => {
-    router.push("/register/manufacturer");
+    router.push("/add-vendor");
   };
 
   return (
@@ -50,16 +50,11 @@ export default function HomePage() {
           <div className="flex gap-3">
             <button
               onClick={handleLogin}
-              className="px-5 py-2 rounded-full border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition"
+              className="px-5 py-2 rounded-full border border-gray-200  bg-gradient-to-r from-purple-600 to-orange-500 text-white font-semibold text-sm font-medium hover:bg-gray-50 transition"
             >
               Login
             </button>
-            <button
-              onClick={handleJoinNow}
-              className="px-5 py-2 rounded-full bg-gradient-to-r from-purple-600 to-orange-500 text-white text-sm font-medium hover:shadow-lg transition"
-            >
-              Join Now
-            </button>
+          
           </div>
         </div>
       </header>
@@ -84,15 +79,15 @@ export default function HomePage() {
             </p>
 
             <div className="mt-10 flex flex-wrap justify-center gap-4">
-              <button
+              {/* <button
                 onClick={handleExploreMarketplace}
                 className="px-8 py-4 rounded-2xl bg-gradient-to-r from-purple-600 to-orange-500 hover:shadow-xl text-white font-semibold transition shadow-lg"
               >
                 Explore Marketplace
-              </button>
+              </button> */}
               <button
                 onClick={handleBecomeVendor}
-                className="px-8 py-4 rounded-2xl border border-orange-200 text-gray-700 font-semibold hover:bg-orange-50 transition"
+                className="px-8 py-4 rounded-2xl border   bg-gradient-to-r from-purple-600 to-orange-500 text-white font-semibold hover:bg-orange-50 transition"
               >
                 Become a Vendor
               </button>
@@ -142,12 +137,12 @@ export default function HomePage() {
           </div>
 
           <div className="text-center mt-12">
-            <button
+            {/* <button
               onClick={handleJoinAsWholesaler}
               className="px-8 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-orange-500 text-white font-semibold hover:shadow-lg transition"
             >
               Join as Wholesaler →
-            </button>
+            </button> */}
           </div>
         </div>
       </section>
@@ -172,14 +167,14 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="text-center mt-12">
+          {/* <div className="text-center mt-12">
             <button
               onClick={handleJoinAsManufacturer}
               className="px-8 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-orange-500 text-white font-semibold hover:shadow-lg transition"
             >
               Join as Manufacturer →
             </button>
-          </div>
+          </div> */}
         </div>
       </section>
 

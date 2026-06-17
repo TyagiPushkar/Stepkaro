@@ -182,19 +182,19 @@ export default function HomePage() {
 
   return (
     <div className="space-y-6">
-      {/* HEADER */}
-      <div>
-        <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-        <p className="text-gray-400 text-sm">Super Admin overview panel</p>
-
-        <button
-          onClick={handleLogout}
-          className="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg transition-colors mt-3"
-        >
-          Logout
-        </button>
-      </div>
-
+      
+<div className="flex justify-between items-start">
+  <div>
+    <h1 className="text-2xl font-bold text-white">Dashboard</h1>
+    <p className="text-gray-400 text-sm">Super Admin overview panel</p>
+  </div>
+  <button
+    onClick={handleLogout}
+    className="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg transition-colors"
+  >
+    Logout
+  </button>
+</div>
       {/* STATS GRID */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {stats.map((item, index) => (
