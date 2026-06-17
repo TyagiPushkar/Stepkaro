@@ -120,6 +120,24 @@ export default function SellerDashboardPage() {
   }, []);
 
   const stats = [
+    // {
+    //   title: "Total Sales",
+    //   value: `₹${dashboardData?.total_sales || 0}`,
+    //   icon: ShoppingBag,
+    //   color: "from-green-400 to-emerald-600",
+    // },
+    {
+      title: "Total Revenue",
+      value: `₹${dashboardData?.total_revenue || 0}`,
+      icon: Wallet,
+      color: "from-blue-400 to-sky-600",
+    },
+    {
+      title: "Total Products",
+      value: dashboardData?.total_products || 0,
+      icon: Star,
+      color: "from-purple-400 to-fuchsia-600",
+    },
     {
       title: "Pending Orders",
       value: dashboardData?.pending_orders || 0,
@@ -141,12 +159,12 @@ export default function SellerDashboardPage() {
       color: "from-sky-400 to-blue-600",
     },
 
-    {
-      title: "Commission Reports",
-      value: `₹${dashboardData?.commission_report?.commission || 0}`,
-      icon: BadgePercent,
-      color: "from-fuchsia-500 to-pink-600",
-    },
+    // {
+    //   title: "Commission Reports",
+    //   value: `₹${dashboardData?.commission_report?.commission || 0}`,
+    //   icon: BadgePercent,
+    //   color: "from-fuchsia-500 to-pink-600",
+    // },
   ];
 
   const handleRefresh = () => {
@@ -197,6 +215,15 @@ export default function SellerDashboardPage() {
     const count = parseInt(stock);
     if (count < 50) return "bg-orange-100 text-orange-700";
     return "bg-emerald-100 text-emerald-700";
+  };
+  const handleImageUrl = (image) => {
+    if (!image) return "/placeholder.png";
+
+    if (image.startsWith("http://") || image.startsWith("https://")) {
+      return image;
+    }
+
+    return `https://namami-infotech.com/Stepkaro/${image}`;
   };
 
   return (
@@ -367,7 +394,7 @@ export default function SellerDashboardPage() {
               >
                 <div className="flex items-center gap-3">
                   <img
-                    src={product.image}
+                    src={handleImageUrl(product.image)}
                     alt={product.article_name}
                     className="w-12 h-12 rounded-lg object-cover"
                   />
