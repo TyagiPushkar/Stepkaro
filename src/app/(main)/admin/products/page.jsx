@@ -245,14 +245,13 @@ export default function ProductsPage() {
     setCurrentPage(1);
   };
 
-  // Toggle product status (for already approved products)
+  // Toggle product status
   const toggleStatus = async (productId) => {
     const product = products.find((p) => p.id === productId);
     if (!product) return;
 
     const newStatus = product.status === "active" ? "inactive" : "active";
 
-    // 👉 Optimistic UI update (instant feel)
     setProducts((prev) =>
       prev.map((p) => (p.id === productId ? { ...p, status: newStatus } : p)),
     );
@@ -262,7 +261,7 @@ export default function ProductsPage() {
         "https://namami-infotech.com/Stepkaro/src/admin/toggle_products.php",
         {
           product_id: productId,
-          action: newStatus, // simple: active / inactive
+          action: newStatus,
         },
         {
           headers: {
@@ -271,20 +270,16 @@ export default function ProductsPage() {
         },
       );
 
-      // ❌ only error case alert
       if (!response.data?.success) {
         throw new Error(response.data?.message || "Toggle failed");
       }
     } catch (error) {
       console.error("Toggle Error:", error);
-
-      // rollback UI if failed
       setProducts((prev) =>
         prev.map((p) =>
           p.id === productId ? { ...p, status: product.status } : p,
         ),
       );
-
       alert(error.message || "Failed to update status");
     }
   };
@@ -308,7 +303,6 @@ export default function ProductsPage() {
       );
 
       if (response.data.status === "success") {
-        // Refresh products list
         const getResponse = await api.get(
           "https://namami-infotech.com/Stepkaro/src/product/get_all_products.php",
           {
@@ -357,7 +351,6 @@ export default function ProductsPage() {
       );
 
       if (response.data.status === "success") {
-        // Refresh products list
         const getResponse = await api.get(
           "https://namami-infotech.com/Stepkaro/src/product/get_all_products.php",
           {
@@ -558,7 +551,7 @@ export default function ProductsPage() {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
         <div className="bg-slate-800 rounded-xl border border-white/10 w-full max-w-md max-h-[90vh] overflow-y-auto">
-          <div className="flex justify-between items-center p-4 border-b border-white/10">
+          <div className="flex justify-between items-center p-4 border-b border-white/10 sticky top-0 bg-slate-800 z-10">
             <h2 className="text-lg font-semibold text-white">{title}</h2>
             <button
               onClick={onClose}
@@ -586,7 +579,7 @@ export default function ProductsPage() {
 
         {/* Action Buttons */}
         <div className="flex flex-wrap gap-3">
-          <div className="relative flex-1 lg:w-64">
+          <div className="relative flex-1 lg:w-64 min-w-[180px]">
             <Search
               className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
               size={18}
@@ -599,14 +592,6 @@ export default function ProductsPage() {
               className="w-full pl-10 pr-4 py-2 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
             />
           </div>
-         {/* all good */}
-          {/* <button
-            onClick={() => setShowAddModal(true)}
-            className="bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-colors"
-          >
-            <Plus size={16} />
-            New Product
-          </button> */}
 
           <button
             onClick={() => setShowBulkImportModal(true)}
@@ -626,8 +611,8 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3">
+      {/* Filters - Scrollable on mobile */}
+      <div className="flex flex-nowrap gap-3 overflow-x-auto pb-2 scrollbar-hide">
         {filters.map((filter) => {
           const Icon = filter.icon;
           const isActive = selectedFilter === filter.value;
@@ -635,7 +620,7 @@ export default function ProductsPage() {
             <button
               key={filter.value}
               onClick={() => handleFilterChange(filter.value)}
-              className={`px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-all duration-200 ${
+              className={`px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-all duration-200 whitespace-nowrap ${
                 isActive
                   ? `bg-${filter.color}-500/20 text-${filter.color}-400 border border-${filter.color}-500/30`
                   : "bg-slate-800/50 text-gray-400 hover:text-white border border-white/10 hover:border-teal-500/30"
@@ -658,7 +643,7 @@ export default function ProductsPage() {
       </div>
 
       {/* Results Summary */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <p className="text-sm text-gray-400">
           Showing{" "}
           <span className="text-white">
@@ -688,43 +673,44 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      {/* Products Table */}
+      {/* Products Table - Mobile Card View */}
       <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        {/* Desktop Table View */}
+        <div className="hidden lg:block overflow-x-auto">
+          <table className="w-full min-w-[900px]">
             <thead className="bg-slate-800/50 border-b border-white/10">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                   S.No
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                   Product Info
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                  Quantity
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  Qty
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                   Owner
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                   Price
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                   Orders
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                   Brand
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                   Commission
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                   Stock
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                  Status/Action
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  Status
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -732,7 +718,7 @@ export default function ProductsPage() {
             <tbody className="divide-y divide-white/5">
               {loading ? (
                 <tr>
-                  <td colSpan="11" className="px-6 py-12 text-center">
+                  <td colSpan="11" className="px-4 py-12 text-center">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500 mx-auto"></div>
                     <p className="text-gray-400 mt-2">Loading products...</p>
                   </td>
@@ -751,17 +737,17 @@ export default function ProductsPage() {
                       key={product.id}
                       className="hover:bg-white/5 transition-colors"
                     >
-                      <td className="px-6 py-4">
+                      <td className="px-4 py-3">
                         <span className="text-sm text-gray-300">
                           {startIndex + index + 1}
                         </span>
                       </td>
 
-                      <td className="px-6 py-4">
+                      <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <div
                             onClick={() => goToProductDetail(product.id)}
-                            className="w-10 h-10 bg-gradient-to-br from-teal-500/20 to-blue-500/20 rounded-lg flex items-center justify-center text-xl border border-white/10 cursor-pointer hover:scale-110 transition-transform overflow-hidden"
+                            className="w-10 h-10 bg-gradient-to-br from-teal-500/20 to-blue-500/20 rounded-lg flex items-center justify-center text-xl border border-white/10 cursor-pointer hover:scale-110 transition-transform overflow-hidden flex-shrink-0"
                           >
                             <img
                               src={normalizeProductImageUrl(product.image)}
@@ -783,7 +769,7 @@ export default function ProductsPage() {
                         </div>
                       </td>
 
-                      <td className="px-6 py-4">
+                      <td className="px-4 py-3">
                         <span
                           className={`text-sm font-medium ${product.stock_quantity === 0 ? "text-red-400" : "text-white"}`}
                         >
@@ -791,13 +777,13 @@ export default function ProductsPage() {
                         </span>
                       </td>
 
-                      <td className="px-6 py-4">
+                      <td className="px-4 py-3">
                         <span className="text-sm text-white">
                           {product.owner_name}
                         </span>
                       </td>
 
-                      <td className="px-6 py-4">
+                      <td className="px-4 py-3">
                         <div className="flex flex-col">
                           <span className="text-xs text-gray-400 line-through">
                             ₹{product.price || 0}
@@ -808,25 +794,25 @@ export default function ProductsPage() {
                         </div>
                       </td>
 
-                      <td className="px-6 py-4">
+                      <td className="px-4 py-3">
                         <span className="text-sm text-white">
                           {product.orders || 0}
                         </span>
                       </td>
 
-                      <td className="px-6 py-4">
+                      <td className="px-4 py-3">
                         <span className="text-sm text-white">
                           {product.brand_name}
                         </span>
                       </td>
 
-                      <td className="px-6 py-4">
+                      <td className="px-4 py-3">
                         <span className="text-sm font-semibold text-teal-400">
                           {product.commission ? `${product.commission}%` : "0%"}
                         </span>
                       </td>
 
-                      <td className="px-6 py-4">
+                      <td className="px-4 py-3">
                         <span
                           className={`text-xs px-2 py-1 rounded-full ${stockBadge.color}`}
                         >
@@ -834,13 +820,13 @@ export default function ProductsPage() {
                         </span>
                       </td>
 
-                      <td className="px-6 py-4">
+                      <td className="px-4 py-3">
                         {product.status === "reject" ? (
                           <span className="px-2 py-1 text-xs bg-red-500/20 text-red-400 rounded-lg">
                             Reject
                           </span>
                         ) : isListingRequested ? (
-                          <div className="flex gap-2">
+                          <div className="flex flex-wrap gap-2">
                             <button
                               onClick={() => {
                                 setSelectedProductId(product.id);
@@ -868,7 +854,7 @@ export default function ProductsPage() {
                         ) : (
                           <button
                             onClick={() => toggleStatus(product.id)}
-                            className="relative w-10 h-5 bg-gray-700 rounded-full transition-colors cursor-pointer"
+                            className="relative w-10 h-5 bg-gray-700 rounded-full transition-colors cursor-pointer flex-shrink-0"
                           >
                             <div
                               className={`absolute w-4 h-4 bg-teal-400 rounded-full top-0.5 transition-all duration-300 ${
@@ -881,8 +867,8 @@ export default function ProductsPage() {
                         )}
                       </td>
 
-                      <td className="px-6 py-4">
-                        <div className="flex gap-2">
+                      <td className="px-4 py-3">
+                        <div className="flex flex-wrap gap-1">
                           <button
                             onClick={() => handleViewProduct(product)}
                             className="p-1.5 text-gray-400 hover:text-teal-400 hover:bg-teal-500/20 rounded-lg transition-colors"
@@ -911,7 +897,7 @@ export default function ProductsPage() {
                 })
               ) : (
                 <tr>
-                  <td colSpan="11" className="px-6 py-12 text-center">
+                  <td colSpan="11" className="px-4 py-12 text-center">
                     <Package size={48} className="text-gray-600 mx-auto mb-3" />
                     <p className="text-gray-400">No products found</p>
                     <p className="text-sm text-gray-500 mt-1">
@@ -924,9 +910,172 @@ export default function ProductsPage() {
           </table>
         </div>
 
+        {/* Mobile Card View */}
+        <div className="lg:hidden">
+          {loading ? (
+            <div className="p-8 text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500 mx-auto"></div>
+              <p className="text-gray-400 mt-2">Loading products...</p>
+            </div>
+          ) : currentProducts.length > 0 ? (
+            <div className="divide-y divide-white/5">
+              {currentProducts.map((product, index) => {
+                const stockBadge = getStockBadge(
+                  product.stock,
+                  product.stock_quantity,
+                );
+                const isListingRequested = product.status === "approve_request";
+
+                return (
+                  <div key={product.id} className="p-4 space-y-3">
+                    <div className="flex items-start gap-3">
+                      <div
+                        onClick={() => goToProductDetail(product.id)}
+                        className="w-14 h-14 bg-gradient-to-br from-teal-500/20 to-blue-500/20 rounded-lg flex items-center justify-center border border-white/10 cursor-pointer hover:scale-110 transition-transform overflow-hidden flex-shrink-0"
+                      >
+                        <img
+                          src={normalizeProductImageUrl(product.image)}
+                          alt={product.article_name || "Product"}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p
+                          onClick={() => goToProductDetail(product.id)}
+                          className="text-sm font-medium text-white cursor-pointer hover:text-teal-400 transition-colors truncate"
+                        >
+                          {product.article_name}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          {product.category_name}
+                        </p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-xs text-gray-400 line-through">
+                            ₹{product.price || 0}
+                          </span>
+                          <span className="text-sm font-semibold text-green-400">
+                            ₹{product.selling_price || 0}
+                          </span>
+                        </div>
+                      </div>
+                      <span
+                        className={`text-xs px-2 py-1 rounded-full ${stockBadge.color} flex-shrink-0`}
+                      >
+                        {stockBadge.label}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <span className="text-gray-400">Qty:</span>
+                        <span className="text-white ml-1">
+                          {product.stock_quantity}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-400">Owner:</span>
+                        <span className="text-white ml-1 truncate">
+                          {product.owner_name}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-400">Orders:</span>
+                        <span className="text-white ml-1">
+                          {product.orders || 0}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-400">Brand:</span>
+                        <span className="text-white ml-1 truncate">
+                          {product.brand_name}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-400">Commission:</span>
+                        <span className="text-teal-400 ml-1 font-semibold">
+                          {product.commission ? `${product.commission}%` : "0%"}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-400">Status:</span>
+                        {product.status === "reject" ? (
+                          <span className="text-red-400 ml-1">Reject</span>
+                        ) : isListingRequested ? (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            <button
+                              onClick={() => {
+                                setSelectedProductId(product.id);
+                                setCommission("");
+                                setShowCommissionModal(true);
+                              }}
+                              className="px-2 py-0.5 text-xs bg-green-500/20 text-green-400 hover:bg-green-500/30 rounded flex items-center gap-1"
+                            >
+                              <ThumbsUp size={12} /> Approve
+                            </button>
+                            <button
+                              onClick={() =>
+                                handleApprovalAction(product.id, "reject")
+                              }
+                              className="px-2 py-0.5 text-xs bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded flex items-center gap-1"
+                            >
+                              <ThumbsDown size={12} /> Reject
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => toggleStatus(product.id)}
+                            className="relative w-10 h-5 bg-gray-700 rounded-full transition-colors cursor-pointer ml-1"
+                          >
+                            <div
+                              className={`absolute w-4 h-4 bg-teal-400 rounded-full top-0.5 transition-all duration-300 ${
+                                product.status === "active"
+                                  ? "left-5"
+                                  : "left-0.5"
+                              }`}
+                            />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end gap-2 pt-2 border-t border-white/5">
+                      <button
+                        onClick={() => handleViewProduct(product)}
+                        className="p-1.5 text-gray-400 hover:text-teal-400 hover:bg-teal-500/20 rounded-lg transition-colors"
+                      >
+                        <Eye size={16} />
+                      </button>
+                      <button
+                        onClick={() => goToProductDetail(product.id)}
+                        className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors"
+                      >
+                        <Edit size={16} />
+                      </button>
+                      <button
+                        onClick={() => openDeleteModal(product)}
+                        className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="p-8 text-center">
+              <Package size={48} className="text-gray-600 mx-auto mb-3" />
+              <p className="text-gray-400">No products found</p>
+              <p className="text-sm text-gray-500 mt-1">
+                Try adjusting your search or filter
+              </p>
+            </div>
+          )}
+        </div>
+
         {/* Pagination */}
         {filteredProducts.length > 0 && totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-white/10 flex justify-center gap-2">
+          <div className="px-4 py-4 border-t border-white/10 flex flex-wrap justify-center gap-2">
             <button
               onClick={() => goToPage(currentPage - 1)}
               disabled={currentPage === 1}
@@ -962,7 +1111,7 @@ export default function ProductsPage() {
         )}
       </div>
 
-      {/* {add commission Modal} */}
+      {/* Commission Modal */}
       <Modal
         isOpen={showCommissionModal}
         onClose={() => setShowCommissionModal(false)}
@@ -981,7 +1130,7 @@ export default function ProductsPage() {
               onChange={handleCommissionChange}
               autoFocus
               placeholder="Enter commission percentage"
-              className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
+              className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
             />
           </div>
 
