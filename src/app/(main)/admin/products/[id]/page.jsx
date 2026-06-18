@@ -16,13 +16,13 @@ import {
   Package,
   CheckCircle,
   AlertCircle,
+  Loader2,
 } from "lucide-react";
 import { useParams } from "next/navigation";
 
 export default function ProductDetailPage() {
   const params = useParams();
   const productId = params.id;
-  // console.log("Product ID from URL:", productId);
   const [loading, setLoading] = useState(true);
   const [showSuccess, setShowSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -34,7 +34,7 @@ export default function ProductDetailPage() {
     email: "",
   });
 
-  // Product Core Info State (Mapped with your API keys)
+  // Product Core Info State
   const [productInfo, setProductInfo] = useState({
     id: "",
     article_name: "",
@@ -46,7 +46,7 @@ export default function ProductDetailPage() {
     pairs_per_ctn: 0,
     commission: "",
     gender: "",
-    videoLink: "", // keeping placeholder if you add videos later
+    videoLink: "",
     rating: 4.5,
     codAllowed: true,
     display: true,
@@ -55,7 +55,7 @@ export default function ProductDetailPage() {
     returnable: true,
   });
 
-  // Variants State (Mapped with your flat product database structure)
+  // Variants State
   const [variants, setVariants] = useState([
     {
       id: Date.now(),
@@ -68,8 +68,8 @@ export default function ProductDetailPage() {
     },
   ]);
 
- 
   const [thumbnailPreview, setThumbnailPreview] = useState("");
+  const [selectedImage, setSelectedImage] = useState(null);
   const [additionalImages, setAdditionalImages] = useState([]);
 
   const categories = [
@@ -79,11 +79,10 @@ export default function ProductDetailPage() {
     "Accessories",
     "Kids Wear",
   ];
-  // const brands = ["TARZAN", "Adidas", "Nike", "Puma"];
-  // Next.js client-side par safe checking ke liye localstorage pick kiya
+
   const token = localStorage.getItem("access_token");
 
-  // --- 1. FETCH PRODUCT DETAILS WITH TOKEN AUTHORIZATION ---
+  // --- 1. FETCH PRODUCT DETAILS ---
   useEffect(() => {
     const fetchProductDetails = async () => {
       try {
@@ -99,18 +98,16 @@ export default function ProductDetailPage() {
         const response = await axios.get(
           "https://namami-infotech.com/Stepkaro/src/product/get_admin_products_details.php",
           {
-            params: { id: productId }, // dynamic banana ho toh dynamic ID use karein
+            params: { id: productId },
             headers: {
-              // Yahan aapka token jaa rha hai standard Bearer format mein
               Authorization: `Bearer ${token}`,
               Accept: "application/json",
             },
-          },
+          }
         );
 
         if (response.data && response.data.success) {
           const product = response.data.data;
-          // console.log("Fetched Product Data:", product);
 
           setProductInfo({
             id: product.id,
@@ -158,14 +155,14 @@ export default function ProductDetailPage() {
           }
         } else {
           setErrorMessage(
-            response.data.message || "Failed to fetch product data.",
+            response.data.message || "Failed to fetch product data."
           );
         }
       } catch (error) {
         console.error("Error fetching product:", error);
         setErrorMessage(
           error.response?.data?.message ||
-            "API connectivity issue while loading product.",
+            "API connectivity issue while loading product."
         );
       } finally {
         setLoading(false);
@@ -181,37 +178,24 @@ export default function ProductDetailPage() {
     try {
       setErrorMessage("");
 
-      // Payload structuring matching with update backend requirement
       const formData = new FormData();
 
       formData.append("product_id", productInfo.id);
       formData.append("article_name", productInfo.article_name);
       formData.append("description", productInfo.description);
       formData.append("status", productInfo.codAllowed ? "active" : "inactive");
-
       formData.append("selling_price", variants[0]?.selling_price);
       formData.append("price", variants[0]?.price);
       formData.append("variant", variants[0]?.variant);
       formData.append("color", variants[0]?.color);
       formData.append("size", variants[0]?.size);
       formData.append("stock_quantity", variants[0]?.stock_quantity);
-
-      // formData.append(
-      //   "brand_id",
-      //   productInfo.brand_id ? Number(productInfo.brand_id) : 0,
-      // );
-      // formData.append(
-      //   "category_id",
-      //   productInfo.category_id ? Number(productInfo.category_id) : 0,
-      // );
       formData.append("material", productInfo.material);
       formData.append("origin", productInfo.origin);
-    formData.append(
-  "commission",
-  productInfo.commission || 0
-);
-
-    
+      formData.append("commission", productInfo.commission || 0);
+      if (selectedImage) {
+  formData.append("image", selectedImage);
+}
 
       const response = await axios.post(
         "https://namami-infotech.com/Stepkaro/src/product/admin_update_product_details.php",
@@ -220,9 +204,8 @@ export default function ProductDetailPage() {
           headers: {
             Authorization: `Bearer ${token}`,
             Accept: "application/json",
-            // "Content-Type": "multipart/form-data",
           },
-        },
+        }
       );
 
       if (response.data && response.data.success) {
@@ -230,22 +213,18 @@ export default function ProductDetailPage() {
         setTimeout(() => setShowSuccess(false), 3000);
       } else {
         setErrorMessage(
-          response.data.message || "Something went wrong during update.",
+          response.data.message || "Something went wrong during update."
         );
       }
     } catch (error) {
       console.log("Full Error:", error);
-      console.log("Response:", error.response);
-      console.log("Response Data:", error.response?.data);
-
       setErrorMessage(
         error.response?.data?.message ||
-          "Server error while updating product data.",
+          "Server error while updating product data."
       );
     }
   };
 
-  // Helper Variant state modifier functions
   const addVariant = () => {
     setVariants([
       ...variants,
@@ -267,33 +246,34 @@ export default function ProductDetailPage() {
 
   const updateVariant = (id, field, value) => {
     setVariants(
-      variants.map((v) => (v.id === id ? { ...v, [field]: value } : v)),
+      variants.map((v) => (v.id === id ? { ...v, [field]: value } : v))
     );
   };
 
- 
-
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64 text-teal-400 font-medium">
-        Loading Product Data from Admin Panel...
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <div className="w-10 h-10 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-3"></div>
+          <p className="text-gray-500">Loading product details...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto p-4">
+    <div className="space-y-6 max-w-6xl mx-auto">
       {/* Toast Notifiers */}
       {showSuccess && (
-        <div className="fixed top-20 right-6 z-50 bg-green-500/90 backdrop-blur-sm text-white px-4 py-3 rounded-lg flex items-center gap-2 animate-in slide-in-from-top-2">
+        <div className="fixed top-20 right-6 z-50 bg-emerald-500 text-white px-4 py-3 rounded-lg flex items-center gap-2 shadow-lg animate-in slide-in-from-top-2">
           <CheckCircle size={18} />
           Product updated successfully!
         </div>
       )}
 
       {errorMessage && (
-        <div className="bg-red-500/20 border border-red-500/50 text-red-200 px-4 py-3 rounded-xl flex items-center gap-2">
-          <AlertCircle size={18} className="text-red-400" />
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl flex items-center gap-2">
+          <AlertCircle size={18} className="text-red-500" />
           {errorMessage}
         </div>
       )}
@@ -301,16 +281,16 @@ export default function ProductDetailPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">
+          <h1 className="text-2xl font-bold text-gray-900">
             Edit Product Information
           </h1>
-          <p className="text-gray-400 text-sm mt-1">
-            Prefilled from Admin Endpoint
+          <p className="text-gray-500 text-sm mt-1">
+            Manage product details and inventory
           </p>
         </div>
         <button
           onClick={handleSubmit}
-          className="bg-teal-500 hover:bg-teal-600 text-white px-6 py-2 rounded-xl text-sm flex items-center gap-2 transition-colors shadow-lg shadow-teal-500/20"
+          className="bg-gradient-to-r from-purple-600 to-orange-500 hover:shadow-lg text-white px-6 py-2 rounded-xl text-sm flex items-center gap-2 transition-all"
         >
           <Save size={16} />
           Update Product
@@ -320,15 +300,17 @@ export default function ProductDetailPage() {
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* LEFT SIDE - Core Product Information */}
-          <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-xl p-6">
-            <div className="flex items-center gap-2 mb-4 pb-2 border-b border-white/10">
-              <Package size={18} className="text-teal-400" />
-              <h2 className="font-semibold text-white">Product Core Details</h2>
+          <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+            <div className="flex items-center gap-2 mb-4 pb-2 border-b border-gray-200">
+              <Package size={18} className="text-purple-600" />
+              <h2 className="font-semibold text-gray-900">
+                Product Core Details
+              </h2>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="text-sm text-gray-400 block mb-1">
+                <label className="text-sm font-medium text-gray-700 block mb-1">
                   Article / Product Name
                 </label>
                 <input
@@ -339,13 +321,13 @@ export default function ProductDetailPage() {
                       article_name: e.target.value,
                     })
                   }
-                  className="w-full px-4 py-2.5 bg-slate-800/50 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all"
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm text-gray-400 block mb-1">
+                  <label className="text-sm font-medium text-gray-700 block mb-1">
                     Category
                   </label>
                   <select
@@ -356,7 +338,7 @@ export default function ProductDetailPage() {
                         category_name: e.target.value,
                       })
                     }
-                    className="w-full px-4 py-2.5 bg-slate-800/50 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   >
                     {categories.map((cat) => (
                       <option key={cat} value={cat}>
@@ -367,7 +349,7 @@ export default function ProductDetailPage() {
                 </div>
 
                 <div>
-                  <label className="text-sm text-gray-400 block mb-1">
+                  <label className="text-sm font-medium text-gray-700 block mb-1">
                     Brand Name
                   </label>
                   <input
@@ -378,14 +360,14 @@ export default function ProductDetailPage() {
                         brand_name: e.target.value,
                       })
                     }
-                    className="w-full px-4 py-2.5 bg-slate-800/50 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all"
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm text-gray-400 block mb-1">
+                  <label className="text-sm font-medium text-gray-700 block mb-1">
                     Material
                   </label>
                   <input
@@ -396,11 +378,11 @@ export default function ProductDetailPage() {
                         material: e.target.value,
                       })
                     }
-                    className="w-full px-4 py-2.5 bg-slate-800/50 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   />
                 </div>
                 <div>
-                  <label className="text-sm text-gray-400 block mb-1">
+                  <label className="text-sm font-medium text-gray-700 block mb-1">
                     Pairs Per Carton
                   </label>
                   <input
@@ -412,13 +394,13 @@ export default function ProductDetailPage() {
                         pairs_per_ctn: parseInt(e.target.value) || 0,
                       })
                     }
-                    className="w-full px-4 py-2.5 bg-slate-800/50 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-sm text-gray-400 block mb-1">
+                <label className="text-sm font-medium text-gray-700 block mb-1">
                   Description
                 </label>
                 <textarea
@@ -430,17 +412,17 @@ export default function ProductDetailPage() {
                     })
                   }
                   rows="3"
-                  className="w-full px-4 py-2.5 bg-slate-800/50 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
                 />
               </div>
             </div>
           </div>
 
           {/* RIGHT SIDE - Shipping & Metadata */}
-          <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-xl p-6">
-            <div className="flex items-center gap-2 mb-4 pb-2 border-b border-white/10">
-              <Tag size={18} className="text-teal-400" />
-              <h2 className="font-semibold text-white">
+          <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+            <div className="flex items-center gap-2 mb-4 pb-2 border-b border-gray-200">
+              <Tag size={18} className="text-orange-500" />
+              <h2 className="font-semibold text-gray-900">
                 General Information & Pricing Metrics
               </h2>
             </div>
@@ -448,7 +430,7 @@ export default function ProductDetailPage() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm text-gray-400 block mb-1">
+                  <label className="text-sm font-medium text-gray-700 block mb-1">
                     Origin Country
                   </label>
                   <input
@@ -456,11 +438,11 @@ export default function ProductDetailPage() {
                     onChange={(e) =>
                       setProductInfo({ ...productInfo, origin: e.target.value })
                     }
-                    className="w-full px-4 py-2.5 bg-slate-800/50 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   />
                 </div>
                 <div>
-                  <label className="text-sm text-gray-400 block mb-1">
+                  <label className="text-sm font-medium text-gray-700 block mb-1">
                     Commission (%)
                   </label>
                   <input
@@ -473,71 +455,51 @@ export default function ProductDetailPage() {
                         commission: e.target.value,
                       })
                     }
-                    className="w-full px-4 py-2.5 bg-slate-800/50 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   />
                 </div>
-                <div className="p-3 bg-slate-800/40 rounded-xl border border-white/10">
-                  <label className="text-xs text-gray-400">Business Name</label>
-                  <p className="text-white font-medium">
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 bg-gray-50 rounded-xl border border-gray-200">
+                  <label className="text-xs text-gray-500">Business Name</label>
+                  <p className="text-gray-900 font-medium">
                     {vendorInfo.business_name || "—"}
                   </p>
                 </div>
 
-                <div className="p-3 bg-slate-800/40 rounded-xl border border-white/10">
-                  <label className="text-xs text-gray-400">Owner Name</label>
-                  <p className="text-white font-medium">
+                <div className="p-3 bg-gray-50 rounded-xl border border-gray-200">
+                  <label className="text-xs text-gray-500">Owner Name</label>
+                  <p className="text-gray-900 font-medium">
                     {vendorInfo.owner_name || "—"}
                   </p>
                 </div>
 
-                <div className="p-3 bg-slate-800/40 rounded-xl border border-white/10">
-                  <label className="text-xs text-gray-400">Phone</label>
-                  <p className="text-white font-medium">
+                <div className="p-3 bg-gray-50 rounded-xl border border-gray-200">
+                  <label className="text-xs text-gray-500">Phone</label>
+                  <p className="text-gray-900 font-medium">
                     {vendorInfo.phone || "—"}
                   </p>
                 </div>
 
-                <div className="p-3 bg-slate-800/40 rounded-xl border border-white/10">
-                  <label className="text-xs text-gray-400">GST Number</label>
-                  <p className="text-white font-medium">
+                <div className="p-3 bg-gray-50 rounded-xl border border-gray-200">
+                  <label className="text-xs text-gray-500">GST Number</label>
+                  <p className="text-gray-900 font-medium">
                     {vendorInfo.gst_number || "—"}
                   </p>
                 </div>
 
-                <div className="p-3 bg-slate-800/40 rounded-xl border border-white/10 col-span-2">
-                  <label className="text-xs text-gray-400">Email</label>
-                  <p className="text-white font-medium">
+                <div className="p-3 bg-gray-50 rounded-xl border border-gray-200 col-span-2">
+                  <label className="text-xs text-gray-500">Email</label>
+                  <p className="text-gray-900 font-medium">
                     {vendorInfo.email || "—"}
                   </p>
                 </div>
               </div>
 
-              {/* <div>
-                <label className="text-sm text-gray-400 block mb-1">
-                  Video Promotional Link
-                </label>
-                <div className="relative">
-                  <Video
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
-                    size={18}
-                  />
-                  <input
-                    value={productInfo.videoLink}
-                    onChange={(e) =>
-                      setProductInfo({
-                        ...productInfo,
-                        videoLink: e.target.value,
-                      })
-                    }
-                    placeholder="https://youtube.com/..."
-                    className="w-full pl-10 pr-4 py-2.5 bg-slate-800/50 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  />
-                </div>
-              </div> */}
-
               <div className="grid grid-cols-2 gap-4 pt-2">
-                <label className="flex items-center justify-between p-3 bg-slate-800/30 rounded-xl cursor-pointer hover:bg-slate-800/50 transition-colors">
-                  <span className="text-sm text-gray-300">
+                <label className="flex items-center justify-between p-3 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors border border-gray-200">
+                  <span className="text-sm text-gray-700">
                     Active Status Display
                   </span>
                   <input
@@ -549,23 +511,9 @@ export default function ProductDetailPage() {
                         codAllowed: e.target.checked,
                       })
                     }
-                    className="w-4 h-4 rounded border-white/20 bg-slate-800 text-teal-500 focus:ring-teal-500"
+                    className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
                   />
                 </label>
-                {/* <label className="flex items-center justify-between p-3 bg-slate-800/30 rounded-xl cursor-pointer hover:bg-slate-800/50 transition-colors">
-                  <span className="text-sm text-gray-300">Returnable Item</span>
-                  <input
-                    type="checkbox"
-                    checked={productInfo.returnable}
-                    onChange={(e) =>
-                      setProductInfo({
-                        ...productInfo,
-                        returnable: e.target.checked,
-                      })
-                    }
-                    className="w-4 h-4 rounded border-white/20 bg-slate-800 text-teal-500 focus:ring-teal-500"
-                  />
-                </label> */}
               </div>
             </div>
           </div>
@@ -574,37 +522,29 @@ export default function ProductDetailPage() {
         {/* VARIANTS + MEDIA SECTIONS */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
           {/* Variants Segment */}
-          <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-xl p-6">
-            <div className="flex justify-between items-center mb-4 pb-2 border-b border-white/10">
+          <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+            <div className="flex justify-between items-center mb-4 pb-2 border-b border-gray-200">
               <div className="flex items-center gap-2">
-                <TrendingUp size={18} className="text-teal-400" />
-                <h2 className="font-semibold text-white">Stock Variants</h2>
+                <TrendingUp size={18} className="text-purple-600" />
+                <h2 className="font-semibold text-gray-900">Stock Variants</h2>
               </div>
-              {/* <button
-                type="button"
-                onClick={addVariant}
-                className="bg-teal-500/20 hover:bg-teal-500/30 text-teal-400 px-3 py-1.5 rounded-lg text-sm flex items-center gap-1 transition-colors"
-              >
-                <Plus size={14} />
-                Add Stock Info
-              </button> */}
             </div>
 
             <div className="space-y-4">
               {variants.map((variant, index) => (
                 <div
                   key={variant.id}
-                  className="bg-slate-800/30 rounded-xl p-4 border border-white/5"
+                  className="bg-gray-50 rounded-xl p-4 border border-gray-200"
                 >
                   <div className="flex justify-between items-center mb-3">
-                    <span className="text-sm text-teal-400">
+                    <span className="text-sm text-purple-600 font-medium">
                       Inventory Set {index + 1}
                     </span>
                     {variants.length > 1 && (
                       <button
                         type="button"
                         onClick={() => removeVariant(variant.id)}
-                        className="p-1 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
+                        className="p-1 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                       >
                         <Trash2 size={14} />
                       </button>
@@ -612,7 +552,7 @@ export default function ProductDetailPage() {
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-xs text-gray-400 block mb-1">
+                      <label className="text-xs text-gray-500 block mb-1">
                         Variant Type
                       </label>
                       <input
@@ -621,11 +561,11 @@ export default function ProductDetailPage() {
                         onChange={(e) =>
                           updateVariant(variant.id, "variant", e.target.value)
                         }
-                        className="w-full px-3 py-2 bg-slate-900/50 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-gray-400 block mb-1">
+                      <label className="text-xs text-gray-500 block mb-1">
                         Color Shade
                       </label>
                       <input
@@ -634,11 +574,11 @@ export default function ProductDetailPage() {
                         onChange={(e) =>
                           updateVariant(variant.id, "color", e.target.value)
                         }
-                        className="w-full px-3 py-2 bg-slate-900/50 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-gray-400 block mb-1">
+                      <label className="text-xs text-gray-500 block mb-1">
                         Size Metric
                       </label>
                       <input
@@ -647,11 +587,11 @@ export default function ProductDetailPage() {
                         onChange={(e) =>
                           updateVariant(variant.id, "size", e.target.value)
                         }
-                        className="w-full px-3 py-2 bg-slate-900/50 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-gray-400 block mb-1">
+                      <label className="text-xs text-gray-500 block mb-1">
                         Stock Vol.
                       </label>
                       <input
@@ -663,20 +603,20 @@ export default function ProductDetailPage() {
                           updateVariant(
                             variant.id,
                             "stock_quantity",
-                            Math.max(0, Number(e.target.value) || 0),
+                            Math.max(0, Number(e.target.value) || 0)
                           )
                         }
-                        className="w-full px-3 py-2 bg-slate-900/50 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-gray-400 block mb-1">
+                      <label className="text-xs text-gray-500 block mb-1">
                         Original Price (Strike)
                       </label>
                       <div className="relative">
                         <DollarSign
                           size={14}
-                          className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500"
+                          className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400"
                         />
                         <input
                           type="number"
@@ -685,21 +625,21 @@ export default function ProductDetailPage() {
                             updateVariant(
                               variant.id,
                               "price",
-                              parseFloat(e.target.value) || 0,
+                              parseFloat(e.target.value) || 0
                             )
                           }
-                          className="w-full pl-7 pr-3 py-2 bg-slate-900/50 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                          className="w-full pl-7 pr-3 py-2 bg-white border border-gray-200 rounded-lg text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                         />
                       </div>
                     </div>
                     <div>
-                      <label className="text-xs text-gray-400 block mb-1">
+                      <label className="text-xs text-gray-500 block mb-1">
                         Selling Discount Price
                       </label>
                       <div className="relative">
                         <DollarSign
                           size={14}
-                          className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500"
+                          className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400"
                         />
                         <input
                           type="number"
@@ -708,10 +648,10 @@ export default function ProductDetailPage() {
                             updateVariant(
                               variant.id,
                               "selling_price",
-                              parseFloat(e.target.value) || 0,
+                              parseFloat(e.target.value) || 0
                             )
                           }
-                          className="w-full pl-7 pr-3 py-2 bg-slate-900/50 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                          className="w-full pl-7 pr-3 py-2 bg-white border border-gray-200 rounded-lg text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                         />
                       </div>
                     </div>
@@ -722,30 +662,71 @@ export default function ProductDetailPage() {
           </div>
 
           {/* Media Content Segment */}
-          <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-xl p-6">
-            <div className="flex items-center gap-2 mb-4 pb-2 border-b border-white/10">
-              <ImageIcon size={18} className="text-teal-400" />
-              <h2 className="font-semibold text-white">Media Assert Preview</h2>
+          <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+            <div className="flex items-center gap-2 mb-4 pb-2 border-b border-gray-200">
+              <ImageIcon size={18} className="text-orange-500" />
+              <h2 className="font-semibold text-gray-900">
+                Media Asset Preview
+              </h2>
             </div>
 
             {/* Thumbnail Render block */}
             <div className="mb-6">
-              <label className="text-sm text-gray-400 block mb-2">
+              <label className="text-sm font-medium text-gray-700 block mb-2">
                 Primary Image Thumbnail
               </label>
-              <div className="border border-white/10 rounded-xl p-4">
+              <div className="border border-gray-200 rounded-xl p-4 bg-gray-50">
   {thumbnailPreview ? (
     <img
       src={thumbnailPreview}
       alt="Product"
-      className="w-40 h-40 object-cover rounded-lg"
+      className="w-40 h-40 object-cover rounded-lg border border-gray-200"
     />
   ) : (
-    <p className="text-gray-400 text-sm">
-      No image available
-    </p>
+    <div className="w-40 h-40 bg-gray-100 rounded-lg flex items-center justify-center border border-gray-200">
+      <ImageIcon size={32} className="text-gray-400" />
+    </div>
   )}
+
+  <input
+    type="file"
+    accept="image/*"
+    className="mt-4 block w-full text-sm"
+    onChange={(e) => {
+      const file = e.target.files[0];
+
+      if (!file) return;
+
+      setSelectedImage(file);
+
+      setThumbnailPreview(URL.createObjectURL(file));
+    }}
+  />
 </div>
+            </div>
+
+            {/* Additional Info */}
+            <div className="border-t border-gray-200 pt-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <p className="text-xs text-gray-500">Product ID</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    #{productInfo.id}
+                  </p>
+                </div>
+                <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <p className="text-xs text-gray-500">Status</p>
+                  <span
+                    className={`text-xs px-2 py-1 rounded-full ${
+                      productInfo.codAllowed
+                        ? "bg-emerald-100 text-emerald-700"
+                        : "bg-red-100 text-red-700"
+                    }`}
+                  >
+                    {productInfo.codAllowed ? "Active" : "Inactive"}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </div>

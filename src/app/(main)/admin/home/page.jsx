@@ -2,6 +2,17 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import {
+  ShoppingCart,
+  Package,
+  AlertCircle,
+  TrendingUp,
+  Building2,
+  CreditCard,
+  LogOut,
+  Loader2,
+} from "lucide-react";
+
 export default function HomePage() {
   const [dashboard, setDashboard] = useState(null);
   const [orders, setOrders] = useState([]);
@@ -11,9 +22,8 @@ export default function HomePage() {
 
   const handleLogout = () => {
     localStorage.removeItem("access_token");
-    localStorage.removeItem("token"); // safety (agar aur naam se saved ho)
-
-    router.push("/"); // home redirect
+    localStorage.removeItem("token");
+    router.push("/");
   };
 
   const token =
@@ -37,7 +47,7 @@ export default function HomePage() {
               "Content-Type": "application/json",
               Authorization: token ? `Bearer ${token}` : "",
             },
-          },
+          }
         );
 
         const data = await res.json();
@@ -58,7 +68,7 @@ export default function HomePage() {
   }, [token]);
 
   // =========================
-  // FETCH ORDERS (optional same as before)
+  // FETCH ORDERS
   // =========================
   useEffect(() => {
     const fetchOrders = async () => {
@@ -71,7 +81,7 @@ export default function HomePage() {
               "Content-Type": "application/json",
               Authorization: token ? `Bearer ${token}` : "",
             },
-          },
+          }
         );
 
         const resData = await response.json();
@@ -88,165 +98,216 @@ export default function HomePage() {
   }, [token]);
 
   // =========================
-  // LOADING / ERROR UI
-  // =========================
-  if (loading) {
-    return (
-      <div className="text-center text-gray-400 p-10">Loading dashboard...</div>
-    );
-  }
-
-  if (error) {
-    return <div className="text-center text-red-400 p-10">Error: {error}</div>;
-  }
-
-  // =========================
   // STATS FROM API
   // =========================
   const stats = [
     {
       title: "Total Orders",
       value: dashboard?.totalOrders || 0,
-      icon: "🛒",
-      bgClass: "bg-teal-500/20",
-      textClass: "text-teal-400",
+      icon: ShoppingCart,
+      bgColor: "bg-purple-100",
+      iconColor: "text-purple-600",
     },
-   
     {
       title: "Active Products",
       value: dashboard?.activeProducts || 0,
-      icon: "📦",
-      bgClass: "bg-green-500/20",
-      textClass: "text-green-400",
+      icon: Package,
+      bgColor: "bg-emerald-100",
+      iconColor: "text-emerald-600",
     },
     {
       title: "Out of Stock",
       value: dashboard?.outOfStock || 0,
-      icon: "⚠️",
-      bgClass: "bg-red-500/20",
-      textClass: "text-red-400",
+      icon: AlertCircle,
+      bgColor: "bg-red-100",
+      iconColor: "text-red-600",
     },
     {
       title: "Total Revenue",
       value: `₹${dashboard?.totalRevenue || 0}`,
-      icon: "💰",
-      bgClass: "bg-emerald-500/20",
-      textClass: "text-emerald-400",
+      icon: TrendingUp,
+      bgColor: "bg-blue-100",
+      iconColor: "text-blue-600",
     },
     {
       title: "Admin Revenue",
       value: `₹${dashboard?.adminRevenue || 0}`,
-      icon: "🏦",
-      bgClass: "bg-purple-500/20",
-      textClass: "text-purple-400",
+      icon: Building2,
+      bgColor: "bg-purple-100",
+      iconColor: "text-purple-600",
     },
     {
       title: "Pending Payments",
       value: `₹${dashboard?.pendingPayments || 0}`,
-      icon: "💳",
-      bgClass: "bg-orange-500/20",
-      textClass: "text-orange-400",
+      icon: CreditCard,
+      bgColor: "bg-orange-100",
+      iconColor: "text-orange-600",
     },
   ];
 
   const getStatusColor = (status) => {
     switch (status) {
       case "pending":
-        return "bg-yellow-500/20 text-yellow-400";
+        return "bg-yellow-100 text-yellow-700";
       case "delivered":
-        return "bg-green-500/20 text-green-400";
+        return "bg-emerald-100 text-emerald-700";
       case "dispatched":
-        return "bg-blue-500/20 text-blue-400";
+        return "bg-blue-100 text-blue-700";
       case "new":
-        return "bg-purple-500/20 text-purple-400";
+        return "bg-purple-100 text-purple-700";
       case "packed":
-        return "bg-indigo-500/20 text-indigo-400";
+        return "bg-indigo-100 text-indigo-700";
       case "shipped":
-        return "bg-cyan-500/20 text-cyan-400";
+        return "bg-cyan-100 text-cyan-700";
       case "processing":
-        return "bg-blue-500/20 text-blue-400";
+        return "bg-blue-100 text-blue-700";
       case "ordered":
-        return "bg-purple-500/20 text-purple-400";
+        return "bg-purple-100 text-purple-700";
       case "accepted":
-        return "bg-yellow-500/20 text-yellow-400";
+        return "bg-yellow-100 text-yellow-700";
       default:
-        return "bg-gray-500/20 text-gray-400";
+        return "bg-gray-100 text-gray-600";
     }
   };
 
+  // =========================
+  // LOADING / ERROR UI
+  // =========================
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <div className="w-10 h-10 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-3"></div>
+          <p className="text-gray-500">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <AlertCircle size={48} className="text-red-500 mx-auto mb-3" />
+          <p className="text-red-500">Error: {error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-purple-100 text-purple-600 rounded-lg hover:bg-purple-200 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      
-<div className="flex justify-between items-start">
-  <div>
-    <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-    <p className="text-gray-400 text-sm">Super Admin overview panel</p>
-  </div>
-  <button
-    onClick={handleLogout}
-    className="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg transition-colors"
-  >
-    Logout
-  </button>
-</div>
+      {/* Header */}
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-gray-500 text-sm">Super Admin overview panel</p>
+        </div>
+        <button
+          onClick={handleLogout}
+          className="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg transition-colors flex items-center gap-2 text-sm font-medium"
+        >
+          <LogOut size={16} />
+          Logout
+        </button>
+      </div>
+
       {/* STATS GRID */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        {stats.map((item, index) => (
-          <div
-            key={index}
-            className="bg-slate-900/50 border border-white/10 rounded-xl p-5"
-          >
-            <div className="text-2xl">{item.icon}</div>
-            <p className="text-xl font-bold text-white mt-2">{item.value}</p>
-            <p className="text-gray-400 text-sm">{item.title}</p>
-          </div>
-        ))}
+        {stats.map((item, index) => {
+          const Icon = item.icon;
+          return (
+            <div
+              key={index}
+              className="bg-white border border-gray-200 rounded-xl p-5 hover:border-purple-300 hover:shadow-md transition-all duration-200"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {item.value}
+                  </p>
+                  <p className="text-sm text-gray-500 mt-1">{item.title}</p>
+                </div>
+                <div
+                  className={`w-12 h-12 rounded-xl ${item.bgColor} flex items-center justify-center`}
+                >
+                  <Icon size={22} className={item.iconColor} />
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {/* ORDERS TABLE */}
-      <div className="bg-slate-900/50 border border-white/10 rounded-xl overflow-hidden">
-        <div className="p-4 border-b border-white/10">
-          <h3 className="text-white font-semibold">Recent Orders</h3>
+      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+        <div className="p-4 border-b border-gray-200">
+          <h3 className="text-gray-900 font-semibold">Recent Orders</h3>
         </div>
 
         {orders.length === 0 ? (
-          <div className="p-6 text-gray-400 text-center">No orders found</div>
+          <div className="p-6 text-gray-500 text-center">
+            <Package size={48} className="text-gray-300 mx-auto mb-3" />
+            No orders found
+          </div>
         ) : (
-          <table className="w-full">
-            <thead className="bg-slate-800/50">
-              <tr>
-                <th className="p-3 text-left text-gray-400">ID</th>
-                <th className="p-3 text-left text-gray-400">Customer</th>
-                <th className="p-3 text-left text-gray-400">vendor</th>
-                <th className="p-3 text-left text-gray-400">Amount</th>
-                <th className="p-3 text-left text-gray-400">Status</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {orders.slice(0, 5).map((order) => (
-                <tr key={order.order_id} className="border-t border-white/5">
-                  <td className="p-3 text-white">#{order.order_id}</td>
-                  <td className="p-3 text-gray-300">
-                    {order.customer || order.user_name || "Guest"}
-                  </td>
-                  <td className="p-3 text-gray-300">
-                    {order.customer || order.owner_name || "Guest"}
-                  </td>
-                  <td className="p-3 text-white">
-                    ₹{order.amount || order.total_amount || 0}
-                  </td>
-                  <td className="p-3">
-                    <span
-                      className={`px-2 py-1 rounded text-xs ${getStatusColor(order.status)}`}
-                    >
-                      {order.status || "Pending"}
-                    </span>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[600px]">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Order ID
+                  </th>
+                  <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Customer
+                  </th>
+                  <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Vendor
+                  </th>
+                  <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Amount
+                  </th>
+                  <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+
+              <tbody className="divide-y divide-gray-100">
+                {orders.slice(0, 5).map((order) => (
+                  <tr key={order.order_id} className="hover:bg-gray-50 transition-colors">
+                    <td className="p-3 text-sm font-medium text-gray-900">
+                      #{order.order_id}
+                    </td>
+                    <td className="p-3 text-sm text-gray-600">
+                      {order.customer || order.user_name || "Guest"}
+                    </td>
+                    <td className="p-3 text-sm text-gray-600">
+                      {order.customer || order.owner_name || "Guest"}
+                    </td>
+                    <td className="p-3 text-sm font-medium text-gray-900">
+                      ₹{order.amount || order.total_amount || 0}
+                    </td>
+                    <td className="p-3">
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                          order.status
+                        )}`}
+                      >
+                        {order.status || "Pending"}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

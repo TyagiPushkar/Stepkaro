@@ -26,25 +26,26 @@ import {
   CreditCard,
   Loader2,
 } from "lucide-react";
+
 const Modal = ({ isOpen, onClose, title, children, maxWidth = "max-w-md" }) => {
-    if (!isOpen) return null;
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-        <div className={`bg-slate-800 rounded-xl border border-white/10 w-full ${maxWidth} max-h-[90vh] overflow-y-auto`}>
-          <div className="flex justify-between items-center p-4 border-b border-white/10 sticky top-0 bg-slate-800 z-10">
-            <h2 className="text-lg font-semibold text-white">{title}</h2>
-            <button
-              onClick={onClose}
-              className="p-1 text-gray-400 hover:text-white"
-            >
-              <X size={20} />
-            </button>
-          </div>
-          <div className="p-4">{children}</div>
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <div className={`bg-white rounded-xl border border-gray-200 w-full ${maxWidth} max-h-[90vh] overflow-y-auto shadow-2xl`}>
+        <div className="flex justify-between items-center p-4 border-b border-gray-200 sticky top-0 bg-white z-10">
+          <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+          <button
+            onClick={onClose}
+            className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <X size={20} />
+          </button>
         </div>
+        <div className="p-4">{children}</div>
       </div>
-    );
-  };
+    </div>
+  );
+};
 
 export default function UsersPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -114,7 +115,7 @@ export default function UsersPage() {
         const result = await response.json();
 
         if (result.success) {
-          // buyers
+          // buyers - including brand_name from response
           const buyers = result.data.buyers.map((buyer) => ({
             id: buyer.id,
             name: buyer.name,
@@ -128,6 +129,7 @@ export default function UsersPage() {
             type: "buyer",
             rawData: buyer,
             // Buyer specific fields
+            brand_name: buyer.brand_name || "", // Added brand_name for buyers
             state: buyer.state,
             district: buyer.district,
             delivery_location: buyer.delivery_location,
@@ -150,6 +152,7 @@ export default function UsersPage() {
             avatar: "🏪",
             createdAt: vendor.created_at,
             type: "vendor",
+            brand_name: vendor.brand_name || vendor.business_name || "", // Use brand_name or fallback to business_name
             business_name: vendor.business_name,
             gst_number: vendor.gst_number,
             pan_number: vendor.pan_number,
@@ -176,7 +179,7 @@ export default function UsersPage() {
 
   // Filters
   const filters = [
-    { label: "All Users", value: "all", count: users.length, color: "teal" },
+    { label: "All Users", value: "all", count: users.length, color: "purple" },
     {
       label: "Pending Requests",
       value: "pending",
@@ -228,7 +231,8 @@ export default function UsersPage() {
           u.phone?.includes(query) ||
           u.address?.toLowerCase().includes(query) ||
           u.id?.toString().includes(query) ||
-          u.business_name?.toLowerCase().includes(query),
+          u.business_name?.toLowerCase().includes(query) ||
+          u.brand_name?.toLowerCase().includes(query), // Added brand_name search
       );
     }
 
@@ -268,10 +272,6 @@ export default function UsersPage() {
     const token = localStorage.getItem("access_token");
 
     try {
-      console.log("Approve clicked");
-      console.log("approvalUser", approvalUser);
-      console.log("approvalData", approvalData);
-
       if (approvalUser.role === "buyer") {
         if (approvalData.wallet_value) {
           const walletResponse = await fetch(
@@ -395,6 +395,7 @@ export default function UsersPage() {
       wallet_value: user.wallet_value || "",
       // Vendor specific
       business_name: user.business_name || "",
+      brand_name: user.brand_name || "", // Added brand_name for edit
       gst_number: user.gst_number || "",
       pan_number: user.pan_number || "",
       city: user.city || "",
@@ -430,27 +431,25 @@ export default function UsersPage() {
         logistic_contact_no: formData.logistic_contact_no,
         document_number: formData.document_number,
         document_image: formData.document_image,
-        // wallet_value: formData.wallet_value,
+        brand_name: formData.brand_name, // Added brand_name to payload
       };
 
       if (
-  formData.wallet_value !== "" &&
-  formData.wallet_value !== null &&
-  formData.wallet_value !== undefined
-) {
-  payload.wallet_value = Number(formData.wallet_value);
-}
+        formData.wallet_value !== "" &&
+        formData.wallet_value !== null &&
+        formData.wallet_value !== undefined
+      ) {
+        payload.wallet_value = Number(formData.wallet_value);
+      }
 
       let endpoint = "";
       if (selectedUser.type === "buyer") {
         endpoint =
           "https://namami-infotech.com/Stepkaro/src/buyer/edit_buyer.php";
-        // Buyer specific fields
         payload.buyer_id = formData.id;
       } else {
         endpoint =
           "https://namami-infotech.com/Stepkaro/src/vender/edit_vendor.php";
-        // Vendor specific fields
         payload.business_name = formData.business_name;
         payload.gst_number = formData.gst_number;
         payload.pan_number = formData.pan_number;
@@ -469,15 +468,13 @@ export default function UsersPage() {
       });
 
       const text = await response.text();
-console.log(text);
-
-let result;
-try {
-  result = JSON.parse(text);
-} catch (e) {
-  console.log("Invalid JSON:", text);
-  return;
-}
+      let result;
+      try {
+        result = JSON.parse(text);
+      } catch (e) {
+        console.log("Invalid JSON:", text);
+        return;
+      }
 
       if (result.success) {
         showToast(result.message || "User updated successfully");
@@ -500,6 +497,7 @@ try {
             createdAt: buyer.created_at,
             type: "buyer",
             rawData: buyer,
+            brand_name: buyer.brand_name || "",
             state: buyer.state,
             district: buyer.district,
             delivery_location: buyer.delivery_location,
@@ -521,6 +519,7 @@ try {
             avatar: "🏪",
             createdAt: vendor.created_at,
             type: "vendor",
+            brand_name: vendor.brand_name || vendor.business_name || "",
             business_name: vendor.business_name,
             gst_number: vendor.gst_number,
             pan_number: vendor.pan_number,
@@ -549,6 +548,7 @@ try {
   const handleExportCSV = () => {
     const headers = [
       "ID",
+      "Brand",
       "Name",
       "Email",
       "Phone",
@@ -559,6 +559,7 @@ try {
     ];
     const csvData = users.map((user) => [
       user.id,
+      user.brand_name || "—",
       user.name,
       user.email,
       user.phone,
@@ -584,22 +585,19 @@ try {
   // Get role badge color
   const getRoleBadge = (role) => {
     return role === "seller"
-      ? "bg-blue-500/20 text-blue-400"
-      : "bg-green-500/20 text-green-400";
+      ? "bg-blue-100 text-blue-700"
+      : "bg-green-100 text-green-700";
   };
 
   const getStatusBadge = (status) => {
     if (status === "active") {
-      return "bg-emerald-500/20 text-emerald-400";
+      return "bg-emerald-100 text-emerald-700";
     }
     if (status === "pending") {
-      return "bg-yellow-500/20 text-yellow-400";
+      return "bg-yellow-100 text-yellow-700";
     }
-    return "bg-red-500/20 text-red-400";
+    return "bg-red-100 text-red-700";
   };
-
-  // Modal component
-  
 
   const updateUserStatus = async (user, status) => {
     const token = localStorage.getItem("access_token");
@@ -635,19 +633,26 @@ try {
   const inactiveUsers = users.filter((u) => u.status === "inactive").length;
 
   if (loading) {
-    return <div className="text-white p-6">Loading users...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <div className="w-10 h-10 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-3"></div>
+          <p className="text-gray-500">Loading users...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
       {toast && (
         <div
-          className={`fixed top-20 right-6 z-50 px-4 py-3 rounded-lg flex items-center gap-2 shadow-lg backdrop-blur-sm text-white ${
+          className={`fixed top-20 right-6 z-50 px-4 py-3 rounded-lg flex items-center gap-2 shadow-lg text-white ${
             toast.type === "success"
-              ? "bg-emerald-500/90"
+              ? "bg-emerald-500"
               : toast.type === "error"
-              ? "bg-red-500/90"
-              : "bg-blue-500/90"
+              ? "bg-red-500"
+              : "bg-blue-500"
           }`}
         >
           {toast.type === "success" ? (
@@ -662,8 +667,8 @@ try {
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Users</h1>
-          <p className="text-gray-400 text-sm mt-1">
+          <h1 className="text-2xl font-bold text-gray-900">Users</h1>
+          <p className="text-gray-500 text-sm mt-1">
             Manage your platform users
           </p>
         </div>
@@ -672,7 +677,7 @@ try {
         <div className="flex flex-wrap gap-3">
           <div className="relative flex-1 lg:w-64">
             <Search
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
               size={18}
             />
             <input
@@ -680,13 +685,13 @@ try {
               value={searchQuery}
               onChange={handleSearch}
               placeholder="Search users..."
-              className="w-full pl-10 pr-4 py-2 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+              className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
             />
           </div>
 
           <button
             onClick={handleExportCSV}
-            className="bg-slate-800 hover:bg-slate-700 text-gray-300 px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-colors border border-white/10"
+            className="bg-white hover:bg-gray-50 text-gray-600 px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-colors border border-gray-200 hover:border-purple-300"
           >
             <Download size={16} />
             Export CSV
@@ -696,50 +701,50 @@ try {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-xl p-4">
+        <div className="bg-white border border-gray-200 rounded-xl p-4 hover:border-purple-300 transition-all">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-yellow-500/20 rounded-lg">
-              <UsersIcon size={20} className="text-yellow-400" />
+            <div className="p-2 bg-yellow-100 rounded-lg">
+              <UsersIcon size={20} className="text-yellow-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">{requested}</p>
-              <p className="text-xs text-gray-400">Pending Requests</p>
+              <p className="text-2xl font-bold text-gray-900">{requested}</p>
+              <p className="text-xs text-gray-500">Pending Requests</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-xl p-4">
+        <div className="bg-white border border-gray-200 rounded-xl p-4 hover:border-purple-300 transition-all">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-500/20 rounded-lg">
-              <Store size={20} className="text-blue-400" />
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <Store size={20} className="text-blue-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">{totalSellers}</p>
-              <p className="text-xs text-gray-400">Sellers</p>
+              <p className="text-2xl font-bold text-gray-900">{totalSellers}</p>
+              <p className="text-xs text-gray-500">Sellers</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-xl p-4">
+        <div className="bg-white border border-gray-200 rounded-xl p-4 hover:border-purple-300 transition-all">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-green-500/20 rounded-lg">
-              <User size={20} className="text-green-400" />
+            <div className="p-2 bg-green-100 rounded-lg">
+              <User size={20} className="text-green-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">{totalBuyers}</p>
-              <p className="text-xs text-gray-400">Buyers</p>
+              <p className="text-2xl font-bold text-gray-900">{totalBuyers}</p>
+              <p className="text-xs text-gray-500">Buyers</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-xl p-4">
+        <div className="bg-white border border-gray-200 rounded-xl p-4 hover:border-purple-300 transition-all">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-red-500/20 rounded-lg">
-              <XCircle size={20} className="text-red-400" />
+            <div className="p-2 bg-red-100 rounded-lg">
+              <XCircle size={20} className="text-red-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">{inactiveUsers}</p>
-              <p className="text-xs text-gray-400">Inactive Users</p>
+              <p className="text-2xl font-bold text-gray-900">{inactiveUsers}</p>
+              <p className="text-xs text-gray-500">Inactive Users</p>
             </div>
           </div>
         </div>
@@ -749,22 +754,38 @@ try {
       <div className="flex flex-wrap gap-3 overflow-x-auto pb-2">
         {filters.map((filter) => {
           const isActive = selectedFilter === filter.value;
+          const colorMap = {
+            purple: "bg-purple-600 text-white",
+            yellow: "bg-yellow-100 text-yellow-700",
+            blue: "bg-blue-100 text-blue-700",
+            green: "bg-green-100 text-green-700",
+            emerald: "bg-emerald-100 text-emerald-700",
+            red: "bg-red-100 text-red-700",
+          };
+          const inactiveColorMap = {
+            purple: "bg-white text-gray-600 border-gray-200 hover:border-purple-300 hover:text-purple-600",
+            yellow: "bg-white text-gray-600 border-gray-200 hover:border-yellow-300 hover:text-yellow-600",
+            blue: "bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:text-blue-600",
+            green: "bg-white text-gray-600 border-gray-200 hover:border-green-300 hover:text-green-600",
+            emerald: "bg-white text-gray-600 border-gray-200 hover:border-emerald-300 hover:text-emerald-600",
+            red: "bg-white text-gray-600 border-gray-200 hover:border-red-300 hover:text-red-600",
+          };
           return (
             <button
               key={filter.value}
               onClick={() => handleFilterChange(filter.value)}
-              className={`px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-all duration-200 whitespace-nowrap ${
+              className={`px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-all duration-200 whitespace-nowrap border ${
                 isActive
-                  ? `bg-${filter.color}-500/20 text-${filter.color}-400 border border-${filter.color}-500/30`
-                  : "bg-slate-800/50 text-gray-400 hover:text-white border border-white/10 hover:border-teal-500/30"
+                  ? colorMap[filter.color] || "bg-purple-600 text-white"
+                  : inactiveColorMap[filter.color] || "bg-white text-gray-600 border-gray-200 hover:border-purple-300"
               }`}
             >
               {filter.label}
               <span
                 className={`px-2 py-0.5 rounded-full text-xs ${
                   isActive
-                    ? `bg-${filter.color}-500/30 text-${filter.color}-400`
-                    : "bg-slate-700 text-gray-400"
+                    ? "bg-white/20 text-white"
+                    : "bg-gray-100 text-gray-600"
                 }`}
               >
                 {filter.count}
@@ -776,26 +797,26 @@ try {
 
       {/* Results Summary */}
       <div className="flex justify-between items-center">
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-gray-500">
           Showing{" "}
-          <span className="text-white">
+          <span className="text-gray-900">
             {filteredUsers.length > 0 ? startIndex + 1 : 0}
           </span>{" "}
           to{" "}
-          <span className="text-white">
+          <span className="text-gray-900">
             {Math.min(endIndex, filteredUsers.length)}
           </span>{" "}
-          of <span className="text-white">{filteredUsers.length}</span> users
+          of <span className="text-gray-900">{filteredUsers.length}</span> users
         </p>
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-400">Show:</span>
+          <span className="text-sm text-gray-500">Show:</span>
           <select
             value={itemsPerPage}
             onChange={(e) => {
               setItemsPerPage(Number(e.target.value));
               setCurrentPage(1);
             }}
-            className="bg-slate-800 border border-white/10 rounded-lg px-2 py-1 text-sm text-gray-300"
+            className="bg-white border border-gray-200 rounded-lg px-2 py-1 text-sm text-gray-600 focus:outline-none focus:ring-1 focus:ring-purple-500"
           >
             <option value={5}>5</option>
             <option value={10}>10</option>
@@ -805,56 +826,65 @@ try {
       </div>
 
       {/* Users Table */}
-      <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden">
+      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[900px]">
-            <thead className="bg-slate-800/50 border-b border-white/10">
+            <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   ID
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Brand
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Name
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Email
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Role
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Address
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
+            <tbody className="divide-y divide-gray-100">
               {currentUsers.length > 0 ? (
                 currentUsers.map((user) => (
                   <tr
                     key={`${user.type}-${user.id}`}
-                    className="hover:bg-white/5 transition-colors"
+                    className="hover:bg-gray-50 transition-colors"
                   >
                     <td className="px-6 py-4">
-                      <span className="text-sm text-gray-300">#{user.id}</span>
+                      <span className="text-sm text-gray-500">#{user.id}</span>
+                    </td>
+
+                    <td className="px-6 py-4">
+                      <span className="text-sm font-medium text-gray-900">
+                        {user.brand_name || "—"}
+                      </span>
                     </td>
 
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-gradient-to-br from-teal-500/20 to-blue-500/20 rounded-full flex items-center justify-center text-base border border-white/10">
+                        <div className="w-8 h-8 bg-gradient-to-br from-purple-100 to-orange-100 rounded-full flex items-center justify-center text-base border border-gray-200">
                           {user.avatar}
                         </div>
                         <div>
-                          <p className="text-sm font-medium text-white">
+                          <p className="text-sm font-medium text-gray-900">
                             {user.name}
                           </p>
                           {user.business_name && (
-                            <p className="text-xs text-gray-400">
+                            <p className="text-xs text-gray-500">
                               {user.business_name}
                             </p>
                           )}
@@ -863,7 +893,7 @@ try {
                     </td>
 
                     <td className="px-6 py-4">
-                      <p className="text-sm text-gray-300">{user.email}</p>
+                      <p className="text-sm text-gray-600">{user.email}</p>
                     </td>
 
                     <td className="px-6 py-4">
@@ -875,7 +905,7 @@ try {
                     </td>
 
                     <td className="px-6 py-4">
-                      <p className="text-sm text-gray-400 max-w-xs truncate">
+                      <p className="text-sm text-gray-500 max-w-xs truncate">
                         {user.address || user.city || "—"}
                       </p>
                     </td>
@@ -908,11 +938,11 @@ try {
                             className={`relative h-6 w-12 rounded-full transition ${
                               user.status === "active"
                                 ? "bg-emerald-500"
-                                : "bg-red-500"
+                                : "bg-gray-300"
                             }`}
                           >
                             <span
-                              className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition ${
+                              className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition ${
                                 user.status === "active"
                                   ? "left-6"
                                   : "left-0.5"
@@ -934,14 +964,14 @@ try {
                       <div className="flex gap-2">
                         <button
                           onClick={() => openViewModal(user)}
-                          className="p-1.5 text-gray-400 hover:text-teal-400 hover:bg-teal-500/20 rounded-lg transition-colors"
+                          className="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
                           title="View Details"
                         >
                           <Eye size={16} />
                         </button>
                         <button
                           onClick={() => openEditModal(user)}
-                          className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors"
+                          className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                           title="Edit User"
                         >
                           <Edit size={16} />
@@ -952,13 +982,13 @@ try {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="7" className="px-6 py-12 text-center">
+                  <td colSpan="8" className="px-6 py-12 text-center">
                     <UsersIcon
                       size={48}
-                      className="text-gray-600 mx-auto mb-3"
+                      className="text-gray-300 mx-auto mb-3"
                     />
-                    <p className="text-gray-400">No users found</p>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-gray-500">No users found</p>
+                    <p className="text-sm text-gray-400 mt-1">
                       Try adjusting your search
                     </p>
                   </td>
@@ -970,11 +1000,11 @@ try {
 
         {/* Pagination */}
         {filteredUsers.length > 0 && totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-white/10 flex justify-center gap-2">
+          <div className="px-6 py-4 border-t border-gray-200 flex justify-center gap-2">
             <button
               onClick={() => goToPage(currentPage - 1)}
               disabled={currentPage === 1}
-              className="px-3 py-1.5 text-sm bg-slate-800 hover:bg-slate-700 text-gray-400 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+              className="px-3 py-1.5 text-sm bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
             >
               <ChevronLeft size={16} />
               Previous
@@ -986,8 +1016,8 @@ try {
                 onClick={() => goToPage(page)}
                 className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
                   currentPage === page
-                    ? "bg-teal-500/20 text-teal-400"
-                    : "bg-slate-800 hover:bg-slate-700 text-gray-400"
+                    ? "bg-purple-600 text-white"
+                    : "bg-white border border-gray-200 hover:bg-gray-50 text-gray-600"
                 }`}
               >
                 {page}
@@ -997,7 +1027,7 @@ try {
             <button
               onClick={() => goToPage(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className="px-3 py-1.5 text-sm bg-slate-800 hover:bg-slate-700 text-gray-400 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+              className="px-3 py-1.5 text-sm bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
             >
               Next
               <ChevronRight size={16} />
@@ -1012,15 +1042,15 @@ try {
         onClose={() => setShowDeleteModal(false)}
         title="Delete User"
       >
-        <p className="text-gray-300 mb-6">
+        <p className="text-gray-600 mb-6">
           Are you sure you want to delete{" "}
-          <span className="text-white font-semibold">{selectedUser?.name}</span>
+          <span className="text-gray-900 font-semibold">{selectedUser?.name}</span>
           ? This action cannot be undone.
         </p>
         <div className="flex gap-3">
           <button
             onClick={() => setShowDeleteModal(false)}
-            className="flex-1 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
+            className="flex-1 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
           >
             Cancel
           </button>
@@ -1042,7 +1072,7 @@ try {
         <div className="space-y-4">
           {approvalUser?.role === "buyer" ? (
             <div>
-              <label className="text-sm text-gray-400 block mb-1">
+              <label className="text-sm font-medium text-gray-700 block mb-1">
                 Minimum Wallet Balance (Optional)
               </label>
               <input
@@ -1055,13 +1085,13 @@ try {
                     wallet_value: e.target.value,
                   }))
                 }
-                className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
+                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 placeholder="Enter minimum wallet balance"
               />
             </div>
           ) : (
             <div>
-              <label className="text-sm text-gray-400 block mb-1">
+              <label className="text-sm font-medium text-gray-700 block mb-1">
                 Minimum Cart Value (Optional)
               </label>
               <input
@@ -1074,14 +1104,14 @@ try {
                     minimum_order_value: e.target.value,
                   }))
                 }
-                className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
+                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 placeholder="Enter minimum cart value"
               />
             </div>
           )}
           <button
             onClick={approveUser}
-            className="w-full py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg"
+            className="w-full py-2 bg-gradient-to-r from-purple-600 to-orange-500 hover:shadow-lg text-white rounded-lg transition-all"
           >
             Approve User
           </button>
@@ -1099,55 +1129,67 @@ try {
           {/* Common Fields */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm text-gray-400 block mb-1">
+              <label className="text-sm font-medium text-gray-700 block mb-1">
                 Name <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
+                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               />
             </div>
             <div>
-              <label className="text-sm text-gray-400 block mb-1">
+              <label className="text-sm font-medium text-gray-700 block mb-1">
                 Email <span className="text-red-500">*</span>
               </label>
               <input
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
+                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               />
             </div>
             <div>
-              <label className="text-sm text-gray-400 block mb-1">
+              <label className="text-sm font-medium text-gray-700 block mb-1">
                 Phone <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
+                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               />
             </div>
             <div>
-              <label className="text-sm text-gray-400 block mb-1">Role</label>
+              <label className="text-sm font-medium text-gray-700 block mb-1">
+                Brand Name
+              </label>
+              <input
+                type="text"
+                value={formData.brand_name}
+                onChange={(e) => setFormData({ ...formData, brand_name: e.target.value })}
+                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="Enter brand name"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700 block mb-1">Role</label>
               <select
                 value={formData.role}
                 onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
+                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               >
                 <option value="buyer">Buyer</option>
                 <option value="seller">Seller</option>
               </select>
             </div>
             <div>
-              <label className="text-sm text-gray-400 block mb-1">Status</label>
+              <label className="text-sm font-medium text-gray-700 block mb-1">Status</label>
               <select
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
+                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               >
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
@@ -1155,110 +1197,110 @@ try {
               </select>
             </div>
             <div>
-              <label className="text-sm text-gray-400 block mb-1">Wallet Value</label>
+              <label className="text-sm font-medium text-gray-700 block mb-1">Wallet Value</label>
               <input
                 type="text"
                 inputMode="numeric"
                 value={formData.wallet_value}
                 onChange={(e) => setFormData({ ...formData, wallet_value: e.target.value })}
-                className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
+                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 placeholder="0"
               />
             </div>
           </div>
 
           {/* Address Fields */}
-          <div className="border-t border-white/10 pt-4">
-            <p className="text-sm font-medium text-gray-400 mb-3">Address Details</p>
+          <div className="border-t border-gray-200 pt-4">
+            <p className="text-sm font-medium text-gray-700 mb-3">Address Details</p>
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
-                <label className="text-sm text-gray-400 block mb-1">Address</label>
+                <label className="text-sm font-medium text-gray-700 block mb-1">Address</label>
                 <input
                   type="text"
                   value={formData.address}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
+                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 />
               </div>
               <div>
-                <label className="text-sm text-gray-400 block mb-1">State</label>
+                <label className="text-sm font-medium text-gray-700 block mb-1">State</label>
                 <input
                   type="text"
                   value={formData.state}
                   onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                  className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
+                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 />
               </div>
               <div>
-                <label className="text-sm text-gray-400 block mb-1">District</label>
+                <label className="text-sm font-medium text-gray-700 block mb-1">District</label>
                 <input
                   type="text"
                   value={formData.district}
                   onChange={(e) => setFormData({ ...formData, district: e.target.value })}
-                  className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
+                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 />
               </div>
               <div className="col-span-2">
-                <label className="text-sm text-gray-400 block mb-1">Delivery Location</label>
+                <label className="text-sm font-medium text-gray-700 block mb-1">Delivery Location</label>
                 <input
                   type="text"
                   value={formData.delivery_location}
                   onChange={(e) => setFormData({ ...formData, delivery_location: e.target.value })}
-                  className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
+                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 />
               </div>
             </div>
           </div>
 
           {/* Logistic Details */}
-          <div className="border-t border-white/10 pt-4">
-            <p className="text-sm font-medium text-gray-400 mb-3 flex items-center gap-2">
+          <div className="border-t border-gray-200 pt-4">
+            <p className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
               <Truck size={16} /> Logistic Details
             </p>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm text-gray-400 block mb-1">Partner Name</label>
+                <label className="text-sm font-medium text-gray-700 block mb-1">Partner Name</label>
                 <input
                   type="text"
                   value={formData.logistic_partner_name}
                   onChange={(e) => setFormData({ ...formData, logistic_partner_name: e.target.value })}
-                  className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
+                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 />
               </div>
               <div>
-                <label className="text-sm text-gray-400 block mb-1">Contact No</label>
+                <label className="text-sm font-medium text-gray-700 block mb-1">Contact No</label>
                 <input
                   type="text"
                   value={formData.logistic_contact_no}
                   onChange={(e) => setFormData({ ...formData, logistic_contact_no: e.target.value })}
-                  className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
+                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 />
               </div>
             </div>
           </div>
 
           {/* Document Details */}
-          <div className="border-t border-white/10 pt-4">
-            <p className="text-sm font-medium text-gray-400 mb-3 flex items-center gap-2">
+          <div className="border-t border-gray-200 pt-4">
+            <p className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
               <FileText size={16} /> Document Details
             </p>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm text-gray-400 block mb-1">Document Number</label>
+                <label className="text-sm font-medium text-gray-700 block mb-1">Document Number</label>
                 <input
                   type="text"
                   value={formData.document_number}
                   onChange={(e) => setFormData({ ...formData, document_number: e.target.value })}
-                  className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
+                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 />
               </div>
               <div>
-                <label className="text-sm text-gray-400 block mb-1">Document Image URL</label>
+                <label className="text-sm font-medium text-gray-700 block mb-1">Document Image URL</label>
                 <input
                   type="text"
                   value={formData.document_image}
                   onChange={(e) => setFormData({ ...formData, document_image: e.target.value })}
-                  className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
+                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   placeholder="Path to document image"
                 />
               </div>
@@ -1267,63 +1309,63 @@ try {
 
           {/* Vendor Specific Fields */}
           {selectedUser?.role === "seller" && (
-            <div className="border-t border-white/10 pt-4">
-              <p className="text-sm font-medium text-gray-400 mb-3 flex items-center gap-2">
+            <div className="border-t border-gray-200 pt-4">
+              <p className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
                 <Store size={16} /> Business Details
               </p>
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
-                  <label className="text-sm text-gray-400 block mb-1">Business Name</label>
+                  <label className="text-sm font-medium text-gray-700 block mb-1">Business Name</label>
                   <input
                     type="text"
                     value={formData.business_name}
                     onChange={(e) => setFormData({ ...formData, business_name: e.target.value })}
-                    className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
+                    className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   />
                 </div>
                 <div>
-                  <label className="text-sm text-gray-400 block mb-1">GST Number</label>
+                  <label className="text-sm font-medium text-gray-700 block mb-1">GST Number</label>
                   <input
                     type="text"
                     value={formData.gst_number}
                     onChange={(e) => setFormData({ ...formData, gst_number: e.target.value })}
-                    className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
+                    className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   />
                 </div>
                 <div>
-                  <label className="text-sm text-gray-400 block mb-1">PAN Number</label>
+                  <label className="text-sm font-medium text-gray-700 block mb-1">PAN Number</label>
                   <input
                     type="text"
                     value={formData.pan_number}
                     onChange={(e) => setFormData({ ...formData, pan_number: e.target.value })}
-                    className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
+                    className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   />
                 </div>
                 <div>
-                  <label className="text-sm text-gray-400 block mb-1">City</label>
+                  <label className="text-sm font-medium text-gray-700 block mb-1">City</label>
                   <input
                     type="text"
                     value={formData.city}
                     onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                    className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
+                    className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   />
                 </div>
                 <div>
-                  <label className="text-sm text-gray-400 block mb-1">Pincode</label>
+                  <label className="text-sm font-medium text-gray-700 block mb-1">Pincode</label>
                   <input
                     type="text"
                     value={formData.pincode}
                     onChange={(e) => setFormData({ ...formData, pincode: e.target.value })}
-                    className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
+                    className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   />
                 </div>
                 <div className="col-span-2">
-                  <label className="text-sm text-gray-400 block mb-1">Country</label>
+                  <label className="text-sm font-medium text-gray-700 block mb-1">Country</label>
                   <input
                     type="text"
                     value={formData.country}
                     onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                    className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
+                    className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   />
                 </div>
               </div>
@@ -1331,17 +1373,17 @@ try {
           )}
 
           {/* Action Buttons */}
-          <div className="flex gap-3 pt-4 border-t border-white/10">
+          <div className="flex gap-3 pt-4 border-t border-gray-200">
             <button
               onClick={() => setShowEditModal(false)}
-              className="flex-1 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
+              className="flex-1 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleEditUser}
               disabled={editLoading}
-              className="flex-1 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              className="flex-1 py-2 bg-gradient-to-r from-purple-600 to-orange-500 hover:shadow-lg text-white rounded-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {editLoading ? (
                 <>
@@ -1369,21 +1411,26 @@ try {
         {selectedUser && (
           <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
             {/* Header */}
-            <div className="flex items-center gap-4 pb-4 border-b border-white/10">
-              <div className="w-16 h-16 bg-gradient-to-br from-teal-500/20 to-blue-500/20 rounded-full flex items-center justify-center text-3xl border border-white/10">
+            <div className="flex items-center gap-4 pb-4 border-b border-gray-200">
+              <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-orange-100 rounded-full flex items-center justify-center text-3xl border border-gray-200">
                 {selectedUser.avatar}
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-white">
+                <h3 className="text-lg font-semibold text-gray-900">
                   {selectedUser.name}
                 </h3>
+                {selectedUser.brand_name && (
+                  <p className="text-sm text-purple-600">
+                    Brand: {selectedUser.brand_name}
+                  </p>
+                )}
                 {selectedUser.business_name && (
-                  <p className="text-sm text-teal-400">
+                  <p className="text-sm text-gray-500">
                     {selectedUser.business_name}
                   </p>
                 )}
-                <p className="text-sm text-gray-400">{selectedUser.email}</p>
-                <p className="text-xs text-gray-500">{selectedUser.phone}</p>
+                <p className="text-sm text-gray-500">{selectedUser.email}</p>
+                <p className="text-xs text-gray-400">{selectedUser.phone}</p>
               </div>
             </div>
 
@@ -1391,7 +1438,7 @@ try {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-xs text-gray-500">User ID</p>
-                <p className="text-sm font-semibold text-white">
+                <p className="text-sm font-semibold text-gray-900">
                   #{selectedUser.id}
                 </p>
               </div>
@@ -1413,28 +1460,34 @@ try {
               </div>
               <div>
                 <p className="text-xs text-gray-500">Joined Date</p>
-                <p className="text-sm text-white">
+                <p className="text-sm text-gray-900">
                   {selectedUser.createdAt?.split(" ")[0] || "—"}
                 </p>
               </div>
               {selectedUser.wallet_value && (
                 <div>
                   <p className="text-xs text-gray-500">Wallet Value</p>
-                  <p className="text-sm text-white">₹{selectedUser.wallet_value}</p>
+                  <p className="text-sm text-gray-900">₹{selectedUser.wallet_value}</p>
+                </div>
+              )}
+              {selectedUser.brand_name && (
+                <div>
+                  <p className="text-xs text-gray-500">Brand</p>
+                  <p className="text-sm text-gray-900">{selectedUser.brand_name}</p>
                 </div>
               )}
             </div>
 
             {/* Address Section */}
-            <div className="bg-slate-900/50 rounded-lg p-4 space-y-2">
+            <div className="bg-gray-50 rounded-lg p-4 space-y-2 border border-gray-200">
               <p className="text-xs text-gray-500 flex items-center gap-1">
                 <MapPin size={14} /> Address Details
               </p>
-              <p className="text-sm text-white">
+              <p className="text-sm text-gray-900">
                 {selectedUser.address || selectedUser.city || "—"}
               </p>
               {(selectedUser.city || selectedUser.state) && (
-                <p className="text-sm text-gray-400">
+                <p className="text-sm text-gray-500">
                   {selectedUser.city && `${selectedUser.city}, `}
                   {selectedUser.state && `${selectedUser.state}, `}
                   {selectedUser.country && selectedUser.country}
@@ -1445,7 +1498,7 @@ try {
 
             {/* Buyer Specific Fields */}
             {selectedUser.role === "buyer" && (
-              <div className="bg-slate-900/50 rounded-lg p-4 space-y-3">
+              <div className="bg-gray-50 rounded-lg p-4 space-y-3 border border-gray-200">
                 <p className="text-xs text-gray-500 flex items-center gap-1">
                   <Package size={14} /> Buyer Details
                 </p>
@@ -1453,7 +1506,7 @@ try {
                   {selectedUser.district && (
                     <div>
                       <p className="text-xs text-gray-500">District</p>
-                      <p className="text-sm text-white">
+                      <p className="text-sm text-gray-900">
                         {selectedUser.district}
                       </p>
                     </div>
@@ -1461,7 +1514,7 @@ try {
                   {selectedUser.delivery_location && (
                     <div className="col-span-2">
                       <p className="text-xs text-gray-500">Delivery Location</p>
-                      <p className="text-sm text-white">
+                      <p className="text-sm text-gray-900">
                         {selectedUser.delivery_location}
                       </p>
                     </div>
@@ -1469,7 +1522,7 @@ try {
                   {selectedUser.document_number && (
                     <div className="col-span-2">
                       <p className="text-xs text-gray-500">Document Number</p>
-                      <p className="text-sm text-white">
+                      <p className="text-sm text-gray-900">
                         {selectedUser.document_number}
                       </p>
                     </div>
@@ -1481,7 +1534,7 @@ try {
                         href={`https://namami-infotech.com/${selectedUser.document_image}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-sm text-teal-400 hover:text-teal-300 underline"
+                        className="text-sm text-purple-600 hover:text-purple-700 underline"
                       >
                         View Document
                       </a>
@@ -1490,7 +1543,7 @@ try {
                 </div>
                 {(selectedUser.logistic_partner_name ||
                   selectedUser.logistic_contact_no) && (
-                  <div className="border-t border-white/10 pt-3 mt-2">
+                  <div className="border-t border-gray-200 pt-3 mt-2">
                     <p className="text-xs text-gray-500 flex items-center gap-1">
                       <Truck size={14} /> Logistic Details
                     </p>
@@ -1498,7 +1551,7 @@ try {
                       {selectedUser.logistic_partner_name && (
                         <div>
                           <p className="text-xs text-gray-500">Partner</p>
-                          <p className="text-sm text-white">
+                          <p className="text-sm text-gray-900">
                             {selectedUser.logistic_partner_name}
                           </p>
                         </div>
@@ -1506,7 +1559,7 @@ try {
                       {selectedUser.logistic_contact_no && (
                         <div>
                           <p className="text-xs text-gray-500">Contact</p>
-                          <p className="text-sm text-white">
+                          <p className="text-sm text-gray-900">
                             {selectedUser.logistic_contact_no}
                           </p>
                         </div>
@@ -1519,7 +1572,7 @@ try {
 
             {/* Vendor Specific Fields */}
             {selectedUser.role === "seller" && (
-              <div className="bg-slate-900/50 rounded-lg p-4 space-y-3">
+              <div className="bg-gray-50 rounded-lg p-4 space-y-3 border border-gray-200">
                 <p className="text-xs text-gray-500 flex items-center gap-1">
                   <Store size={14} /> Vendor Details
                 </p>
@@ -1527,7 +1580,7 @@ try {
                   {selectedUser.business_name && (
                     <div className="col-span-2">
                       <p className="text-xs text-gray-500">Business Name</p>
-                      <p className="text-sm text-white">
+                      <p className="text-sm text-gray-900">
                         {selectedUser.business_name}
                       </p>
                     </div>
@@ -1535,7 +1588,7 @@ try {
                   {selectedUser.gst_number && (
                     <div>
                       <p className="text-xs text-gray-500">GST Number</p>
-                      <p className="text-sm text-white font-mono">
+                      <p className="text-sm text-gray-900 font-mono">
                         {selectedUser.gst_number}
                       </p>
                     </div>
@@ -1543,7 +1596,7 @@ try {
                   {selectedUser.pan_number && (
                     <div>
                       <p className="text-xs text-gray-500">PAN Number</p>
-                      <p className="text-sm text-white font-mono">
+                      <p className="text-sm text-gray-900 font-mono">
                         {selectedUser.pan_number}
                       </p>
                     </div>
@@ -1551,7 +1604,7 @@ try {
                   {selectedUser.pincode && (
                     <div>
                       <p className="text-xs text-gray-500">Pincode</p>
-                      <p className="text-sm text-white">
+                      <p className="text-sm text-gray-900">
                         {selectedUser.pincode}
                       </p>
                     </div>
