@@ -45,6 +45,7 @@ export default function SellerProductsPage() {
     gender: [],
     colors: [],
     materials: [],
+    upper_materials: [],
     packingTypes: [],
   });
 
@@ -57,14 +58,16 @@ export default function SellerProductsPage() {
     category_name: "",
     min_size: "",
     max_size: "",
+    variants: [], // 👈 NEW (min/max combined)
     gender: "",
     color: "",
     material: "",
+    upper_material: "",
     packing_type: "",
     pairs_per_ctn: "",
     origin: "Made in India",
     stock_quantity: "",
-    status: "inactive", // Default inactive
+    status: "approve_request",
   });
 
   useEffect(() => {
@@ -83,7 +86,7 @@ export default function SellerProductsPage() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
       const result = await response.json();
 
@@ -97,11 +100,14 @@ export default function SellerProductsPage() {
           category: p.category_name,
           brand: p.brand_name,
           article: p.article_name,
-          size: p.variant && p.variant.trim() !== "" 
-            ? p.variant 
-           : (p.min_size && p.max_size ? `${p.min_size}-${p.max_size}` : p.size || "—"),
-           min_size: p.min_size,
-           max_size : p.max_size,
+          size:
+            p.variant && p.variant.trim() !== ""
+              ? p.variant
+              : p.min_size && p.max_size
+                ? `${p.min_size}-${p.max_size}`
+                : p.size || "—",
+          min_size: p.min_size,
+          max_size: p.max_size,
           color: p.color,
           material: p.material,
           packingType: p.packing_type,
@@ -111,7 +117,7 @@ export default function SellerProductsPage() {
           gender: p.gender,
           description: p.description,
           status: p.status,
-           commission: p.commission || "0",
+          commission: p.commission || "0",
         }));
         setProducts(formattedProducts);
       }
@@ -130,7 +136,7 @@ export default function SellerProductsPage() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
       const result = await response.json();
 
@@ -142,6 +148,7 @@ export default function SellerProductsPage() {
           gender: [...new Set(result.data.gender || [])],
           colors: [...new Set(result.data.color || [])],
           materials: [...new Set(result.data.material || [])],
+          upper_materials: [...new Set(result.data.upper_material || [])],
           packingTypes: [...new Set(result.data.packing_type || [])],
         });
       }
@@ -155,9 +162,10 @@ export default function SellerProductsPage() {
     let filtered = products;
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(p =>
-        p.name?.toLowerCase().includes(query) ||
-        p.category?.toLowerCase().includes(query)
+      filtered = filtered.filter(
+        (p) =>
+          p.name?.toLowerCase().includes(query) ||
+          p.category?.toLowerCase().includes(query),
       );
     }
     return filtered;
@@ -166,7 +174,10 @@ export default function SellerProductsPage() {
   // Pagination
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentProducts = filteredProducts.slice(startIndex, startIndex + itemsPerPage);
+  const currentProducts = filteredProducts.slice(
+    startIndex,
+    startIndex + itemsPerPage,
+  );
 
   const goToPage = (page) => {
     setCurrentPage(Math.max(1, Math.min(page, totalPages || 1)));
@@ -190,7 +201,7 @@ export default function SellerProductsPage() {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ product_id: productId }),
-        }
+        },
       );
       const result = await response.json();
       if (result.success) {
@@ -231,7 +242,7 @@ export default function SellerProductsPage() {
             product_id: productId,
             stock_quantity: newQuantity,
           }),
-        }
+        },
       );
       const result = await response.json();
       if (result.success) {
@@ -270,6 +281,7 @@ export default function SellerProductsPage() {
       gender: "",
       color: "",
       material: "",
+      upper_material: "",
       packing_type: "",
       pairs_per_ctn: "",
       origin: "Made in India",
@@ -284,7 +296,7 @@ export default function SellerProductsPage() {
     // Parse size range if exists
     // let minSize = "";
     // let maxSize = "";
-      
+
     let extractedMin = "";
     let extractedMax = "";
     // if (product.size && product.size.includes("-")) {
@@ -292,23 +304,20 @@ export default function SellerProductsPage() {
     //   minSize = min;
     //   maxSize = max;
     // }
-      
+
     if (product.size && product.size.toLowerCase().includes("x")) {
       const parts = product.size.toLowerCase().split("x");
       if (parts.length === 2) {
         extractedMin = parts[0].trim();
         extractedMax = parts[1].trim();
       }
-    }
-
-    else if (product.size && product.size.includes("-")) {
+    } else if (product.size && product.size.includes("-")) {
       const parts = product.size.split("-");
       if (parts.length === 2) {
         extractedMin = parts[0].trim();
         extractedMax = parts[1].trim();
       }
-    }
-    else {
+    } else {
       extractedMin = product.min_size || "";
       extractedMax = product.max_size || "";
     }
@@ -326,6 +335,7 @@ export default function SellerProductsPage() {
       gender: product.gender || "",
       color: product.color || "",
       material: product.material || "",
+      upper_material: product.upper_material || "",
       packing_type: product.packingType || "",
       pairs_per_ctn: product.pairsPerCTN || "",
       origin: product.origin || "Made in India",
@@ -335,8 +345,8 @@ export default function SellerProductsPage() {
       // min_size: product.min_size || "",
       // max_size: product.max_size || "",
 
-       min_size: extractedMin,
-       max_size: extractedMax,
+      min_size: extractedMin,
+      max_size: extractedMax,
     });
     setIsEditing(true);
     setShowAddModal(true);
@@ -344,16 +354,40 @@ export default function SellerProductsPage() {
 
   const handleExportProducts = () => {
     const headers = [
-      "ID", "Product Name", "Category", "Brand", "Article", "Size",
-      "Color", "Material", "Packing Type", "Pairs per CTN", "Origin",
-      "Price", "Quantity", "Status"
+      "ID",
+      "Product Name",
+      "Category",
+      "Brand",
+      "Article",
+      "Size",
+      "Color",
+      "Material",
+      "Packing Type",
+      "Pairs per CTN",
+      "Origin",
+      "Price",
+      "Quantity",
+      "Status",
     ];
-    const csvData = products.map(p => [
-      p.id, p.name, p.category, p.brand, p.article, p.size,
-      p.color, p.material, p.packingType, p.pairsPerCTN, p.origin,
-      p.price, p.quantity, p.stock ? "Active" : "Inactive"
+    const csvData = products.map((p) => [
+      p.id,
+      p.name,
+      p.category,
+      p.brand,
+      p.article,
+      p.size,
+      p.color,
+      p.material,
+      p.packingType,
+      p.pairsPerCTN,
+      p.origin,
+      p.price,
+      p.quantity,
+      p.stock ? "Active" : "Inactive",
     ]);
-    const csvContent = [headers, ...csvData].map(row => row.join(",")).join("\n");
+    const csvContent = [headers, ...csvData]
+      .map((row) => row.join(","))
+      .join("\n");
     const blob = new Blob([csvContent], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -391,24 +425,35 @@ export default function SellerProductsPage() {
       formData.append("gender", newProduct.gender);
       formData.append("color", newProduct.color);
       formData.append("material", newProduct.material);
+      formData.append("upper_material", newProduct.upper_material);
       formData.append("packing_type", newProduct.packing_type);
       formData.append("pairs_per_ctn", newProduct.pairs_per_ctn);
       formData.append("origin", newProduct.origin);
       formData.append("stock_quantity", newProduct.stock_quantity);
       formData.append("status", newProduct.status);
-      formData.append("min_size", newProduct.min_size);
-      formData.append("max_size", newProduct.max_size);
+      formData.append("variants", JSON.stringify(newProduct.variants));
+      // formData.append("min_size", newProduct.min_size);
+      // formData.append("max_size", newProduct.max_size);
+      //   console.log("--- STARTING FORM DATA VALIDATION LOG ---");
+      // for (let [key, value] of formData.entries()) {
+      //   if (value instanceof File) {
+      //     console.log(`${key}: [File] Name: ${value.name}, Size: ${value.size} bytes`);
+      //   } else {
+      //     console.log(`${key}:`, value);
+      //   }
+      // }
+      // console.log("--- END OF FORM DATA LOG ---");
 
+      if (newProduct.image) {
+        formData.append("image", newProduct.image); // 👈 Verify if your backend expects "image" or "product_img"
+      }
 
-    if (newProduct.image) {
-      formData.append("image", newProduct.image); // 👈 Verify if your backend expects "image" or "product_img"
-    }
-  
-
-      let url = "https://namami-infotech.com/Stepkaro/src/product/vendor_add_product.php";
+      let url =
+        "https://namami-infotech.com/Stepkaro/src/product/vendor_add_product.php";
       if (isEditing && editProduct) {
         formData.append("product_id", editProduct.id);
-        url = "https://namami-infotech.com/Stepkaro/src/product/update_product.php";
+        url =
+          "https://namami-infotech.com/Stepkaro/src/product/update_product.php";
       }
 
       const response = await fetch(url, {
@@ -424,10 +469,23 @@ export default function SellerProductsPage() {
         setShowAddModal(false);
         fetchProducts();
         setNewProduct({
-          article_name: "", description: "", selling_price: "", price: "",
-          brand_name: "", category_name: "", min_size: "", max_size: "",
-          gender: "", color: "", material: "", packing_type: "",
-          pairs_per_ctn: "", origin: "Made in India", stock_quantity: "",
+          article_name: "",
+          description: "",
+          selling_price: "",
+          price: "",
+          brand_name: "",
+          category_name: "",
+          min_size: "",
+          max_size: "",
+          variants: [],
+          gender: "",
+          color: "",
+          material: "",
+          upper_material: "",
+          packing_type: "",
+          pairs_per_ctn: "",
+          origin: "Made in India",
+          stock_quantity: "",
           status: "inactive",
         });
         setShowSuccess(true);
@@ -438,14 +496,18 @@ export default function SellerProductsPage() {
     } catch (error) {
       console.log(error);
     }
+    //    } catch (error) {
+    //   console.error("Error debugging current form state:", error);
+    // }
   };
 
   // Stats
   const totalProducts = products.length;
-  const activeProducts = products.filter(p => p.stock === true).length;
-  const inactiveProducts = products.filter(p => p.stock === false).length;
-  const outOfStockProducts = products.filter(p => Number(p.quantity || 0) === 0).length;
-
+  const activeProducts = products.filter((p) => p.stock === true).length;
+  const inactiveProducts = products.filter((p) => p.stock === false).length;
+  const outOfStockProducts = products.filter(
+    (p) => Number(p.quantity || 0) === 0,
+  ).length;
 
   if (!isMounted) {
     return (
@@ -474,10 +536,16 @@ export default function SellerProductsPage() {
           <p className="mt-1 text-violet-600">Manage your product catalog</p>
         </div>
         <div className="flex gap-3">
-          <button onClick={handleExportProducts} className="flex items-center gap-2 rounded-xl border border-violet-200 bg-white px-4 py-2 text-sm font-medium text-violet-700 transition hover:bg-violet-50">
+          <button
+            onClick={handleExportProducts}
+            className="flex items-center gap-2 rounded-xl border border-violet-200 bg-white px-4 py-2 text-sm font-medium text-violet-700 transition hover:bg-violet-50"
+          >
             <Download size={16} /> Export
           </button>
-          <button onClick={handleAddProduct} className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-5 py-2 text-sm font-medium text-white shadow-lg transition hover:scale-105">
+          <button
+            onClick={handleAddProduct}
+            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-5 py-2 text-sm font-medium text-white shadow-lg transition hover:scale-105"
+          >
             <Plus size={18} /> Add Product
           </button>
         </div>
@@ -497,8 +565,8 @@ export default function SellerProductsPage() {
           <p className="text-xs opacity-90">Inactive Products</p>
           <p className="text-2xl font-bold">{inactiveProducts}</p>
         </div>
-         
-         <div className="rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 p-4 text-white shadow-lg">
+
+        <div className="rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 p-4 text-white shadow-lg">
           <p className="text-xs opacity-90">Out of Stock</p>
           <p className="text-2xl font-bold">{outOfStockProducts}</p>
         </div>
@@ -507,7 +575,10 @@ export default function SellerProductsPage() {
       {/* Search Bar */}
       <div className="mb-6">
         <div className="relative max-w-md">
-          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-violet-400" />
+          <Search
+            size={18}
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-violet-400"
+          />
           <input
             type="text"
             value={searchQuery}
@@ -521,7 +592,11 @@ export default function SellerProductsPage() {
       {/* Results Summary */}
       <div className="mb-4 flex justify-between items-center">
         <p className="text-sm text-violet-600">
-          Showing <span className="font-semibold text-violet-900">{filteredProducts.length}</span> products
+          Showing{" "}
+          <span className="font-semibold text-violet-900">
+            {filteredProducts.length}
+          </span>{" "}
+          products
         </p>
         <div className="flex items-center gap-2">
           <span className="text-sm text-violet-600">Show:</span>
@@ -558,21 +633,32 @@ export default function SellerProductsPage() {
             </thead>
             <tbody className="divide-y divide-violet-50">
               {currentProducts.map((product) => (
-                <tr key={product.id} className="hover:bg-violet-50/50 transition">
-                  <td className="px-6 py-4 text-sm text-violet-600">#{product.id}</td>
-                  <td className="px-6 py-4">
-                    <p className="text-sm font-medium text-gray-900">{product.name}</p>
+                <tr
+                  key={product.id}
+                  className="hover:bg-violet-50/50 transition"
+                >
+                  <td className="px-6 py-4 text-sm text-violet-600">
+                    #{product.id}
                   </td>
                   <td className="px-6 py-4">
-                    <span className="text-sm text-violet-600">{product.category}</span>
+                    <p className="text-sm font-medium text-gray-900">
+                      {product.name}
+                    </p>
                   </td>
-                   <td className="px-6 py-4">
+                  <td className="px-6 py-4">
+                    <span className="text-sm text-violet-600">
+                      {product.category}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
                     <span className="text-sm font-medium text-purple-600 bg-purple-50 px-2.5 py-1 rounded-md border border-purple-100">
                       {product.commission}%
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <span className="text-sm font-semibold text-teal-600">₹{product.price}</span>
+                    <span className="text-sm font-semibold text-teal-600">
+                      ₹{product.price}
+                    </span>
                   </td>
                   <td className="px-6 py-4">
                     {editingQuantity === product.id ? (
@@ -585,19 +671,35 @@ export default function SellerProductsPage() {
                           autoFocus
                           min="0"
                         />
-                        <button onClick={() => saveQuantity(product.id)} className="p-1 bg-emerald-500 text-white rounded hover:bg-emerald-600" title="Save">
+                        <button
+                          onClick={() => saveQuantity(product.id)}
+                          className="p-1 bg-emerald-500 text-white rounded hover:bg-emerald-600"
+                          title="Save"
+                        >
                           <Check size={14} />
                         </button>
-                        <button onClick={cancelEdit} className="p-1 bg-gray-400 text-white rounded hover:bg-gray-500" title="Cancel">
+                        <button
+                          onClick={cancelEdit}
+                          className="p-1 bg-gray-400 text-white rounded hover:bg-gray-500"
+                          title="Cancel"
+                        >
                           <X size={14} />
                         </button>
                       </div>
                     ) : (
-                      <div onClick={() => startEditQuantity(product)} className="cursor-pointer group flex items-center gap-2">
-                        <span className={`text-sm ${product.quantity === 0 ? "text-red-500" : "text-gray-700"}`}>
+                      <div
+                        onClick={() => startEditQuantity(product)}
+                        className="cursor-pointer group flex items-center gap-2"
+                      >
+                        <span
+                          className={`text-sm ${product.quantity === 0 ? "text-red-500" : "text-gray-700"}`}
+                        >
                           {product.quantity}
                         </span>
-                        <Pencil size={14} className="text-gray-400 opacity-0 group-hover:opacity-100 transition" />
+                        <Pencil
+                          size={14}
+                          className="text-gray-400 opacity-0 group-hover:opacity-100 transition"
+                        />
                       </div>
                     )}
                   </td>
@@ -607,9 +709,13 @@ export default function SellerProductsPage() {
                         onClick={() => toggleStatus(product.id)}
                         className={`relative h-5 w-10 rounded-full transition ${product.stock ? "bg-emerald-500" : "bg-gray-300"}`}
                       >
-                        <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition ${product.stock ? "left-5" : "left-0.5"}`} />
+                        <span
+                          className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition ${product.stock ? "left-5" : "left-0.5"}`}
+                        />
                       </button>
-                      <span className="text-xs text-gray-500">{product.stock ? "Active" : "Inactive"}</span>
+                      <span className="text-xs text-gray-500">
+                        {product.stock ? "Active" : "Inactive"}
+                      </span>
                     </div>
                   </td>
                   <td className="px-6 py-4">
@@ -641,29 +747,44 @@ export default function SellerProductsPage() {
           <div className="py-12 text-center">
             <Package size={48} className="mx-auto text-violet-300 mb-3" />
             <p className="text-violet-500">No products found</p>
-            <p className="text-sm text-violet-400 mt-1">Try adjusting your search or add a new product</p>
+            <p className="text-sm text-violet-400 mt-1">
+              Try adjusting your search or add a new product
+            </p>
           </div>
         )}
 
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex justify-center gap-2 border-t border-violet-100 px-6 py-4">
-            <button onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 1} className="rounded-lg px-3 py-1.5 text-sm bg-violet-100 text-violet-700 hover:bg-violet-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1">
+            <button
+              onClick={() => goToPage(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="rounded-lg px-3 py-1.5 text-sm bg-violet-100 text-violet-700 hover:bg-violet-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+            >
               <ChevronLeft size={16} /> Previous
             </button>
             {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
               let pageNum;
               if (totalPages <= 5) pageNum = i + 1;
               else if (currentPage <= 3) pageNum = i + 1;
-              else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i;
+              else if (currentPage >= totalPages - 2)
+                pageNum = totalPages - 4 + i;
               else pageNum = currentPage - 2 + i;
               return (
-                <button key={pageNum} onClick={() => goToPage(pageNum)} className={`px-3 py-1.5 text-sm rounded-lg transition ${currentPage === pageNum ? "bg-violet-600 text-white" : "bg-violet-100 text-violet-700 hover:bg-violet-200"}`}>
+                <button
+                  key={pageNum}
+                  onClick={() => goToPage(pageNum)}
+                  className={`px-3 py-1.5 text-sm rounded-lg transition ${currentPage === pageNum ? "bg-violet-600 text-white" : "bg-violet-100 text-violet-700 hover:bg-violet-200"}`}
+                >
                   {pageNum}
                 </button>
               );
             })}
-            <button onClick={() => goToPage(currentPage + 1)} disabled={currentPage === totalPages} className="rounded-lg px-3 py-1.5 text-sm bg-violet-100 text-violet-700 hover:bg-violet-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1">
+            <button
+              onClick={() => goToPage(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="rounded-lg px-3 py-1.5 text-sm bg-violet-100 text-violet-700 hover:bg-violet-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+            >
               Next <ChevronRight size={16} />
             </button>
           </div>

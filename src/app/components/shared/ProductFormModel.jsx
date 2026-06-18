@@ -1,6 +1,5 @@
 "use client";
-// import React from "react";
-import { X, Image as ImageIcon } from "lucide-react";
+import { X, Image as ImageIcon, Plus, Trash2 } from "lucide-react";
 import React, { useState, useEffect } from "react";
 
 export default function ProductFormModal({
@@ -12,27 +11,26 @@ export default function ProductFormModal({
   filterOptions,
   onSubmit,
 }) {
+  const [previewUrl, setPreviewUrl] = useState("");
+  const [showValidationErrors, setShowValidationErrors] = useState(false);
+  // console.log("filterOptions in ProductFormModal:", filterOptions);
 
- const [previewUrl, setPreviewUrl] = useState("");
+  // Initialize with one default variant when modal opens and no variants exist
+  useEffect(() => {
+    if (isOpen && !isEditing) {
+      // Only add default variant if no variants exist and not editing
+      if (!newProduct.variants || newProduct.variants.length === 0) {
+        setNewProduct((prev) => ({
+          ...prev,
+          variants: [{ min_size: "", max_size: "" }],
+        }));
+      }
+    }
+  }, [isOpen, isEditing]);
 
- const [showValidationErrors, setShowValidationErrors] = useState(false);
-  
-//  useEffect(() => {
-//     if (isOpen) {
-//        setShowValidationErrors(false); 
-//       if (newProduct.image && typeof newProduct.image === "string") {
-//         setPreviewUrl(newProduct.image);
-//       } else if (newProduct.image instanceof File) {
-//         setPreviewUrl(URL.createObjectURL(newProduct.image));
-//       } else {
-//         setPreviewUrl("");
-//       }
-//     }
-//   }, [isOpen, newProduct.image]);
-
-useEffect(() => {
+  useEffect(() => {
     if (isOpen) {
-      setShowValidationErrors(false); 
+      setShowValidationErrors(false);
       if (newProduct.image && typeof newProduct.image === "string") {
         setPreviewUrl(newProduct.image);
       } else if (newProduct.image instanceof File) {
@@ -44,27 +42,60 @@ useEffect(() => {
   }, [isOpen, newProduct.image]);
 
   if (!isOpen) return null;
- 
-  // Real-time boolean check to see if the error text should be displayed
-    const isPriceInvalid = 
-    newProduct.selling_price && 
-    newProduct.price && 
+
+  const isPriceInvalid =
+    newProduct.selling_price &&
+    newProduct.price &&
     Number(newProduct.selling_price) > Number(newProduct.price);
 
-     // Helper utility function to determine if a specific field is currently empty/invalid
-        const isFieldEmpty = (value) => {
-            if (value === undefined || value === null) return true;
-            // if (typeof value === "string") return value.trim() === "";
-            const stringValue = value.toString().trim();
-            return stringValue === "";
-            // return false;
-        };
-        
-            const handleValidateAndSubmit = (e) => {
-            e.preventDefault();
-            setShowValidationErrors(true);
-            
-          // List of all mandatory field keys that must be filled out
+  const isFieldEmpty = (value) => {
+    if (value === undefined || value === null) return true;
+    const stringValue = value.toString().trim();
+    return stringValue === "";
+  };
+
+  const getFieldClass = (fieldName) => {
+    const baseClass =
+      "w-full px-4 py-2.5 bg-white border rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 text-sm transition-all";
+    const isInvalid =
+      showValidationErrors && isFieldEmpty(newProduct[fieldName]);
+
+    return `${baseClass} ${
+      isInvalid
+        ? "border-red-500 focus:ring-red-500/20 shadow-sm shadow-red-500/10"
+        : "border-slate-200 focus:ring-teal-500"
+    }`;
+  };
+
+  // Add variant
+  const addVariant = () => {
+    setNewProduct((prev) => ({
+      ...prev,
+      variants: [...(prev.variants || []), { min_size: "", max_size: "" }],
+    }));
+  };
+
+  // Remove variant
+  const removeVariant = (index) => {
+    setNewProduct((prev) => ({
+      ...prev,
+      variants: prev.variants.filter((_, i) => i !== index),
+    }));
+  };
+
+  // Update variant
+  const updateVariant = (index, field, value) => {
+    setNewProduct((prev) => {
+      const updatedVariants = [...(prev.variants || [])];
+      updatedVariants[index] = { ...updatedVariants[index], [field]: value };
+      return { ...prev, variants: updatedVariants };
+    });
+  };
+
+  const handleValidateAndSubmit = (e) => {
+    e.preventDefault();
+    setShowValidationErrors(true);
+
     const requiredFields = [
       "article_name",
       "selling_price",
@@ -72,28 +103,38 @@ useEffect(() => {
       "brand_name",
       "category_name",
       "stock_quantity",
-      "min_size",
-      "max_size",
       "gender",
       "color",
       "material",
+      "upper_material",
       "packing_type",
       "pairs_per_ctn",
       "origin",
-      "description"
+      "description",
     ];
-    
-    // Check if any text or numeric field is empty
-    const hasEmptyFields = requiredFields.some((field) => isFieldEmpty(newProduct[field]));
 
-    // Check if the image asset is completely missing
-    // const hasNoImage = isFieldEmpty(newProduct.image);
+    const hasEmptyFields = requiredFields.some((field) =>
+      isFieldEmpty(newProduct[field]),
+    );
 
-    //   const hasNoImage = !newProduct.image;
-    const hasNoImage = !newProduct.image || (typeof newProduct.image === "string" && newProduct.image.trim() === "");
+    const hasNoImage =
+      !isEditing &&
+      (!newProduct.image ||
+        (typeof newProduct.image === "string" &&
+          newProduct.image.trim() === ""));
 
-    if (hasEmptyFields || hasNoImage) {
-      alert("Validation Error: Please fill all the required fields and attach a product photo!");
+    // Check variants
+    const hasEmptyVariants =
+      newProduct.variants &&
+      newProduct.variants.length > 0 &&
+      newProduct.variants.some(
+        (v) => isFieldEmpty(v.min_size) || isFieldEmpty(v.max_size),
+      );
+
+    if (hasEmptyFields || hasNoImage || hasEmptyVariants) {
+      alert(
+        "Validation Error: Please fill all the required fields, add a product photo, and complete all variants!",
+      );
       return;
     }
 
@@ -102,111 +143,75 @@ useEffect(() => {
       return;
     }
 
-    
     onSubmit(e);
   };
 
-   // Reusable utility pattern to apply red highlight ring logic consistently to any form field element
-  const getFieldClass = (fieldName) => {
-    const baseClass = "w-full px-4 py-2.5 bg-slate-900 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 text-sm transition-all";
-    const isInvalid = showValidationErrors && isFieldEmpty(newProduct[fieldName]);
-    
+  // Get validation class for variant fields
+  const getVariantFieldClass = (variant, field) => {
+    const baseClass =
+      "w-full px-3 py-2 bg-white border rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 text-sm transition-all";
+    const isInvalid = showValidationErrors && isFieldEmpty(variant[field]);
+
     return `${baseClass} ${
-      isInvalid 
-        ? "border-red-500 focus:ring-red-500/20 shadow-sm shadow-red-500/10" 
-        : "border-white/10 focus:ring-teal-500"
+      isInvalid
+        ? "border-red-500 focus:ring-red-500/20"
+        : "border-slate-200 focus:ring-teal-500"
     }`;
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      <div className="bg-slate-800 rounded-2xl border border-white/10 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 z-50 bg-slate-800 border-b border-white/10 px-6 py-4 flex justify-between items-center">
-          <h2 className="text-xl font-bold text-white">
-            {isEditing ? "Edit Product" : "Add Product"}
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+      <div className="bg-white rounded-2xl border border-slate-200 w-full max-w-3xl max-h-[92vh] overflow-y-auto shadow-2xl">
+        {/* Header */}
+        <div className="sticky top-0 z-50 bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center">
+          <h2 className="text-lg font-semibold text-slate-900 tracking-wide">
+            {isEditing ? "Edit Product" : "Add New Product"}
           </h2>
           <button
             onClick={onClose}
-            className="p-1 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition"
           >
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-            {/* upload photo */}
+        <div className="p-6 space-y-6">
+          {/* IMAGE SECTION */}
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4">
+            <p className="text-xs text-slate-600 mb-3 font-medium">
+              Product Image{" "}
+              {!isEditing && <span className="text-red-500">*</span>}
+              {isEditing && (
+                <span className="text-slate-500 ml-1">(View only)</span>
+              )}
+            </p>
 
-            <div className="md:col-span-2 flex flex-col gap-1">
-              <label className="text-xs font-semibold text-gray-400 pl-1">
-               {isEditing ? "Product Photo" : "Upload Product Photo"}{!isEditing && <span className="text-red-500">*</span>}
-              </label>
-              
-              <div className={`flex flex-col sm:flex-row gap-4 items-center bg-slate-900/60 p-3 border rounded-xl transition-all ${
-                !isEditing && showValidationErrors && !newProduct.image
-                  ? "border-red-500 shadow-sm shadow-red-500/10"
-                  : "border-white/10"
-              
-              }`}>
-                
-                {/* Left Side: Interactive Live Image Preview Box */}
-                <div className="w-20 h-20 flex flex-col items-center justify-center bg-slate-900 rounded-xl border border-white/10 overflow-hidden relative shrink-0">
-                  {previewUrl ? (
-                    <img 
-                    //   src={previewUrl} 
-                    //  src=
-                    //  { newProduct.image instanceof File
-                    //     ? previewUrl
-                    //     :typeof newProduct.image === "string" && newProduct.image.trim() !== ""
-                    //      ?(newProduct.image.startsWith("http")  ? newProduct.image : `https://namami-infotech.com/Stepkaro/${newProduct.image}`)
-                    //     // : `https://namami-infotech.com/Stepkaro/${newProduct.image}` 
-                    //     : "https://placehold.co/80x80?text=No+Photo"
-                    //   }
-                    //   alt="Preview" 
-                    //   className="w-full h-full object-cover"
-                    //   onError={(e) => {
-                    //     e.target.src = "https://placehold.co/80x80?text=No+Photo";
-                    //   }} 
-                      
-                    src={
-                        newProduct.image instanceof File
-                          ? previewUrl
-                          : typeof newProduct.image === "string" && newProduct.image.trim() !== ""
-                            ? newProduct.image.startsWith("http")
-                              ? newProduct.image
-                              : newProduct.image.startsWith("Stepkaro/")
-                                ? `https://namami-infotech.com/${newProduct.image}` //  If data already contains Stepkaro/, do not double append it
-                                : `https://namami-infotech.com/Stepkaro/${newProduct.image}` //  Otherwise, add the base route normally
-                            : "https://placehold.co/80x80?text=No+Photo"
-                      }
-                      alt="Preview" 
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.target.src = "https://placehold.co/80x80?text=No+Photo";
-                      }}
+            <div className="flex items-center gap-4">
+              {/* Preview Box */}
+              <div className="w-24 h-24 rounded-xl overflow-hidden border border-slate-200 bg-slate-100 flex items-center justify-center flex-shrink-0">
+                {previewUrl ? (
+                  <img
+                    src={previewUrl}
+                    alt="preview"
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.src = "https://placehold.co/100x100";
+                    }}
+                  />
+                ) : (
+                  <ImageIcon className="text-slate-400" size={32} />
+                )}
+              </div>
 
-
-                    />
-                  ) : (
-                    <div className="flex flex-col items-center gap-1 text-gray-500">
-                      <ImageIcon size={24} />
-                      <span className="text-xs font-medium">photo</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Right Side: File Input Target Selector Section */}
-                {!isEditing ? (
-                <div className="flex flex-col items-end space-y-1.5 shrink-0 ml-auto pr-1">
-                  {/* <div className="relative flex items-center bg-slate-900 border border-white/10 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-teal-500 transition-all w-[140px]"> */}
-                    <div className={`relative flex items-center bg-slate-900 border rounded-xl overflow-hidden focus-within:ring-2 transition-all w-[140px] ${
-                    showValidationErrors && !newProduct.image
-                      ? "border-red-500 focus-within:ring-red-500/20"
-                      : "border-white/10 focus-within:ring-teal-500"
-                  }`}>
+              {/* Upload - Only show when NOT editing */}
+              {!isEditing && (
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs text-slate-500 font-medium">
+                    Upload new image
+                  </label>
+                  <div className="relative">
                     <input
                       type="file"
-                      id="product-photo-upload"
                       accept="image/*"
                       onChange={(e) => {
                         const file = e.target.files?.[0];
@@ -215,114 +220,83 @@ useEffect(() => {
                           setPreviewUrl(URL.createObjectURL(file));
                         }
                       }}
-                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
+                      className="absolute inset-0 opacity-0 cursor-pointer"
                     />
-                    {/* Replicating the styled "Choose File" container from image_959f55.png */}
-                    <div className="flex items-center w-full px-2 py-1.5 justify start">
-                      <span className="bg-teal-500 hover:bg-teal-600 text-white text-xs font-bold px-4 py-1.5 rounded-lg transition-colors z-20 pointer-events-none">
-                        Choose File
-                      </span>
-                    </div>
+                    <button className="px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white text-sm rounded-xl transition">
+                      Choose File
+                    </button>
                   </div>
-                  
-                  {/* Bottom Area: Dynamic File Selector Name Label Indicator */}
-                  <p className="text-xs text-gray-400 pl-1 truncate max-w-md">
-                    {newProduct.image instanceof File 
-                     
-                     ? `${newProduct.image.name}` 
-                        : "No file chosen"}
-                     
-                    {/* //   ? `Selected file: ${newProduct.image.name}` 
-                    //   : isEditing && previewUrl 
-                    //     ? "Current active product image loaded" 
-                    //     : "No file chosen"} */}
-                  </p>
+                  <span className="text-xs text-slate-400 truncate max-w-[180px]">
+                    {newProduct.image instanceof File
+                      ? newProduct.image.name
+                      : "No file selected"}
+                  </span>
                 </div>
-                ) :(
-                   
-                  //   <div className="ml-auto pr-2">
-                  //   <span className="text-xs bg-white/5 border border-white/10 px-3 py-1.5 rounded-lg text-gray-400 font-medium select-none">
-                  //     Photo Cannot Be Changed
-                  //   </span>
-                  // </div>
-                  null
-                )}
-                    
+              )}
 
-              </div>
+              {/* Show message when editing */}
+              {isEditing && (
+                <div className="text-xs text-slate-500 bg-slate-100 px-4 py-2 rounded-lg border border-slate-200">
+                  <span>Image cannot be changed in edit mode</span>
+                </div>
+              )}
             </div>
+          </div>
 
+          {/* FORM SECTION */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <input
-              placeholder="Article Name *"
-            //   className="px-4 py-2.5 bg-slate-900 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500"
               className={getFieldClass("article_name")}
+              placeholder="Article Name *"
               value={newProduct.article_name}
               onChange={(e) =>
                 setNewProduct({ ...newProduct, article_name: e.target.value })
               }
             />
-            {/* <input
-              placeholder="Selling Price *"
-              type="number"
-              className="px-4 py-2.5 bg-slate-900 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500"
-              value={newProduct.selling_price}
-              onChange={(e) =>
-                setNewProduct({ ...newProduct, selling_price: e.target.value })
-              }
-            /> */}
+
             <input
-              placeholder="Price (MRP) *"
+              className={getFieldClass("price")}
+              placeholder="MRP *"
               type="number"
-            //   className="px-4 py-2.5 bg-slate-900 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500"
-             className={getFieldClass("price")}
-            value={newProduct.price}
+              value={newProduct.price}
               onChange={(e) =>
                 setNewProduct({ ...newProduct, price: e.target.value })
               }
             />
-            {/* <input
-              placeholder="Selling Price *"
-              type="number"
-              className="px-4 py-2.5 bg-slate-900 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500"
-              value={newProduct.selling_price}
-              onChange={(e) =>
-                setNewProduct({ ...newProduct, selling_price: e.target.value })
-              }
-            /> */}
-             <div className="flex flex-col gap-1">
+
+            <div className="flex flex-col gap-1">
               <input
+                className={`${getFieldClass("selling_price")} ${
+                  isPriceInvalid ? "border-red-500" : ""
+                }`}
                 placeholder="Selling Price *"
                 type="number"
-                 min="1"
-                className={`px-4 py-2.5 bg-slate-900 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 ${
-                //   isPriceInvalid 
-                  (showValidationErrors && isFieldEmpty(newProduct.selling_price)) || isPriceInvalid
-                    ? "border-red-500/50 focus:ring-red-500/20" 
-                    : "border-white/10 focus:ring-teal-500"
-                }`}
                 value={newProduct.selling_price}
-                onChange={(e) =>{
-                  
-                   const value = e.target.value;
-                  
-                  // If they backspace completely, let them type. Otherwise, block anything below 1
-                  if (value !== "" && Number(value) < 1) {
-                    setNewProduct({ ...newProduct, selling_price: "1" });
-                  } else {
-                    setNewProduct({ ...newProduct, selling_price: value });
-                  }
-                }
+                onChange={(e) =>
+                  setNewProduct({
+                    ...newProduct,
+                    selling_price: e.target.value,
+                  })
                 }
               />
               {isPriceInvalid && (
-                <span className="text-red-500 text-xs pl-1 font-medium animate-fadeIn">
+                <span className="text-red-500 text-xs pl-1 font-medium">
                   Selling price should be less than MRP *
                 </span>
               )}
             </div>
 
+            <input
+              className={getFieldClass("stock_quantity")}
+              placeholder="Stock Quantity *"
+              type="number"
+              value={newProduct.stock_quantity}
+              onChange={(e) =>
+                setNewProduct({ ...newProduct, stock_quantity: e.target.value })
+              }
+            />
+
             <select
-            //   className="px-4 py-2.5 bg-slate-900 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
               className={getFieldClass("brand_name")}
               value={newProduct.brand_name}
               onChange={(e) =>
@@ -330,14 +304,14 @@ useEffect(() => {
               }
             >
               <option value="">Select Brand *</option>
-              {filterOptions.brands.map((brand, idx) => (
-                <option key={`brand-${idx}-${brand}`} value={brand}>
-                  {brand}
+              {filterOptions.brands.map((b, i) => (
+                <option key={i} value={b}>
+                  {b}
                 </option>
               ))}
             </select>
+
             <select
-            //   className="px-4 py-2.5 bg-slate-900 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
               className={getFieldClass("category_name")}
               value={newProduct.category_name}
               onChange={(e) =>
@@ -345,168 +319,178 @@ useEffect(() => {
               }
             >
               <option value="">Select Category *</option>
-              {filterOptions.categories.map((cat, idx) => (
-                <option key={`cat-${idx}-${cat}`} value={cat}>
-                  {cat}
+              {filterOptions.categories.map((c, i) => (
+                <option key={i} value={c}>
+                  {c}
                 </option>
               ))}
             </select>
-            <input
-              placeholder="Stock Quantity *"
-              type="number"
-            //   className="px-4 py-2.5 bg-slate-900 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500"
-               className={getFieldClass("stock_quantity")}
-              value={newProduct.stock_quantity}
-              onChange={(e) =>
-                setNewProduct({ ...newProduct, stock_quantity: e.target.value })
-              }
-            />
-            {/* <input
-              type="number"
-              placeholder="Min Size *"
-              className="px-4 py-2.5 bg-slate-900 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500"
-              value={newProduct.min_size}
-              onChange={(e) =>
-                setNewProduct({ ...newProduct, min_size: e.target.value })
-              }
-            />
-            <input
-              type="number"
-              placeholder="Max Size *"
-              className="px-4 py-2.5 bg-slate-900 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500"
-              value={newProduct.max_size}
-              onChange={(e) =>
-                setNewProduct({ ...newProduct, max_size: e.target.value })
-              }
-            /> */}
+
             <select
-            //   className="px-4 py-2.5 bg-slate-900 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-             className={getFieldClass("gender")} 
-            value={newProduct.gender}
+              className={getFieldClass("gender")}
+              value={newProduct.gender}
               onChange={(e) =>
                 setNewProduct({ ...newProduct, gender: e.target.value })
               }
             >
-              <option value="">Select Gender *</option>
-              {filterOptions.gender.map((g, idx) => (
-                <option key={`gender-${idx}-${g}`} value={g}>
+              <option value="">Gender *</option>
+              {filterOptions.gender.map((g, i) => (
+                <option key={i} value={g}>
                   {g}
                 </option>
               ))}
             </select>
+
             <select
-            //   className="px-4 py-2.5 bg-slate-900 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-             className={getFieldClass("color")} 
-            value={newProduct.color}
+              className={getFieldClass("color")}
+              value={newProduct.color}
               onChange={(e) =>
                 setNewProduct({ ...newProduct, color: e.target.value })
               }
             >
-              <option value="">Select Color *</option>
-              {filterOptions.colors.map((color, idx) => (
-                <option key={`color-${idx}-${color}`} value={color}>
-                  {color}
+              <option value="">Color *</option>
+              {filterOptions.colors.map((c, i) => (
+                <option key={i} value={c}>
+                  {c}
                 </option>
               ))}
             </select>
+
             <select
-            //   className="px-4 py-2.5 bg-slate-900 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-            className={getFieldClass("material")}  
-            value={newProduct.material}
+              className={getFieldClass("material")}
+              value={newProduct.material}
               onChange={(e) =>
                 setNewProduct({ ...newProduct, material: e.target.value })
               }
             >
-              <option value="">Select Material *</option>
-              {filterOptions.materials.map((mat, idx) => (
-                <option key={`material-${idx}-${mat}`} value={mat}>
-                  {mat}
+              <option value="">Material *</option>
+              {filterOptions.materials.map((m, i) => (
+                <option key={i} value={m}>
+                  {m}
                 </option>
               ))}
             </select>
+
             <select
-            //   className="px-4 py-2.5 bg-slate-900 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-            className={getFieldClass("packing_type")} 
-            value={newProduct.packing_type}
+              className={getFieldClass("upper_material")}
+              value={newProduct.upper_material}
+              onChange={(e) =>
+                setNewProduct({ ...newProduct, upper_material: e.target.value })
+              }
+            >
+              <option value="">Upper Material *</option>
+              {filterOptions.upper_materials?.map((um, i) => (
+                <option key={i} value={um}>
+                  {um}
+                </option>
+              ))}
+            </select>
+
+            <select
+              className={getFieldClass("packing_type")}
+              value={newProduct.packing_type}
               onChange={(e) =>
                 setNewProduct({ ...newProduct, packing_type: e.target.value })
               }
             >
-              <option value="">Select Packing Type *</option>
-              {filterOptions.packingTypes.map((type, idx) => (
-                <option key={`packing-${idx}-${type}`} value={type}>
-                  {type}
+              <option value="">Packing Type *</option>
+              {filterOptions.packingTypes.map((pt, i) => (
+                <option key={i} value={pt}>
+                  {pt}
                 </option>
               ))}
             </select>
+
             <input
-              placeholder="Pairs"
+              className={getFieldClass("pairs_per_ctn")}
+              placeholder="Pairs Per Carton *"
               type="number"
-            //   className="px-4 py-2.5 bg-slate-900 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500"
-             className={getFieldClass("pairs_per_ctn")} 
-            value={newProduct.pairs_per_ctn}
+              value={newProduct.pairs_per_ctn}
               onChange={(e) =>
                 setNewProduct({ ...newProduct, pairs_per_ctn: e.target.value })
               }
             />
+
             <input
-              placeholder="Origin"
               className={getFieldClass("origin")}
-              //   className="px-4 py-2.5 bg-slate-900 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              placeholder="Origin"
               value={newProduct.origin}
               onChange={(e) =>
                 setNewProduct({ ...newProduct, origin: e.target.value })
               }
             />
+          </div>
 
-             <input
-              type="number"
-              placeholder="Min Size *"
-              className={getFieldClass("min_size")}
-            //   className="px-4 py-2.5 bg-slate-900 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500"
-              value={newProduct.min_size || ""}
-              onChange={(e) =>
-                setNewProduct({ ...newProduct, min_size: e.target.value })
-              }
-            />
-            <input
-              type="number"
-              placeholder="Max Size *"
-            //   className="px-4 py-2.5 bg-slate-900 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500"
-             className={getFieldClass("max_size")} 
-              value={newProduct.max_size || ""}
-              onChange={(e) =>
-                setNewProduct({ ...newProduct, max_size: e.target.value })
-              }
-            />
-              {/* <div className="md:col-span-2 flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-gray-400 pl-1">
-                Upload Product Photo
-              </label>
-              <div className="relative flex items-center justify-between px-4 py-2 bg-slate-900 border border-white/10 rounded-xl text-white focus-within:ring-2 focus-within:ring-teal-500 transition-all">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      // Binds image state directly into your existing form state object if required by backend,
-                      // or makes it instantly retrievable on target file capture
-                      setNewProduct({ ...newProduct, image: file });
-                    }
-                  }}
-                  className="w-full text-sm text-gray-400 file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-teal-500 file:text-white hover:file:bg-teal-600 file:cursor-pointer"
-                />
-              </div>
-            </div> */}
+          {/* VARIANTS SECTION - Moved BEFORE Description */}
+          <div className="border-t border-slate-200 pt-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-sm font-semibold text-slate-900">
+                Sizes <span className="text-red-500">*</span>
+              </h3>
+              <button
+                type="button"
+                onClick={addVariant}
+                className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-sm rounded-xl transition"
+              >
+                <Plus size={16} />
+                Add size
+              </button>
+            </div>
 
-            {/* upload pciture section */}
+            <div className="space-y-3">
+              {(newProduct.variants || []).map((variant, index) => (
+                <div
+                  key={index}
+                  className="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl p-3"
+                >
+                  <div className="flex-1 grid grid-cols-2 gap-3">
+                    <input
+                      type="number"
+                      className={getVariantFieldClass(variant, "min_size")}
+                      placeholder="Min Size *"
+                      value={variant.min_size}
+                      onChange={(e) =>
+                        updateVariant(index, "min_size", e.target.value)
+                      }
+                    />
+                    <input
+                      type="number"
+                      className={getVariantFieldClass(variant, "max_size")}
+                      placeholder="Max Size *"
+                      value={variant.max_size}
+                      onChange={(e) =>
+                        updateVariant(index, "max_size", e.target.value)
+                      }
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeVariant(index)}
+                    className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                    disabled={(newProduct.variants || []).length === 1}
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              ))}
 
+              {(!newProduct.variants || newProduct.variants.length === 0) && (
+                <div className="text-center py-6 text-slate-500 text-sm border-2 border-dashed border-slate-200 rounded-xl">
+                  No variants added. Click "Add Variant" to add size variations.
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* DESCRIPTION - Now after Variants */}
+          <div>
+            <label className="text-xs font-medium text-slate-600 block mb-1.5">
+              Description
+            </label>
             <textarea
-              placeholder="Description"
+              className={`${getFieldClass("description")} w-full`}
               rows={3}
-            //   className="md:col-span-2 px-4 py-2.5 bg-slate-900 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500"
-              className={getFieldClass("description")}
+              placeholder="Enter product description..."
               value={newProduct.description}
               onChange={(e) =>
                 setNewProduct({ ...newProduct, description: e.target.value })
@@ -514,40 +498,13 @@ useEffect(() => {
             />
           </div>
 
-
-          {/* <button
-            onClick={onSubmit}
-            className="mt-6 w-full bg-teal-500 hover:bg-teal-600 text-white py-3 rounded-xl transition-colors font-medium"
-          >
-            {isEditing ? "Update Product" : "Add Product"}
-          </button> */}
-           {/* <button
-            onClick={(e) => {
-              const sellingPrice = Number(newProduct.selling_price);
-              const mrp = Number(newProduct.price);
-
-              // Throw a browser warning and stop submission if selling price exceeds MRP
-              if (sellingPrice > mrp) {
-                e.preventDefault(); 
-                alert("Validation Error: Selling Price cannot be greater than the MRP!");
-                return;
-              }
-
-              // Fire original submission function if numbers match up properly
-              onSubmit(e);
-            }}
-            className="mt-6 w-full bg-teal-500 hover:bg-teal-600 text-white py-3 rounded-xl transition-colors font-medium"
-          >
-            {isEditing ? "Update Product" : "Add Product"}
-          </button> */}
-         <button
+          {/* FOOTER BUTTON */}
+          <button
             onClick={handleValidateAndSubmit}
-            className="mt-6 w-full bg-teal-500 hover:bg-teal-600 text-white py-3 rounded-xl transition-colors font-medium"
+            className="w-full py-3 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 hover:opacity-90 text-white font-semibold transition"
           >
             {isEditing ? "Update Product" : "Add Product"}
           </button>
-
-
         </div>
       </div>
     </div>

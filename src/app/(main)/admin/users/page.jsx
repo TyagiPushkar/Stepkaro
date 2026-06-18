@@ -1,5 +1,6 @@
 "use client";
 import { useState, useMemo, useEffect } from "react";
+import axios from "axios";
 import {
   Search,
   Plus,
@@ -164,16 +165,64 @@ export default function UsersPage() {
             rawData: vendor,
           }));
 
-          setUsers([...buyers, ...vendors]);
-        }
-      } catch (error) {
-        console.log("Error fetching users:", error);
-        showToast("Failed to fetch users", "error");
-      } finally {
-        setLoading(false);
-      }
-    };
+      if (result.success) {
+        // buyers
+        const buyers = result.data.buyers.map((buyer) => ({
+          id: buyer.id,
+          name: buyer.name,
+          email: buyer.email,
+          phone: buyer.phone,
+          role: "buyer",
+          address: buyer.address,
+          status: buyer.status,
+          avatar: "👤",
+          createdAt: buyer.created_at,
+          type: "buyer",
+          rawData: buyer,
+          // Buyer specific fields
+          state: buyer.state,
+          district: buyer.district,
+          delivery_location: buyer.delivery_location,
+          logistic_partner_name: buyer.logistic_partner_name,
+          logistic_contact_no: buyer.logistic_contact_no,
+          document_number: buyer.document_number,
+          document_image: buyer.document_image,
+          wallet_value: buyer.wallet_value || "",
+        }));
 
+        // vendors
+        const vendors = result.data.vendors.map((vendor) => ({
+          id: vendor.id,
+          name: vendor.owner_name,
+          email: vendor.email,
+          phone: vendor.phone,
+          role: "seller",
+          address: vendor.address,
+          status: vendor.status,
+          avatar: "🏪",
+          createdAt: vendor.created_at,
+          type: "vendor",
+          business_name: vendor.business_name,
+          gst_number: vendor.gst_number,
+          pan_number: vendor.pan_number,
+          city: vendor.city,
+          state: vendor.state,
+          country: vendor.country,
+          pincode: vendor.pincode,
+          wallet_value: vendor.wallet_value || "",
+          rawData: vendor,
+        }));
+
+        setUsers([...buyers, ...vendors]);
+      }
+    } catch (error) {
+      console.log("Error fetching users:", error);
+      showToast("Failed to fetch users", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
     fetchUsers();
   }, []);
 
@@ -269,8 +318,6 @@ export default function UsersPage() {
   };
 
   const approveUser = async () => {
-    const token = localStorage.getItem("access_token");
-
     try {
       if (approvalUser.role === "buyer") {
         if (approvalData.wallet_value) {
@@ -289,74 +336,84 @@ export default function UsersPage() {
             }
           );
 
-          const walletResult = await walletResponse.json();
-          console.log("Wallet Response", walletResult);
-        }
-
-        const statusResponse = await fetch(
-          "https://namami-infotech.com/Stepkaro/src/admin/update_user_status_admin.php",
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              user_type: "buyer",
-              id: approvalUser.id,
-              status: "active",
-            }),
-          }
-        );
-
-        const statusResult = await statusResponse.json();
-        console.log("Status Response", statusResult);
-      } else {
-        if (approvalData.minimum_order_value) {
-          const minimumResponse = await fetch(
-            "https://namami-infotech.com/Stepkaro/src/admin/set_vendor_minimum_order.php",
-            {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                vendor_id: approvalUser.id,
-                minimum_order_value: approvalData.minimum_order_value,
-              }),
-            }
-          );
-
-          const minimumResult = await minimumResponse.json();
-          console.log("Minimum Order Response", minimumResult);
-        }
-
-        const statusResponse = await fetch(
-          "https://namami-infotech.com/Stepkaro/src/admin/update_user_status_admin.php",
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              user_type: "vendor",
-              id: approvalUser.id,
-              status: "active",
-            }),
-          }
-        );
-
-        const statusResult = await statusResponse.json();
-        console.log("Status Response", statusResult);
+      if (!approvalUser || !approvalUser.id) {
+        alert("No active user selected for approval context.");
+        return;
       }
 
-      setShowApprovalModal(false);
-      window.location.reload();
+      // 1. Role match karna ('buyer' ya 'vendor')
+      const currentRole = approvalUser.role === "buyer" ? "buyer" : "vendor";
+
+      // 2. State se raw input value nikalna
+      const rawAmount =
+        currentRole === "buyer"
+          ? approvalData.wallet_value
+          : approvalData.minimum_order_value;
+
+      // 3. Payload Build (intval hata kar standard Number() laga diya)
+      const payload = {
+        id: Number(approvalUser.id),
+        role: currentRole,
+        status: "active",
+        amount:
+          rawAmount !== "" && rawAmount !== undefined ? Number(rawAmount) : "",
+      };
+
+      console.log("Submitting Admin Approval Payload via Axios:", payload);
+
+      const url =
+        "https://namami-infotech.com/Stepkaro/src/super_admin/approve_seller_buyer.php";
+
+      // 4. Axios instance trigger (Bina headers/stringify ke load jhanjhat free)
+      const response = await axios.post(url, payload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      // Axios automatic response mapping karta hai response.data par
+      const result = response.data;
+
+      if (result.success) {
+        alert(result.message || "User approved successfully!");
+
+        // Reset State Controls & Close Modals
+        setShowApprovalModal(false);
+        setApprovalData({
+          wallet_value: "",
+          minimum_order_value: "",
+        });
+
+        // Data refreshing callbacks
+        if (result.success) {
+          setUsers((prev) =>
+            prev.map((u) =>
+              u.id === approvalUser.id && u.type === approvalUser.type
+                ? {
+                    ...u,
+                    status: "active",
+                    wallet_value:
+                      approvalUser.role === "buyer"
+                        ? approvalData.wallet_value
+                        : u.wallet_value,
+                  }
+                : u,
+            ),
+          );
+
+          setShowApprovalModal(false);
+
+          showToast("User approved successfully");
+        }
+      } else {
+        alert(result.message || "Failed to process approval request.");
+      }
     } catch (error) {
-      console.log("Approve Error", error);
-      showToast("Failed to approve user", "error");
+      console.error("Axios request failure:", error);
+      // Axios errors context me message read karne ke liye safe fallback
+      const errorMsg =
+        error.response?.data?.message || "Network communication error.";
+      alert(errorMsg);
     }
   };
 
@@ -481,7 +538,7 @@ export default function UsersPage() {
         setShowEditModal(false);
         // Refresh the users list
         const fetchResponse = await fetch(
-          "https://namami-infotech.com/Stepkaro/src/home/get_vendor_and_buyer.php"
+          "https://namami-infotech.com/Stepkaro/src/home/get_vendor_and_buyer.php",
         );
         const fetchResult = await fetchResponse.json();
         if (fetchResult.success) {
@@ -603,7 +660,7 @@ export default function UsersPage() {
     const token = localStorage.getItem("access_token");
 
     try {
-      await fetch(
+      const response = await fetch(
         "https://namami-infotech.com/Stepkaro/src/admin/update_user_status_admin.php",
         {
           method: "POST",
@@ -616,10 +673,22 @@ export default function UsersPage() {
             id: user.id,
             status,
           }),
-        }
+        },
       );
 
-      window.location.reload();
+      const result = await response.json();
+
+      if (result.success) {
+        setUsers((prev) =>
+          prev.map((u) =>
+            u.id === user.id && u.type === user.type ? { ...u, status } : u,
+          ),
+        );
+
+        showToast("Status updated successfully");
+      } else {
+        showToast(result.message || "Failed to update status", "error");
+      }
     } catch (error) {
       console.log(error);
       showToast("Failed to update status", "error");
@@ -932,7 +1001,9 @@ export default function UsersPage() {
                             onClick={() =>
                               updateUserStatus(
                                 user,
-                                user.status === "active" ? "inactive" : "active"
+                                user.status === "active"
+                                  ? "inactive"
+                                  : "active",
                               )
                             }
                             className={`relative h-6 w-12 rounded-full transition ${
@@ -951,7 +1022,7 @@ export default function UsersPage() {
                           </button>
                           <span
                             className={`text-xs px-2 py-0.5 rounded-full ${getStatusBadge(
-                              user.status
+                              user.status,
                             )}`}
                           >
                             {user.status}
@@ -1067,7 +1138,9 @@ export default function UsersPage() {
       <Modal
         isOpen={showApprovalModal}
         onClose={() => setShowApprovalModal(false)}
-        title={approvalUser?.role === "buyer" ? "Approve Buyer" : "Approve Seller"}
+        title={
+          approvalUser?.role === "buyer" ? "Approve Buyer" : "Approve Seller"
+        }
       >
         <div className="space-y-4">
           {approvalUser?.role === "buyer" ? (
