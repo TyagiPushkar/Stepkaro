@@ -6,198 +6,66 @@ import {
   Package,
   User,
   Building2,
-  CreditCard,
   Calendar,
   Clock,
   MapPin,
   Phone,
   Mail,
-  IndianRupee,
   BadgePercent,
   Wallet,
-  Truck,
-  Hash,
-  Tag,
-  Palette,
-  Layers,
-  Loader2,
   ShoppingBag,
+  ChevronDown,
+  ChevronUp,
+  Loader2,
+  CreditCard,
+  ExternalLink,
 } from "lucide-react";
 
 const API_BASE = "https://namami-infotech.com/Stepkaro/src";
+const BASE_URL_IMAGE = "https://namami-infotech.com/Stepkaro/";
 
 const STATUS_STYLES = {
   pending: {
     label: "Pending",
-    color: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+    color: "bg-amber-50 text-amber-700 border-amber-200",
   },
   processing: {
     label: "Processing",
-    color: "bg-orange-500/20 text-orange-400 border-orange-500/30",
+    color: "bg-blue-50 text-blue-700 border-blue-200",
   },
   accepted: {
     label: "Accepted",
-    color: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+    color: "bg-cyan-50 text-cyan-700 border-cyan-200",
   },
   confirmed: {
     label: "Confirmed",
-    color: "bg-green-500/20 text-green-400 border-green-500/30",
+    color: "bg-indigo-50 text-indigo-700 border-indigo-200",
   },
   rejected: {
     label: "Rejected",
-    color: "bg-red-500/20 text-red-400 border-red-500/30",
+    color: "bg-rose-50 text-rose-700 border-rose-200",
   },
   dispatched: {
     label: "Dispatched",
-    color: "bg-purple-500/20 text-purple-400 border-purple-500/30",
+    color: "bg-purple-50 text-purple-700 border-purple-200",
   },
   packed: {
     label: "Packed",
-    color: "bg-indigo-500/20 text-indigo-400 border-indigo-500/30",
+    color: "bg-orange-50 text-orange-700 border-orange-200",
   },
-  shipped: {
-    label: "Shipped",
-    color: "bg-cyan-500/20 text-cyan-400 border-cyan-500/30",
-  },
+  shipped: { label: "Shipped", color: "bg-sky-50 text-sky-700 border-sky-200" },
   delivered: {
     label: "Delivered",
-    color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
-  },
-  transport: {
-    label: "Booked for Transport",
-    color: "bg-indigo-500/20 text-indigo-400 border-indigo-500/30",
-  },
-  paid: {
-    label: "Paid",
-    color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
-  },
-  completed: {
-    label: "Completed",
-    color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
+    color: "bg-emerald-50 text-emerald-700 border-emerald-200",
   },
 };
-
-export function normalizeOrder(order) {
-  if (!order) return null;
-
-  const rawId = order.order_id ?? order.id;
-  const orderId = typeof rawId === "string" ? rawId.replace("#", "") : rawId;
-
-  const totalAmount = parseFloat(order.total_amount ?? order.amount ?? 0) || 0;
-  const commissionRate = parseFloat(order.commission) || 10;
-  const commissionAmount =
-    order.commission_amount != null
-      ? parseFloat(order.commission_amount)
-      : (totalAmount * commissionRate) / 100;
-  const payoutAmount =
-    order.payout_amount != null
-      ? parseFloat(order.payout_amount)
-      : totalAmount - commissionAmount;
-
-  const createdAt = order.created_at || null;
-  let orderDate = order.date || "—";
-  let orderTime = order.time || "—";
-  if (createdAt) {
-    const parts = String(createdAt).split(" ");
-    orderDate = parts[0] || orderDate;
-    orderTime = parts[1]?.substring(0, 5) || orderTime;
-  }
-
-  // Handle multiple items array
-  let normalizedItems = null;
-  let buyer = null;
-
-  if (Array.isArray(order.items) && order.items.length > 0) {
-    normalizedItems = order.items.map((item) => ({
-      itemId: item.item_id,
-      quantity: item.quantity || 1,
-      price: parseFloat(item.price) || 0,
-      totalPrice: parseFloat(item.total_price) || 0,
-      product: {
-        id: item.product?.product_id || null,
-        name: item.product?.article_name || "—",
-        image: item.product?.image,
-        brand: item.product?.brand_name || "—",
-        category: item.product?.category_name || "—",
-        price: parseFloat(item.product?.price) || 0,
-      },
-      vendor: {
-        id: item.vendor?.vendor_id,
-        name: item.vendor?.owner_name || "—",
-        phone: item.vendor?.vendor_phone || "—",
-        business: item.vendor?.business_name || "—",
-        email: item.vendor?.vendor_email || null,
-      },
-    }));
-  }
-
-  // Handle buyer info from API response
-  if (order.buyer) {
-    buyer = {
-      id: order.buyer.buyer_id,
-      name: order.buyer.name || "—",
-      phone: order.buyer.phone || "—",
-    };
-  }
-
-  // Fallback to single product format (legacy)
-  const legacyProduct = {
-    id: order.product_id || null,
-    name: order.article_name || order.product_name || "—",
-    image: order.product_image || order.image,
-    brand: order.brand_name || order.brand || "—",
-    category: order.category_name || order.category || "—",
-    size: order.size || "—",
-    color: order.color || "—",
-    material: order.material || "—",
-    quantity: order.quantity ?? order.qty ?? order.total_quantity ?? "—",
-    unitPrice: order.unit_price || order.selling_price || null,
-  };
-
-  return {
-    orderId,
-    status: (order.status || "pending").toLowerCase(),
-    orderDate,
-    orderTime,
-    createdAt,
-    paymentMethod: order.payment_method || order.paymentMethod || "COD",
-    totalAmount,
-    commissionRate,
-    commissionAmount,
-    payoutAmount,
-    vendorPaymentStatus: (
-      order.vendor_payment_status ||
-      order.payment_status ||
-      "pending"
-    ).toLowerCase(),
-    customer: buyer || {
-      name: order.user_name || order.customer_name || order.customerName || "—",
-      phone: order.user_phone || order.customer_phone || "—",
-      address:
-        order.user_address ||
-        order.shipping_address ||
-        order.shippingAddress ||
-        "—",
-      email: order.user_email || order.email || null,
-    },
-    vendor: {
-      name: order.owner_name || order.vendor_name || "—",
-      phone: order.owner_phone || order.vendor_phone || "—",
-      business: order.business_name || "—",
-    },
-    product: legacyProduct,
-    items: normalizedItems || order.total_items || null,
-    hasMultipleItems:
-      Array.isArray(normalizedItems) && normalizedItems.length > 1,
-  };
-}
 
 function getStatusBadge(status) {
   const key = status?.toLowerCase();
   return (
     STATUS_STYLES[key] || {
       label: status || "Unknown",
-      color: "bg-gray-500/20 text-gray-400 border-gray-500/30",
+      color: "bg-slate-50 text-slate-600 border-slate-200",
     }
   );
 }
@@ -205,35 +73,27 @@ function getStatusBadge(status) {
 function getImageUrl(image) {
   if (!image) return null;
   if (image.startsWith("http://") || image.startsWith("https://")) return image;
-  if (image.startsWith("/")) return `https://namami-infotech.com${image}`;
-  return `https://namami-infotech.com/${image}`;
+  if (image.startsWith("/")) return `${BASE_URL_IMAGE}${image}`;
+  return `${BASE_URL_IMAGE}/${image}`;
 }
 
 function formatCurrency(amount) {
   return `₹${Number(amount || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
 }
 
-function InfoRow({ icon: Icon, label, value, isAdmin = true }) {
+// Compact Micro Data Row Helper
+function InfoRow({ icon: Icon, label, value }) {
   if (!value || value === "—") return null;
   return (
-    <div className="flex items-start gap-3">
-      <div
-        className={`p-1.5 rounded-lg shrink-0 ${
-          isAdmin ? "bg-slate-700/50" : "bg-violet-100"
-        }`}
-      >
-        <Icon
-          size={14}
-          className={isAdmin ? "text-teal-400" : "text-violet-600"}
-        />
+    <div className="flex items-start gap-2.5 py-1">
+      <div className="p-1 rounded bg-slate-100 border border-slate-200/40 text-slate-500 shrink-0 mt-0.5">
+        <Icon size={12} />
       </div>
-      <div className="min-w-0">
-        <p className={`text-xs ${isAdmin ? "text-gray-500" : "text-gray-500"}`}>
+      <div className="min-w-0 flex-1">
+        <p className="text-[10px] uppercase font-bold tracking-tight text-slate-400 leading-none">
           {label}
         </p>
-        <p
-          className={`text-sm font-medium break-words ${isAdmin ? "text-white" : "text-gray-900"}`}
-        >
+        <p className="text-xs font-semibold text-slate-700 mt-1 break-words leading-tight">
           {value}
         </p>
       </div>
@@ -241,23 +101,13 @@ function InfoRow({ icon: Icon, label, value, isAdmin = true }) {
   );
 }
 
-function SectionCard({ title, icon: Icon, children, isAdmin }) {
+// Refined Light Card Container
+function SectionCard({ title, icon: Icon, children }) {
   return (
-    <div
-      className={`rounded-xl border p-4 ${
-        isAdmin
-          ? "bg-slate-800/40 border-white/5"
-          : "bg-white border-violet-100 shadow-sm"
-      }`}
-    >
-      <div className="flex items-center gap-2 mb-4">
-        <Icon
-          size={16}
-          className={isAdmin ? "text-teal-400" : "text-violet-600"}
-        />
-        <h3
-          className={`text-sm font-semibold ${isAdmin ? "text-white" : "text-gray-900"}`}
-        >
+    <div className="rounded-xl border border-slate-200/60 bg-white p-3.5 shadow-2xs">
+      <div className="flex items-center gap-1.5 border-b border-slate-100 pb-2 mb-2.5">
+        <Icon size={13} className="text-indigo-600" />
+        <h3 className="text-[11px] font-black uppercase tracking-wider text-slate-800">
           {title}
         </h3>
       </div>
@@ -269,32 +119,23 @@ function SectionCard({ title, icon: Icon, children, isAdmin }) {
 export default function ViewOrderDetailsModal({
   isOpen,
   onClose,
-  order,
-  variant = "admin",
-  showFinancials = true,
+  orderId,
   token = "",
 }) {
-  const [details, setDetails] = useState(null);
   const [loading, setLoading] = useState(false);
-
-  const isAdmin = variant === "admin";
+  const [orderData, setOrderData] = useState(null);
+  const [expandedItems, setExpandedItems] = useState({});
 
   useEffect(() => {
-    if (!isOpen || !order) {
-      setDetails(null);
+    if (!isOpen || !orderId) {
+      setOrderData(null);
       return;
     }
 
-    const normalized = normalizeOrder(order);
-    setDetails(normalized);
-
-    const orderId = normalized?.orderId;
-    if (!orderId || !token) return;
-
-    const fetchDetails = async () => {
+    const fetchOrderDetails = async () => {
       setLoading(true);
       try {
-        const res = await fetch(
+        const response = await fetch(
           `${API_BASE}/order/admin_get_details_order.php?order_id=${orderId}`,
           {
             headers: {
@@ -303,708 +144,415 @@ export default function ViewOrderDetailsModal({
             },
           },
         );
-        if (res.ok) {
-          const data = await res.json();
+
+        if (response.ok) {
+          const data = await response.json();
           if (data?.success && data.data) {
-            setDetails(normalizeOrder({ ...order, ...data.data }));
+            setOrderData(data.data);
           }
         }
-      } catch {
-        /* use list data */
+      } catch (error) {
+        console.error("Error fetching order details:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchDetails();
-  }, [isOpen, order, token]);
+    fetchOrderDetails();
+  }, [isOpen, orderId, token]);
 
-  if (!isOpen || !details) return null;
+  if (!isOpen) return null;
 
-  const statusBadge = getStatusBadge(details.status);
-  const payBadge = getStatusBadge(details.vendorPaymentStatus);
-  const imageUrl = getImageUrl(details.product.image);
+  if (loading) {
+    return (
+      <div className="fixed inset-0 z-50 bg-slate-950/20 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="bg-white rounded-xl p-6 shadow-xl flex items-center gap-3 border border-slate-100">
+          <Loader2 className="animate-spin h-5 w-5 text-indigo-600" />
+          <p className="text-slate-600 text-xs font-medium">
+            Syncing order timeline metrics...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!orderData) {
+    return (
+      <div className="fixed inset-0 z-50 bg-slate-950/20 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="bg-white border border-slate-100 rounded-xl p-5 max-w-xs w-full text-center shadow-xl">
+          <h2 className="text-sm font-bold text-slate-800">Order Logs Empty</h2>
+          <p className="text-slate-400 text-[11px] mt-1">
+            Details could not be referenced from backend pool.
+          </p>
+          <button
+            onClick={onClose}
+            className="mt-4 w-full py-1.5 bg-slate-900 text-white rounded-lg text-xs font-medium hover:bg-slate-800 transition"
+          >
+            Close Panel
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const { order, buyer, vendor, items } = orderData;
+  const statusBadge = getStatusBadge(order?.status);
+
+  const toggleItem = (itemId) => {
+    setExpandedItems((prev) => ({ ...prev, [itemId]: !prev[itemId] }));
+  };
+
+  // Payment Receipt Verification URL Parser
+  const paymentReceiptUrl = getImageUrl(
+    order?.payment_receipt || order?.receipt_image,
+  );
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/30 backdrop-blur-xs animate-in fade-in duration-200"
       onClick={onClose}
     >
       <div
-        className={`w-full max-w-4xl max-h-[92vh] overflow-hidden rounded-2xl shadow-2xl flex flex-col ${
-          isAdmin
-            ? "bg-slate-900 border border-white/10"
-            : "bg-white border border-violet-100"
-        }`}
+        className="w-full max-w-4xl max-h-[85vh] overflow-hidden rounded-xl shadow-2xl flex flex-col bg-slate-50 border border-white"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div
-          className={`shrink-0 px-6 py-4 border-b ${
-            isAdmin
-              ? "border-white/10 bg-slate-900/95"
-              : "border-violet-100 bg-white"
-          }`}
-        >
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex items-center gap-3 min-w-0">
-              <div
-                className={`p-2.5 rounded-xl ${
-                  isAdmin ? "bg-teal-500/20" : "bg-violet-100"
-                }`}
-              >
-                <ShoppingBag
-                  size={22}
-                  className={isAdmin ? "text-teal-400" : "text-violet-600"}
-                />
-              </div>
-              <div>
-                <h2
-                  className={`text-lg font-bold ${isAdmin ? "text-white" : "text-gray-900"}`}
-                >
-                  Order #{details.orderId}
-                </h2>
-                <div className="flex flex-wrap items-center gap-2 mt-1.5">
-                  <span
-                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold border ${statusBadge.color}`}
-                  >
-                    {statusBadge.label}
-                  </span>
-                  <span
-                    className={`inline-flex items-center gap-1 text-xs ${
-                      isAdmin ? "text-gray-400" : "text-gray-500"
-                    }`}
-                  >
-                    <Calendar size={11} />
-                    {details.orderDate}
-                  </span>
-                  <span
-                    className={`inline-flex items-center gap-1 text-xs ${
-                      isAdmin ? "text-gray-400" : "text-gray-500"
-                    }`}
-                  >
-                    <Clock size={11} />
-                    {details.orderTime}
-                  </span>
-                </div>
-              </div>
+        {/* Modern Flat Header */}
+        <div className="shrink-0 px-4 py-3 bg-white border-b border-slate-200/60 flex items-center justify-between">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="p-1.5 rounded-lg bg-indigo-50 text-indigo-600 shrink-0">
+              <ShoppingBag size={15} />
             </div>
-            <div className="flex items-center gap-2">
-              {loading && (
-                <Loader2
-                  size={18}
-                  className={`animate-spin ${isAdmin ? "text-teal-400" : "text-violet-600"}`}
-                />
-              )}
-              <button
-                onClick={onClose}
-                className={`p-2 rounded-xl transition-colors ${
-                  isAdmin
-                    ? "text-gray-400 hover:text-white hover:bg-white/10"
-                    : "text-gray-400 hover:text-gray-700 hover:bg-gray-100"
-                }`}
-              >
-                <X size={20} />
-              </button>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-xs font-black uppercase tracking-tight text-slate-900">
+                  Order Session Ledger
+                </h2>
+                <span className="text-[10px] font-mono font-bold bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">
+                  #{order?.id}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 mt-0.5 text-[10px] text-slate-400 font-medium">
+                <span
+                  className={`px-1.5 py-0.5 rounded text-[9px] font-bold border uppercase tracking-wider ${statusBadge.color}`}
+                >
+                  {statusBadge.label}
+                </span>
+                <span>•</span>
+                <span className="flex items-center gap-0.5">
+                  <Calendar size={10} />{" "}
+                  {order?.created_at?.split(" ")[0] || "—"}
+                </span>
+                <span>•</span>
+                <span className="flex items-center gap-0.5">
+                  <Clock size={10} />{" "}
+                  {order?.created_at?.split(" ")[1]?.substring(0, 5) || "—"}
+                </span>
+              </div>
             </div>
           </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
+          >
+            <X size={15} />
+          </button>
         </div>
 
-        {/* Body */}
-        <div className="overflow-y-auto flex-1 p-6 space-y-5">
-          {/* Multiple Items Section */}
-          {Array.isArray(details.items) && details.items.length > 0 ? (
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 mb-4">
-                <ShoppingBag
-                  size={16}
-                  className={isAdmin ? "text-teal-400" : "text-violet-600"}
-                />
-                <h3
-                  className={`text-sm font-semibold ${isAdmin ? "text-white" : "text-gray-900"}`}
-                >
-                  Order Items ({details.items.length})
-                </h3>
+        {/* Balanced Body Area */}
+        <div className="overflow-y-auto flex-1 p-4 space-y-4">
+          {/* Top Quick Status Metric Row */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+            {[
+              {
+                label: "Net Payable",
+                val: formatCurrency(order?.total_amount),
+                cls: "text-slate-900 font-extrabold",
+              },
+              {
+                label: "Item Count",
+                val: `${items?.length || 0} Batches`,
+                cls: "text-slate-700 font-semibold",
+              },
+              {
+                label: "Channel Method",
+                val: order?.payment_method || "COD",
+                cls: "text-indigo-600 font-mono font-bold uppercase",
+              },
+              {
+                label: "Admin Payout Cuts",
+                val: formatCurrency(order?.admin_commission),
+                cls: "text-fuchsia-600 font-semibold",
+              },
+            ].map((stat, idx) => (
+              <div
+                key={idx}
+                className="rounded-xl border border-slate-200/60 bg-white p-2.5 shadow-3xs"
+              >
+                <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block">
+                  {stat.label}
+                </span>
+                <p className={`text-sm mt-0.5 ${stat.cls}`}>{stat.val}</p>
               </div>
-              {details.items.map((item, idx) => {
-                const itemImageUrl = getImageUrl(item.product?.image);
+            ))}
+          </div>
+
+          {/* Dynamic Item Configuration Grid Section */}
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-1 text-slate-800 font-bold text-[10px] uppercase tracking-wider">
+              <Package size={12} className="text-slate-500" />
+              <span>Consolidated Item Matrix ({items?.length || 0})</span>
+            </div>
+
+            <div className="space-y-1.5">
+              {items?.map((item) => {
+                const isExpanded = expandedItems[item.item_id];
+                const product = item.product;
+                const imageUrl = getImageUrl(product?.image);
+
                 return (
                   <div
-                    key={item.itemId || idx}
-                    className={`rounded-xl border overflow-hidden ${
-                      isAdmin
-                        ? "border-white/10 bg-slate-800/30"
-                        : "border-violet-100 bg-violet-50/50"
-                    }`}
+                    key={item.item_id}
+                    className="rounded-xl border border-slate-200/60 bg-white overflow-hidden shadow-3xs"
                   >
-                    <div className="flex flex-col sm:flex-row">
-                      {/* Product Image */}
-                      <div
-                        className={`sm:w-40 shrink-0 aspect-square sm:aspect-auto sm:min-h-[160px] flex items-center justify-center ${
-                          isAdmin ? "bg-slate-800" : "bg-violet-100"
-                        }`}
-                      >
-                        {itemImageUrl ? (
+                    {/* Compact Nested Item Trigger */}
+                    <div
+                      className="flex items-center gap-3 p-2.5 cursor-pointer hover:bg-slate-50/80 transition-colors"
+                      onClick={() => toggleItem(item.item_id)}
+                    >
+                      <div className="w-10 h-10 rounded-lg overflow-hidden bg-slate-100 border border-slate-200/40 shrink-0">
+                        {imageUrl ? (
                           <img
-                            src={itemImageUrl}
-                            alt={item.product?.name}
+                            src={imageUrl}
+                            alt={product?.article_name}
                             className="w-full h-full object-cover"
                             onError={(e) => {
                               e.target.src =
-                                "https://placehold.co/160x160/f1f5f9/64748b?text=Product";
+                                "https://placehold.co/64x64/f1f5f9/94a3b8?text=Product";
                             }}
                           />
                         ) : (
-                          <Package
-                            size={40}
-                            className={
-                              isAdmin ? "text-gray-600" : "text-violet-300"
-                            }
-                          />
+                          <div className="w-full h-full flex items-center justify-center text-slate-300">
+                            <Package size={16} />
+                          </div>
                         )}
                       </div>
-                      <div className="flex-1 p-5 flex flex-col justify-between">
-                        <div>
-                          <div className="flex items-start justify-between mb-2 gap-2">
-                            <h3
-                              className={`text-base font-bold ${
-                                isAdmin ? "text-white" : "text-gray-900"
-                              }`}
-                            >
-                              {item.product?.name}
-                            </h3>
-                            <span
-                              className={`text-xs font-semibold px-2 py-1 rounded-lg shrink-0 ${
-                                isAdmin
-                                  ? "bg-teal-500/20 text-teal-400"
-                                  : "bg-violet-100 text-violet-700"
-                              }`}
-                            >
-                              Item {idx + 1}
+
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-bold text-slate-800 truncate">
+                          {product?.article_name || "Unbranded Item Line"}
+                        </p>
+                        <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-500">
+                          <span>
+                            Pool Qty:{" "}
+                            <span className="font-bold text-slate-700">
+                              {item.quantity}
                             </span>
-                          </div>
-
-                          {/* Product Specs */}
-                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
-                            {[
-                              {
-                                icon: ShoppingBag,
-                                label: "Quantity",
-                                value: item.quantity,
-                              },
-                              {
-                                icon: IndianRupee,
-                                label: "Unit Price",
-                                value: formatCurrency(item.price),
-                              },
-                            ].map(({ icon: FieldIcon, label, value }) =>
-                              value && value !== "—" ? (
-                                <div
-                                  key={label}
-                                  className="flex items-center gap-2"
-                                >
-                                  <FieldIcon
-                                    size={12}
-                                    className={
-                                      isAdmin
-                                        ? "text-gray-500"
-                                        : "text-violet-400"
-                                    }
-                                  />
-                                  <div>
-                                    <p
-                                      className={`text-[10px] uppercase ${
-                                        isAdmin
-                                          ? "text-gray-500"
-                                          : "text-gray-400"
-                                      }`}
-                                    >
-                                      {label}
-                                    </p>
-                                    <p
-                                      className={`text-sm font-medium ${
-                                        isAdmin
-                                          ? "text-gray-200"
-                                          : "text-gray-800"
-                                      }`}
-                                    >
-                                      {value}
-                                    </p>
-                                  </div>
-                                </div>
-                              ) : null,
-                            )}
-                          </div>
-
-                          {/* Vendor Info */}
-                          <div
-                            className={`p-3 rounded-lg mb-4 border ${
-                              isAdmin
-                                ? "bg-slate-900/30 border-white/5"
-                                : "bg-white border-violet-100"
-                            }`}
-                          >
-                            <p
-                              className={`text-xs font-semibold uppercase mb-2 ${
-                                isAdmin ? "text-gray-500" : "text-gray-500"
-                              }`}
-                            >
-                              Seller
-                            </p>
-                            <div className="space-y-2">
-                              <div className="flex items-center gap-2">
-                                <Building2
-                                  size={12}
-                                  className={
-                                    isAdmin
-                                      ? "text-gray-500"
-                                      : "text-violet-400"
-                                  }
-                                />
-                                <p
-                                  className={`text-xs ${
-                                    isAdmin ? "text-gray-300" : "text-gray-700"
-                                  }`}
-                                >
-                                  {item.vendor?.business}
-                                </p>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <User
-                                  size={12}
-                                  className={
-                                    isAdmin
-                                      ? "text-gray-500"
-                                      : "text-violet-400"
-                                  }
-                                />
-                                <p
-                                  className={`text-xs ${
-                                    isAdmin ? "text-gray-300" : "text-gray-700"
-                                  }`}
-                                >
-                                  {item.vendor?.name}
-                                </p>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Phone
-                                  size={12}
-                                  className={
-                                    isAdmin
-                                      ? "text-gray-500"
-                                      : "text-violet-400"
-                                  }
-                                />
-                                <p
-                                  className={`text-xs ${
-                                    isAdmin ? "text-gray-300" : "text-gray-700"
-                                  }`}
-                                >
-                                  {item.vendor?.phone}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Item Total */}
-                        <div className="flex items-center justify-between pt-3 border-t border-white/5">
-                          <p
-                            className={`text-xs font-semibold uppercase ${
-                              isAdmin ? "text-gray-500" : "text-gray-500"
-                            }`}
-                          >
-                            Item Total
-                          </p>
-                          <p
-                            className={`text-lg font-bold ${
-                              isAdmin ? "text-emerald-400" : "text-emerald-600"
-                            }`}
-                          >
-                            {formatCurrency(item.totalPrice)}
-                          </p>
+                          </span>
+                          <span className="text-slate-300">|</span>
+                          <span>
+                            Unit:{" "}
+                            <span className="font-medium">
+                              {formatCurrency(item.price)}
+                            </span>
+                          </span>
+                          <span className="text-slate-300">|</span>
+                          <span className="text-emerald-600 font-bold">
+                            Sum: {formatCurrency(item.total_price)}
+                          </span>
                         </div>
                       </div>
+
+                      <div className="text-slate-400 shrink-0 p-1">
+                        {isExpanded ? (
+                          <ChevronUp size={14} />
+                        ) : (
+                          <ChevronDown size={14} />
+                        )}
+                      </div>
                     </div>
+
+                    {/* Extended Operational Specs Block */}
+                    {isExpanded && (
+                      <div className="border-t border-slate-100 px-3 py-2 bg-slate-50/60 grid grid-cols-2 sm:grid-cols-4 gap-y-2 gap-x-4 text-[11px]">
+                        <div>
+                          <span className="text-slate-400">Variant Class:</span>{" "}
+                          <span className="font-mono font-bold text-slate-700 block">
+                            {product?.variant || "—"}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-slate-400">
+                            Base Retail MRP:
+                          </span>{" "}
+                          <span className="font-semibold text-slate-700 block">
+                            {formatCurrency(product?.price)}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-slate-400">
+                            SaaS Deal Price:
+                          </span>{" "}
+                          <span className="font-bold text-emerald-600 block">
+                            {formatCurrency(product?.selling_price)}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-slate-400">
+                            Warehouse Stocks:
+                          </span>{" "}
+                          <span className="font-semibold text-slate-700 block">
+                            {product?.stock_quantity || "0"} Pcs
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-slate-400">
+                            Margin Cut Rate:
+                          </span>{" "}
+                          <span className="font-bold text-indigo-600 block">
+                            {product?.commission || 0}%
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-slate-400">
+                            Platform Status:
+                          </span>{" "}
+                          <span className="font-medium text-slate-600 block uppercase text-[10px]">
+                            {product?.status || "—"}
+                          </span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}
             </div>
-          ) : (
-            // Fallback to single product card for legacy data
-            <div
-              className={`rounded-xl border overflow-hidden ${
-                isAdmin
-                  ? "border-white/10 bg-slate-800/30"
-                  : "border-violet-100 bg-violet-50/50"
-              }`}
-            >
-              <div className="flex flex-col sm:flex-row">
-                <div
-                  className={`sm:w-44 shrink-0 aspect-square sm:aspect-auto sm:min-h-[180px] flex items-center justify-center ${
-                    isAdmin ? "bg-slate-800" : "bg-violet-100"
-                  }`}
-                >
-                  {imageUrl ? (
-                    <img
-                      src={imageUrl}
-                      alt={details.product.name}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.target.src =
-                          "https://placehold.co/200x200/f1f5f9/64748b?text=Product";
-                      }}
-                    />
-                  ) : (
-                    <Package
-                      size={48}
-                      className={isAdmin ? "text-gray-600" : "text-violet-300"}
-                    />
-                  )}
-                </div>
-                <div className="flex-1 p-5">
-                  <p
-                    className={`text-xs font-medium uppercase tracking-wide mb-1 ${
-                      isAdmin ? "text-teal-400" : "text-violet-600"
-                    }`}
-                  >
-                    Product Details
-                  </p>
-                  <h3
-                    className={`text-lg font-bold mb-3 ${
-                      isAdmin ? "text-white" : "text-gray-900"
-                    }`}
-                  >
-                    {details.product.name}
-                  </h3>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {[
-                      {
-                        icon: Tag,
-                        label: "Brand",
-                        value: details.product.brand,
-                      },
-                      {
-                        icon: Layers,
-                        label: "Category",
-                        value: details.product.category,
-                      },
-                      {
-                        icon: Hash,
-                        label: "Size",
-                        value: details.product.size,
-                      },
-                      {
-                        icon: Palette,
-                        label: "Color",
-                        value: details.product.color,
-                      },
-                      {
-                        icon: Package,
-                        label: "Material",
-                        value: details.product.material,
-                      },
-                      {
-                        icon: ShoppingBag,
-                        label: "Quantity",
-                        value: details.product.quantity,
-                      },
-                    ].map(({ icon: FieldIcon, label, value }) =>
-                      value && value !== "—" ? (
-                        <div key={label} className="flex items-center gap-2">
-                          <FieldIcon
-                            size={13}
-                            className={
-                              isAdmin ? "text-gray-500" : "text-violet-400"
-                            }
-                          />
-                          <div>
-                            <p
-                              className={`text-[10px] uppercase ${
-                                isAdmin ? "text-gray-500" : "text-gray-400"
-                              }`}
-                            >
-                              {label}
-                            </p>
-                            <p
-                              className={`text-sm font-medium ${
-                                isAdmin ? "text-gray-200" : "text-gray-800"
-                              }`}
-                            >
-                              {value}
-                            </p>
-                          </div>
-                        </div>
-                      ) : null,
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {/* Customer */}
-            <SectionCard
-              title="Customer Information"
-              icon={User}
-              isAdmin={isAdmin}
-            >
-              <div className="space-y-3">
-                <InfoRow
-                  icon={User}
-                  label="Name"
-                  value={details.customer.name}
-                  isAdmin={isAdmin}
-                />
-                <InfoRow
-                  icon={Phone}
-                  label="Phone"
-                  value={details.customer.phone}
-                  isAdmin={isAdmin}
-                />
-                {details.customer.email && (
-                  <InfoRow
-                    icon={Mail}
-                    label="Email"
-                    value={details.customer.email}
-                    isAdmin={isAdmin}
-                  />
-                )}
+          {/* Customer & Vendor Directory Matrices */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <SectionCard title="Customer Profile" icon={User}>
+              <div className="space-y-1.5">
+                <InfoRow icon={User} label="Name ID" value={buyer?.name} />
+                <InfoRow icon={Phone} label="Phone Line" value={buyer?.phone} />
+                <InfoRow icon={Mail} label="Secure Mail" value={buyer?.email} />
                 <InfoRow
                   icon={MapPin}
-                  label="Address"
-                  value={details.customer.address}
-                  isAdmin={isAdmin}
+                  label="Destination Address"
+                  value={buyer?.address}
                 />
               </div>
             </SectionCard>
 
-            {/* Vendor */}
-            <SectionCard
-              title="Vendor Information"
-              icon={Building2}
-              isAdmin={isAdmin}
-            >
-              <div className="space-y-3">
+            <SectionCard title="Vendor Directory" icon={Building2}>
+              <div className="space-y-1.5">
                 <InfoRow
                   icon={Building2}
-                  label="Business"
-                  value={details.vendor.business}
-                  isAdmin={isAdmin}
+                  label="Registered Entity"
+                  value={vendor?.business_name}
                 />
                 <InfoRow
                   icon={User}
-                  label="Owner"
-                  value={details.vendor.name}
-                  isAdmin={isAdmin}
+                  label="Merchant Name"
+                  value={vendor?.owner_name}
                 />
                 <InfoRow
                   icon={Phone}
-                  label="Phone"
-                  value={details.vendor.phone}
-                  isAdmin={isAdmin}
+                  label="Acquisition Contact"
+                  value={vendor?.phone}
+                />
+                <InfoRow
+                  icon={Mail}
+                  label="Corporate Email"
+                  value={vendor?.email}
                 />
               </div>
             </SectionCard>
           </div>
 
-          {/* Payment & order summary */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            <div
-              className={`rounded-xl p-4 border ${
-                isAdmin
-                  ? "bg-slate-800/60 border-white/5"
-                  : "bg-white border-violet-100"
-              }`}
-            >
-              <div className="flex items-center gap-2 mb-2">
-                <CreditCard
-                  size={14}
-                  className={isAdmin ? "text-teal-400" : "text-violet-600"}
-                />
-                <p
-                  className={`text-xs ${isAdmin ? "text-gray-500" : "text-gray-500"}`}
-                >
-                  Payment
-                </p>
-              </div>
-              <p
-                className={`text-sm font-bold uppercase ${isAdmin ? "text-white" : "text-gray-900"}`}
-              >
-                {details.paymentMethod}
-              </p>
-            </div>
-
-            <div
-              className={`rounded-xl p-4 border ${
-                isAdmin
-                  ? "bg-slate-800/60 border-white/5"
-                  : "bg-white border-violet-100"
-              }`}
-            >
-              <div className="flex items-center gap-2 mb-2">
-                <IndianRupee
-                  size={14}
-                  className={isAdmin ? "text-emerald-400" : "text-emerald-600"}
-                />
-                <p
-                  className={`text-xs ${isAdmin ? "text-gray-500" : "text-gray-500"}`}
-                >
-                  Order Total
-                </p>
-              </div>
-              <p
-                className={`text-lg font-bold ${isAdmin ? "text-emerald-400" : "text-emerald-600"}`}
-              >
-                {formatCurrency(details.totalAmount)}
-              </p>
-            </div>
-
-            {details.items != null && (
-              <div
-                className={`rounded-xl p-4 border ${
-                  isAdmin
-                    ? "bg-slate-800/60 border-white/5"
-                    : "bg-white border-violet-100"
-                }`}
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <Package
-                    size={14}
-                    className={isAdmin ? "text-blue-400" : "text-blue-600"}
-                  />
-                  <p
-                    className={`text-xs ${isAdmin ? "text-gray-500" : "text-gray-500"}`}
-                  >
-                    Items
-                  </p>
-                </div>
-                <p
-                  className={`text-lg font-bold ${isAdmin ? "text-white" : "text-gray-900"}`}
-                >
-                  {details.items}
-                </p>
-              </div>
-            )}
-
-            <div
-              className={`rounded-xl p-4 border ${
-                isAdmin
-                  ? "bg-slate-800/60 border-white/5"
-                  : "bg-white border-violet-100"
-              }`}
-            >
-              <div className="flex items-center gap-2 mb-2">
-                <Truck
-                  size={14}
-                  className={isAdmin ? "text-purple-400" : "text-purple-600"}
-                />
-                <p
-                  className={`text-xs ${isAdmin ? "text-gray-500" : "text-gray-500"}`}
-                >
-                  Fulfillment
-                </p>
-              </div>
-              <span
-                className={`inline-flex text-xs px-2 py-1 rounded-full border font-semibold ${statusBadge.color}`}
-              >
-                {statusBadge.label}
-              </span>
-            </div>
-          </div>
-
-          {/* Financial breakdown (accounts) */}
-          {showFinancials && (
-            <SectionCard
-              title="Payment & Settlement Breakdown"
-              icon={Wallet}
-              isAdmin={isAdmin}
-            >
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div
-                  className={`rounded-lg p-4 ${
-                    isAdmin ? "bg-slate-900/50" : "bg-emerald-50"
-                  }`}
-                >
-                  <p
-                    className={`text-xs mb-1 ${isAdmin ? "text-gray-500" : "text-gray-500"}`}
-                  >
-                    Gross Amount
-                  </p>
-                  <p
-                    className={`text-xl font-bold ${isAdmin ? "text-white" : "text-gray-900"}`}
-                  >
-                    {formatCurrency(details.totalAmount)}
-                  </p>
-                </div>
-                <div
-                  className={`rounded-lg p-4 ${
-                    isAdmin ? "bg-slate-900/50" : "bg-fuchsia-50"
-                  }`}
-                >
-                  <div className="flex items-center gap-1 mb-1">
-                    <BadgePercent size={12} className="text-fuchsia-400" />
-                    <p
-                      className={`text-xs ${isAdmin ? "text-gray-500" : "text-gray-500"}`}
-                    >
-                      Commission ({details.commissionRate}%)
+          {/* Lower Financial & Payment Receipt Split Section */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {/* Financial Ledger Breakdown */}
+            <div className="md:col-span-2">
+              <SectionCard title="SaaS Financial Settlement" icon={Wallet}>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="bg-slate-50 border border-slate-100 rounded-lg p-2">
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight block">
+                      Gross Intake
+                    </span>
+                    <p className="text-xs font-black text-slate-800 mt-0.5">
+                      {formatCurrency(order?.total_amount)}
                     </p>
                   </div>
-                  <p className={`text-xl font-bold text-fuchsia-400`}>
-                    {formatCurrency(details.commissionAmount)}
-                  </p>
+                  <div className="bg-fuchsia-50/50 border border-fuchsia-100 rounded-lg p-2">
+                    <div className="flex items-center justify-center gap-0.5 text-fuchsia-500 text-[9px] font-bold uppercase tracking-tight">
+                      <BadgePercent size={10} />
+                      <span>Cut System</span>
+                    </div>
+                    <p className="text-xs font-black text-fuchsia-700 mt-0.5">
+                      {formatCurrency(order?.admin_commission)}
+                    </p>
+                  </div>
+                  <div className="bg-emerald-50/50 border border-emerald-100 rounded-lg p-2">
+                    <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-tight block">
+                      Merchant Yield
+                    </span>
+                    <p className="text-xs font-black text-emerald-700 mt-0.5">
+                      {formatCurrency(order?.vendor_amount)}
+                    </p>
+                  </div>
                 </div>
-                <div
-                  className={`rounded-lg p-4 ${
-                    isAdmin ? "bg-slate-900/50" : "bg-teal-50"
-                  }`}
-                >
-                  <p
-                    className={`text-xs mb-1 ${isAdmin ? "text-gray-500" : "text-gray-500"}`}
+              </SectionCard>
+            </div>
+
+            {/* Premium Interactive Payment Receipt Card */}
+            <SectionCard title="Receipt Attachment" icon={CreditCard}>
+              {paymentReceiptUrl ? (
+                <div className="group relative rounded-lg border border-slate-200 bg-slate-50 p-1 overflow-hidden h-[54px] flex items-center gap-2 justify-between">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <img
+                      src={paymentReceiptUrl}
+                      alt="Receipt Entry Thumbnail"
+                      className="w-10 h-10 object-cover rounded border border-slate-200 shrink-0"
+                      onError={(e) => {
+                        e.target.style.display = "none";
+                      }}
+                    />
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-bold text-slate-700 truncate">
+                        Payment_Receipt.jpg
+                      </p>
+                      <span className="text-[9px] text-indigo-600 font-semibold tracking-wide block uppercase">
+                        Stored Cloud Path
+                      </span>
+                    </div>
+                  </div>
+                  <a
+                    href={paymentReceiptUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="p-1.5 bg-slate-100 hover:bg-indigo-50 text-slate-500 hover:text-indigo-600 rounded-md transition-colors border border-slate-200/40"
                   >
-                    Vendor Payout
-                  </p>
-                  <p
-                    className={`text-xl font-bold ${isAdmin ? "text-teal-400" : "text-teal-600"}`}
-                  >
-                    {formatCurrency(details.payoutAmount)}
-                  </p>
+                    <ExternalLink size={12} />
+                  </a>
                 </div>
-              </div>
-              <div className="mt-4 flex items-center gap-2">
-                <p
-                  className={`text-xs ${isAdmin ? "text-gray-500" : "text-gray-500"}`}
-                >
-                  Vendor payment status:
-                </p>
-                <span
-                  className={`inline-flex text-xs px-2.5 py-1 rounded-full border font-semibold ${payBadge.color}`}
-                >
-                  {payBadge.label}
-                </span>
-              </div>
+              ) : (
+                <div className="h-[54px] border border-dashed border-slate-200 rounded-lg flex items-center justify-center bg-slate-50">
+                  <span className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">
+                    No Slip Doc Logs Uploaded
+                  </span>
+                </div>
+              )}
             </SectionCard>
-          )}
+          </div>
         </div>
 
-        {/* Footer */}
-        <div
-          className={`shrink-0 px-6 py-4 border-t ${
-            isAdmin
-              ? "border-white/10 bg-slate-900/95"
-              : "border-violet-100 bg-white"
-          }`}
-        >
+        {/* Global Action Footer */}
+        <div className="shrink-0 px-4 py-2.5 bg-white border-t border-slate-200/60 flex justify-end">
           <button
             onClick={onClose}
-            className={`w-full py-2.5 rounded-xl font-medium transition-colors ${
-              isAdmin
-                ? "bg-slate-800 hover:bg-slate-700 text-gray-300 border border-white/10"
-                : "bg-violet-600 hover:bg-violet-700 text-white"
-            }`}
+            className="px-4 py-1.5 rounded-lg text-xs font-bold transition-all bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200"
           >
-            Close
+            Close Session
           </button>
         </div>
       </div>

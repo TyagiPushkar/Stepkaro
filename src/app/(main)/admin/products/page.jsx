@@ -20,7 +20,7 @@ import {
   ThumbsDown,
 } from "lucide-react";
 import api from "@/app/utils/api";
-import ViewProductModal from "@/app/components/shared/ViewProductModal";
+import ViewProduct from "@/app/components/shared/ViewProduct";
 
 const normalizeProductImageUrl = (image) => {
   if (!image) return "/placeholder.png";
@@ -438,7 +438,7 @@ export default function ProductsPage() {
   };
 
   const handleViewProduct = (product) => {
-    setSelectedProduct(product);
+    setSelectedProduct(product.id);
     setShowViewModal(true);
   };
 
@@ -594,12 +594,20 @@ export default function ProductsPage() {
           </div>
 
           <button
+            onClick={() => setShowAddModal(true)}
+            className="bg-slate-800 hover:bg-slate-700 text-gray-300 px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-colors border border-white/10"
+          >
+            <Plus size={16} />
+            Product Add
+          </button>
+
+          {/* <button
             onClick={() => setShowBulkImportModal(true)}
             className="bg-slate-800 hover:bg-slate-700 text-gray-300 px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-colors border border-white/10"
           >
             <Upload size={16} />
             Bulk Import
-          </button>
+          </button> */}
 
           <button
             onClick={handleExportCSV}
@@ -883,13 +891,13 @@ export default function ProductsPage() {
                           >
                             <Edit size={16} />
                           </button>
-                          <button
+                          {/* <button
                             onClick={() => openDeleteModal(product)}
                             className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
                             title="Delete Product"
                           >
                             <Trash2 size={16} />
-                          </button>
+                          </button> */}
                         </div>
                       </td>
                     </tr>
@@ -1311,12 +1319,12 @@ export default function ProductsPage() {
         </div>
       </Modal>
 
-      <ViewProductModal
+      <ViewProduct
         isOpen={showViewModal}
         onClose={() => setShowViewModal(false)}
-        product={selectedProduct}
+        productId={selectedProduct}
         variant="admin"
-        onEdit={(product) => goToProductDetail(product.id)}
+        // onEdit={(product) => goToProductDetail(product.id)}
       />
 
       {/* Bulk Import Modal */}
