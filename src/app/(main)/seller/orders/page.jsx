@@ -314,7 +314,7 @@ const fetchOrders = async () => {
 
     const response = await fetch(
 
-      "https://namami-infotech.com/Stepkaro/src/vender/update_order_status.php",
+      "https://namami-infotech.com/Stepkaro/src/order/update_order_status.php",
 
       {
         method: "POST",

@@ -111,13 +111,7 @@ export default function HomePage() {
       bgClass: "bg-teal-500/20",
       textClass: "text-teal-400",
     },
-    {
-      title: "Pending Orders",
-      value: dashboard?.pendingOrders || 0,
-      icon: "⏳",
-      bgClass: "bg-yellow-500/20",
-      textClass: "text-yellow-400",
-    },
+   
     {
       title: "Active Products",
       value: dashboard?.activeProducts || 0,
@@ -196,7 +190,7 @@ export default function HomePage() {
   </button>
 </div>
       {/* STATS GRID */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {stats.map((item, index) => (
           <div
             key={index}
