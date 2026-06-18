@@ -1,5 +1,6 @@
 "use client";
 import { useState, useMemo, useEffect } from "react";
+import axios from "axios";
 import {
   Search,
   Plus,
@@ -27,24 +28,26 @@ import {
   Loader2,
 } from "lucide-react";
 const Modal = ({ isOpen, onClose, title, children, maxWidth = "max-w-md" }) => {
-    if (!isOpen) return null;
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-        <div className={`bg-slate-800 rounded-xl border border-white/10 w-full ${maxWidth} max-h-[90vh] overflow-y-auto`}>
-          <div className="flex justify-between items-center p-4 border-b border-white/10 sticky top-0 bg-slate-800 z-10">
-            <h2 className="text-lg font-semibold text-white">{title}</h2>
-            <button
-              onClick={onClose}
-              className="p-1 text-gray-400 hover:text-white"
-            >
-              <X size={20} />
-            </button>
-          </div>
-          <div className="p-4">{children}</div>
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+      <div
+        className={`bg-slate-800 rounded-xl border border-white/10 w-full ${maxWidth} max-h-[90vh] overflow-y-auto`}
+      >
+        <div className="flex justify-between items-center p-4 border-b border-white/10 sticky top-0 bg-slate-800 z-10">
+          <h2 className="text-lg font-semibold text-white">{title}</h2>
+          <button
+            onClick={onClose}
+            className="p-1 text-gray-400 hover:text-white"
+          >
+            <X size={20} />
+          </button>
         </div>
+        <div className="p-4">{children}</div>
       </div>
-    );
-  };
+    </div>
+  );
+};
 
 export default function UsersPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -104,73 +107,72 @@ export default function UsersPage() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await fetch(
-          "https://namami-infotech.com/Stepkaro/src/home/get_vendor_and_buyer.php",
-        );
+  const fetchUsers = async () => {
+    try {
+      const response = await fetch(
+        "https://namami-infotech.com/Stepkaro/src/home/get_vendor_and_buyer.php",
+      );
 
-        const result = await response.json();
+      const result = await response.json();
 
-        if (result.success) {
-          // buyers
-          const buyers = result.data.buyers.map((buyer) => ({
-            id: buyer.id,
-            name: buyer.name,
-            email: buyer.email,
-            phone: buyer.phone,
-            role: "buyer",
-            address: buyer.address,
-            status: buyer.status,
-            avatar: "👤",
-            createdAt: buyer.created_at,
-            type: "buyer",
-            rawData: buyer,
-            // Buyer specific fields
-            state: buyer.state,
-            district: buyer.district,
-            delivery_location: buyer.delivery_location,
-            logistic_partner_name: buyer.logistic_partner_name,
-            logistic_contact_no: buyer.logistic_contact_no,
-            document_number: buyer.document_number,
-            document_image: buyer.document_image,
-            wallet_value: buyer.wallet_value || "",
-          }));
+      if (result.success) {
+        // buyers
+        const buyers = result.data.buyers.map((buyer) => ({
+          id: buyer.id,
+          name: buyer.name,
+          email: buyer.email,
+          phone: buyer.phone,
+          role: "buyer",
+          address: buyer.address,
+          status: buyer.status,
+          avatar: "👤",
+          createdAt: buyer.created_at,
+          type: "buyer",
+          rawData: buyer,
+          // Buyer specific fields
+          state: buyer.state,
+          district: buyer.district,
+          delivery_location: buyer.delivery_location,
+          logistic_partner_name: buyer.logistic_partner_name,
+          logistic_contact_no: buyer.logistic_contact_no,
+          document_number: buyer.document_number,
+          document_image: buyer.document_image,
+          wallet_value: buyer.wallet_value || "",
+        }));
 
-          // vendors
-          const vendors = result.data.vendors.map((vendor) => ({
-            id: vendor.id,
-            name: vendor.owner_name,
-            email: vendor.email,
-            phone: vendor.phone,
-            role: "seller",
-            address: vendor.address,
-            status: vendor.status,
-            avatar: "🏪",
-            createdAt: vendor.created_at,
-            type: "vendor",
-            business_name: vendor.business_name,
-            gst_number: vendor.gst_number,
-            pan_number: vendor.pan_number,
-            city: vendor.city,
-            state: vendor.state,
-            country: vendor.country,
-            pincode: vendor.pincode,
-            wallet_value: vendor.wallet_value || "",
-            rawData: vendor,
-          }));
+        // vendors
+        const vendors = result.data.vendors.map((vendor) => ({
+          id: vendor.id,
+          name: vendor.owner_name,
+          email: vendor.email,
+          phone: vendor.phone,
+          role: "seller",
+          address: vendor.address,
+          status: vendor.status,
+          avatar: "🏪",
+          createdAt: vendor.created_at,
+          type: "vendor",
+          business_name: vendor.business_name,
+          gst_number: vendor.gst_number,
+          pan_number: vendor.pan_number,
+          city: vendor.city,
+          state: vendor.state,
+          country: vendor.country,
+          pincode: vendor.pincode,
+          wallet_value: vendor.wallet_value || "",
+          rawData: vendor,
+        }));
 
-          setUsers([...buyers, ...vendors]);
-        }
-      } catch (error) {
-        console.log("Error fetching users:", error);
-        showToast("Failed to fetch users", "error");
-      } finally {
-        setLoading(false);
+        setUsers([...buyers, ...vendors]);
       }
-    };
-
+    } catch (error) {
+      console.log("Error fetching users:", error);
+      showToast("Failed to fetch users", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
     fetchUsers();
   }, []);
 
@@ -265,98 +267,91 @@ export default function UsersPage() {
   };
 
   const approveUser = async () => {
-    const token = localStorage.getItem("access_token");
-
     try {
-      console.log("Approve clicked");
-      console.log("approvalUser", approvalUser);
-      console.log("approvalData", approvalData);
-
-      if (approvalUser.role === "buyer") {
-        if (approvalData.wallet_value) {
-          const walletResponse = await fetch(
-            "https://namami-infotech.com/Stepkaro/src/super_admin/set_wallet_user.php",
-            {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                buyer_id: approvalUser.id,
-                wallet_value: approvalData.wallet_value,
-              }),
-            }
-          );
-
-          const walletResult = await walletResponse.json();
-          console.log("Wallet Response", walletResult);
-        }
-
-        const statusResponse = await fetch(
-          "https://namami-infotech.com/Stepkaro/src/admin/update_user_status_admin.php",
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              user_type: "buyer",
-              id: approvalUser.id,
-              status: "active",
-            }),
-          }
-        );
-
-        const statusResult = await statusResponse.json();
-        console.log("Status Response", statusResult);
-      } else {
-        if (approvalData.minimum_order_value) {
-          const minimumResponse = await fetch(
-            "https://namami-infotech.com/Stepkaro/src/admin/set_vendor_minimum_order.php",
-            {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                vendor_id: approvalUser.id,
-                minimum_order_value: approvalData.minimum_order_value,
-              }),
-            }
-          );
-
-          const minimumResult = await minimumResponse.json();
-          console.log("Minimum Order Response", minimumResult);
-        }
-
-        const statusResponse = await fetch(
-          "https://namami-infotech.com/Stepkaro/src/admin/update_user_status_admin.php",
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              user_type: "vendor",
-              id: approvalUser.id,
-              status: "active",
-            }),
-          }
-        );
-
-        const statusResult = await statusResponse.json();
-        console.log("Status Response", statusResult);
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        alert("Session expired. Please login again.");
+        return;
       }
 
-      setShowApprovalModal(false);
-      window.location.reload();
+      if (!approvalUser || !approvalUser.id) {
+        alert("No active user selected for approval context.");
+        return;
+      }
+
+      // 1. Role match karna ('buyer' ya 'vendor')
+      const currentRole = approvalUser.role === "buyer" ? "buyer" : "vendor";
+
+      // 2. State se raw input value nikalna
+      const rawAmount =
+        currentRole === "buyer"
+          ? approvalData.wallet_value
+          : approvalData.minimum_order_value;
+
+      // 3. Payload Build (intval hata kar standard Number() laga diya)
+      const payload = {
+        id: Number(approvalUser.id),
+        role: currentRole,
+        status: "active",
+        amount:
+          rawAmount !== "" && rawAmount !== undefined ? Number(rawAmount) : "",
+      };
+
+      console.log("Submitting Admin Approval Payload via Axios:", payload);
+
+      const url =
+        "https://namami-infotech.com/Stepkaro/src/super_admin/approve_seller_buyer.php";
+
+      // 4. Axios instance trigger (Bina headers/stringify ke load jhanjhat free)
+      const response = await axios.post(url, payload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      // Axios automatic response mapping karta hai response.data par
+      const result = response.data;
+
+      if (result.success) {
+        alert(result.message || "User approved successfully!");
+
+        // Reset State Controls & Close Modals
+        setShowApprovalModal(false);
+        setApprovalData({
+          wallet_value: "",
+          minimum_order_value: "",
+        });
+
+        // Data refreshing callbacks
+        if (result.success) {
+          setUsers((prev) =>
+            prev.map((u) =>
+              u.id === approvalUser.id && u.type === approvalUser.type
+                ? {
+                    ...u,
+                    status: "active",
+                    wallet_value:
+                      approvalUser.role === "buyer"
+                        ? approvalData.wallet_value
+                        : u.wallet_value,
+                  }
+                : u,
+            ),
+          );
+
+          setShowApprovalModal(false);
+
+          showToast("User approved successfully");
+        }
+      } else {
+        alert(result.message || "Failed to process approval request.");
+      }
     } catch (error) {
-      console.log("Approve Error", error);
-      showToast("Failed to approve user", "error");
+      console.error("Axios request failure:", error);
+      // Axios errors context me message read karne ke liye safe fallback
+      const errorMsg =
+        error.response?.data?.message || "Network communication error.";
+      alert(errorMsg);
     }
   };
 
@@ -434,12 +429,12 @@ export default function UsersPage() {
       };
 
       if (
-  formData.wallet_value !== "" &&
-  formData.wallet_value !== null &&
-  formData.wallet_value !== undefined
-) {
-  payload.wallet_value = Number(formData.wallet_value);
-}
+        formData.wallet_value !== "" &&
+        formData.wallet_value !== null &&
+        formData.wallet_value !== undefined
+      ) {
+        payload.wallet_value = Number(formData.wallet_value);
+      }
 
       let endpoint = "";
       if (selectedUser.type === "buyer") {
@@ -469,22 +464,22 @@ export default function UsersPage() {
       });
 
       const text = await response.text();
-console.log(text);
+      console.log(text);
 
-let result;
-try {
-  result = JSON.parse(text);
-} catch (e) {
-  console.log("Invalid JSON:", text);
-  return;
-}
+      let result;
+      try {
+        result = JSON.parse(text);
+      } catch (e) {
+        console.log("Invalid JSON:", text);
+        return;
+      }
 
       if (result.success) {
         showToast(result.message || "User updated successfully");
         setShowEditModal(false);
         // Refresh the users list
         const fetchResponse = await fetch(
-          "https://namami-infotech.com/Stepkaro/src/home/get_vendor_and_buyer.php"
+          "https://namami-infotech.com/Stepkaro/src/home/get_vendor_and_buyer.php",
         );
         const fetchResult = await fetchResponse.json();
         if (fetchResult.success) {
@@ -599,13 +594,12 @@ try {
   };
 
   // Modal component
-  
 
   const updateUserStatus = async (user, status) => {
     const token = localStorage.getItem("access_token");
 
     try {
-      await fetch(
+      const response = await fetch(
         "https://namami-infotech.com/Stepkaro/src/admin/update_user_status_admin.php",
         {
           method: "POST",
@@ -618,10 +612,22 @@ try {
             id: user.id,
             status,
           }),
-        }
+        },
       );
 
-      window.location.reload();
+      const result = await response.json();
+
+      if (result.success) {
+        setUsers((prev) =>
+          prev.map((u) =>
+            u.id === user.id && u.type === user.type ? { ...u, status } : u,
+          ),
+        );
+
+        showToast("Status updated successfully");
+      } else {
+        showToast(result.message || "Failed to update status", "error");
+      }
     } catch (error) {
       console.log(error);
       showToast("Failed to update status", "error");
@@ -646,8 +652,8 @@ try {
             toast.type === "success"
               ? "bg-emerald-500/90"
               : toast.type === "error"
-              ? "bg-red-500/90"
-              : "bg-blue-500/90"
+                ? "bg-red-500/90"
+                : "bg-blue-500/90"
           }`}
         >
           {toast.type === "success" ? (
@@ -902,7 +908,9 @@ try {
                             onClick={() =>
                               updateUserStatus(
                                 user,
-                                user.status === "active" ? "inactive" : "active"
+                                user.status === "active"
+                                  ? "inactive"
+                                  : "active",
                               )
                             }
                             className={`relative h-6 w-12 rounded-full transition ${
@@ -913,15 +921,13 @@ try {
                           >
                             <span
                               className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition ${
-                                user.status === "active"
-                                  ? "left-6"
-                                  : "left-0.5"
+                                user.status === "active" ? "left-6" : "left-0.5"
                               }`}
                             />
                           </button>
                           <span
                             className={`text-xs px-2 py-0.5 rounded-full ${getStatusBadge(
-                              user.status
+                              user.status,
                             )}`}
                           >
                             {user.status}
@@ -1037,7 +1043,9 @@ try {
       <Modal
         isOpen={showApprovalModal}
         onClose={() => setShowApprovalModal(false)}
-        title={approvalUser?.role === "buyer" ? "Approve Buyer" : "Approve Seller"}
+        title={
+          approvalUser?.role === "buyer" ? "Approve Buyer" : "Approve Seller"
+        }
       >
         <div className="space-y-4">
           {approvalUser?.role === "buyer" ? (
@@ -1105,7 +1113,9 @@ try {
               <input
                 type="text"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
                 className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
               />
             </div>
@@ -1116,7 +1126,9 @@ try {
               <input
                 type="email"
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
                 className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
               />
             </div>
@@ -1127,7 +1139,9 @@ try {
               <input
                 type="text"
                 value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, phone: e.target.value })
+                }
                 className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
               />
             </div>
@@ -1135,7 +1149,9 @@ try {
               <label className="text-sm text-gray-400 block mb-1">Role</label>
               <select
                 value={formData.role}
-                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, role: e.target.value })
+                }
                 className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
               >
                 <option value="buyer">Buyer</option>
@@ -1146,7 +1162,9 @@ try {
               <label className="text-sm text-gray-400 block mb-1">Status</label>
               <select
                 value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, status: e.target.value })
+                }
                 className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
               >
                 <option value="active">Active</option>
@@ -1155,12 +1173,16 @@ try {
               </select>
             </div>
             <div>
-              <label className="text-sm text-gray-400 block mb-1">Wallet Value</label>
+              <label className="text-sm text-gray-400 block mb-1">
+                Wallet Value
+              </label>
               <input
                 type="text"
                 inputMode="numeric"
                 value={formData.wallet_value}
-                onChange={(e) => setFormData({ ...formData, wallet_value: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, wallet_value: e.target.value })
+                }
                 className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
                 placeholder="0"
               />
@@ -1169,41 +1191,62 @@ try {
 
           {/* Address Fields */}
           <div className="border-t border-white/10 pt-4">
-            <p className="text-sm font-medium text-gray-400 mb-3">Address Details</p>
+            <p className="text-sm font-medium text-gray-400 mb-3">
+              Address Details
+            </p>
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
-                <label className="text-sm text-gray-400 block mb-1">Address</label>
+                <label className="text-sm text-gray-400 block mb-1">
+                  Address
+                </label>
                 <input
                   type="text"
                   value={formData.address}
-                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, address: e.target.value })
+                  }
                   className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
                 />
               </div>
               <div>
-                <label className="text-sm text-gray-400 block mb-1">State</label>
+                <label className="text-sm text-gray-400 block mb-1">
+                  State
+                </label>
                 <input
                   type="text"
                   value={formData.state}
-                  onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, state: e.target.value })
+                  }
                   className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
                 />
               </div>
               <div>
-                <label className="text-sm text-gray-400 block mb-1">District</label>
+                <label className="text-sm text-gray-400 block mb-1">
+                  District
+                </label>
                 <input
                   type="text"
                   value={formData.district}
-                  onChange={(e) => setFormData({ ...formData, district: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, district: e.target.value })
+                  }
                   className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
                 />
               </div>
               <div className="col-span-2">
-                <label className="text-sm text-gray-400 block mb-1">Delivery Location</label>
+                <label className="text-sm text-gray-400 block mb-1">
+                  Delivery Location
+                </label>
                 <input
                   type="text"
                   value={formData.delivery_location}
-                  onChange={(e) => setFormData({ ...formData, delivery_location: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      delivery_location: e.target.value,
+                    })
+                  }
                   className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
                 />
               </div>
@@ -1217,20 +1260,34 @@ try {
             </p>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm text-gray-400 block mb-1">Partner Name</label>
+                <label className="text-sm text-gray-400 block mb-1">
+                  Partner Name
+                </label>
                 <input
                   type="text"
                   value={formData.logistic_partner_name}
-                  onChange={(e) => setFormData({ ...formData, logistic_partner_name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      logistic_partner_name: e.target.value,
+                    })
+                  }
                   className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
                 />
               </div>
               <div>
-                <label className="text-sm text-gray-400 block mb-1">Contact No</label>
+                <label className="text-sm text-gray-400 block mb-1">
+                  Contact No
+                </label>
                 <input
                   type="text"
                   value={formData.logistic_contact_no}
-                  onChange={(e) => setFormData({ ...formData, logistic_contact_no: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      logistic_contact_no: e.target.value,
+                    })
+                  }
                   className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
                 />
               </div>
@@ -1244,20 +1301,31 @@ try {
             </p>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm text-gray-400 block mb-1">Document Number</label>
+                <label className="text-sm text-gray-400 block mb-1">
+                  Document Number
+                </label>
                 <input
                   type="text"
                   value={formData.document_number}
-                  onChange={(e) => setFormData({ ...formData, document_number: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      document_number: e.target.value,
+                    })
+                  }
                   className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
                 />
               </div>
               <div>
-                <label className="text-sm text-gray-400 block mb-1">Document Image URL</label>
+                <label className="text-sm text-gray-400 block mb-1">
+                  Document Image URL
+                </label>
                 <input
                   type="text"
                   value={formData.document_image}
-                  onChange={(e) => setFormData({ ...formData, document_image: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, document_image: e.target.value })
+                  }
                   className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
                   placeholder="Path to document image"
                 />
@@ -1273,56 +1341,83 @@ try {
               </p>
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
-                  <label className="text-sm text-gray-400 block mb-1">Business Name</label>
+                  <label className="text-sm text-gray-400 block mb-1">
+                    Business Name
+                  </label>
                   <input
                     type="text"
                     value={formData.business_name}
-                    onChange={(e) => setFormData({ ...formData, business_name: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        business_name: e.target.value,
+                      })
+                    }
                     className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
                   />
                 </div>
                 <div>
-                  <label className="text-sm text-gray-400 block mb-1">GST Number</label>
+                  <label className="text-sm text-gray-400 block mb-1">
+                    GST Number
+                  </label>
                   <input
                     type="text"
                     value={formData.gst_number}
-                    onChange={(e) => setFormData({ ...formData, gst_number: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, gst_number: e.target.value })
+                    }
                     className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
                   />
                 </div>
                 <div>
-                  <label className="text-sm text-gray-400 block mb-1">PAN Number</label>
+                  <label className="text-sm text-gray-400 block mb-1">
+                    PAN Number
+                  </label>
                   <input
                     type="text"
                     value={formData.pan_number}
-                    onChange={(e) => setFormData({ ...formData, pan_number: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, pan_number: e.target.value })
+                    }
                     className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
                   />
                 </div>
                 <div>
-                  <label className="text-sm text-gray-400 block mb-1">City</label>
+                  <label className="text-sm text-gray-400 block mb-1">
+                    City
+                  </label>
                   <input
                     type="text"
                     value={formData.city}
-                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, city: e.target.value })
+                    }
                     className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
                   />
                 </div>
                 <div>
-                  <label className="text-sm text-gray-400 block mb-1">Pincode</label>
+                  <label className="text-sm text-gray-400 block mb-1">
+                    Pincode
+                  </label>
                   <input
                     type="text"
                     value={formData.pincode}
-                    onChange={(e) => setFormData({ ...formData, pincode: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, pincode: e.target.value })
+                    }
                     className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
                   />
                 </div>
                 <div className="col-span-2">
-                  <label className="text-sm text-gray-400 block mb-1">Country</label>
+                  <label className="text-sm text-gray-400 block mb-1">
+                    Country
+                  </label>
                   <input
                     type="text"
                     value={formData.country}
-                    onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, country: e.target.value })
+                    }
                     className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white"
                   />
                 </div>
@@ -1420,7 +1515,9 @@ try {
               {selectedUser.wallet_value && (
                 <div>
                   <p className="text-xs text-gray-500">Wallet Value</p>
-                  <p className="text-sm text-white">₹{selectedUser.wallet_value}</p>
+                  <p className="text-sm text-white">
+                    ₹{selectedUser.wallet_value}
+                  </p>
                 </div>
               )}
             </div>
