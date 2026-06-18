@@ -256,7 +256,7 @@ export default function OrdersPage() {
   };
 
   const handleViewOrder = (order) => {
-    setSelectedOrder(order);
+    setSelectedOrder(order.id || order.order_id);
     setViewModalOpen(true);
   };
 
@@ -637,7 +637,7 @@ export default function OrdersPage() {
       <ViewOrderDetailsModal
         isOpen={viewModalOpen}
         onClose={() => setViewModalOpen(false)}
-        order={selectedOrder}
+        orderId={selectedOrder}
         variant="admin"
         showFinancials={true}
         token={token || ""}
