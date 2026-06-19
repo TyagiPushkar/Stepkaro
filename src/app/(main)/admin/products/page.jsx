@@ -73,7 +73,8 @@ export default function ProductsPage() {
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [toast, setToast] = useState(null);
 
   // Modal states
   const [showAddModal, setShowAddModal] = useState(false);
@@ -101,6 +102,11 @@ export default function ProductsPage() {
   });
   const token = localStorage.getItem("access_token");
 
+  const showToast = (message, type = "success") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
   // Fetch products
   useEffect(() => {
     const getProducts = async () => {
@@ -112,7 +118,7 @@ export default function ProductsPage() {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          },
+          }
         );
         setProducts(response.data.data);
         console.log("Products fetched successfully:", response.data.data);
@@ -129,7 +135,7 @@ export default function ProductsPage() {
   const handleApprovalAction = async (
     productId,
     action,
-    commissionValue = null,
+    commissionValue = null
   ) => {
     try {
       const response = await api.post(
@@ -144,7 +150,7 @@ export default function ProductsPage() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        },
+        }
       );
 
       if (response.data.success) {
@@ -157,19 +163,18 @@ export default function ProductsPage() {
                   commission: commissionValue,
                   commission_type: commissionType || "percentage",
                 }
-              : product,
-          ),
+              : product
+          )
         );
 
         setShowCommissionModal(false);
-
-        alert("Product updated successfully");
+        showToast("Product updated successfully");
       } else {
-        alert(response.data.message);
+        showToast(response.data.message || "Failed to update product", "error");
       }
     } catch (error) {
       console.error(error);
-      alert("Failed to update product");
+      showToast("Failed to update product", "error");
     }
   };
 
@@ -178,10 +183,10 @@ export default function ProductsPage() {
   const activeCount = products.filter((p) => p.status === "active").length;
   const inactiveCount = products.filter((p) => p.status === "inactive").length;
   const productsListingRequestedCount = products.filter(
-    (p) => p.status === "approve_request",
+    (p) => p.status === "approve_request"
   ).length;
   const outOfStockCount = products.filter(
-    (p) => p.stock === "out_of_stock" || p.qty === 0,
+    (p) => p.stock === "out_of_stock" || p.qty === 0
   ).length;
 
   const filters = [
@@ -234,7 +239,7 @@ export default function ProductsPage() {
       filtered = filtered.filter((p) => p.status === "approve_request");
     } else if (selectedFilter === "out_of_stock") {
       filtered = filtered.filter(
-        (p) => p.stock === "out_of_stock" || p.qty === 0,
+        (p) => p.stock === "out_of_stock" || p.qty === 0
       );
     }
 
@@ -244,7 +249,7 @@ export default function ProductsPage() {
         (p) =>
           p.article_name?.toLowerCase().includes(query) ||
           p.category_name?.toLowerCase().includes(query) ||
-          p.id?.toString().includes(query),
+          p.id?.toString().includes(query)
       );
     }
 
@@ -279,7 +284,7 @@ export default function ProductsPage() {
     const newStatus = product.status === "active" ? "inactive" : "active";
 
     setProducts((prev) =>
-      prev.map((p) => (p.id === productId ? { ...p, status: newStatus } : p)),
+      prev.map((p) => (p.id === productId ? { ...p, status: newStatus } : p))
     );
 
     try {
@@ -293,20 +298,21 @@ export default function ProductsPage() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        },
+        }
       );
 
       if (!response.data?.success) {
         throw new Error(response.data?.message || "Toggle failed");
       }
+      showToast(`Product ${newStatus === "active" ? "activated" : "deactivated"} successfully`);
     } catch (error) {
       console.error("Toggle Error:", error);
       setProducts((prev) =>
         prev.map((p) =>
-          p.id === productId ? { ...p, status: product.status } : p,
-        ),
+          p.id === productId ? { ...p, status: product.status } : p
+        )
       );
-      alert(error.message || "Failed to update status");
+      showToast(error.message || "Failed to update status", "error");
     }
   };
 
@@ -325,7 +331,7 @@ export default function ProductsPage() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        },
+        }
       );
 
       if (response.data.status === "success") {
@@ -335,7 +341,7 @@ export default function ProductsPage() {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          },
+          }
         );
         setProducts(getResponse.data.data);
         setShowAddModal(false);
@@ -347,13 +353,13 @@ export default function ProductsPage() {
           status: "active",
           stock: "in_stock",
         });
-        alert("Product added successfully!");
+        showToast("Product added successfully!");
       } else {
-        alert(response.data.message || "Failed to add product");
+        showToast(response.data.message || "Failed to add product", "error");
       }
     } catch (error) {
       console.error("Error adding product:", error);
-      alert("Failed to add product");
+      showToast("Failed to add product", "error");
     }
   };
 
@@ -373,7 +379,7 @@ export default function ProductsPage() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        },
+        }
       );
 
       if (response.data.status === "success") {
@@ -383,7 +389,7 @@ export default function ProductsPage() {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          },
+          }
         );
         setProducts(getResponse.data.data);
         setShowEditModal(false);
@@ -396,13 +402,13 @@ export default function ProductsPage() {
           status: "active",
           stock: "in_stock",
         });
-        alert("Product updated successfully!");
+        showToast("Product updated successfully!");
       } else {
-        alert(response.data.message || "Failed to update product");
+        showToast(response.data.message || "Failed to update product", "error");
       }
     } catch (error) {
       console.error("Error editing product:", error);
-      alert("Failed to update product");
+      showToast("Failed to update product", "error");
     }
   };
 
@@ -418,22 +424,22 @@ export default function ProductsPage() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        },
+        }
       );
 
       if (response.data.status === "success") {
         setProducts(
-          products.filter((product) => product.id !== selectedProduct.id),
+          products.filter((product) => product.id !== selectedProduct.id)
         );
         setShowDeleteModal(false);
         setSelectedProduct(null);
-        alert("Product deleted successfully!");
+        showToast("Product deleted successfully!");
       } else {
-        alert(response.data.message || "Failed to delete product");
+        showToast(response.data.message || "Failed to delete product", "error");
       }
     } catch (error) {
       console.error("Error deleting product:", error);
-      alert("Failed to delete product");
+      showToast("Failed to delete product", "error");
     }
   };
 
@@ -468,39 +474,154 @@ export default function ProductsPage() {
     setShowViewModal(true);
   };
 
-  // Export to CSV
+  // ========== ENHANCED EXPORT TO CSV ==========
   const handleExportCSV = () => {
+    if (products.length === 0) {
+      showToast("No products to export", "error");
+      return;
+    }
+
+    const exportData = filteredProducts.length > 0 ? filteredProducts : products;
+
     const headers = [
       "ID",
       "Product Name",
       "Category",
+      "Brand",
+      "Owner Name",
+      "Business Name",
       "Quantity",
+      "Price (Original)",
+      "Selling Price",
+      "Commission (%)",
       "Orders",
       "Returns",
       "Revenue",
       "Status",
+      "Stock Status",
+      "Variant",
+      "Color",
+      "Size",
+      "Material",
+      "Gender",
+      "Origin",
+      "Created At"
     ];
-    const csvData = products.map((p) => [
-      p.id,
-      p.article_name,
-      p.category_name,
-      p.stock_quantity,
+
+    const rows = exportData.map((p) => [
+      p.id || "",
+      p.article_name || "",
+      p.category_name || "",
+      p.brand_name || "",
+      p.owner_name || "",
+      p.business_name || "",
+      p.stock_quantity || 0,
+      p.price || 0,
+      p.selling_price || 0,
+      p.commission || "0",
       p.orders || 0,
       p.returns || 0,
       p.revenue || 0,
-      p.status,
+      p.status || "",
+      p.stock || "in_stock",
+      p.variant || "",
+      p.color || "",
+      p.size || "",
+      p.material || "",
+      p.gender || "",
+      p.origin || "",
+      p.created_at || ""
     ]);
 
-    const csvContent = [headers, ...csvData]
+    const csvContent = [headers, ...rows]
       .map((row) => row.join(","))
       .join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv" });
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
     a.download = `products_${new Date().toISOString().split("T")[0]}.csv`;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     URL.revokeObjectURL(url);
+
+    showToast(`Exported ${exportData.length} products successfully`);
+  };
+
+  // ========== EXPORT FILTERED PRODUCTS ==========
+  const handleExportFilteredCSV = () => {
+    if (filteredProducts.length === 0) {
+      showToast("No products matching filter to export", "error");
+      return;
+    }
+
+    const headers = [
+      "ID",
+      "Product Name",
+      "Category",
+      "Brand",
+      "Owner Name",
+      "Business Name",
+      "Quantity",
+      "Price (Original)",
+      "Selling Price",
+      "Commission (%)",
+      "Orders",
+      "Returns",
+      "Revenue",
+      "Status",
+      "Stock Status",
+      "Variant",
+      "Color",
+      "Size",
+      "Material",
+      "Gender",
+      "Origin",
+      "Created At"
+    ];
+
+    const rows = filteredProducts.map((p) => [
+      p.id || "",
+      p.article_name || "",
+      p.category_name || "",
+      p.brand_name || "",
+      p.owner_name || "",
+      p.business_name || "",
+      p.stock_quantity || 0,
+      p.price || 0,
+      p.selling_price || 0,
+      p.commission || "0",
+      p.orders || 0,
+      p.returns || 0,
+      p.revenue || 0,
+      p.status || "",
+      p.stock || "in_stock",
+      p.variant || "",
+      p.color || "",
+      p.size || "",
+      p.material || "",
+      p.gender || "",
+      p.origin || "",
+      p.created_at || ""
+    ]);
+
+    const csvContent = [headers, ...rows]
+      .map((row) => row.join(","))
+      .join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `products_filtered_${new Date().toISOString().split("T")[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    showToast(`Exported ${filteredProducts.length} filtered products successfully`);
   };
 
   // Bulk import handler
@@ -535,7 +656,7 @@ export default function ProductsPage() {
               headers: {
                 Authorization: `Bearer ${token}`,
               },
-            },
+            }
           );
 
           if (response.data.status === "success") {
@@ -545,17 +666,17 @@ export default function ProductsPage() {
                 headers: {
                   Authorization: `Bearer ${token}`,
                 },
-              },
+              }
             );
             setProducts(getResponse.data.data);
             setShowBulkImportModal(false);
-            alert("Products imported successfully!");
+            showToast("Products imported successfully!");
           } else {
-            alert(response.data.message || "Failed to import products");
+            showToast(response.data.message || "Failed to import products", "error");
           }
         } catch (error) {
           console.error("Error importing products:", error);
-          alert("Failed to import products");
+          showToast("Failed to import products", "error");
         }
       };
       reader.readAsText(file);
@@ -584,6 +705,25 @@ export default function ProductsPage() {
 
   return (
     <div className="space-y-6">
+      {toast && (
+        <div
+          className={`fixed top-20 right-6 z-50 px-4 py-3 rounded-lg flex items-center gap-2 shadow-lg text-white ${
+            toast.type === "success"
+              ? "bg-emerald-500"
+              : toast.type === "error"
+              ? "bg-red-500"
+              : "bg-blue-500"
+          }`}
+        >
+          {toast.type === "success" ? (
+            <CheckCircle size={18} />
+          ) : (
+            <XCircle size={18} />
+          )}
+          {toast.message}
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
@@ -611,27 +751,37 @@ export default function ProductsPage() {
 
           <button
             onClick={() => setShowAddModal(true)}
-            className="bg-slate-800 hover:bg-slate-700 text-gray-300 px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-colors border border-white/10"
+            className="bg-gradient-to-r from-purple-600 to-orange-500 hover:shadow-lg text-white px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-all"
           >
             <Plus size={16} />
-            Product Add
+            Add Product
           </button>
 
-          {/* <button
+          <button
             onClick={() => setShowBulkImportModal(true)}
             className="bg-white hover:bg-gray-50 text-gray-600 px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-colors border border-gray-200 hover:border-purple-300"
           >
             <Upload size={16} />
             Bulk Import
-          </button> */}
+          </button>
 
           <button
             onClick={handleExportCSV}
-            className="bg-white hover:bg-gray-50 text-gray-600 px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-colors border border-gray-200 hover:border-purple-300"
+            className="bg-purple-50 hover:bg-purple-100 text-purple-600 px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-colors border border-purple-200"
           >
             <Download size={16} />
-            Export CSV
+            Export All
           </button>
+
+          {filteredProducts.length < products.length && filteredProducts.length > 0 && (
+            <button
+              onClick={handleExportFilteredCSV}
+              className="bg-white hover:bg-gray-50 text-gray-600 px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-colors border border-gray-200 hover:border-purple-300"
+            >
+              <Download size={16} />
+              Export Filtered ({filteredProducts.length})
+            </button>
+          )}
         </div>
       </div>
 
@@ -707,9 +857,10 @@ export default function ProductsPage() {
             }}
             className="bg-white border border-gray-200 rounded-lg px-2 py-1 text-sm text-gray-600 focus:outline-none focus:ring-1 focus:ring-purple-500"
           >
-            <option value={5}>5</option>
             <option value={10}>10</option>
             <option value={25}>25</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
           </select>
         </div>
       </div>
@@ -761,7 +912,7 @@ export default function ProductsPage() {
                 currentProducts.map((product, index) => {
                   const stockBadge = getStockBadge(
                     product.stock,
-                    product.stock_quantity,
+                    product.stock_quantity
                   );
                   const isListingRequested =
                     product.status === "approve_request";
@@ -888,13 +1039,17 @@ export default function ProductsPage() {
                         ) : (
                           <button
                             onClick={() => toggleStatus(product.id)}
-                            className="relative w-10 h-5 bg-gray-300 rounded-full transition-colors cursor-pointer flex-shrink-0"
+                            className={`relative w-10 h-5 rounded-full transition-colors cursor-pointer flex-shrink-0 ${
+                              product.status === "active"
+                                ? "bg-green-500"
+                                : "bg-red-500"
+                            }`}
                           >
                             <div
                               className={`absolute w-4 h-4 bg-white rounded-full top-0.5 transition-all duration-300 shadow-sm ${
                                 product.status === "active"
-                                  ? "left-5 bg-emerald-500"
-                                  : "left-0.5 bg-gray-400"
+                                  ? "left-5"
+                                  : "left-0.5"
                               }`}
                             />
                           </button>
@@ -917,13 +1072,13 @@ export default function ProductsPage() {
                           >
                             <Edit size={16} />
                           </button>
-                          {/* <button
+                          <button
                             onClick={() => openDeleteModal(product)}
                             className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                             title="Delete Product"
                           >
                             <Trash2 size={16} />
-                          </button> */}
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -951,7 +1106,7 @@ export default function ProductsPage() {
               {currentProducts.map((product, index) => {
                 const stockBadge = getStockBadge(
                   product.stock,
-                  product.stock_quantity,
+                  product.stock_quantity
                 );
                 const isListingRequested = product.status === "approve_request";
 
@@ -1053,13 +1208,17 @@ export default function ProductsPage() {
                         ) : (
                           <button
                             onClick={() => toggleStatus(product.id)}
-                            className="relative w-10 h-5 bg-gray-300 rounded-full transition-colors cursor-pointer ml-1"
+                            className={`relative w-10 h-5 rounded-full transition-colors cursor-pointer ml-1 ${
+                              product.status === "active"
+                                ? "bg-green-500"
+                                : "bg-red-500"
+                            }`}
                           >
                             <div
                               className={`absolute w-4 h-4 bg-white rounded-full top-0.5 transition-all duration-300 shadow-sm ${
                                 product.status === "active"
-                                  ? "left-5 bg-emerald-500"
-                                  : "left-0.5 bg-gray-400"
+                                  ? "left-5"
+                                  : "left-0.5"
                               }`}
                             />
                           </button>
@@ -1201,7 +1360,73 @@ export default function ProductsPage() {
       <AdminAddProductModal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
-      />
+        title="Add New Product"
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="text-sm font-medium text-gray-700 block mb-1">
+              Product Name
+            </label>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
+              className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              placeholder="Enter product name"
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium text-gray-700 block mb-1">
+              Category
+            </label>
+            <input
+              type="text"
+              value={formData.category}
+              onChange={(e) =>
+                setFormData({ ...formData, category: e.target.value })
+              }
+              className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              placeholder="Enter category"
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium text-gray-700 block mb-1">
+              Quantity
+            </label>
+            <input
+              type="number"
+              value={formData.qty}
+              onChange={(e) =>
+                setFormData({ ...formData, qty: e.target.value })
+              }
+              className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              placeholder="Enter quantity"
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium text-gray-700 block mb-1">
+              Price (₹)
+            </label>
+            <input
+              type="number"
+              value={formData.price}
+              onChange={(e) =>
+                setFormData({ ...formData, price: e.target.value })
+              }
+              className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              placeholder="Enter price"
+            />
+          </div>
+          <button
+            onClick={handleAddProduct}
+            className="w-full py-2 bg-gradient-to-r from-purple-600 to-orange-500 hover:shadow-lg text-white rounded-lg transition-all"
+          >
+            Add Product
+          </button>
+        </div>
+      </Modal>
 
       {/* Edit Product Modal */}
       <Modal
@@ -1305,7 +1530,6 @@ export default function ProductsPage() {
         onClose={() => setShowViewModal(false)}
         productId={selectedProduct}
         variant="admin"
-        // onEdit={(product) => goToProductDetail(product.id)}
       />
 
       {/* Bulk Import Modal */}

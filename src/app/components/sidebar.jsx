@@ -72,12 +72,12 @@ export default function Sidebar() {
   const navItems = role === "seller" ? sellerNavItems : adminNavItems;
 
   // =======================
-  // THEME
+  // THEME - WHITE THEME
   // =======================
   const sidebarTheme =
     role === "seller"
-      ? "bg-gradient-to-b from-violet-700 via-purple-700 to-fuchsia-600"
-      : "bg-gradient-to-b from-indigo-950 via-blue-900 to-blue-700";
+      ? "bg-gradient-to-b from-purple-50 via-white to-orange-50"
+      : "bg-gradient-to-b from-purple-50 via-white to-orange-50";
 
   if (loadingUser) {
     return null;
@@ -88,7 +88,7 @@ export default function Sidebar() {
       {/* Mobile Menu Button */}
       <button
         onClick={() => setSidebarOpen(true)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-blue-900/95 backdrop-blur-xl border border-white/10 text-white"
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-white shadow-md border border-gray-200 text-gray-700"
       >
         <Menu size={20} />
       </button>
@@ -103,15 +103,15 @@ export default function Sidebar() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-50 h-full w-72 bg-gradient-to-b from-indigo-950 via-blue-900 to-blue-700 shadow-xl transform transition-transform duration-300 ease-in-out overflow-y-auto ${
+        className={`fixed top-0 left-0 z-50 h-full w-72 bg-gradient-to-b from-purple-50 via-white to-orange-50 shadow-xl transform transition-transform duration-300 ease-in-out overflow-y-auto border-r border-gray-200 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="p-6 border-b border-white/10">
+          <div className="p-6 border-b border-gray-200">
             <Link href="/home" className="flex items-center gap-3">
-              <div className="relative w-10 h-10 bg-white/10 rounded-lg backdrop-blur-sm flex items-center justify-center">
+              <div className="relative w-10 h-10 bg-gradient-to-br from-purple-100 to-orange-100 rounded-lg backdrop-blur-sm flex items-center justify-center border border-gray-200">
                 <Image
                   src="/logo.jpeg"
                   alt="Logo"
@@ -122,12 +122,12 @@ export default function Sidebar() {
               </div>
 
               <div>
-                <h1 className="text-xl font-bold text-white">
+                <h1 className="text-xl font-bold text-gray-900">
                   Step
-                  <span className="text-blue-300">Karo</span>
+                  <span className="text-purple-600">Karo</span>
                 </h1>
 
-                <p className="text-xs text-white/70 mt-0.5">
+                <p className="text-xs text-gray-500 mt-0.5">
                   {role === "seller" ? "Seller Dashboard" : "Admin Dashboard"}
                 </p>
               </div>
@@ -137,7 +137,7 @@ export default function Sidebar() {
           {/* Close Button */}
           <button
             onClick={() => setSidebarOpen(false)}
-            className="lg:hidden absolute top-4 right-4 p-2 text-white/70"
+            className="lg:hidden absolute top-4 right-4 p-2 text-gray-500 hover:text-gray-700"
           >
             <X size={20} />
           </button>
@@ -155,16 +155,16 @@ export default function Sidebar() {
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200
                   ${
                     isActive
-                      ? "bg-white/15 text-white border border-white/20"
-                      : "text-white/80 hover:bg-white/10 hover:text-white"
+                      ? "bg-gradient-to-r from-purple-50 to-orange-50 text-purple-700 border border-purple-200 shadow-sm"
+                      : "text-gray-600 hover:bg-gray-50 hover:text-purple-600"
                   }`}
                 >
-                  <item.icon size={18} />
+                  <item.icon size={18} className={isActive ? "text-purple-600" : "text-gray-500"} />
 
                   <span className="font-medium text-sm">{item.name}</span>
 
                   {isActive && (
-                    <div className="ml-auto w-1.5 h-1.5 bg-white rounded-full" />
+                    <div className="ml-auto w-1.5 h-6 bg-purple-600 rounded-full" />
                   )}
                 </Link>
               );
@@ -172,18 +172,18 @@ export default function Sidebar() {
           </nav>
 
           {/* Footer */}
-          <div className="p-4 border-t border-white/10">
-            <div className="flex items-center gap-3 p-3 rounded-xl bg-white/10 backdrop-blur-sm">
-              <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-white font-semibold">
+          <div className="p-4 border-t border-gray-200">
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-purple-50 to-orange-50 border border-gray-200">
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-orange-500 flex items-center justify-center text-white font-semibold">
                 {user?.name?.charAt(0) || "A"}
               </div>
 
               <div className="flex-1">
-                <p className="text-sm font-medium text-white">
+                <p className="text-sm font-medium text-gray-900">
                   {user?.name || "Admin User"}
                 </p>
 
-                <p className="text-xs text-white/70">{role}</p>
+                <p className="text-xs text-gray-500 capitalize">{role}</p>
               </div>
             </div>
           </div>
