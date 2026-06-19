@@ -49,7 +49,7 @@ export default function OrdersPage() {
               "Content-Type": "application/json",
               Authorization: token ? `Bearer ${token}` : "",
             },
-          }
+          },
         );
 
         const resData = await response.json();
@@ -166,7 +166,7 @@ export default function OrdersPage() {
           (order.business_name &&
             order.business_name.toLowerCase().includes(query)) ||
           (order.article_name &&
-            order.article_name.toLowerCase().includes(query))
+            order.article_name.toLowerCase().includes(query)),
       );
     }
 
@@ -216,7 +216,7 @@ export default function OrdersPage() {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       if (response.data?.success) {
@@ -224,8 +224,8 @@ export default function OrdersPage() {
 
         setOrders((prev) =>
           prev.map((order) =>
-            order.order_id === orderId ? { ...order, status } : order
-          )
+            order.order_id === orderId ? { ...order, status } : order,
+          ),
         );
       } else {
         console.log(response.data?.message || "Failed to update order");
@@ -314,9 +314,12 @@ export default function OrdersPage() {
             blue: "bg-blue-100 text-blue-700 border-blue-200",
           };
           const inactiveColorMap = {
-            purple: "bg-white text-gray-600 border-gray-200 hover:border-purple-300 hover:text-purple-600",
-            yellow: "bg-white text-gray-600 border-gray-200 hover:border-yellow-300 hover:text-yellow-600",
-            green: "bg-white text-gray-600 border-gray-200 hover:border-green-300 hover:text-green-600",
+            purple:
+              "bg-white text-gray-600 border-gray-200 hover:border-purple-300 hover:text-purple-600",
+            yellow:
+              "bg-white text-gray-600 border-gray-200 hover:border-yellow-300 hover:text-yellow-600",
+            green:
+              "bg-white text-gray-600 border-gray-200 hover:border-green-300 hover:text-green-600",
             red: "bg-white text-gray-600 border-gray-200 hover:border-red-300 hover:text-red-600",
             blue: "bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:text-blue-600",
           };
@@ -326,8 +329,10 @@ export default function OrdersPage() {
               onClick={() => handleFilterChange(filter.value)}
               className={`px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-all duration-200 border ${
                 isActive
-                  ? colorMap[filter.color] || "bg-purple-600 text-white border-purple-600"
-                  : inactiveColorMap[filter.color] || "bg-white text-gray-600 border-gray-200 hover:border-purple-300"
+                  ? colorMap[filter.color] ||
+                    "bg-purple-600 text-white border-purple-600"
+                  : inactiveColorMap[filter.color] ||
+                    "bg-white text-gray-600 border-gray-200 hover:border-purple-300"
               }`}
             >
               <Icon size={16} />
@@ -357,7 +362,8 @@ export default function OrdersPage() {
           <span className="text-gray-900">
             {Math.min(endIndex, filteredOrders.length)}
           </span>{" "}
-          of <span className="text-gray-900">{filteredOrders.length}</span> orders
+          of <span className="text-gray-900">{filteredOrders.length}</span>{" "}
+          orders
         </p>
         <div className="flex items-center gap-2">
           <span className="text-sm text-gray-500">Show:</span>
@@ -412,7 +418,10 @@ export default function OrdersPage() {
             <tbody className="divide-y divide-gray-100">
               {error ? (
                 <tr>
-                  <td colSpan="9" className="px-6 py-8 text-center text-red-500 text-sm">
+                  <td
+                    colSpan="9"
+                    className="px-6 py-8 text-center text-red-500 text-sm"
+                  >
                     Error loading orders: {error}
                   </td>
                 </tr>
@@ -434,14 +443,14 @@ export default function OrdersPage() {
                     >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <img
+                          {/* <img
                             src={getImageUrl(order.product_image)}
                             alt="Product"
                             className="w-8 h-8 rounded-md object-cover border border-gray-200"
                             onError={(e) => {
                               e.target.src = "/placeholder.png";
                             }}
-                          />
+                          /> */}
                           <span className="text-sm font-medium text-gray-900">
                             #{order.order_id}
                           </span>
@@ -480,7 +489,10 @@ export default function OrdersPage() {
 
                       <td className="px-6 py-4">
                         <span className="text-sm font-semibold text-gray-900">
-                          ₹{parseFloat(order.total_amount).toLocaleString("en-IN")}
+                          ₹
+                          {parseFloat(order.total_amount).toLocaleString(
+                            "en-IN",
+                          )}
                         </span>
                       </td>
 
@@ -507,7 +519,7 @@ export default function OrdersPage() {
                                 onClick={() =>
                                   handleUpdateOrderStatus(
                                     order.order_id,
-                                    "rejected"
+                                    "rejected",
                                   )
                                 }
                                 className="px-3 py-1.5 text-xs bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition-colors"
@@ -518,7 +530,7 @@ export default function OrdersPage() {
                                 onClick={() =>
                                   handleUpdateOrderStatus(
                                     order.order_id,
-                                    "processing"
+                                    "processing",
                                   )
                                 }
                                 className="px-3 py-1.5 text-xs bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg transition-colors"
@@ -532,7 +544,7 @@ export default function OrdersPage() {
                               onChange={(e) =>
                                 handleUpdateOrderStatus(
                                   order.order_id,
-                                  e.target.value
+                                  e.target.value,
                                 )
                               }
                               className="bg-gray-50 border border-gray-200 text-gray-700 text-xs rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-purple-500"
