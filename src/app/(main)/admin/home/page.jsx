@@ -19,6 +19,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const router = useRouter();
+  const [users, setUsers] = useState([]);
 
   const handleLogout = () => {
     localStorage.removeItem("access_token");
@@ -97,17 +98,42 @@ export default function HomePage() {
     fetchOrders();
   }, [token]);
 
+  useEffect(() => {
+  const fetchUsers = async () => {
+    try {
+      const res = await fetch(
+        "https://namami-infotech.com/Stepkaro/src/home/get_vendor_and_buyer.php"
+      );
+
+      const data = await res.json();
+
+      if (data.success) {
+        setUsers([
+          ...(data.data.buyers || []),
+          ...(data.data.vendors || []),
+        ]);
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  fetchUsers();
+}, []);
+
   // =========================
   // STATS FROM API
   // =========================
   const stats = [
     {
-      title: "Total Orders",
-      value: dashboard?.totalOrders || 0,
-      icon: ShoppingCart,
-      bgColor: "bg-purple-100",
-      iconColor: "text-purple-600",
-    },
+  title: "New Orders",
+  value: orders.filter(
+    (o) => (o.status || "").toLowerCase() === "new"
+  ).length,
+  icon: ShoppingCart,
+  bgColor: "bg-purple-100",
+  iconColor: "text-purple-600",
+},
     {
       title: "Active Products",
       value: dashboard?.activeProducts || 0,
@@ -115,13 +141,15 @@ export default function HomePage() {
       bgColor: "bg-emerald-100",
       iconColor: "text-emerald-600",
     },
-    {
-      title: "Out of Stock",
-      value: dashboard?.outOfStock || 0,
-      icon: AlertCircle,
-      bgColor: "bg-red-100",
-      iconColor: "text-red-600",
-    },
+   {
+  title: "New Users",
+  value: users.filter(
+    (u) => (u.status || "").toLowerCase() === "pending"
+  ).length,
+  icon: Building2,
+  bgColor: "bg-yellow-100",
+  iconColor: "text-yellow-600",
+},
     {
       title: "Total Revenue",
       value: `₹${dashboard?.totalRevenue || 0}`,
@@ -280,7 +308,22 @@ export default function HomePage() {
               </thead>
 
               <tbody className="divide-y divide-gray-100">
-                {orders.slice(0, 5).map((order) => (
+                {[...orders]
+  .sort((a, b) => {
+    if (
+      (a.status || "").toLowerCase() === "new" &&
+      (b.status || "").toLowerCase() !== "new"
+    )
+      return -1;
+
+    if (
+      (a.status || "").toLowerCase() !== "new" &&
+      (b.status || "").toLowerCase() === "new"
+    )
+      return 1;
+
+    return 0;
+  }).slice(0, 5).map((order) => (
                   <tr key={order.order_id} className="hover:bg-gray-50 transition-colors">
                     <td className="p-3 text-sm font-medium text-gray-900">
                       #{order.order_id}

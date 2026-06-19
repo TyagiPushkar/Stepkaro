@@ -69,230 +69,6 @@ const normalizeOrdersResponse = (payload) => {
 const formatCurrency = (amount) =>
   `₹${Number(amount || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
 
-const buildFallbackFromOrders = (dashboard, orders) => {
-  const vendorMap = {};
-
-  orders.forEach((order) => {
-    const vendorId = order.vendor_id || order.owner_id || order.owner_name || "unknown";
-    const key = String(vendorId);
-
-    if (!vendorMap[key]) {
-      vendorMap[key] = {
-        vendor_id: order.vendor_id || order.owner_id || key,
-        vendor_name: order.owner_name || "Unknown Vendor",
-        business_name: order.business_name || order.owner_name || "—",
-        owner_phone: order.owner_phone || "—",
-        total_orders: 0,
-        gross_amount: 0,
-        commission_amount: 0,
-        payout_amount: 0,
-        paid_amount: 0,
-        pending_amount: 0,
-        payment_status: "pending",
-        due_date: null,
-        last_order_date: null,
-      };
-    }
-
-    const amount = parseFloat(order.total_amount) || 0;
-    const commissionRate = parseFloat(order.commission) || 10;
-    const commission = (amount * commissionRate) / 100;
-    const payout = amount - commission;
-    const payStatus = (order.vendor_payment_status || order.payment_status || "pending").toLowerCase();
-
-    vendorMap[key].total_orders += 1;
-    vendorMap[key].gross_amount += amount;
-    vendorMap[key].commission_amount += commission;
-    vendorMap[key].payout_amount += payout;
-
-    if (payStatus === "paid") {
-      vendorMap[key].paid_amount += payout;
-    } else {
-      vendorMap[key].pending_amount += payout;
-    }
-
-    const orderDate = order.created_at?.split(" ")[0];
-    if (!vendorMap[key].last_order_date || orderDate > vendorMap[key].last_order_date) {
-      vendorMap[key].last_order_date = orderDate;
-    }
-  });
-
-  const settlements = Object.values(vendorMap).map((v) => {
-    const status = v.pending_amount === 0 ? "paid" : "pending";
-    return { ...v, payment_status: status, due_date: v.last_order_date };
-  });
-
-  const totalPaid = settlements.reduce((sum, v) => sum + v.paid_amount, 0);
-  const totalPending = settlements.reduce((sum, v) => sum + v.pending_amount, 0);
-
-  return {
-    summary: {
-      total_revenue: dashboard?.totalRevenue || 0,
-      admin_revenue: dashboard?.adminRevenue || 0,
-      pending_vendor_payouts: dashboard?.pendingPayments || totalPending,
-      total_paid_to_vendors: totalPaid,
-      total_vendors: settlements.length,
-      pending_settlements: settlements.filter((v) => v.payment_status === "pending").length,
-    },
-    settlements,
-    paymentHistory: [],
-  };
-};
-
-// Demo data with clear statuses
-const DEMO_ACCOUNTS_DATA = {
-  summary: {
-    total_revenue: 276500,
-    admin_revenue: 41250,
-    pending_vendor_payouts: 120000,
-    total_paid_to_vendors: 155750,
-    total_vendors: 5,
-    pending_settlements: 2,
-  },
-  settlements: [
-    {
-      vendor_id: 101,
-      vendor_name: "Neha Sharma",
-      business_name: "CraftKart",
-      owner_phone: "9876543210",
-      total_orders: 24,
-      gross_amount: 84200,
-      commission_amount: 8420,
-      payout_amount: 75780,
-      paid_amount: 45200,
-      pending_amount: 30580,
-      payment_status: "pending",
-      due_date: "2026-06-10",
-    },
-    {
-      vendor_id: 102,
-      vendor_name: "Amit Verma",
-      business_name: "ElecHub",
-      owner_phone: "9123456789",
-      total_orders: 18,
-      gross_amount: 62500,
-      commission_amount: 6250,
-      payout_amount: 56250,
-      paid_amount: 56250,
-      pending_amount: 0,
-      payment_status: "paid",
-      due_date: "2026-06-08",
-    },
-    {
-      vendor_id: 103,
-      vendor_name: "Priya Joshi",
-      business_name: "HomeStyle",
-      owner_phone: "9012345678",
-      total_orders: 12,
-      gross_amount: 35000,
-      commission_amount: 3500,
-      payout_amount: 31500,
-      paid_amount: 0,
-      pending_amount: 31500,
-      payment_status: "pending",
-      due_date: "2026-06-14",
-    },
-    {
-      vendor_id: 104,
-      vendor_name: "Sunil Rao",
-      business_name: "FreshMart",
-      owner_phone: "9988776655",
-      total_orders: 20,
-      gross_amount: 64500,
-      commission_amount: 6450,
-      payout_amount: 58050,
-      paid_amount: 58050,
-      pending_amount: 0,
-      payment_status: "paid",
-      due_date: "2026-06-09",
-    },
-    {
-      vendor_id: 105,
-      vendor_name: "Leena Patel",
-      business_name: "StyleStreet",
-      owner_phone: "9090909090",
-      total_orders: 10,
-      gross_amount: 35000,
-      commission_amount: 3500,
-      payout_amount: 31500,
-      paid_amount: 6600,
-      pending_amount: 24900,
-      payment_status: "pending",
-      due_date: "2026-06-12",
-    },
-  ],
-  paymentHistory: [
-    {
-      id: 1,
-      vendor_name: "Amit Verma",
-      amount: 56250,
-      payment_reference: "UTR123456",
-      status: "paid",
-      payment_date: "2026-06-08",
-    },
-    {
-      id: 2,
-      vendor_name: "Sunil Rao",
-      amount: 58050,
-      payment_reference: "UTR123457",
-      status: "paid",
-      payment_date: "2026-06-09",
-    },
-  ],
-  orders: [
-    {
-      order_id: 1205,
-      article_name: "Handmade Decor",
-      owner_name: "Neha Sharma",
-      business_name: "CraftKart",
-      total_amount: "1800",
-      commission: "10",
-      vendor_payment_status: "pending",
-      created_at: "2026-06-13 11:12:00",
-    },
-    {
-      order_id: 1209,
-      article_name: "Organic Spices Pack",
-      owner_name: "Amit Verma",
-      business_name: "ElecHub",
-      total_amount: "2500",
-      commission: "10",
-      vendor_payment_status: "paid",
-      created_at: "2026-06-11 09:05:00",
-    },
-    {
-      order_id: 1212,
-      article_name: "Luxury Bedsheet",
-      owner_name: "Priya Joshi",
-      business_name: "HomeStyle",
-      total_amount: "4200",
-      commission: "10",
-      vendor_payment_status: "pending",
-      created_at: "2026-06-14 14:33:00",
-    },
-    {
-      order_id: 1215,
-      article_name: "Organic Fruit Basket",
-      owner_name: "Sunil Rao",
-      business_name: "FreshMart",
-      total_amount: "1800",
-      commission: "10",
-      vendor_payment_status: "paid",
-      created_at: "2026-06-09 12:10:00",
-    },
-    {
-      order_id: 1220,
-      article_name: "Branded Sneakers",
-      owner_name: "Leena Patel",
-      business_name: "StyleStreet",
-      total_amount: "7000",
-      commission: "10",
-      vendor_payment_status: "pending",
-      created_at: "2026-06-12 16:25:00",
-    },
-  ],
-};
-
 export default function AdminAccountsPage() {
   const [summary, setSummary] = useState(null);
   const [settlements, setSettlements] = useState([]);
@@ -300,8 +76,6 @@ export default function AdminAccountsPage() {
   const [paymentHistory, setPaymentHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [usingFallback, setUsingFallback] = useState(false);
-  const [fallbackMessage, setFallbackMessage] = useState("");
   const [toast, setToast] = useState(null);
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -343,67 +117,53 @@ export default function AdminAccountsPage() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  const setDemoMode = useCallback(() => {
-    setSummary(DEMO_ACCOUNTS_DATA.summary);
-    setSettlements(DEMO_ACCOUNTS_DATA.settlements);
-    setPaymentHistory(DEMO_ACCOUNTS_DATA.paymentHistory);
-    setOrders(DEMO_ACCOUNTS_DATA.orders);
-    setUsingFallback(true);
-    setFallbackMessage("Showing demo accounts data because the API request failed.");
-    setError(null);
-  }, []);
-
   const fetchAccountsData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
+      // Fetch orders
       const ordersRes = await fetch(`${API_BASE}/order/admin_get_orders.php`, { headers });
-      const ordersData = ordersRes.ok ? await ordersRes.json() : null;
+      if (!ordersRes.ok) {
+        throw new Error("Failed to fetch orders");
+      }
+      const ordersData = await ordersRes.json();
       const normalizedOrders = normalizeOrdersResponse(ordersData);
       if (normalizedOrders.length) {
         setOrders(normalizedOrders);
       }
 
+      // Fetch accounts data
       const [summaryRes, settlementsRes, historyRes] = await Promise.all([
         fetch(`${API_BASE}/super_admin/get_accounts_summary.php`, { headers }),
         fetch(`${API_BASE}/super_admin/get_vendor_settlements.php`, { headers }),
         fetch(`${API_BASE}/super_admin/get_payment_history.php`, { headers }),
       ]);
 
-      const summaryData = summaryRes.ok ? await summaryRes.json() : null;
-      const settlementsData = settlementsRes.ok ? await settlementsRes.json() : null;
+      if (!summaryRes.ok || !settlementsRes.ok) {
+        throw new Error("Failed to fetch accounts data");
+      }
+
+      const summaryData = await summaryRes.json();
+      const settlementsData = await settlementsRes.json();
       const historyData = historyRes.ok ? await historyRes.json() : null;
 
-      if (summaryData?.success && settlementsData?.success) {
-        setSummary(summaryData.summary);
-        setSettlements(settlementsData.data || []);
-        setPaymentHistory(historyData?.data || []);
-        setUsingFallback(false);
-        setFallbackMessage("");
-        return;
+      if (!summaryData?.success || !settlementsData?.success) {
+        throw new Error(summaryData?.message || "Failed to fetch accounts data");
       }
 
-      const dashRes = await fetch(`${API_BASE}/super_admin/dashboard.php`, { headers });
-      const dashData = dashRes.ok ? await dashRes.json() : { success: false };
+      setSummary(summaryData.summary);
+      setSettlements(settlementsData.data || []);
+      setPaymentHistory(historyData?.data || []);
+      setError(null);
 
-      if (!dashData.success && !ordersData?.success) {
-        setDemoMode();
-        return;
-      }
-
-      const fallback = buildFallbackFromOrders(dashData.data || {}, ordersData?.data || []);
-      setSummary(fallback.summary);
-      setSettlements(fallback.settlements);
-      setPaymentHistory(fallback.paymentHistory || []);
-      setUsingFallback(true);
-      setFallbackMessage("Showing computed data from orders — dedicated accounts API not yet available.");
     } catch (err) {
-      setDemoMode();
+      console.error("Error fetching accounts data:", err);
+      setError(err.message || "Failed to load accounts data");
     } finally {
       setLoading(false);
     }
-  }, [headers, setDemoMode]);
+  }, [headers]);
 
   const handleViewOrder = (order) => {
     setSelectedOrder(order);
@@ -418,10 +178,7 @@ export default function AdminAccountsPage() {
   const ordersTotalPages = Math.ceil(orders.length / ordersPerPage);
 
   useEffect(() => {
-    const loadData = async () => {
-      await fetchAccountsData();
-    };
-    void loadData();
+    fetchAccountsData();
   }, [fetchAccountsData]);
 
   const stats = [
@@ -601,21 +358,163 @@ export default function AdminAccountsPage() {
     setUpdatingId(null);
   };
 
-  const handleExport = () => {
-    const data = {
-      summary,
-      settlements,
-      paymentHistory,
-      exported_at: new Date().toISOString(),
-    };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  // ========== EXPORT FUNCTIONALITY ==========
+  const handleExportCSV = () => {
+    // Export Settlements
+    const settlementHeaders = [
+      "Vendor ID",
+      "Vendor Name",
+      "Business Name",
+      "Phone",
+      "Total Orders",
+      "Gross Amount",
+      "Commission",
+      "Payout Due",
+      "Paid Amount",
+      "Pending Amount",
+      "Payment Status",
+      "Due Date"
+    ];
+
+    const settlementRows = settlements.map((s) => [
+      s.vendor_id || "",
+      s.vendor_name || "",
+      s.business_name || "",
+      s.owner_phone || "",
+      s.total_orders || 0,
+      s.gross_amount || 0,
+      s.commission || 0,
+      s.payout_amount || 0,
+      s.paid_amount || 0,
+      s.pending_amount || 0,
+      s.payment_status || "",
+      s.due_date || ""
+    ]);
+
+    const settlementCSV = [settlementHeaders, ...settlementRows]
+      .map((row) => row.join(","))
+      .join("\n");
+
+    // Export Orders
+    const orderHeaders = [
+      "Order ID",
+      "Article Name",
+      "Vendor Name",
+      "Business Name",
+      "Total Amount",
+      "Commission",
+      "Vendor Payout",
+      "Payment Status",
+      "Created Date"
+    ];
+
+    const orderRows = orders.map((o) => [
+      o.order_id || "",
+      o.article_name || "",
+      o.owner_name || "",
+      o.business_name || "",
+      o.total_amount || 0,
+      o.commission || 0,
+      (parseFloat(o.total_amount || 0) - (parseFloat(o.total_amount || 0) * parseFloat(o.commission || 10) / 100)) || 0,
+      o.vendor_payment_status || o.payment_status || "",
+      o.created_at?.split(" ")[0] || ""
+    ]);
+
+    const orderCSV = [orderHeaders, ...orderRows]
+      .map((row) => row.join(","))
+      .join("\n");
+
+    // Export Payment History
+    const historyHeaders = [
+      "Vendor Name",
+      "Amount Paid",
+      "Payment Reference",
+      "Status",
+      "Payment Date"
+    ];
+
+    const historyRows = paymentHistory.map((h) => [
+      h.vendor_name || "",
+      h.paid_amount || h.amount || 0,
+      h.payment_reference || "",
+      h.status || "",
+      h.payment_date || ""
+    ]);
+
+    const historyCSV = [historyHeaders, ...historyRows]
+      .map((row) => row.join(","))
+      .join("\n");
+
+    // Combine all exports into one file
+    const fullCSV = [
+      "=== VENDOR SETTLEMENTS ===",
+      settlementCSV,
+      "",
+      "=== ORDER PAYOUTS ===",
+      orderCSV,
+      "",
+      "=== PAYMENT HISTORY ===",
+      historyCSV
+    ].join("\n");
+
+    const blob = new Blob([fullCSV], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `accounts-report-${new Date().toISOString().split("T")[0]}.json`;
+    a.download = `accounts_report_${new Date().toISOString().split("T")[0]}.csv`;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    showToast("Report exported");
+    showToast("Accounts report exported successfully");
+  };
+
+  // ========== EXPORT SETTLEMENTS ONLY ==========
+  const handleExportSettlementsOnly = () => {
+    const headers = [
+      "Vendor ID",
+      "Vendor Name",
+      "Business Name",
+      "Phone",
+      "Total Orders",
+      "Gross Amount",
+      "Commission",
+      "Payout Due",
+      "Paid Amount",
+      "Pending Amount",
+      "Payment Status",
+      "Due Date"
+    ];
+
+    const rows = settlements.map((s) => [
+      s.vendor_id || "",
+      s.vendor_name || "",
+      s.business_name || "",
+      s.owner_phone || "",
+      s.total_orders || 0,
+      s.gross_amount || 0,
+      s.commission || 0,
+      s.payout_amount || 0,
+      s.paid_amount || 0,
+      s.pending_amount || 0,
+      s.payment_status || "",
+      s.due_date || ""
+    ]);
+
+    const csvContent = [headers, ...rows]
+      .map((row) => row.join(","))
+      .join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `settlements_${new Date().toISOString().split("T")[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast("Settlements exported successfully");
   };
 
   if (loading) {
@@ -631,15 +530,18 @@ export default function AdminAccountsPage() {
 
   if (error) {
     return (
-      <div className="text-center p-10">
-        <XCircle size={48} className="text-red-500 mx-auto mb-3" />
-        <p className="text-red-500">{error}</p>
-        <button
-          onClick={fetchAccountsData}
-          className="mt-4 px-4 py-2 bg-purple-100 text-purple-600 rounded-lg hover:bg-purple-200"
-        >
-          Retry
-        </button>
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <XCircle size={48} className="text-red-500 mx-auto mb-3" />
+          <p className="text-red-500 font-medium">Error loading accounts data</p>
+          <p className="text-gray-500 text-sm mt-1">{error}</p>
+          <button
+            onClick={fetchAccountsData}
+            className="mt-4 px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+          >
+            Retry
+          </button>
+        </div>
       </div>
     );
   }
@@ -666,20 +568,21 @@ export default function AdminAccountsPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Accounts & Settlements</h1>
           <p className="text-gray-500 text-sm mt-1">Manage vendor payouts, revenue tracking & payment status</p>
-          {usingFallback && (
-            <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
-              <AlertCircle size={12} />
-              {fallbackMessage || "Showing computed data from orders — dedicated accounts API not yet available"}
-            </p>
-          )}
         </div>
         <div className="flex gap-3">
           <button
-            onClick={handleExport}
+            onClick={handleExportSettlementsOnly}
             className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:border-purple-300"
           >
             <Download size={16} />
-            Export
+            Export Settlements
+          </button>
+          <button
+            onClick={handleExportCSV}
+            className="flex items-center gap-2 rounded-xl border border-gray-200 bg-purple-50 px-4 py-2 text-sm text-purple-600 hover:bg-purple-100 hover:border-purple-300"
+          >
+            <Download size={16} />
+            Full Report
           </button>
           <button
             onClick={fetchAccountsData}
