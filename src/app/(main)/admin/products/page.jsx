@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import api from "@/app/utils/api";
 import ViewProduct from "@/app/components/shared/ViewProduct";
+import AdminAddProductModal from "@/app/components/shared/AdminProductForm";
 
 const normalizeProductImageUrl = (image) => {
   if (!image) return "/placeholder.png";
@@ -88,6 +89,7 @@ export default function ProductsPage() {
   const [showCommissionModal, setShowCommissionModal] = useState(false);
   const [selectedProductId, setSelectedProductId] = useState(null);
   const [commission, setCommission] = useState("");
+  const [commissionType, setCommissionType] = useState("");
 
   // Form states for add/edit
   const [formData, setFormData] = useState({
@@ -141,6 +143,7 @@ export default function ProductsPage() {
         {
           product_id: productId,
           action,
+          commission_type: commissionType || "percentage",
           commission: parseFloat(commissionValue),
         },
         {
@@ -158,6 +161,7 @@ export default function ProductsPage() {
                   ...product,
                   status: action,
                   commission: commissionValue,
+                  commission_type: commissionType || "percentage",
                 }
               : product
           )
@@ -1302,25 +1306,45 @@ export default function ProductsPage() {
         title="Approve Product"
       >
         <div className="space-y-4">
+          {/* NEW DROPDOWN */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Commission (%)
+              Commission Type
             </label>
+
+            <select
+              value={commissionType}
+              onChange={(e) => setCommissionType(e.target.value)}
+              className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            >
+              <option value="">Select type</option>
+              <option value="percentage">Percentage (%)</option>
+              <option value="per_piece_rate">Per Piece Rate</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Commission (% / Rate)
+            </label>
+
             <input
               type="text"
               inputMode="decimal"
               value={commission}
               onChange={handleCommissionChange}
               autoFocus
-              placeholder="Enter commission percentage"
+              placeholder="Enter commission"
               className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
           </div>
-
           <button
             onClick={() => {
               if (!commission) {
                 alert("Please enter commission");
+                return;
+              }
+              if (!commissionType) {
+                alert("Please enter commission type");
                 return;
               }
               handleApprovalAction(selectedProductId, "active", commission);
@@ -1332,8 +1356,8 @@ export default function ProductsPage() {
         </div>
       </Modal>
 
-      {/* Add Product Modal */}
-      <Modal
+      {/* add products */}
+      <AdminAddProductModal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
         title="Add New Product"
