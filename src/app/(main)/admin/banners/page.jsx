@@ -5,6 +5,8 @@ import {
   Edit, 
   Trash2, 
   X,
+  CheckCircle,
+  XCircle,
   ChevronLeft,
   ChevronRight,
   Download,
@@ -65,9 +67,15 @@ export default function BannersPage() {
 
   const [banners, setBanners] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState(null);
 
   // Position options
   const positions = ["HEADER", "SIDEBAR", "FOOTER", "POPUP", "MOBILE"];
+  
+  const showToast = (message, type = "success") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
   
   const fetchBanners = async () => {
     try {
@@ -165,11 +173,13 @@ export default function BannersPage() {
           status: "active",
         });
         fetchBanners();
+        showToast("Banner created successfully");
       } else {
         alert(result.message);
       }
     } catch (error) {
       console.log(error);
+      showToast("Failed to create banner", "error");
     }
   };
 
@@ -208,11 +218,13 @@ export default function BannersPage() {
         setShowEditModal(false);
         setSelectedBanner(null);
         fetchBanners();
+        showToast("Banner updated successfully");
       } else {
         alert(result.message);
       }
     } catch (error) {
       console.log(error);
+      showToast("Failed to update banner", "error");
     }
   };
 
@@ -237,11 +249,13 @@ export default function BannersPage() {
         setShowDeleteModal(false);
         setSelectedBanner(null);
         fetchBanners();
+        showToast("Banner deleted successfully");
       } else {
         alert(result.message);
       }
     } catch (error) {
       console.log(error);
+      showToast("Failed to delete banner", "error");
     }
   };
 
@@ -265,11 +279,13 @@ export default function BannersPage() {
       const result = await response.json();
       if (result.success) {
         fetchBanners();
+        showToast(`Banner ${Number(banner.status) === 1 ? "deactivated" : "activated"} successfully`);
       } else {
         alert(result.message);
       }
     } catch (error) {
       console.log(error);
+      showToast("Failed to update status", "error");
     }
   };
 
@@ -327,29 +343,82 @@ export default function BannersPage() {
       }
     } catch (error) {
       console.log(error);
+      showToast("Failed to upload image", "error");
     }
   };
 
-  // Export to CSV
+  // ========== EXPORT FUNCTIONALITY ==========
   const handleExportCSV = () => {
+    if (banners.length === 0) {
+      showToast("No banners to export", "error");
+      return;
+    }
+
+    // Headers for CSV
     const headers = ["ID", "Title", "Position", "Link", "Status", "Created At"];
-    const csvData = banners.map(banner => [
+    
+    // Map data to rows
+    const rows = banners.map(banner => [
       banner.id,
       banner.name,
       banner.position,
-      banner.link,
+      banner.link || "",
       Number(banner.status) === 1 ? "Active" : "Inactive",
-      banner.createdAt
+      banner.createdAt || ""
     ]);
     
-    const csvContent = [headers, ...csvData].map(row => row.join(",")).join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv" });
+    // Combine headers and rows
+    const csvContent = [headers, ...rows]
+      .map(row => row.join(","))
+      .join("\n");
+    
+    // Create and download CSV file
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
     a.download = `banners_${new Date().toISOString().split("T")[0]}.csv`;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    
+    showToast(`Exported ${banners.length} banners successfully`);
+  };
+
+  // ========== EXPORT FILTERED BANNERS ==========
+  const handleExportFilteredCSV = () => {
+    if (filteredBanners.length === 0) {
+      showToast("No banners matching filter to export", "error");
+      return;
+    }
+
+    const headers = ["ID", "Title", "Position", "Link", "Status", "Created At"];
+    
+    const rows = filteredBanners.map(banner => [
+      banner.id,
+      banner.name,
+      banner.position,
+      banner.link || "",
+      Number(banner.status) === 1 ? "Active" : "Inactive",
+      banner.createdAt || ""
+    ]);
+    
+    const csvContent = [headers, ...rows]
+      .map(row => row.join(","))
+      .join("\n");
+    
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `banners_filtered_${new Date().toISOString().split("T")[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    showToast(`Exported ${filteredBanners.length} filtered banners successfully`);
   };
 
   // Get position badge color
@@ -370,8 +439,6 @@ export default function BannersPage() {
     }
   };
 
-  // Modal component
- 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -385,6 +452,25 @@ export default function BannersPage() {
 
   return (
     <div className="space-y-6">
+      {toast && (
+        <div
+          className={`fixed top-20 right-6 z-50 px-4 py-3 rounded-lg flex items-center gap-2 shadow-lg text-white ${
+            toast.type === "success"
+              ? "bg-emerald-500"
+              : toast.type === "error"
+              ? "bg-red-500"
+              : "bg-blue-500"
+          }`}
+        >
+          {toast.type === "success" ? (
+            <CheckCircle size={18} />
+          ) : (
+            <XCircle size={18} />
+          )}
+          {toast.message}
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
@@ -415,11 +501,21 @@ export default function BannersPage() {
           
           <button 
             onClick={handleExportCSV}
-            className="bg-white hover:bg-gray-50 text-gray-600 px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-colors border border-gray-200 hover:border-purple-300"
+            className="bg-purple-50 hover:bg-purple-100 text-purple-600 px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-colors border border-purple-200"
           >
             <Download size={16} />
-            Export CSV
+            Export All
           </button>
+
+          {filteredBanners.length < banners.length && filteredBanners.length > 0 && (
+            <button 
+              onClick={handleExportFilteredCSV}
+              className="bg-white hover:bg-gray-50 text-gray-600 px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-colors border border-gray-200 hover:border-purple-300"
+            >
+              <Download size={16} />
+              Export Filtered ({filteredBanners.length})
+            </button>
+          )}
         </div>
       </div>
 
@@ -492,6 +588,9 @@ export default function BannersPage() {
                         src={banner.image}
                         alt={banner.name}
                         className="w-full h-full object-cover rounded-lg"
+                        onError={(e) => {
+                          e.target.src = "/placeholder.png";
+                        }}
                       />
                     </div>
                   </div>
@@ -825,6 +924,9 @@ export default function BannersPage() {
                   src={selectedBanner.image}
                   alt={selectedBanner.name}
                   className="w-full max-h-64 object-cover rounded-lg mb-4 border border-gray-200"
+                  onError={(e) => {
+                    e.target.src = "/placeholder.png";
+                  }}
                 />
                 <h3 className="text-xl font-bold text-gray-900">{selectedBanner.name}</h3>
                 <p className="text-gray-500 mt-2">Position: {selectedBanner.position}</p>

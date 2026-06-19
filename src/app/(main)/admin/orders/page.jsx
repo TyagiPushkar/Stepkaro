@@ -29,12 +29,18 @@ export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [toast, setToast] = useState(null);
 
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const token = localStorage.getItem("access_token");
+
+  const showToast = (message, type = "success") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   // Fetch real data from your API
   useEffect(() => {
@@ -49,7 +55,7 @@ export default function OrdersPage() {
               "Content-Type": "application/json",
               Authorization: token ? `Bearer ${token}` : "",
             },
-          },
+          }
         );
 
         const resData = await response.json();
@@ -165,8 +171,10 @@ export default function OrdersPage() {
           (order.user_phone && order.user_phone.includes(query)) ||
           (order.business_name &&
             order.business_name.toLowerCase().includes(query)) ||
+          (order.owner_name &&
+            order.owner_name.toLowerCase().includes(query)) ||
           (order.article_name &&
-            order.article_name.toLowerCase().includes(query)),
+            order.article_name.toLowerCase().includes(query))
       );
     }
 
@@ -216,7 +224,7 @@ export default function OrdersPage() {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        },
+        }
       );
 
       if (response.data?.success) {
@@ -224,20 +232,140 @@ export default function OrdersPage() {
 
         setOrders((prev) =>
           prev.map((order) =>
-            order.order_id === orderId ? { ...order, status } : order,
-          ),
+            order.order_id === orderId ? { ...order, status } : order
+          )
         );
+        showToast(`Order ${orderId} updated to ${status}`);
       } else {
         console.log(response.data?.message || "Failed to update order");
+        showToast(response.data?.message || "Failed to update order", "error");
       }
     } catch (error) {
       console.error("API Error:", error);
-      console.log(error.response?.data?.message || "Server error");
+      showToast("Failed to update order", "error");
     }
   };
 
+  // ========== EXPORT FUNCTIONALITY ==========
   const handleExportOrders = () => {
-    console.log("Exporting orders...");
+    if (orders.length === 0) {
+      showToast("No orders to export", "error");
+      return;
+    }
+
+    const exportData = filteredOrders.length > 0 ? filteredOrders : orders;
+
+    const headers = [
+      "Order ID",
+      "Customer Name",
+      "Customer Phone",
+      "Vendor Name",
+      "Vendor Phone",
+      "Article Name",
+      "Payment Method",
+      "Total Amount",
+      "Order Date",
+      "Order Time",
+      "Status"
+    ];
+
+    const rows = exportData.map((order) => {
+      const dateTimeParts = order.created_at
+        ? order.created_at.split(" ")
+        : ["", ""];
+      const orderDate = dateTimeParts[0] || "";
+      const orderTime = dateTimeParts[1] ? dateTimeParts[1].substring(0, 5) : "";
+
+      return [
+        order.order_id || "",
+        order.user_name || "Guest Customer",
+        order.user_phone || "N/A",
+        order.owner_name || "N/A",
+        order.owner_phone || "N/A",
+        order.article_name || "N/A",
+        order.payment_method || "COD",
+        parseFloat(order.total_amount || 0).toLocaleString("en-IN"),
+        orderDate,
+        orderTime,
+        order.status || "Pending"
+      ];
+    });
+
+    const csvContent = [headers, ...rows]
+      .map((row) => row.join(","))
+      .join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `orders_${new Date().toISOString().split("T")[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    showToast(`Exported ${exportData.length} orders successfully`);
+  };
+
+  // ========== EXPORT FILTERED ORDERS ==========
+  const handleExportFilteredOrders = () => {
+    if (filteredOrders.length === 0) {
+      showToast("No orders matching filter to export", "error");
+      return;
+    }
+
+    const headers = [
+      "Order ID",
+      "Customer Name",
+      "Customer Phone",
+      "Vendor Name",
+      "Vendor Phone",
+      "Article Name",
+      "Payment Method",
+      "Total Amount",
+      "Order Date",
+      "Order Time",
+      "Status"
+    ];
+
+    const rows = filteredOrders.map((order) => {
+      const dateTimeParts = order.created_at
+        ? order.created_at.split(" ")
+        : ["", ""];
+      const orderDate = dateTimeParts[0] || "";
+      const orderTime = dateTimeParts[1] ? dateTimeParts[1].substring(0, 5) : "";
+
+      return [
+        order.order_id || "",
+        order.user_name || "Guest Customer",
+        order.user_phone || "N/A",
+        order.owner_name || "N/A",
+        order.owner_phone || "N/A",
+        order.article_name || "N/A",
+        order.payment_method || "COD",
+        parseFloat(order.total_amount || 0).toLocaleString("en-IN"),
+        orderDate,
+        orderTime,
+        order.status || "Pending"
+      ];
+    });
+
+    const csvContent = [headers, ...rows]
+      .map((row) => row.join(","))
+      .join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `orders_filtered_${new Date().toISOString().split("T")[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    showToast(`Exported ${filteredOrders.length} filtered orders successfully`);
   };
 
   const getImageUrl = (image) => {
@@ -266,6 +394,25 @@ export default function OrdersPage() {
 
   return (
     <div className="space-y-6">
+      {toast && (
+        <div
+          className={`fixed top-20 right-6 z-50 px-4 py-3 rounded-lg flex items-center gap-2 shadow-lg text-white ${
+            toast.type === "success"
+              ? "bg-emerald-500"
+              : toast.type === "error"
+              ? "bg-red-500"
+              : "bg-blue-500"
+          }`}
+        >
+          {toast.type === "success" ? (
+            <CheckCircle size={18} />
+          ) : (
+            <XCircle size={18} />
+          )}
+          {toast.message}
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -278,11 +425,20 @@ export default function OrdersPage() {
         <div className="flex gap-3">
           <button
             onClick={handleExportOrders}
-            className="bg-white hover:bg-gray-50 text-gray-600 px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-colors border border-gray-200 hover:border-purple-300"
+            className="bg-purple-50 hover:bg-purple-100 text-purple-600 px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-colors border border-purple-200"
           >
             <Download size={16} />
-            Export Orders
+            Export All
           </button>
+          {filteredOrders.length < orders.length && filteredOrders.length > 0 && (
+            <button
+              onClick={handleExportFilteredOrders}
+              className="bg-white hover:bg-gray-50 text-gray-600 px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-colors border border-gray-200 hover:border-purple-300"
+            >
+              <Download size={16} />
+              Export Filtered ({filteredOrders.length})
+            </button>
+          )}
         </div>
       </div>
 
@@ -372,10 +528,10 @@ export default function OrdersPage() {
             onChange={handleItemsPerPageChange}
             className="bg-white border border-gray-200 rounded-lg px-2 py-1 text-sm text-gray-600 focus:outline-none focus:ring-1 focus:ring-purple-500"
           >
-            <option value={5}>5</option>
             <option value={10}>10</option>
             <option value={25}>25</option>
             <option value={50}>50</option>
+            <option value={100}>100</option>
           </select>
         </div>
       </div>
@@ -443,14 +599,6 @@ export default function OrdersPage() {
                     >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          {/* <img
-                            src={getImageUrl(order.product_image)}
-                            alt="Product"
-                            className="w-8 h-8 rounded-md object-cover border border-gray-200"
-                            onError={(e) => {
-                              e.target.src = "/placeholder.png";
-                            }}
-                          /> */}
                           <span className="text-sm font-medium text-gray-900">
                             #{order.order_id}
                           </span>
@@ -491,7 +639,7 @@ export default function OrdersPage() {
                         <span className="text-sm font-semibold text-gray-900">
                           ₹
                           {parseFloat(order.total_amount).toLocaleString(
-                            "en-IN",
+                            "en-IN"
                           )}
                         </span>
                       </td>
@@ -519,7 +667,7 @@ export default function OrdersPage() {
                                 onClick={() =>
                                   handleUpdateOrderStatus(
                                     order.order_id,
-                                    "rejected",
+                                    "rejected"
                                   )
                                 }
                                 className="px-3 py-1.5 text-xs bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition-colors"
@@ -530,7 +678,7 @@ export default function OrdersPage() {
                                 onClick={() =>
                                   handleUpdateOrderStatus(
                                     order.order_id,
-                                    "processing",
+                                    "processing"
                                   )
                                 }
                                 className="px-3 py-1.5 text-xs bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg transition-colors"
@@ -544,7 +692,7 @@ export default function OrdersPage() {
                               onChange={(e) =>
                                 handleUpdateOrderStatus(
                                   order.order_id,
-                                  e.target.value,
+                                  e.target.value
                                 )
                               }
                               className="bg-gray-50 border border-gray-200 text-gray-700 text-xs rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-purple-500"
