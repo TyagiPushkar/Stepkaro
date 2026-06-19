@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import api from "@/app/utils/api";
 import ViewProduct from "@/app/components/shared/ViewProduct";
+import AdminAddProductModal from "@/app/components/shared/AdminProductForm";
 
 const normalizeProductImageUrl = (image) => {
   if (!image) return "/placeholder.png";
@@ -73,7 +74,6 @@ export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
- 
 
   // Modal states
   const [showAddModal, setShowAddModal] = useState(false);
@@ -88,6 +88,7 @@ export default function ProductsPage() {
   const [showCommissionModal, setShowCommissionModal] = useState(false);
   const [selectedProductId, setSelectedProductId] = useState(null);
   const [commission, setCommission] = useState("");
+  const [commissionType, setCommissionType] = useState("");
 
   // Form states for add/edit
   const [formData, setFormData] = useState({
@@ -136,6 +137,7 @@ export default function ProductsPage() {
         {
           product_id: productId,
           action,
+          commission_type: commissionType || "percentage",
           commission: parseFloat(commissionValue),
         },
         {
@@ -153,6 +155,7 @@ export default function ProductsPage() {
                   ...product,
                   status: action,
                   commission: commissionValue,
+                  commission_type: commissionType || "percentage",
                 }
               : product,
           ),
@@ -644,9 +647,12 @@ export default function ProductsPage() {
             red: "bg-red-100 text-red-700 border-red-200",
           };
           const inactiveColorMap = {
-            purple: "bg-white text-gray-600 border-gray-200 hover:border-purple-300 hover:text-purple-600",
-            yellow: "bg-white text-gray-600 border-gray-200 hover:border-yellow-300 hover:text-yellow-600",
-            green: "bg-white text-gray-600 border-gray-200 hover:border-green-300 hover:text-green-600",
+            purple:
+              "bg-white text-gray-600 border-gray-200 hover:border-purple-300 hover:text-purple-600",
+            yellow:
+              "bg-white text-gray-600 border-gray-200 hover:border-yellow-300 hover:text-yellow-600",
+            green:
+              "bg-white text-gray-600 border-gray-200 hover:border-green-300 hover:text-green-600",
             red: "bg-white text-gray-600 border-gray-200 hover:border-red-300 hover:text-red-600",
           };
           return (
@@ -655,8 +661,10 @@ export default function ProductsPage() {
               onClick={() => handleFilterChange(filter.value)}
               className={`px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-all duration-200 whitespace-nowrap border ${
                 isActive
-                  ? colorMap[filter.color] || "bg-purple-600 text-white border-purple-600"
-                  : inactiveColorMap[filter.color] || "bg-white text-gray-600 border-gray-200 hover:border-purple-300"
+                  ? colorMap[filter.color] ||
+                    "bg-purple-600 text-white border-purple-600"
+                  : inactiveColorMap[filter.color] ||
+                    "bg-white text-gray-600 border-gray-200 hover:border-purple-300"
               }`}
             >
               <Icon size={16} />
@@ -1139,25 +1147,45 @@ export default function ProductsPage() {
         title="Approve Product"
       >
         <div className="space-y-4">
+          {/* NEW DROPDOWN */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Commission (%)
+              Commission Type
             </label>
+
+            <select
+              value={commissionType}
+              onChange={(e) => setCommissionType(e.target.value)}
+              className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            >
+              <option value="">Select type</option>
+              <option value="percentage">Percentage (%)</option>
+              <option value="per_piece_rate">Per Piece Rate</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Commission (% / Rate)
+            </label>
+
             <input
               type="text"
               inputMode="decimal"
               value={commission}
               onChange={handleCommissionChange}
               autoFocus
-              placeholder="Enter commission percentage"
+              placeholder="Enter commission"
               className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
           </div>
-
           <button
             onClick={() => {
               if (!commission) {
                 alert("Please enter commission");
+                return;
+              }
+              if (!commissionType) {
+                alert("Please enter commission type");
                 return;
               }
               handleApprovalAction(selectedProductId, "active", commission);
@@ -1169,73 +1197,11 @@ export default function ProductsPage() {
         </div>
       </Modal>
 
-      {/* Add Product Modal */}
-      <Modal
+      {/* add products */}
+      <AdminAddProductModal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
-        title="Add New Product"
-      >
-        <div className="space-y-4">
-          <div>
-            <label className="text-sm font-medium text-gray-700 block mb-1">
-              Product Name
-            </label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
-              }
-              className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              placeholder="Enter product name"
-            />
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-700 block mb-1">Category</label>
-            <input
-              type="text"
-              value={formData.category}
-              onChange={(e) =>
-                setFormData({ ...formData, category: e.target.value })
-              }
-              className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              placeholder="Enter category"
-            />
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-700 block mb-1">Quantity</label>
-            <input
-              type="number"
-              value={formData.qty}
-              onChange={(e) =>
-                setFormData({ ...formData, qty: e.target.value })
-              }
-              className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              placeholder="Enter quantity"
-            />
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-700 block mb-1">
-              Price (₹)
-            </label>
-            <input
-              type="number"
-              value={formData.price}
-              onChange={(e) =>
-                setFormData({ ...formData, price: e.target.value })
-              }
-              className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              placeholder="Enter price"
-            />
-          </div>
-          <button
-            onClick={handleAddProduct}
-            className="w-full py-2 bg-gradient-to-r from-purple-600 to-orange-500 hover:shadow-lg text-white rounded-lg transition-all"
-          >
-            Add Product
-          </button>
-        </div>
-      </Modal>
+      />
 
       {/* Edit Product Modal */}
       <Modal
@@ -1258,7 +1224,9 @@ export default function ProductsPage() {
             />
           </div>
           <div>
-            <label className="text-sm font-medium text-gray-700 block mb-1">Category</label>
+            <label className="text-sm font-medium text-gray-700 block mb-1">
+              Category
+            </label>
             <input
               type="text"
               value={formData.category}
@@ -1269,7 +1237,9 @@ export default function ProductsPage() {
             />
           </div>
           <div>
-            <label className="text-sm font-medium text-gray-700 block mb-1">Quantity</label>
+            <label className="text-sm font-medium text-gray-700 block mb-1">
+              Quantity
+            </label>
             <input
               type="number"
               value={formData.qty}
