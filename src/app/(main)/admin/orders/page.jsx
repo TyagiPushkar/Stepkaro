@@ -41,8 +41,6 @@ export default function OrdersPage() {
     const fetchOrders = async () => {
       try {
         setLoading(true);
-        // Authorization token required by your PHP middleware
-
         const response = await fetch(
           "https://namami-infotech.com/Stepkaro/src/order/admin_get_orders.php",
           {
@@ -51,7 +49,7 @@ export default function OrdersPage() {
               "Content-Type": "application/json",
               Authorization: token ? `Bearer ${token}` : "",
             },
-          },
+          }
         );
 
         const resData = await response.json();
@@ -79,7 +77,7 @@ export default function OrdersPage() {
         value: "all",
         count: orders.length,
         icon: Package,
-        color: "teal",
+        color: "purple",
       },
       {
         label: "Order Confirmation",
@@ -123,29 +121,29 @@ export default function OrdersPage() {
     const badges = {
       confirmed: {
         label: "Confirmed",
-        color: "bg-green-500/20 text-green-400",
+        color: "bg-green-100 text-green-700",
       },
-      pending: { label: "Pending", color: "bg-yellow-500/20 text-yellow-400" },
-      accepted: { label: "Accepted", color: "bg-blue-500/20 text-blue-400" },
-      rejected: { label: "Rejected", color: "bg-red-500/20 text-red-400" },
+      pending: { label: "Pending", color: "bg-yellow-100 text-yellow-700" },
+      accepted: { label: "Accepted", color: "bg-blue-100 text-blue-700" },
+      rejected: { label: "Rejected", color: "bg-red-100 text-red-700" },
       dispatched: {
         label: "Dispatched",
-        color: "bg-purple-500/20 text-purple-400",
+        color: "bg-purple-100 text-purple-700",
       },
       transport: {
         label: "Booked for Transport",
-        color: "bg-indigo-500/20 text-indigo-400",
+        color: "bg-indigo-100 text-indigo-700",
       },
       processing: {
         label: "Processing",
-        color: "bg-orange-500/20 text-orange-400",
+        color: "bg-orange-100 text-orange-700",
       },
-      new: { label: "New", color: "bg-teal-500/20 text-teal-400" },
+      new: { label: "New", color: "bg-teal-100 text-teal-700" },
     };
     return (
       badges[status] || {
         label: status || "Processing",
-        color: "bg-gray-500/20 text-gray-400",
+        color: "bg-gray-100 text-gray-600",
       }
     );
   };
@@ -168,7 +166,7 @@ export default function OrdersPage() {
           (order.business_name &&
             order.business_name.toLowerCase().includes(query)) ||
           (order.article_name &&
-            order.article_name.toLowerCase().includes(query)),
+            order.article_name.toLowerCase().includes(query))
       );
     }
 
@@ -218,7 +216,7 @@ export default function OrdersPage() {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        },
+        }
       );
 
       if (response.data?.success) {
@@ -226,8 +224,8 @@ export default function OrdersPage() {
 
         setOrders((prev) =>
           prev.map((order) =>
-            order.order_id === orderId ? { ...order, status } : order,
-          ),
+            order.order_id === orderId ? { ...order, status } : order
+          )
         );
       } else {
         console.log(response.data?.message || "Failed to update order");
@@ -238,20 +236,15 @@ export default function OrdersPage() {
     }
   };
 
-  const handleRejectOrder = (orderId) => {
-    console.log(`Reject order ${orderId}`);
-  };
-
   const handleExportOrders = () => {
     console.log("Exporting orders...");
   };
+
   const getImageUrl = (image) => {
     if (!image) return "/placeholder.png";
-
     if (image.startsWith("http://") || image.startsWith("https://")) {
       return image;
     }
-
     return `https://namami-infotech.com/${image}`;
   };
 
@@ -260,13 +253,24 @@ export default function OrdersPage() {
     setViewModalOpen(true);
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <div className="w-10 h-10 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-3"></div>
+          <p className="text-gray-500">Loading orders...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Orders</h1>
-          <p className="text-gray-400 text-sm mt-1">
+          <h1 className="text-2xl font-bold text-gray-900">Orders</h1>
+          <p className="text-gray-500 text-sm mt-1">
             Manage and track all customer orders
           </p>
         </div>
@@ -274,7 +278,7 @@ export default function OrdersPage() {
         <div className="flex gap-3">
           <button
             onClick={handleExportOrders}
-            className="bg-teal-500/20 hover:bg-teal-500/30 border border-teal-500/30 rounded-lg px-4 py-2 text-sm text-teal-400 transition-colors flex items-center gap-2"
+            className="bg-white hover:bg-gray-50 text-gray-600 px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-colors border border-gray-200 hover:border-purple-300"
           >
             <Download size={16} />
             Export Orders
@@ -285,7 +289,7 @@ export default function OrdersPage() {
       {/* Search Bar */}
       <div className="relative">
         <Search
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
           size={18}
         />
         <input
@@ -293,7 +297,7 @@ export default function OrdersPage() {
           value={searchQuery}
           onChange={handleSearch}
           placeholder="Search by order ID, customer, phone, vendor, or article name..."
-          className="w-full pl-10 pr-4 py-2.5 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+          className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
         />
       </div>
 
@@ -302,14 +306,28 @@ export default function OrdersPage() {
         {filters.map((filter) => {
           const Icon = filter.icon;
           const isActive = selectedFilter === filter.value;
+          const colorMap = {
+            purple: "bg-purple-600 text-white border-purple-600",
+            yellow: "bg-yellow-100 text-yellow-700 border-yellow-200",
+            green: "bg-green-100 text-green-700 border-green-200",
+            red: "bg-red-100 text-red-700 border-red-200",
+            blue: "bg-blue-100 text-blue-700 border-blue-200",
+          };
+          const inactiveColorMap = {
+            purple: "bg-white text-gray-600 border-gray-200 hover:border-purple-300 hover:text-purple-600",
+            yellow: "bg-white text-gray-600 border-gray-200 hover:border-yellow-300 hover:text-yellow-600",
+            green: "bg-white text-gray-600 border-gray-200 hover:border-green-300 hover:text-green-600",
+            red: "bg-white text-gray-600 border-gray-200 hover:border-red-300 hover:text-red-600",
+            blue: "bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:text-blue-600",
+          };
           return (
             <button
               key={filter.value}
               onClick={() => handleFilterChange(filter.value)}
-              className={`px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-all duration-200 ${
+              className={`px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-all duration-200 border ${
                 isActive
-                  ? `bg-${filter.color}-500/20 text-${filter.color}-400 border border-${filter.color}-500/30`
-                  : "bg-slate-800/50 text-gray-400 hover:text-white border border-white/10 hover:border-teal-500/30"
+                  ? colorMap[filter.color] || "bg-purple-600 text-white border-purple-600"
+                  : inactiveColorMap[filter.color] || "bg-white text-gray-600 border-gray-200 hover:border-purple-300"
               }`}
             >
               <Icon size={16} />
@@ -317,8 +335,8 @@ export default function OrdersPage() {
               <span
                 className={`px-2 py-0.5 rounded-full text-xs ${
                   isActive
-                    ? `bg-${filter.color}-500/30 text-${filter.color}-400`
-                    : "bg-slate-700 text-gray-400"
+                    ? "bg-white/20 text-white"
+                    : "bg-gray-100 text-gray-600"
                 }`}
               >
                 {filter.count}
@@ -330,23 +348,23 @@ export default function OrdersPage() {
 
       {/* Results Summary */}
       <div className="flex justify-between items-center">
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-gray-500">
           Showing{" "}
-          <span className="text-white">
+          <span className="text-gray-900">
             {filteredOrders.length > 0 ? startIndex + 1 : 0}
           </span>{" "}
           to{" "}
-          <span className="text-white">
+          <span className="text-gray-900">
             {Math.min(endIndex, filteredOrders.length)}
           </span>{" "}
-          of <span className="text-white">{filteredOrders.length}</span> orders
+          of <span className="text-gray-900">{filteredOrders.length}</span> orders
         </p>
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-400">Show:</span>
+          <span className="text-sm text-gray-500">Show:</span>
           <select
             value={itemsPerPage}
             onChange={handleItemsPerPageChange}
-            className="bg-slate-800 border border-white/10 rounded-lg px-2 py-1 text-sm text-gray-300"
+            className="bg-white border border-gray-200 rounded-lg px-2 py-1 text-sm text-gray-600 focus:outline-none focus:ring-1 focus:ring-purple-500"
           >
             <option value={5}>5</option>
             <option value={10}>10</option>
@@ -356,68 +374,51 @@ export default function OrdersPage() {
         </div>
       </div>
 
-      {/* Orders Table container with API State controls */}
-      <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden">
+      {/* Orders Table */}
+      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-slate-800/50 border-b border-white/10">
+          <table className="w-full min-w-[1100px]">
+            <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Order ID
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Customer Info
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Vendor
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                  Article Name
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Article
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Payment
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Amount
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                  Date & Time
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Date
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
-              {loading ? (
+            <tbody className="divide-y divide-gray-100">
+              {error ? (
                 <tr>
-                  <td colSpan="9" className="px-6 py-12 text-center">
-                    <Loader2
-                      size={32}
-                      className="text-teal-500 animate-spin mx-auto mb-2"
-                    />
-                    <p className="text-gray-400 text-sm">
-                      Fetching live database records...
-                    </p>
-                  </td>
-                </tr>
-              ) : error ? (
-                <tr>
-                  <td
-                    colSpan="9"
-                    className="px-6 py-8 text-center text-red-400 text-sm"
-                  >
+                  <td colSpan="9" className="px-6 py-8 text-center text-red-500 text-sm">
                     Error loading orders: {error}
                   </td>
                 </tr>
               ) : currentOrders.length > 0 ? (
                 currentOrders.map((order) => {
                   const statusBadge = getStatusBadge(order.status);
-
-                  // Extract Date & Time cleanly from "YYYY-MM-DD HH:MM:SS"
                   const dateTimeParts = order.created_at
                     ? order.created_at.split(" ")
                     : ["N/A", ""];
@@ -429,67 +430,63 @@ export default function OrdersPage() {
                   return (
                     <tr
                       key={order.order_id}
-                      className="hover:bg-white/5 transition-colors"
+                      className="hover:bg-gray-50 transition-colors"
                     >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <img
                             src={getImageUrl(order.product_image)}
                             alt="Product"
-                            className="w-8 h-8 rounded-md object-cover border border-gray-700"
-                            // onError={(e) => {
-                            //   e.target.src = "/placeholder.png";
-                            // }}
+                            className="w-8 h-8 rounded-md object-cover border border-gray-200"
+                            onError={(e) => {
+                              e.target.src = "/placeholder.png";
+                            }}
                           />
-
-                          <span className="text-sm font-medium text-white">
+                          <span className="text-sm font-medium text-gray-900">
                             #{order.order_id}
                           </span>
                         </div>
                       </td>
 
                       <td className="px-6 py-4">
-                        <div className="text-sm font-medium text-white">
+                        <div className="text-sm font-medium text-gray-900">
                           {order.user_name || "Guest Customer"}
                         </div>
-                        <div className="text-xs text-gray-400 mt-0.5">
+                        <div className="text-xs text-gray-500 mt-0.5">
                           {order.user_phone || "N/A"}
                         </div>
                       </td>
 
                       <td className="px-6 py-4">
-                        <div className="text-sm font-medium text-white">
+                        <div className="text-sm font-medium text-gray-900">
                           {order.owner_name || "Guest Customer"}
                         </div>
-                        <div className="text-xs text-gray-400 mt-0.5">
+                        <div className="text-xs text-gray-500 mt-0.5">
                           {order.owner_phone || "N/A"}
                         </div>
                       </td>
 
                       <td className="px-6 py-4">
-                        <span className="text-sm text-gray-300">
+                        <span className="text-sm text-gray-600">
                           {order.article_name || "N/A"}
                         </span>
                       </td>
 
                       <td className="px-6 py-4">
-                        <span className="text-xs uppercase bg-slate-800 text-gray-400 px-2 py-1 rounded">
+                        <span className="text-xs uppercase bg-gray-100 text-gray-600 px-2 py-1 rounded">
                           {order.payment_method || "COD"}
                         </span>
                       </td>
 
                       <td className="px-6 py-4">
-                        <span className="text-sm font-semibold text-white">
-                          ₹
-                          {parseFloat(order.total_amount).toLocaleString(
-                            "en-IN",
-                          )}
+                        <span className="text-sm font-semibold text-gray-900">
+                          ₹{parseFloat(order.total_amount).toLocaleString("en-IN")}
                         </span>
                       </td>
 
                       <td className="px-6 py-4">
-                        <div className="text-sm text-white">{orderDate}</div>
-                        <div className="text-xs text-gray-400 mt-0.5">
+                        <div className="text-sm text-gray-900">{orderDate}</div>
+                        <div className="text-xs text-gray-500 mt-0.5">
                           {orderTime}
                         </div>
                       </td>
@@ -510,22 +507,21 @@ export default function OrdersPage() {
                                 onClick={() =>
                                   handleUpdateOrderStatus(
                                     order.order_id,
-                                    "rejected",
+                                    "rejected"
                                   )
                                 }
-                                className="px-3 py-1.5 text-xs bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg"
+                                className="px-3 py-1.5 text-xs bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition-colors"
                               >
                                 Reject
                               </button>
-
                               <button
                                 onClick={() =>
                                   handleUpdateOrderStatus(
                                     order.order_id,
-                                    "processing",
+                                    "processing"
                                   )
                                 }
-                                className="px-3 py-1.5 text-xs bg-teal-500/20 hover:bg-teal-500/30 text-teal-400 rounded-lg"
+                                className="px-3 py-1.5 text-xs bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg transition-colors"
                               >
                                 Accept
                               </button>
@@ -536,10 +532,10 @@ export default function OrdersPage() {
                               onChange={(e) =>
                                 handleUpdateOrderStatus(
                                   order.order_id,
-                                  e.target.value,
+                                  e.target.value
                                 )
                               }
-                              className="bg-slate-800 border border-slate-600 text-white text-xs rounded-lg px-3 py-2"
+                              className="bg-gray-50 border border-gray-200 text-gray-700 text-xs rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-purple-500"
                             >
                               {allowedStatuses.map((status) => (
                                 <option key={status} value={status}>
@@ -551,7 +547,7 @@ export default function OrdersPage() {
                           )}
                           <button
                             onClick={() => handleViewOrder(order)}
-                            className="p-1.5 text-gray-400 hover:text-teal-400 hover:bg-teal-500/20 rounded-lg transition-colors"
+                            className="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
                             title="View Order Details"
                           >
                             <Eye size={16} />
@@ -564,9 +560,9 @@ export default function OrdersPage() {
               ) : (
                 <tr>
                   <td colSpan="9" className="px-6 py-12 text-center">
-                    <Package size={48} className="text-gray-600 mx-auto mb-3" />
-                    <p className="text-gray-400">No orders found</p>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <Package size={48} className="text-gray-300 mx-auto mb-3" />
+                    <p className="text-gray-500">No orders found</p>
+                    <p className="text-sm text-gray-400 mt-1">
                       Try adjusting your search or filter
                     </p>
                   </td>
@@ -578,13 +574,13 @@ export default function OrdersPage() {
 
         {/* Pagination Footer */}
         {!loading && !error && filteredOrders.length > 0 && (
-          <div className="px-6 py-4 border-t border-white/10 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <p className="text-sm text-gray-400">
-              Showing <span className="text-white">{startIndex + 1}</span> to{" "}
-              <span className="text-white">
+          <div className="px-6 py-4 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <p className="text-sm text-gray-500">
+              Showing <span className="text-gray-900">{startIndex + 1}</span> to{" "}
+              <span className="text-gray-900">
                 {Math.min(endIndex, filteredOrders.length)}
               </span>{" "}
-              of <span className="text-white">{filteredOrders.length}</span>{" "}
+              of <span className="text-gray-900">{filteredOrders.length}</span>{" "}
               orders
             </p>
 
@@ -592,7 +588,7 @@ export default function OrdersPage() {
               <button
                 onClick={() => goToPage(currentPage - 1)}
                 disabled={currentPage === 1}
-                className="px-3 py-1.5 text-sm bg-slate-800 hover:bg-slate-700 text-gray-400 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                className="px-3 py-1.5 text-sm bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
               >
                 <ChevronLeft size={16} />
                 Previous
@@ -612,8 +608,8 @@ export default function OrdersPage() {
                     onClick={() => goToPage(pageNum)}
                     className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
                       currentPage === pageNum
-                        ? "bg-teal-500/20 text-teal-400"
-                        : "bg-slate-800 hover:bg-slate-700 text-gray-400"
+                        ? "bg-purple-600 text-white"
+                        : "bg-white border border-gray-200 hover:bg-gray-50 text-gray-600"
                     }`}
                   >
                     {pageNum}
@@ -624,7 +620,7 @@ export default function OrdersPage() {
               <button
                 onClick={() => goToPage(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className="px-3 py-1.5 text-sm bg-slate-800 hover:bg-slate-700 text-gray-400 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                className="px-3 py-1.5 text-sm bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
               >
                 Next
                 <ChevronRight size={16} />

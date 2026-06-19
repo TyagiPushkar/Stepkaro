@@ -8,6 +8,9 @@ import {
   ShoppingBag,
   TrendingUp,
   Users,
+  Mail,
+  Lock,
+  ArrowRight,
 } from "lucide-react";
 import ReCAPTCHA from "react-google-recaptcha";
 
@@ -51,12 +54,8 @@ export default function Login() {
       const data = await res.json();
 
       if (data.success) {
-        // save tokens
         localStorage.setItem("access_token", data.access_token);
-
         localStorage.setItem("refresh_token", data.refresh_token);
-
-        // save minimal user info
         localStorage.setItem(
           "user",
           JSON.stringify({
@@ -66,10 +65,8 @@ export default function Login() {
           }),
         );
         document.cookie = `role=${data.role}; path=/`;
-
         document.cookie = `access_token=${data.access_token}; path=/`;
 
-        // redirect based on role
         if (data.role === "admin") {
           router.push("/admin/home");
         } else if (data.role === "seller") {
@@ -86,79 +83,110 @@ export default function Login() {
       setIsLoading(false);
     }
   };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-teal-900 flex items-center justify-center p-4">
-      {/* Animated background elements */}
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-orange-50 flex items-center justify-center p-4">
+      {/* Animated background elements - softer */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-teal-500/20 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-500/20 rounded-full blur-3xl animate-pulse delay-1000" />
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-200/30 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-orange-200/30 rounded-full blur-3xl" />
       </div>
 
       <div className="relative w-full max-w-6xl flex flex-col lg:flex-row gap-8 items-center">
         {/* Brand Section - Left Side */}
-        <div className="flex-1 text-center lg:text-left space-y-6 animate-fade-in-up">
-          <div className="inline-flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-2xl px-4 py-2 lg:mx-0 mx-auto">
-            <div className="w-3 h-3 bg-teal-400 rounded-full animate-ping" />
-            <span className="text-teal-300 text-sm font-medium">
-              Platform Overview
+        <div className="flex-1 text-center lg:text-left space-y-6">
+          <div className="inline-flex items-center gap-3 bg-purple-50 rounded-2xl px-4 py-2 lg:mx-0 mx-auto border border-purple-100">
+            <div className="w-3 h-3 bg-purple-500 rounded-full animate-pulse" />
+            <span className="text-purple-600 text-sm font-medium">
+              Secure Admin Login
             </span>
           </div>
 
-          <h1 className="text-5xl lg:text-6xl font-bold text-white">
-            Step<span className="text-teal-400">Karo</span>
+          <h1 className="text-5xl lg:text-6xl font-bold text-gray-900">
+            Step<span className="text-purple-600">Karo</span>
           </h1>
 
-          <p className="text-gray-300 text-lg max-w-md lg:mx-0 mx-auto">
+          <p className="text-gray-600 text-lg max-w-md lg:mx-0 mx-auto">
             Manage your marketplace, track orders, and grow your business with
             powerful analytics.
           </p>
+
+          {/* Feature badges */}
+          <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
+            <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full border border-gray-200 shadow-sm">
+              <ShoppingBag size={16} className="text-purple-500" />
+              <span className="text-sm text-gray-600">Product Management</span>
+            </div>
+            <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full border border-gray-200 shadow-sm">
+              <TrendingUp size={16} className="text-orange-500" />
+              <span className="text-sm text-gray-600">Analytics</span>
+            </div>
+            <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full border border-gray-200 shadow-sm">
+              <Users size={16} className="text-purple-500" />
+              <span className="text-sm text-gray-600">User Management</span>
+            </div>
+          </div>
         </div>
 
+        {/* Login Card */}
         <div className="flex-1 w-full max-w-md">
-          <div className="bg-slate-900/80 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl p-8 animate-fade-in-up animation-delay-200">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-xl p-8">
             <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-white">Welcome back</h2>
-              <p className="text-gray-400 mt-2">Sign in to your account</p>
+              <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-orange-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <LogIn size={28} className="text-purple-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900">Welcome back</h2>
+              <p className="text-gray-500 mt-2">Sign in to your account</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               {error && (
-                <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3">
-                  <p className="text-red-400 text-sm text-center">{error}</p>
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                  <p className="text-red-600 text-sm text-center">{error}</p>
                 </div>
               )}
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">
+                <label className="text-sm font-medium text-gray-700">
                   Email address
                 </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@socialseller.com"
-                  className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
-                  required
-                />
+                <div className="relative">
+                  <Mail
+                    size={18}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="admin@socialseller.com"
+                    className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                    required
+                  />
+                </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">
+                <label className="text-sm font-medium text-gray-700">
                   Password
                 </label>
                 <div className="relative">
+                  <Lock
+                    size={18}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  />
                   <input
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your password"
-                    className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all pr-12"
+                    className="w-full pl-10 pr-12 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300 transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                   >
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
@@ -169,51 +197,67 @@ export default function Login() {
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
-                    className="w-4 h-4 rounded border-white/20 bg-slate-800 text-teal-500 focus:ring-teal-500 focus:ring-offset-0"
+                    className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
                   />
-                  <span className="text-sm text-gray-400">Remember me</span>
+                  <span className="text-sm text-gray-600">Remember me</span>
                 </label>
                 <a
                   href="#"
-                  className="text-sm text-teal-400 hover:text-teal-300 transition-colors"
+                  className="text-sm text-purple-600 hover:text-purple-700 transition-colors font-medium"
                 >
                   Forgot password?
                 </a>
               </div>
-              <ReCAPTCHA
-                sitekey="6LflhNgsAAAAAPAp5TS5W-QxR2feOSikw3gGVKfR"
-                onChange={(token) => {
-                  setCaptchaVerified(true);
-                  setCaptchaToken(token);
-                }}
-              />
+
+              <div className="flex justify-center">
+                <ReCAPTCHA
+                  sitekey="6LflhNgsAAAAAPAp5TS5W-QxR2feOSikw3gGVKfR"
+                  onChange={(token) => {
+                    setCaptchaVerified(true);
+                    setCaptchaToken(token);
+                  }}
+                />
+              </div>
 
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-3 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                className="w-full py-3 bg-gradient-to-r from-purple-600 to-orange-500 hover:shadow-lg text-white font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : (
                   <>
-                    <LogIn size={18} />
                     Sign In
+                    <ArrowRight size={18} />
                   </>
                 )}
               </button>
             </form>
 
-            <div className="mt-8 pt-6 border-t border-white/10">
-              <div className="flex items-center justify-between text-sm text-gray-400"></div>
-            </div>
-          </div>
-
-          <div className="mt-4 text-center text-xs text-gray-500">
-            <p>Demo: admin@socialseller.com / any password</p>
+          
           </div>
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes fade-in-up {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fade-in-up {
+          animation: fade-in-up 0.6s ease-out forwards;
+        }
+        .animation-delay-200 {
+          animation-delay: 0.2s;
+        }
+      `}</style>
     </div>
   );
 }

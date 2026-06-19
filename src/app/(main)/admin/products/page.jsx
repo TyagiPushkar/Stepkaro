@@ -18,6 +18,7 @@ import {
   X,
   ThumbsUp,
   ThumbsDown,
+  Loader2,
 } from "lucide-react";
 import api from "@/app/utils/api";
 import ViewProduct from "@/app/components/shared/ViewProduct";
@@ -45,12 +46,34 @@ const normalizeProductImageUrl = (image) => {
   return `https://namami-infotech.com/${trimmed}`;
 };
 
+// Modal component
+const Modal = ({ isOpen, onClose, title, children }) => {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <div className="bg-white rounded-xl border border-gray-200 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl">
+        <div className="flex justify-between items-center p-4 border-b border-gray-200 sticky top-0 bg-white z-10">
+          <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+          <button
+            onClick={onClose}
+            className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <X size={20} />
+          </button>
+        </div>
+        <div className="p-4">{children}</div>
+      </div>
+    </div>
+  );
+};
+
 export default function ProductsPage() {
   const router = useRouter();
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
+ 
 
   // Modal states
   const [showAddModal, setShowAddModal] = useState(false);
@@ -164,7 +187,7 @@ export default function ProductsPage() {
       value: "all",
       count: allProductsCount,
       icon: Package,
-      color: "teal",
+      color: "purple",
     },
     {
       label: "Products Listing Requested",
@@ -188,9 +211,9 @@ export default function ProductsPage() {
       color: "red",
     },
   ];
+
   const handleCommissionChange = (e) => {
     const val = e.target.value;
-
     if (/^\d*\.?\d*$/.test(val)) {
       setCommission(val);
     }
@@ -538,41 +561,31 @@ export default function ProductsPage() {
 
   const getStockBadge = (stock, qty) => {
     if (qty === 0 || stock === "out_of_stock") {
-      return { label: "Out of Stock", color: "bg-red-500/20 text-red-400" };
+      return { label: "Out of Stock", color: "bg-red-100 text-red-700" };
     } else if (qty < 5) {
-      return { label: "Low Stock", color: "bg-yellow-500/20 text-yellow-400" };
+      return { label: "Low Stock", color: "bg-yellow-100 text-yellow-700" };
     }
-    return { label: "In Stock", color: "bg-green-500/20 text-green-400" };
+    return { label: "In Stock", color: "bg-green-100 text-green-700" };
   };
 
-  // Modal component
-  const Modal = ({ isOpen, onClose, title, children }) => {
-    if (!isOpen) return null;
+  if (loading) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-        <div className="bg-slate-800 rounded-xl border border-white/10 w-full max-w-md max-h-[90vh] overflow-y-auto">
-          <div className="flex justify-between items-center p-4 border-b border-white/10 sticky top-0 bg-slate-800 z-10">
-            <h2 className="text-lg font-semibold text-white">{title}</h2>
-            <button
-              onClick={onClose}
-              className="p-1 text-gray-400 hover:text-white"
-            >
-              <X size={20} />
-            </button>
-          </div>
-          <div className="p-4">{children}</div>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <div className="w-10 h-10 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-3"></div>
+          <p className="text-gray-500">Loading products...</p>
         </div>
       </div>
     );
-  };
+  }
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Products</h1>
-          <p className="text-gray-400 text-sm mt-1">
+          <h1 className="text-2xl font-bold text-gray-900">Products</h1>
+          <p className="text-gray-500 text-sm mt-1">
             Manage your product catalog
           </p>
         </div>
@@ -581,7 +594,7 @@ export default function ProductsPage() {
         <div className="flex flex-wrap gap-3">
           <div className="relative flex-1 lg:w-64 min-w-[180px]">
             <Search
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
               size={18}
             />
             <input
@@ -589,7 +602,7 @@ export default function ProductsPage() {
               value={searchQuery}
               onChange={handleSearch}
               placeholder="Search products..."
-              className="w-full pl-10 pr-4 py-2 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+              className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
             />
           </div>
 
@@ -603,7 +616,7 @@ export default function ProductsPage() {
 
           {/* <button
             onClick={() => setShowBulkImportModal(true)}
-            className="bg-slate-800 hover:bg-slate-700 text-gray-300 px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-colors border border-white/10"
+            className="bg-white hover:bg-gray-50 text-gray-600 px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-colors border border-gray-200 hover:border-purple-300"
           >
             <Upload size={16} />
             Bulk Import
@@ -611,7 +624,7 @@ export default function ProductsPage() {
 
           <button
             onClick={handleExportCSV}
-            className="bg-slate-800 hover:bg-slate-700 text-gray-300 px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-colors border border-white/10"
+            className="bg-white hover:bg-gray-50 text-gray-600 px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-colors border border-gray-200 hover:border-purple-300"
           >
             <Download size={16} />
             Export CSV
@@ -619,19 +632,31 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      {/* Filters - Scrollable on mobile */}
+      {/* Filters */}
       <div className="flex flex-nowrap gap-3 overflow-x-auto pb-2 scrollbar-hide">
         {filters.map((filter) => {
           const Icon = filter.icon;
           const isActive = selectedFilter === filter.value;
+          const colorMap = {
+            purple: "bg-purple-600 text-white border-purple-600",
+            yellow: "bg-yellow-100 text-yellow-700 border-yellow-200",
+            green: "bg-green-100 text-green-700 border-green-200",
+            red: "bg-red-100 text-red-700 border-red-200",
+          };
+          const inactiveColorMap = {
+            purple: "bg-white text-gray-600 border-gray-200 hover:border-purple-300 hover:text-purple-600",
+            yellow: "bg-white text-gray-600 border-gray-200 hover:border-yellow-300 hover:text-yellow-600",
+            green: "bg-white text-gray-600 border-gray-200 hover:border-green-300 hover:text-green-600",
+            red: "bg-white text-gray-600 border-gray-200 hover:border-red-300 hover:text-red-600",
+          };
           return (
             <button
               key={filter.value}
               onClick={() => handleFilterChange(filter.value)}
-              className={`px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-all duration-200 whitespace-nowrap ${
+              className={`px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-all duration-200 whitespace-nowrap border ${
                 isActive
-                  ? `bg-${filter.color}-500/20 text-${filter.color}-400 border border-${filter.color}-500/30`
-                  : "bg-slate-800/50 text-gray-400 hover:text-white border border-white/10 hover:border-teal-500/30"
+                  ? colorMap[filter.color] || "bg-purple-600 text-white border-purple-600"
+                  : inactiveColorMap[filter.color] || "bg-white text-gray-600 border-gray-200 hover:border-purple-300"
               }`}
             >
               <Icon size={16} />
@@ -639,8 +664,8 @@ export default function ProductsPage() {
               <span
                 className={`px-2 py-0.5 rounded-full text-xs ${
                   isActive
-                    ? `bg-${filter.color}-500/30 text-${filter.color}-400`
-                    : "bg-slate-700 text-gray-400"
+                    ? "bg-white/20 text-white"
+                    : "bg-gray-100 text-gray-600"
                 }`}
               >
                 {filter.count}
@@ -652,27 +677,27 @@ export default function ProductsPage() {
 
       {/* Results Summary */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-gray-500">
           Showing{" "}
-          <span className="text-white">
+          <span className="text-gray-900">
             {filteredProducts.length > 0 ? startIndex + 1 : 0}
           </span>{" "}
           to{" "}
-          <span className="text-white">
+          <span className="text-gray-900">
             {Math.min(endIndex, filteredProducts.length)}
           </span>{" "}
-          of <span className="text-white">{filteredProducts.length}</span>{" "}
+          of <span className="text-gray-900">{filteredProducts.length}</span>{" "}
           products
         </p>
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-400">Show:</span>
+          <span className="text-sm text-gray-500">Show:</span>
           <select
             value={itemsPerPage}
             onChange={(e) => {
               setItemsPerPage(Number(e.target.value));
               setCurrentPage(1);
             }}
-            className="bg-slate-800 border border-white/10 rounded-lg px-2 py-1 text-sm text-gray-300"
+            className="bg-white border border-gray-200 rounded-lg px-2 py-1 text-sm text-gray-600 focus:outline-none focus:ring-1 focus:ring-purple-500"
           >
             <option value={5}>5</option>
             <option value={10}>10</option>
@@ -681,57 +706,50 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      {/* Products Table - Mobile Card View */}
-      <div className="bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden">
+      {/* Products Table */}
+      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
         {/* Desktop Table View */}
         <div className="hidden lg:block overflow-x-auto">
           <table className="w-full min-w-[900px]">
-            <thead className="bg-slate-800/50 border-b border-white/10">
+            <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   S.No
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Product Info
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Qty
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Owner
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Price
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Orders
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Brand
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Commission
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Stock
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
-              {loading ? (
-                <tr>
-                  <td colSpan="11" className="px-4 py-12 text-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500 mx-auto"></div>
-                    <p className="text-gray-400 mt-2">Loading products...</p>
-                  </td>
-                </tr>
-              ) : currentProducts.length > 0 ? (
+            <tbody className="divide-y divide-gray-100">
+              {currentProducts.length > 0 ? (
                 currentProducts.map((product, index) => {
                   const stockBadge = getStockBadge(
                     product.stock,
@@ -743,10 +761,10 @@ export default function ProductsPage() {
                   return (
                     <tr
                       key={product.id}
-                      className="hover:bg-white/5 transition-colors"
+                      className="hover:bg-gray-50 transition-colors"
                     >
                       <td className="px-4 py-3">
-                        <span className="text-sm text-gray-300">
+                        <span className="text-sm text-gray-500">
                           {startIndex + index + 1}
                         </span>
                       </td>
@@ -755,7 +773,7 @@ export default function ProductsPage() {
                         <div className="flex items-center gap-3">
                           <div
                             onClick={() => goToProductDetail(product.id)}
-                            className="w-10 h-10 bg-gradient-to-br from-teal-500/20 to-blue-500/20 rounded-lg flex items-center justify-center text-xl border border-white/10 cursor-pointer hover:scale-110 transition-transform overflow-hidden flex-shrink-0"
+                            className="w-10 h-10 bg-gradient-to-br from-purple-100 to-orange-100 rounded-lg flex items-center justify-center border border-gray-200 cursor-pointer hover:scale-110 transition-transform overflow-hidden flex-shrink-0"
                           >
                             <img
                               src={normalizeProductImageUrl(product.image)}
@@ -766,11 +784,11 @@ export default function ProductsPage() {
                           <div>
                             <p
                               onClick={() => goToProductDetail(product.id)}
-                              className="text-sm font-medium text-white cursor-pointer hover:text-teal-400 transition-colors"
+                              className="text-sm font-medium text-gray-900 cursor-pointer hover:text-purple-600 transition-colors"
                             >
                               {product.article_name}
                             </p>
-                            <p className="text-xs text-gray-400 mt-0.5">
+                            <p className="text-xs text-gray-500 mt-0.5">
                               {product.category_name}
                             </p>
                           </div>
@@ -779,14 +797,14 @@ export default function ProductsPage() {
 
                       <td className="px-4 py-3">
                         <span
-                          className={`text-sm font-medium ${product.stock_quantity === 0 ? "text-red-400" : "text-white"}`}
+                          className={`text-sm font-medium ${product.stock_quantity === 0 ? "text-red-600" : "text-gray-900"}`}
                         >
                           {product.stock_quantity}
                         </span>
                       </td>
 
                       <td className="px-4 py-3">
-                        <span className="text-sm text-white">
+                        <span className="text-sm text-gray-900">
                           {product.owner_name}
                         </span>
                       </td>
@@ -796,26 +814,26 @@ export default function ProductsPage() {
                           <span className="text-xs text-gray-400 line-through">
                             ₹{product.price || 0}
                           </span>
-                          <span className="text-sm font-semibold text-green-400">
+                          <span className="text-sm font-semibold text-emerald-600">
                             ₹{product.selling_price || 0}
                           </span>
                         </div>
                       </td>
 
                       <td className="px-4 py-3">
-                        <span className="text-sm text-white">
+                        <span className="text-sm text-gray-900">
                           {product.orders || 0}
                         </span>
                       </td>
 
                       <td className="px-4 py-3">
-                        <span className="text-sm text-white">
+                        <span className="text-sm text-gray-900">
                           {product.brand_name}
                         </span>
                       </td>
 
                       <td className="px-4 py-3">
-                        <span className="text-sm font-semibold text-teal-400">
+                        <span className="text-sm font-semibold text-purple-600">
                           {product.commission ? `${product.commission}%` : "0%"}
                         </span>
                       </td>
@@ -830,7 +848,7 @@ export default function ProductsPage() {
 
                       <td className="px-4 py-3">
                         {product.status === "reject" ? (
-                          <span className="px-2 py-1 text-xs bg-red-500/20 text-red-400 rounded-lg">
+                          <span className="px-2 py-1 text-xs bg-red-100 text-red-700 rounded-lg">
                             Reject
                           </span>
                         ) : isListingRequested ? (
@@ -841,7 +859,7 @@ export default function ProductsPage() {
                                 setCommission("");
                                 setShowCommissionModal(true);
                               }}
-                              className="px-3 py-1 text-xs bg-green-500/20 text-green-400 hover:bg-green-500/30 rounded-lg flex items-center gap-1 transition-colors cursor-pointer"
+                              className="px-3 py-1 text-xs bg-emerald-100 text-emerald-700 hover:bg-emerald-200 rounded-lg flex items-center gap-1 transition-colors cursor-pointer"
                               title="Approve Product"
                             >
                               <ThumbsUp size={14} />
@@ -852,7 +870,7 @@ export default function ProductsPage() {
                               onClick={() =>
                                 handleApprovalAction(product.id, "reject")
                               }
-                              className="px-3 py-1 text-xs bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded-lg flex items-center gap-1 transition-colors cursor-pointer"
+                              className="px-3 py-1 text-xs bg-red-100 text-red-700 hover:bg-red-200 rounded-lg flex items-center gap-1 transition-colors cursor-pointer"
                               title="Reject Product"
                             >
                               <ThumbsDown size={14} />
@@ -862,13 +880,13 @@ export default function ProductsPage() {
                         ) : (
                           <button
                             onClick={() => toggleStatus(product.id)}
-                            className="relative w-10 h-5 bg-gray-700 rounded-full transition-colors cursor-pointer flex-shrink-0"
+                            className="relative w-10 h-5 bg-gray-300 rounded-full transition-colors cursor-pointer flex-shrink-0"
                           >
                             <div
-                              className={`absolute w-4 h-4 bg-teal-400 rounded-full top-0.5 transition-all duration-300 ${
+                              className={`absolute w-4 h-4 bg-white rounded-full top-0.5 transition-all duration-300 shadow-sm ${
                                 product.status === "active"
-                                  ? "left-5"
-                                  : "left-0.5"
+                                  ? "left-5 bg-emerald-500"
+                                  : "left-0.5 bg-gray-400"
                               }`}
                             />
                           </button>
@@ -879,21 +897,21 @@ export default function ProductsPage() {
                         <div className="flex flex-wrap gap-1">
                           <button
                             onClick={() => handleViewProduct(product)}
-                            className="p-1.5 text-gray-400 hover:text-teal-400 hover:bg-teal-500/20 rounded-lg transition-colors"
+                            className="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
                             title="View Product"
                           >
                             <Eye size={16} />
                           </button>
                           <button
                             onClick={() => goToProductDetail(product.id)}
-                            className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors"
+                            className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                             title="Edit Product"
                           >
                             <Edit size={16} />
                           </button>
                           {/* <button
                             onClick={() => openDeleteModal(product)}
-                            className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
+                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                             title="Delete Product"
                           >
                             <Trash2 size={16} />
@@ -906,9 +924,9 @@ export default function ProductsPage() {
               ) : (
                 <tr>
                   <td colSpan="11" className="px-4 py-12 text-center">
-                    <Package size={48} className="text-gray-600 mx-auto mb-3" />
-                    <p className="text-gray-400">No products found</p>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <Package size={48} className="text-gray-300 mx-auto mb-3" />
+                    <p className="text-gray-500">No products found</p>
+                    <p className="text-sm text-gray-400 mt-1">
                       Try adjusting your search or filter
                     </p>
                   </td>
@@ -920,13 +938,8 @@ export default function ProductsPage() {
 
         {/* Mobile Card View */}
         <div className="lg:hidden">
-          {loading ? (
-            <div className="p-8 text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500 mx-auto"></div>
-              <p className="text-gray-400 mt-2">Loading products...</p>
-            </div>
-          ) : currentProducts.length > 0 ? (
-            <div className="divide-y divide-white/5">
+          {currentProducts.length > 0 ? (
+            <div className="divide-y divide-gray-100">
               {currentProducts.map((product, index) => {
                 const stockBadge = getStockBadge(
                   product.stock,
@@ -939,7 +952,7 @@ export default function ProductsPage() {
                     <div className="flex items-start gap-3">
                       <div
                         onClick={() => goToProductDetail(product.id)}
-                        className="w-14 h-14 bg-gradient-to-br from-teal-500/20 to-blue-500/20 rounded-lg flex items-center justify-center border border-white/10 cursor-pointer hover:scale-110 transition-transform overflow-hidden flex-shrink-0"
+                        className="w-14 h-14 bg-gradient-to-br from-purple-100 to-orange-100 rounded-lg flex items-center justify-center border border-gray-200 cursor-pointer hover:scale-110 transition-transform overflow-hidden flex-shrink-0"
                       >
                         <img
                           src={normalizeProductImageUrl(product.image)}
@@ -950,18 +963,18 @@ export default function ProductsPage() {
                       <div className="flex-1 min-w-0">
                         <p
                           onClick={() => goToProductDetail(product.id)}
-                          className="text-sm font-medium text-white cursor-pointer hover:text-teal-400 transition-colors truncate"
+                          className="text-sm font-medium text-gray-900 cursor-pointer hover:text-purple-600 transition-colors truncate"
                         >
                           {product.article_name}
                         </p>
-                        <p className="text-xs text-gray-400">
+                        <p className="text-xs text-gray-500">
                           {product.category_name}
                         </p>
                         <div className="flex items-center gap-2 mt-1">
                           <span className="text-xs text-gray-400 line-through">
                             ₹{product.price || 0}
                           </span>
-                          <span className="text-sm font-semibold text-green-400">
+                          <span className="text-sm font-semibold text-emerald-600">
                             ₹{product.selling_price || 0}
                           </span>
                         </div>
@@ -975,39 +988,39 @@ export default function ProductsPage() {
 
                     <div className="grid grid-cols-2 gap-2 text-sm">
                       <div>
-                        <span className="text-gray-400">Qty:</span>
-                        <span className="text-white ml-1">
+                        <span className="text-gray-500">Qty:</span>
+                        <span className="text-gray-900 ml-1">
                           {product.stock_quantity}
                         </span>
                       </div>
                       <div>
-                        <span className="text-gray-400">Owner:</span>
-                        <span className="text-white ml-1 truncate">
+                        <span className="text-gray-500">Owner:</span>
+                        <span className="text-gray-900 ml-1 truncate">
                           {product.owner_name}
                         </span>
                       </div>
                       <div>
-                        <span className="text-gray-400">Orders:</span>
-                        <span className="text-white ml-1">
+                        <span className="text-gray-500">Orders:</span>
+                        <span className="text-gray-900 ml-1">
                           {product.orders || 0}
                         </span>
                       </div>
                       <div>
-                        <span className="text-gray-400">Brand:</span>
-                        <span className="text-white ml-1 truncate">
+                        <span className="text-gray-500">Brand:</span>
+                        <span className="text-gray-900 ml-1 truncate">
                           {product.brand_name}
                         </span>
                       </div>
                       <div>
-                        <span className="text-gray-400">Commission:</span>
-                        <span className="text-teal-400 ml-1 font-semibold">
+                        <span className="text-gray-500">Commission:</span>
+                        <span className="text-purple-600 ml-1 font-semibold">
                           {product.commission ? `${product.commission}%` : "0%"}
                         </span>
                       </div>
                       <div>
-                        <span className="text-gray-400">Status:</span>
+                        <span className="text-gray-500">Status:</span>
                         {product.status === "reject" ? (
-                          <span className="text-red-400 ml-1">Reject</span>
+                          <span className="text-red-600 ml-1">Reject</span>
                         ) : isListingRequested ? (
                           <div className="flex flex-wrap gap-1 mt-1">
                             <button
@@ -1016,7 +1029,7 @@ export default function ProductsPage() {
                                 setCommission("");
                                 setShowCommissionModal(true);
                               }}
-                              className="px-2 py-0.5 text-xs bg-green-500/20 text-green-400 hover:bg-green-500/30 rounded flex items-center gap-1"
+                              className="px-2 py-0.5 text-xs bg-emerald-100 text-emerald-700 hover:bg-emerald-200 rounded flex items-center gap-1"
                             >
                               <ThumbsUp size={12} /> Approve
                             </button>
@@ -1024,7 +1037,7 @@ export default function ProductsPage() {
                               onClick={() =>
                                 handleApprovalAction(product.id, "reject")
                               }
-                              className="px-2 py-0.5 text-xs bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded flex items-center gap-1"
+                              className="px-2 py-0.5 text-xs bg-red-100 text-red-700 hover:bg-red-200 rounded flex items-center gap-1"
                             >
                               <ThumbsDown size={12} /> Reject
                             </button>
@@ -1032,13 +1045,13 @@ export default function ProductsPage() {
                         ) : (
                           <button
                             onClick={() => toggleStatus(product.id)}
-                            className="relative w-10 h-5 bg-gray-700 rounded-full transition-colors cursor-pointer ml-1"
+                            className="relative w-10 h-5 bg-gray-300 rounded-full transition-colors cursor-pointer ml-1"
                           >
                             <div
-                              className={`absolute w-4 h-4 bg-teal-400 rounded-full top-0.5 transition-all duration-300 ${
+                              className={`absolute w-4 h-4 bg-white rounded-full top-0.5 transition-all duration-300 shadow-sm ${
                                 product.status === "active"
-                                  ? "left-5"
-                                  : "left-0.5"
+                                  ? "left-5 bg-emerald-500"
+                                  : "left-0.5 bg-gray-400"
                               }`}
                             />
                           </button>
@@ -1046,22 +1059,22 @@ export default function ProductsPage() {
                       </div>
                     </div>
 
-                    <div className="flex justify-end gap-2 pt-2 border-t border-white/5">
+                    <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
                       <button
                         onClick={() => handleViewProduct(product)}
-                        className="p-1.5 text-gray-400 hover:text-teal-400 hover:bg-teal-500/20 rounded-lg transition-colors"
+                        className="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
                       >
                         <Eye size={16} />
                       </button>
                       <button
                         onClick={() => goToProductDetail(product.id)}
-                        className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors"
+                        className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                       >
                         <Edit size={16} />
                       </button>
                       <button
                         onClick={() => openDeleteModal(product)}
-                        className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
+                        className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                       >
                         <Trash2 size={16} />
                       </button>
@@ -1072,9 +1085,9 @@ export default function ProductsPage() {
             </div>
           ) : (
             <div className="p-8 text-center">
-              <Package size={48} className="text-gray-600 mx-auto mb-3" />
-              <p className="text-gray-400">No products found</p>
-              <p className="text-sm text-gray-500 mt-1">
+              <Package size={48} className="text-gray-300 mx-auto mb-3" />
+              <p className="text-gray-500">No products found</p>
+              <p className="text-sm text-gray-400 mt-1">
                 Try adjusting your search or filter
               </p>
             </div>
@@ -1083,11 +1096,11 @@ export default function ProductsPage() {
 
         {/* Pagination */}
         {filteredProducts.length > 0 && totalPages > 1 && (
-          <div className="px-4 py-4 border-t border-white/10 flex flex-wrap justify-center gap-2">
+          <div className="px-4 py-4 border-t border-gray-200 flex flex-wrap justify-center gap-2">
             <button
               onClick={() => goToPage(currentPage - 1)}
               disabled={currentPage === 1}
-              className="px-3 py-1.5 text-sm bg-slate-800 hover:bg-slate-700 text-gray-400 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+              className="px-3 py-1.5 text-sm bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
             >
               <ChevronLeft size={16} />
               Previous
@@ -1099,8 +1112,8 @@ export default function ProductsPage() {
                 onClick={() => goToPage(page)}
                 className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
                   currentPage === page
-                    ? "bg-teal-500/20 text-teal-400"
-                    : "bg-slate-800 hover:bg-slate-700 text-gray-400"
+                    ? "bg-purple-600 text-white"
+                    : "bg-white border border-gray-200 hover:bg-gray-50 text-gray-600"
                 }`}
               >
                 {page}
@@ -1110,7 +1123,7 @@ export default function ProductsPage() {
             <button
               onClick={() => goToPage(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className="px-3 py-1.5 text-sm bg-slate-800 hover:bg-slate-700 text-gray-400 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+              className="px-3 py-1.5 text-sm bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
             >
               Next
               <ChevronRight size={16} />
@@ -1127,10 +1140,9 @@ export default function ProductsPage() {
       >
         <div className="space-y-4">
           <div>
-            <label className="block text-sm text-gray-400 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Commission (%)
             </label>
-
             <input
               type="text"
               inputMode="decimal"
@@ -1138,7 +1150,7 @@ export default function ProductsPage() {
               onChange={handleCommissionChange}
               autoFocus
               placeholder="Enter commission percentage"
-              className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
           </div>
 
@@ -1148,10 +1160,9 @@ export default function ProductsPage() {
                 alert("Please enter commission");
                 return;
               }
-
               handleApprovalAction(selectedProductId, "active", commission);
             }}
-            className="w-full py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg"
+            className="w-full py-2 bg-gradient-to-r from-purple-600 to-orange-500 hover:shadow-lg text-white rounded-lg transition-all"
           >
             Approve Product
           </button>
@@ -1166,7 +1177,7 @@ export default function ProductsPage() {
       >
         <div className="space-y-4">
           <div>
-            <label className="text-sm text-gray-400 block mb-1">
+            <label className="text-sm font-medium text-gray-700 block mb-1">
               Product Name
             </label>
             <input
@@ -1175,36 +1186,36 @@ export default function ProductsPage() {
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
-              className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               placeholder="Enter product name"
             />
           </div>
           <div>
-            <label className="text-sm text-gray-400 block mb-1">Category</label>
+            <label className="text-sm font-medium text-gray-700 block mb-1">Category</label>
             <input
               type="text"
               value={formData.category}
               onChange={(e) =>
                 setFormData({ ...formData, category: e.target.value })
               }
-              className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               placeholder="Enter category"
             />
           </div>
           <div>
-            <label className="text-sm text-gray-400 block mb-1">Quantity</label>
+            <label className="text-sm font-medium text-gray-700 block mb-1">Quantity</label>
             <input
               type="number"
               value={formData.qty}
               onChange={(e) =>
                 setFormData({ ...formData, qty: e.target.value })
               }
-              className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               placeholder="Enter quantity"
             />
           </div>
           <div>
-            <label className="text-sm text-gray-400 block mb-1">
+            <label className="text-sm font-medium text-gray-700 block mb-1">
               Price (₹)
             </label>
             <input
@@ -1213,13 +1224,13 @@ export default function ProductsPage() {
               onChange={(e) =>
                 setFormData({ ...formData, price: e.target.value })
               }
-              className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               placeholder="Enter price"
             />
           </div>
           <button
             onClick={handleAddProduct}
-            className="w-full py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg transition-colors"
+            className="w-full py-2 bg-gradient-to-r from-purple-600 to-orange-500 hover:shadow-lg text-white rounded-lg transition-all"
           >
             Add Product
           </button>
@@ -1234,7 +1245,7 @@ export default function ProductsPage() {
       >
         <div className="space-y-4">
           <div>
-            <label className="text-sm text-gray-400 block mb-1">
+            <label className="text-sm font-medium text-gray-700 block mb-1">
               Product Name
             </label>
             <input
@@ -1243,33 +1254,33 @@ export default function ProductsPage() {
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
-              className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
           </div>
           <div>
-            <label className="text-sm text-gray-400 block mb-1">Category</label>
+            <label className="text-sm font-medium text-gray-700 block mb-1">Category</label>
             <input
               type="text"
               value={formData.category}
               onChange={(e) =>
                 setFormData({ ...formData, category: e.target.value })
               }
-              className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
           </div>
           <div>
-            <label className="text-sm text-gray-400 block mb-1">Quantity</label>
+            <label className="text-sm font-medium text-gray-700 block mb-1">Quantity</label>
             <input
               type="number"
               value={formData.qty}
               onChange={(e) =>
                 setFormData({ ...formData, qty: e.target.value })
               }
-              className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
           </div>
           <div>
-            <label className="text-sm text-gray-400 block mb-1">
+            <label className="text-sm font-medium text-gray-700 block mb-1">
               Price (₹)
             </label>
             <input
@@ -1278,12 +1289,12 @@ export default function ProductsPage() {
               onChange={(e) =>
                 setFormData({ ...formData, price: e.target.value })
               }
-              className="w-full px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
           </div>
           <button
             onClick={handleEditProduct}
-            className="w-full py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg transition-colors"
+            className="w-full py-2 bg-gradient-to-r from-purple-600 to-orange-500 hover:shadow-lg text-white rounded-lg transition-all"
           >
             Save Changes
           </button>
@@ -1296,9 +1307,9 @@ export default function ProductsPage() {
         onClose={() => setShowDeleteModal(false)}
         title="Delete Product"
       >
-        <p className="text-gray-300 mb-6">
+        <p className="text-gray-600 mb-6">
           Are you sure you want to delete{" "}
-          <span className="text-white font-semibold">
+          <span className="text-gray-900 font-semibold">
             {selectedProduct?.article_name}
           </span>
           ? This action cannot be undone.
@@ -1306,7 +1317,7 @@ export default function ProductsPage() {
         <div className="flex gap-3">
           <button
             onClick={() => setShowDeleteModal(false)}
-            className="flex-1 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
+            className="flex-1 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
           >
             Cancel
           </button>
@@ -1334,24 +1345,24 @@ export default function ProductsPage() {
         title="Bulk Import Products"
       >
         <div className="space-y-4">
-          <p className="text-gray-400 text-sm">
+          <p className="text-gray-600 text-sm">
             Upload a CSV file with columns:{" "}
-            <span className="text-white">
+            <span className="text-gray-900 font-medium">
               Product Name, Category, Quantity, Price
             </span>
           </p>
-          <div className="border-2 border-dashed border-white/20 rounded-lg p-8 text-center">
-            <Upload size={32} className="text-gray-500 mx-auto mb-3" />
+          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-purple-400 transition-colors">
+            <Upload size={32} className="text-gray-400 mx-auto mb-3" />
             <input
               type="file"
               accept=".csv"
               onChange={handleBulkImport}
-              className="text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:bg-teal-500/20 file:text-teal-400 hover:file:bg-teal-500/30"
+              className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:bg-purple-100 file:text-purple-700 hover:file:bg-purple-200"
             />
           </div>
           <a
             href="#"
-            className="text-sm text-teal-400 hover:text-teal-300 block text-center"
+            className="text-sm text-purple-600 hover:text-purple-700 block text-center"
           >
             Download sample CSV template
           </a>
