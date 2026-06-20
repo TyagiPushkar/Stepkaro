@@ -409,35 +409,35 @@ export default function ProductsPage() {
   };
 
   // Delete product
-  const handleDeleteProduct = async () => {
-    try {
-      const response = await api.post(
-        "https://namami-infotech.com/Stepkaro/src/product/delete_product.php",
-        {
-          product_id: selectedProduct.id,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+  // const handleDeleteProduct = async () => {
+  //   try {
+  //     const response = await api.post(
+  //       "https://namami-infotech.com/Stepkaro/src/product/delete_product.php",
+  //       {
+  //         product_id: selectedProduct.id,
+  //       },
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       }
+  //     );
 
-      if (response.data.status === "success") {
-        setProducts(
-          products.filter((product) => product.id !== selectedProduct.id)
-        );
-        setShowDeleteModal(false);
-        setSelectedProduct(null);
-        showToast("Product deleted successfully!");
-      } else {
-        showToast(response.data.message || "Failed to delete product", "error");
-      }
-    } catch (error) {
-      console.error("Error deleting product:", error);
-      showToast("Failed to delete product", "error");
-    }
-  };
+  //     if (response.data.status === "success") {
+  //       setProducts(
+  //         products.filter((product) => product.id !== selectedProduct.id)
+  //       );
+  //       setShowDeleteModal(false);
+  //       setSelectedProduct(null);
+  //       showToast("Product deleted successfully!");
+  //     } else {
+  //       showToast(response.data.message || "Failed to delete product", "error");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error deleting product:", error);
+  //     showToast("Failed to delete product", "error");
+  //   }
+  // };
 
   // Navigate to product detail page
   const goToProductDetail = (productId) => {
@@ -1068,13 +1068,13 @@ export default function ProductsPage() {
                           >
                             <Edit size={16} />
                           </button>
-                          <button
+                          {/* <button
                             onClick={() => openDeleteModal(product)}
                             className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                             title="Delete Product"
                           >
                             <Trash2 size={16} />
-                          </button>
+                          </button> */}
                         </div>
                       </td>
                     </tr>
@@ -1235,12 +1235,12 @@ export default function ProductsPage() {
                       >
                         <Edit size={16} />
                       </button>
-                      <button
+                      {/* <button
                         onClick={() => openDeleteModal(product)}
                         className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                       >
                         <Trash2 size={16} />
-                      </button>
+                      </button> */}
                     </div>
                   </div>
                 );
@@ -1492,12 +1492,12 @@ export default function ProductsPage() {
           >
             Cancel
           </button>
-          <button
+          {/* <button
             onClick={handleDeleteProduct}
             className="flex-1 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
           >
             Delete
-          </button>
+          </button> */}
         </div>
       </Modal>
 
