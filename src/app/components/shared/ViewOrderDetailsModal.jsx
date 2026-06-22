@@ -169,7 +169,7 @@ export default function ViewOrderDetailsModal({
         <div className="bg-white rounded-xl p-6 shadow-xl flex items-center gap-3 border border-slate-100">
           <Loader2 className="animate-spin h-5 w-5 text-indigo-600" />
           <p className="text-slate-600 text-xs font-medium">
-            Syncing order timeline metrics...
+            Loading order details...
           </p>
         </div>
       </div>
@@ -180,9 +180,9 @@ export default function ViewOrderDetailsModal({
     return (
       <div className="fixed inset-0 z-50 bg-slate-950/20 backdrop-blur-xs flex items-center justify-center p-4">
         <div className="bg-white border border-slate-100 rounded-xl p-5 max-w-xs w-full text-center shadow-xl">
-          <h2 className="text-sm font-bold text-slate-800">Order Logs Empty</h2>
+          <h2 className="text-sm font-bold text-slate-800">Order Not Found</h2>
           <p className="text-slate-400 text-[11px] mt-1">
-            Details could not be referenced from backend pool.
+           Unable to load this order.
           </p>
           <button
             onClick={onClose}
@@ -225,7 +225,7 @@ export default function ViewOrderDetailsModal({
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-xs font-black uppercase tracking-tight text-slate-900">
-                  Order Session Ledger
+                Order Details  
                 </h2>
                 <span className="text-[10px] font-mono font-bold bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">
                   #{order?.id}
@@ -264,25 +264,21 @@ export default function ViewOrderDetailsModal({
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
             {[
               {
-                label: "Net Payable",
+                label: "Total Amount",
                 val: formatCurrency(order?.total_amount),
                 cls: "text-slate-900 font-extrabold",
               },
               {
-                label: "Item Count",
+                label: "Items",
                 val: `${items?.length || 0} Batches`,
                 cls: "text-slate-700 font-semibold",
               },
               {
-                label: "Channel Method",
+                label: "Payment Method",
                 val: order?.payment_method || "COD",
                 cls: "text-indigo-600 font-mono font-bold uppercase",
               },
-              {
-                label: "Admin Payout Cuts",
-                val: formatCurrency(order?.admin_commission),
-                cls: "text-fuchsia-600 font-semibold",
-              },
+           
             ].map((stat, idx) => (
               <div
                 key={idx}
@@ -300,7 +296,7 @@ export default function ViewOrderDetailsModal({
           <div className="space-y-1.5">
             <div className="flex items-center gap-1 text-slate-800 font-bold text-[10px] uppercase tracking-wider">
               <Package size={12} className="text-slate-500" />
-              <span>Consolidated Item Matrix ({items?.length || 0})</span>
+              <span>Products ({items?.length || 0})</span>
             </div>
 
             <div className="space-y-1.5">
@@ -430,7 +426,7 @@ export default function ViewOrderDetailsModal({
 
           {/* Customer & Vendor Directory Matrices */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <SectionCard title="Customer Profile" icon={User}>
+            <SectionCard title="Buyer Details" icon={User}>
               <div className="space-y-1.5">
                 <InfoRow icon={User} label="Name ID" value={buyer?.name} />
                 <InfoRow icon={Phone} label="Phone Line" value={buyer?.phone} />
@@ -443,7 +439,7 @@ export default function ViewOrderDetailsModal({
               </div>
             </SectionCard>
 
-            <SectionCard title="Vendor Directory" icon={Building2}>
+            <SectionCard title="Vendor Details" icon={Building2}>
               <div className="space-y-1.5">
                 <InfoRow
                   icon={Building2}
@@ -473,7 +469,7 @@ export default function ViewOrderDetailsModal({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {/* Financial Ledger Breakdown */}
             <div className="md:col-span-2">
-              <SectionCard title="SaaS Financial Settlement" icon={Wallet}>
+              {/* <SectionCard title="SaaS Financial Settlement" icon={Wallet}>
                 <div className="grid grid-cols-3 gap-2 text-center">
                   <div className="bg-slate-50 border border-slate-100 rounded-lg p-2">
                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight block">
@@ -501,11 +497,11 @@ export default function ViewOrderDetailsModal({
                     </p>
                   </div>
                 </div>
-              </SectionCard>
+              </SectionCard> */}
             </div>
 
             {/* Premium Interactive Payment Receipt Card */}
-            <SectionCard title="Receipt Attachment" icon={CreditCard}>
+            <SectionCard title="Payment Receipt" icon={CreditCard}>
               {paymentReceiptUrl ? (
                 <div className="group relative rounded-lg border border-slate-200 bg-slate-50 p-1 overflow-hidden h-[54px] flex items-center gap-2 justify-between">
                   <div className="flex items-center gap-2 min-w-0">
@@ -552,7 +548,7 @@ export default function ViewOrderDetailsModal({
             onClick={onClose}
             className="px-4 py-1.5 rounded-lg text-xs font-bold transition-all bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200"
           >
-            Close Session
+            Close 
           </button>
         </div>
       </div>
