@@ -18,6 +18,7 @@ import {
   User,
   IndianRupee,
   Wallet,
+  Store,
 } from "lucide-react";
 
 import { useEffect, useState } from "react";
@@ -28,11 +29,14 @@ import { useEffect, useState } from "react";
 const adminNavItems = [
   { name: "Home", href: "/admin/home", icon: Home },
   { name: "Product", href: "/admin/products", icon: Package },
+  { name: "Banners", href: "/admin/banners", icon: ImageIcon },
   { name: "Orders", href: "/admin/orders", icon: ShoppingCart },
+  { name: "QR/BANK Orders", href: "/admin/qr-orders", icon: ShoppingCart },
   // { name: "Category", href: "/admin/categories", icon: Tag },
   { name: "Users", href: "/admin/users", icon: Users },
+  { name: "Sellers", href: "/admin/vendors", icon: Store },
   // { name: "Collections", href: "/admin/collections", icon: Layers },
-  { name: "Banners", href: "/admin/banners", icon: ImageIcon },
+  { name: "Wallets", href: "/admin/wallets", icon: Wallet },
   { name: "Accounts", href: "/admin/accounts", icon: Wallet },
   // { name: "Settings", href: "/admin/settings", icon: Settings },
   // { name: "Logout", href: "/admin/logout", icon: IndianRupee },
@@ -159,7 +163,10 @@ export default function Sidebar() {
                       : "text-gray-600 hover:bg-gray-50 hover:text-purple-600"
                   }`}
                 >
-                  <item.icon size={18} className={isActive ? "text-purple-600" : "text-gray-500"} />
+                  <item.icon
+                    size={18}
+                    className={isActive ? "text-purple-600" : "text-gray-500"}
+                  />
 
                   <span className="font-medium text-sm">{item.name}</span>
 

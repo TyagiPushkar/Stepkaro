@@ -15,45 +15,67 @@ import {
   Store,
   ChevronUp,
   Edit2,
+  AlertCircle,
 } from "lucide-react";
 
 const API_BASE = "https://namami-infotech.com/Stepkaro/src";
 
-// Reusable Form Field Components
-const InputField = ({ label, required, error, ...props }) => (
+// ==========================================
+// 1. REUSABLE FORM FIELD COMPONENTS
+// ==========================================
+
+const InputField = ({ label, required, error, hint, ...props }) => (
   <div>
     <label className="text-xs font-medium text-gray-700 block mb-1">
       {label} {required && <span className="text-red-500">*</span>}
+      {hint && <span className="text-gray-400 text-[10px] ml-1">({hint})</span>}
     </label>
     <input
       {...props}
-      className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-teal-500 ${
+      className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-teal-500 transition ${
         error ? "border-red-500" : "border-gray-300"
       }`}
     />
-    {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+    {error && (
+      <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+        <AlertCircle size={12} />
+        {error}
+      </p>
+    )}
   </div>
 );
 
-const SelectField = ({ label, required, error, options, ...props }) => (
+const SelectField = ({
+  label,
+  required,
+  error,
+  options,
+  placeholder,
+  ...props
+}) => (
   <div>
     <label className="text-xs font-medium text-gray-700 block mb-1">
       {label} {required && <span className="text-red-500">*</span>}
     </label>
     <select
       {...props}
-      className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-teal-500 ${
+      className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-teal-500 transition ${
         error ? "border-red-500" : "border-gray-300"
       }`}
     >
-      <option value="">Select {label}</option>
+      <option value="">{placeholder || `Select ${label}`}</option>
       {options.map((opt) => (
         <option key={opt} value={opt}>
           {opt}
         </option>
       ))}
     </select>
-    {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+    {error && (
+      <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+        <AlertCircle size={12} />
+        {error}
+      </p>
+    )}
   </div>
 );
 
@@ -65,13 +87,18 @@ const ImageUpload = ({
   onImageChange,
   imageName,
   id,
+  variant,
 }) => (
   <div>
     <label className="text-xs font-medium text-gray-700 block mb-1">
       {label} {required && <span className="text-red-500">*</span>}
     </label>
     <div
-      className={`flex items-center gap-3 p-3 border rounded-lg ${error ? "border-red-500" : "border-gray-300"}`}
+      className={`flex items-center gap-3 p-3 border rounded-lg transition ${
+        error
+          ? "border-red-500 bg-red-50"
+          : "border-gray-300 hover:border-teal-400"
+      }`}
     >
       <div className="w-16 h-16 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50 flex-shrink-0">
         {preview ? (
@@ -84,7 +111,7 @@ const ImageUpload = ({
           <ImageIcon size={24} className="text-gray-400" />
         )}
       </div>
-      <div>
+      <div className="flex-1">
         <input
           type="file"
           accept="image/*"
@@ -103,19 +130,31 @@ const ImageUpload = ({
             {imageName}
           </p>
         )}
+        {variant && (
+          <p className="text-[10px] text-gray-400 mt-1">
+            Upload variant specific image
+          </p>
+        )}
       </div>
     </div>
-    {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+    {error && (
+      <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+        <AlertCircle size={12} />
+        {error}
+      </p>
+    )}
   </div>
 );
 
-// Variant Card Component
+// ==========================================
+// 2. VARIANT CARD COMPONENT
+// ==========================================
+
 const VariantCard = ({ variant, index, onRemove, onEdit }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
     <div className="border rounded-lg overflow-hidden bg-white shadow-sm">
-      {/* Header */}
       <div
         className="flex items-center justify-between p-3 cursor-pointer hover:bg-gray-50 transition"
         onClick={() => setIsExpanded(!isExpanded)}
@@ -142,17 +181,20 @@ const VariantCard = ({ variant, index, onRemove, onEdit }) => {
                   Size: {variant.min_size}-{variant.max_size}
                 </span>
               )}
-              {variant.price && (
+              {variant.selling_price && (
                 <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
-                  ₹{variant.price}
+                  ₹{variant.selling_price}
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-2 text-xs text-gray-400 mt-0.5">
-              {variant.stock_quantity && (
-                <span>Stock: {variant.stock_quantity}</span>
+            <div className="flex items-center gap-2 text-xs text-gray-400 mt-0.5 flex-wrap">
+              {variant.stock !== undefined && (
+                <span>Stock: {variant.stock}</span>
               )}
               {variant.color && <span>Color: {variant.color}</span>}
+              {variant.pairs_per_ctn && (
+                <span>Pairs/Ctn: {variant.pairs_per_ctn}</span>
+              )}
             </div>
           </div>
         </div>
@@ -186,10 +228,9 @@ const VariantCard = ({ variant, index, onRemove, onEdit }) => {
         </div>
       </div>
 
-      {/* Expanded Details */}
       {isExpanded && (
         <div className="p-4 border-t bg-gray-50">
-          <div className="grid grid-cols-3 gap-2 text-sm">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
             <div>
               <span className="text-gray-500">Name:</span>
               <span className="ml-1 font-medium">
@@ -220,20 +261,12 @@ const VariantCard = ({ variant, index, onRemove, onEdit }) => {
             </div>
             <div>
               <span className="text-gray-500">Stock:</span>
-              <span className="ml-1 font-medium">
-                {variant.stock_quantity || "0"}
-              </span>
+              <span className="ml-1 font-medium">{variant.stock || "0"}</span>
             </div>
             <div>
               <span className="text-gray-500">Packing:</span>
               <span className="ml-1 font-medium">
                 {variant.packing_type || "-"}
-              </span>
-            </div>
-            <div>
-              <span className="text-gray-500">Pairs/Ctn:</span>
-              <span className="ml-1 font-medium">
-                {variant.pairs_per_ctn || "-"}
               </span>
             </div>
             <div>
@@ -247,8 +280,15 @@ const VariantCard = ({ variant, index, onRemove, onEdit }) => {
   );
 };
 
+// ==========================================
+// 3. MAIN COMPONENT
+// ==========================================
+
 export default function AdminAddProductModal({ isOpen, onClose }) {
-  // State
+  // ==========================================
+  // 3.1 STATE MANAGEMENT
+  // ==========================================
+
   const [token] = useState(() => {
     if (typeof window !== "undefined") {
       return (
@@ -277,7 +317,7 @@ export default function AdminAddProductModal({ isOpen, onClose }) {
   const [submitting, setSubmitting] = useState(false);
   const [editingVariantId, setEditingVariantId] = useState(null);
 
-  // Main Product
+  // Main Product Form
   const [form, setForm] = useState({
     vendor_id: "",
     article_name: "",
@@ -291,7 +331,7 @@ export default function AdminAddProductModal({ isOpen, onClose }) {
     material: "",
     upper_material: "",
     packing_type: "",
-    commission_type: "",
+    commission_type: "percentage",
     commission: "",
     pairs_per_ctn: "",
     stock_quantity: "",
@@ -301,7 +341,7 @@ export default function AdminAddProductModal({ isOpen, onClose }) {
     status: "active",
   });
 
-  // Variants
+  // Variants State
   const [showVariants, setShowVariants] = useState(false);
   const [variants, setVariants] = useState([]);
   const [variantCounter, setVariantCounter] = useState(1);
@@ -310,23 +350,26 @@ export default function AdminAddProductModal({ isOpen, onClose }) {
   const [currentVariant, setCurrentVariant] = useState({
     id: null,
     variant_name: "",
+    category: "",
+    color: "",
+    image: null,
     min_size: "",
     max_size: "",
     price: "",
     selling_price: "",
-    stock_quantity: "",
+    stock: "",
     packing_type: "",
     pairs_per_ctn: "",
-    color: "",
-    image: null,
-    preview: "",
   });
 
   // Main Product Image
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState("");
 
-  // Create variant with all fields
+  // ==========================================
+  // 3.2 HELPER FUNCTIONS
+  // ==========================================
+
   const createVariant = (id) => ({
     id,
     variant_name: "",
@@ -334,7 +377,7 @@ export default function AdminAddProductModal({ isOpen, onClose }) {
     max_size: "",
     price: "",
     selling_price: "",
-    stock_quantity: "",
+    stock: "",
     packing_type: "",
     pairs_per_ctn: "",
     color: "",
@@ -342,7 +385,10 @@ export default function AdminAddProductModal({ isOpen, onClose }) {
     preview: "",
   });
 
-  // Fetch Filters
+  // ==========================================
+  // 3.3 API CALLS
+  // ==========================================
+
   const fetchFilters = useCallback(
     async (vendorId) => {
       if (!token) return;
@@ -370,22 +416,26 @@ export default function AdminAddProductModal({ isOpen, onClose }) {
     [token],
   );
 
-  // Fetch Vendors when modal opens
-  useEffect(() => {
-    const fetchVendors = async () => {
-      if (!isOpen || !token) return;
-      try {
-        const res = await fetch(`${API_BASE}/admin/get_all_vendor.php`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json();
-        if (data.success && data.data) setVendors(data.data);
-      } catch (error) {
-        console.log("Vendor fetch error:", error);
-      }
-    };
-    fetchVendors();
+  const fetchVendors = useCallback(async () => {
+    if (!isOpen || !token) return;
+    try {
+      const res = await fetch(`${API_BASE}/admin/get_all_vendor.php`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.success && data.data) setVendors(data.data);
+    } catch (error) {
+      console.log("Vendor fetch error:", error);
+    }
   }, [isOpen, token]);
+
+  // ==========================================
+  // 3.4 EFFECTS
+  // ==========================================
+
+  useEffect(() => {
+    fetchVendors();
+  }, [fetchVendors]);
 
   const resetFormState = useCallback(() => {
     setForm({
@@ -401,7 +451,7 @@ export default function AdminAddProductModal({ isOpen, onClose }) {
       material: "",
       upper_material: "",
       packing_type: "",
-      commission_type: "",
+      commission_type: "percentage",
       commission: "",
       pairs_per_ctn: "",
       stock_quantity: "",
@@ -430,7 +480,10 @@ export default function AdminAddProductModal({ isOpen, onClose }) {
     return () => window.clearTimeout(timeoutId);
   }, [isOpen, resetFormState]);
 
-  // Filter vendors
+  // ==========================================
+  // 3.5 COMPUTED VALUES
+  // ==========================================
+
   const filteredVendors = useMemo(() => {
     if (!vendorSearch) return vendors;
     return vendors.filter(
@@ -441,7 +494,10 @@ export default function AdminAddProductModal({ isOpen, onClose }) {
     );
   }, [vendors, vendorSearch]);
 
-  // Handlers
+  // ==========================================
+  // 3.6 EVENT HANDLERS
+  // ==========================================
+
   const handleVendorSelect = (vendor) => {
     setSelectedVendor(vendor);
     setForm({ ...form, vendor_id: vendor.id });
@@ -456,7 +512,7 @@ export default function AdminAddProductModal({ isOpen, onClose }) {
     setCurrentVariant(createVariant(variantCounter));
     setEditingVariantId(null);
     setVariantCounter((prev) => prev + 1);
-    // Clear any variant errors
+    // Clear variant errors
     const newErrors = { ...errors };
     Object.keys(newErrors).forEach((key) => {
       if (key.startsWith("variant_")) delete newErrors[key];
@@ -467,19 +523,15 @@ export default function AdminAddProductModal({ isOpen, onClose }) {
   const handleVariantSave = () => {
     // Validate current variant
     const variantErrors = {};
-    if (!currentVariant.variant_name)
-      variantErrors.variant_name = "Variant name required";
     if (!currentVariant.min_size) variantErrors.min_size = "Min size required";
     if (!currentVariant.max_size) variantErrors.max_size = "Max size required";
     if (!currentVariant.price) variantErrors.price = "MRP required";
     if (!currentVariant.selling_price)
       variantErrors.selling_price = "Selling price required";
-    if (!currentVariant.stock_quantity)
-      variantErrors.stock_quantity = "Stock required";
+    if (!currentVariant.stock) variantErrors.stock = "Stock required";
     if (!currentVariant.image) variantErrors.image = "Variant image required";
 
     if (Object.keys(variantErrors).length > 0) {
-      // Set errors with variant prefix
       const newErrors = { ...errors };
       Object.entries(variantErrors).forEach(([key, value]) => {
         newErrors[`variant_${currentVariant.id}_${key}`] = value;
@@ -490,7 +542,6 @@ export default function AdminAddProductModal({ isOpen, onClose }) {
 
     // Save variant
     if (editingVariantId) {
-      // Update existing variant
       setVariants(
         variants.map((v) =>
           v.id === editingVariantId ? { ...currentVariant } : v,
@@ -498,7 +549,6 @@ export default function AdminAddProductModal({ isOpen, onClose }) {
       );
       setEditingVariantId(null);
     } else {
-      // Add new variant
       setVariants([...variants, { ...currentVariant }]);
     }
 
@@ -524,7 +574,6 @@ export default function AdminAddProductModal({ isOpen, onClose }) {
 
   const handleVariantChange = (field, value) => {
     setCurrentVariant({ ...currentVariant, [field]: value });
-    // Clear error for this field
     const newErrors = { ...errors };
     delete newErrors[`variant_${currentVariant.id}_${field}`];
     setErrors(newErrors);
@@ -538,7 +587,6 @@ export default function AdminAddProductModal({ isOpen, onClose }) {
         image: file,
         preview: URL.createObjectURL(file),
       });
-      // Clear image error
       const newErrors = { ...errors };
       delete newErrors[`variant_${currentVariant.id}_image`];
       setErrors(newErrors);
@@ -553,7 +601,17 @@ export default function AdminAddProductModal({ isOpen, onClose }) {
     }
   };
 
-  // Validation
+  const handleFormChange = (field, value) => {
+    setForm({ ...form, [field]: value });
+    const newErrors = { ...errors };
+    delete newErrors[field];
+    setErrors(newErrors);
+  };
+
+  // ==========================================
+  // 3.7 VALIDATION
+  // ==========================================
+
   const validate = () => {
     const newErrors = {};
     const requiredFields = {
@@ -594,12 +652,14 @@ export default function AdminAddProductModal({ isOpen, onClose }) {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Submit
+  // ==========================================
+  // 3.8 SUBMIT HANDLER
+  // ==========================================
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
 
-    // Check if there are variants but none saved
     if (showVariants && variants.length === 0) {
       alert("Please add at least one variant or remove the variants section.");
       return;
@@ -609,29 +669,89 @@ export default function AdminAddProductModal({ isOpen, onClose }) {
     try {
       const formData = new FormData();
 
-      // Main product data
+      // Main product data - matches API expectations
       Object.entries(form).forEach(([key, value]) => {
-        if (value) formData.append(key, value);
+        if (value !== undefined && value !== null && value !== "") {
+          // formData.append(key, value);
+          let finalValue = value;
+
+          if (key === "commission_type" && value === "per pairs rate") {
+            finalValue = "per_piece_rate";
+          }
+
+          formData.append(key, finalValue);
+        }
       });
       formData.append("image", image);
 
-      // Variants data
-      const variantsData = variants.map((v) => ({
-        variant_name: v.variant_name,
-        min_size: v.min_size,
-        max_size: v.max_size,
-        price: v.price,
-        selling_price: v.selling_price,
-        stock_quantity: v.stock_quantity,
-        packing_type: v.packing_type || form.packing_type,
-        pairs_per_ctn: v.pairs_per_ctn || form.pairs_per_ctn,
-        color: v.color || form.color,
-      }));
-      formData.append("variants", JSON.stringify(variantsData));
+      // Build multi_variants structure for API
+      // const multiVariants = variants.map((v) => ({
+      //   variant_name: v.variant_name,
+      //   color: v.color,
+      //   image: v.image,
+      //   min_size: v.min_size,
+      //   max_size: v.max_size,
+      //   price: v.price,
+      //   selling_price: v.selling_price,
+      //   stock: v.stock,
+      //   packing_type: v.packing_type || form.packing_type,
+      //   pairs_per_ctn: v.pairs_per_ctn || form.pairs_per_ctn,
+      //   // Include color variants if needed
+      //   // colors: v.color ? [{ color: v.color }] : [],
+      // }));
 
+      // formData.append("multi_variants", JSON.stringify(multiVariants));
       variants.forEach((v, index) => {
-        if (v.image) formData.append(`variant_image_${index}`, v.image);
+        formData.append(
+          `multi_variants[${index}][variant_name]`,
+          v.variant_name || "",
+        );
+
+        formData.append(`multi_variants[${index}][color]`, v.color || "");
+
+        formData.append(`multi_variants[${index}][min_size]`, v.min_size || "");
+
+        formData.append(`multi_variants[${index}][max_size]`, v.max_size || "");
+
+        formData.append(`multi_variants[${index}][price]`, v.price || "");
+
+        formData.append(
+          `multi_variants[${index}][selling_price]`,
+          v.selling_price || "",
+        );
+
+        formData.append(`multi_variants[${index}][stock]`, v.stock || "");
+
+        formData.append(
+          `multi_variants[${index}][packing_type]`,
+          v.packing_type || form.packing_type || "",
+        );
+
+        formData.append(
+          `multi_variants[${index}][pairs_per_ctn]`,
+          v.pairs_per_ctn || form.pairs_per_ctn || "",
+        );
+
+        if (v.image) {
+          formData.append(`multi_variants[${index}][image]`, v.image);
+        }
       });
+
+      // Append variant images with proper indexing
+      // variants.forEach((v, index) => {
+      //   if (v.image) {
+      //     formData.append(`multi_variants[${index}][image]`, v.image);
+      //   }
+      // });
+
+      // console.log("===== FORM DATA =====");
+
+      // for (let [key, value] of formData.entries()) {
+      // console.log(key, value);
+      // }
+
+      // console.log("===== VARIANTS =====");
+      // console.log(multiVariants);
 
       const res = await fetch(`${API_BASE}/product/admin_add_product.php`, {
         method: "POST",
@@ -648,15 +768,21 @@ export default function AdminAddProductModal({ isOpen, onClose }) {
         alert(data.message || "Failed to add product");
       }
     } catch (error) {
+      console.error("Submit error:", error);
       alert("Error adding product");
     } finally {
       setSubmitting(false);
     }
   };
 
-  if (!isOpen) return null;
+  // ==========================================
+  // 3.9 RENDER HELPERS
+  // ==========================================
 
-  // Reusable attribute fields config
+  const getVariantError = (field) => {
+    return errors[`variant_${currentVariant.id}_${field}`];
+  };
+
   const attributeFields = [
     { key: "brand_name", label: "Brand", options: filterOptions.brands },
     {
@@ -679,15 +805,17 @@ export default function AdminAddProductModal({ isOpen, onClose }) {
     },
   ];
 
-  const getVariantError = (field) => {
-    return errors[`variant_${currentVariant.id}_${field}`];
-  };
+  if (!isOpen) return null;
+
+  // ==========================================
+  // 3.10 RENDER
+  // ==========================================
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-xl">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3 border-b">
+        <div className="flex items-center justify-between px-5 py-3 border-b bg-gray-50/80">
           <div className="flex items-center gap-2">
             <Package size={18} className="text-teal-600" />
             <h2 className="text-sm font-semibold">Add New Product</h2>
@@ -711,8 +839,10 @@ export default function AdminAddProductModal({ isOpen, onClose }) {
               <div className="relative">
                 <div
                   onClick={() => setIsVendorOpen(!isVendorOpen)}
-                  className={`w-full px-3 py-2 border rounded-lg flex items-center justify-between cursor-pointer bg-white text-sm ${
-                    errors.vendor_id ? "border-red-500" : "border-gray-300"
+                  className={`w-full px-3 py-2 border rounded-lg flex items-center justify-between cursor-pointer bg-white text-sm transition ${
+                    errors.vendor_id
+                      ? "border-red-500"
+                      : "border-gray-300 hover:border-teal-400"
                   }`}
                 >
                   <div className="flex items-center gap-2 flex-1">
@@ -780,7 +910,9 @@ export default function AdminAddProductModal({ isOpen, onClose }) {
                 )}
               </div>
               {errors.vendor_id && (
-                <p className="text-xs text-red-500 mt-1">{errors.vendor_id}</p>
+                <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                  <AlertCircle size={12} /> {errors.vendor_id}
+                </p>
               )}
             </div>
 
@@ -795,24 +927,59 @@ export default function AdminAddProductModal({ isOpen, onClose }) {
               id="image-input"
             />
 
-            {/* Product Details */}
-            <div className="grid grid-cols-2 gap-3">
+            {/* Product Details - Article Name & Description */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <InputField
                 label="Article Name"
                 required
                 value={form.article_name}
                 onChange={(e) =>
-                  setForm({ ...form, article_name: e.target.value })
+                  handleFormChange("article_name", e.target.value)
                 }
                 error={errors.article_name}
-                placeholder="Product name"
+                placeholder="Enter product name"
               />
+              <InputField
+                label="Description"
+                value={form.description}
+                onChange={(e) =>
+                  handleFormChange("description", e.target.value)
+                }
+                placeholder="Product description (optional)"
+              />
+            </div>
+
+            {/* Size Range */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <InputField
+                label="Min Size"
+                required
+                type="number"
+                value={form.min_size}
+                onChange={(e) => handleFormChange("min_size", e.target.value)}
+                error={errors.min_size}
+                placeholder="e.g., 6"
+              />
+              <InputField
+                label="Max Size"
+                required
+                type="number"
+                value={form.max_size}
+                onChange={(e) => handleFormChange("max_size", e.target.value)}
+                error={errors.max_size}
+                placeholder="e.g., 12"
+              />
+            </div>
+
+            {/* Pricing & Stock */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <InputField
                 label="MRP (₹)"
                 required
                 type="number"
+                step="0.01"
                 value={form.price}
-                onChange={(e) => setForm({ ...form, price: e.target.value })}
+                onChange={(e) => handleFormChange("price", e.target.value)}
                 error={errors.price}
                 placeholder="0.00"
               />
@@ -820,9 +987,10 @@ export default function AdminAddProductModal({ isOpen, onClose }) {
                 label="Selling Price (₹)"
                 required
                 type="number"
+                step="0.01"
                 value={form.selling_price}
                 onChange={(e) =>
-                  setForm({ ...form, selling_price: e.target.value })
+                  handleFormChange("selling_price", e.target.value)
                 }
                 error={errors.selling_price}
                 placeholder="0.00"
@@ -833,37 +1001,37 @@ export default function AdminAddProductModal({ isOpen, onClose }) {
                 type="number"
                 value={form.stock_quantity}
                 onChange={(e) =>
-                  setForm({ ...form, stock_quantity: e.target.value })
+                  handleFormChange("stock_quantity", e.target.value)
                 }
                 error={errors.stock_quantity}
                 placeholder="Units"
               />
-            </div>
-
-            {/* Attributes */}
-            <div className="grid grid-cols-2 gap-3">
-              {attributeFields.map(({ key, label, options }) => (
-                <SelectField
-                  key={key}
-                  label={label}
-                  required
-                  value={form[key]}
-                  onChange={(e) => setForm({ ...form, [key]: e.target.value })}
-                  error={errors[key]}
-                  options={options}
-                />
-              ))}
               <InputField
                 label="Pairs per Carton"
                 required
                 type="number"
                 value={form.pairs_per_ctn}
                 onChange={(e) =>
-                  setForm({ ...form, pairs_per_ctn: e.target.value })
+                  handleFormChange("pairs_per_ctn", e.target.value)
                 }
                 error={errors.pairs_per_ctn}
-                placeholder="Enter count"
+                placeholder="Count"
               />
+            </div>
+
+            {/* Attributes */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {attributeFields.map(({ key, label, options }) => (
+                <SelectField
+                  key={key}
+                  label={label}
+                  required
+                  value={form[key]}
+                  onChange={(e) => handleFormChange(key, e.target.value)}
+                  error={errors[key]}
+                  options={options}
+                />
+              ))}
             </div>
 
             {/* Commission */}
@@ -873,43 +1041,21 @@ export default function AdminAddProductModal({ isOpen, onClose }) {
                 required
                 value={form.commission_type}
                 onChange={(e) =>
-                  setForm({ ...form, commission_type: e.target.value })
+                  handleFormChange("commission_type", e.target.value)
                 }
                 error={errors.commission_type}
-                options={["percentage", "fixed"]}
+                options={["percentage", "per pairs rate"]}
               />
               <InputField
                 label="Commission Value"
                 required
                 type="number"
+                step="0.01"
                 value={form.commission}
-                onChange={(e) =>
-                  setForm({ ...form, commission: e.target.value })
-                }
+                onChange={(e) => handleFormChange("commission", e.target.value)}
                 error={errors.commission}
                 placeholder="Enter commission value"
-              />
-            </div>
-
-            {/* Size Range */}
-            <div className="grid grid-cols-2 gap-3">
-              <InputField
-                label="Min Size"
-                required
-                value={form.min_size}
-                onChange={(e) => setForm({ ...form, min_size: e.target.value })}
-                error={errors.min_size}
-                placeholder="e.g., 6"
-                type="number"
-              />
-              <InputField
-                label="Max Size"
-                required
-                value={form.max_size}
-                onChange={(e) => setForm({ ...form, max_size: e.target.value })}
-                error={errors.max_size}
-                placeholder="e.g., 12"
-                type="number"
+                hint={form.commission_type === "percentage" ? "%" : "₹"}
               />
             </div>
 
@@ -928,7 +1074,7 @@ export default function AdminAddProductModal({ isOpen, onClose }) {
                 </button>
               </div>
 
-              {/* Show existing variants as cards */}
+              {/* Existing Variants */}
               {variants.length > 0 && (
                 <div className="space-y-2 mb-4">
                   {variants.map((variant, index) => (
@@ -943,7 +1089,7 @@ export default function AdminAddProductModal({ isOpen, onClose }) {
                 </div>
               )}
 
-              {/* Variant Form - Always visible when showVariants is true */}
+              {/* Variant Form */}
               {showVariants && (
                 <div className="border rounded-lg p-4 bg-gray-50 mt-3">
                   <div className="flex items-center justify-between mb-3">
@@ -954,7 +1100,7 @@ export default function AdminAddProductModal({ isOpen, onClose }) {
                       <button
                         type="button"
                         onClick={() => setShowVariants(false)}
-                        className="text-xs text-gray-400 hover:text-gray-600 transition"
+                        className="px-2 py-1 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 hover:border-gray-400 transition cursor-pointer"
                       >
                         Cancel
                       </button>
@@ -962,9 +1108,20 @@ export default function AdminAddProductModal({ isOpen, onClose }) {
                   </div>
 
                   <div className="space-y-3">
+                    {/* Variant Image */}
+                    <ImageUpload
+                      label="Variant Image"
+                      required
+                      error={getVariantError("image")}
+                      preview={currentVariant.preview}
+                      onImageChange={handleVariantImageChange}
+                      imageName={currentVariant.image?.name}
+                      id={`variant-image-${currentVariant.id}`}
+                      variant
+                    />
                     {/* Variant Name and Size */}
-                    <div className="grid grid-cols-3 gap-3">
-                      {/* <InputField
+                    {/* <div className="grid grid-cols-3 gap-3">
+                      <InputField
                         label="Variant Name"
                         required
                         value={currentVariant.variant_name}
@@ -973,7 +1130,12 @@ export default function AdminAddProductModal({ isOpen, onClose }) {
                         }
                         error={getVariantError("variant_name")}
                         placeholder="e.g., Red-Small"
-                      /> */}
+                      />
+                     
+                    </div> */}
+
+                    {/* size set mininum and maxium */}
+                    <div className="grid grid-cols-3 gap-3">
                       <InputField
                         label="Min Size"
                         required
@@ -1004,24 +1166,26 @@ export default function AdminAddProductModal({ isOpen, onClose }) {
                         }
                         options={filterOptions.colors}
                       />
+                      {/* <InputField
+                        label="Stock"
+                        required
+                        type="number"
+                        value={currentVariant.stock}
+                        onChange={(e) =>
+                          handleVariantChange("stock", e.target.value)
+                        }
+                        error={getVariantError("stock")}
+                        placeholder="Units"
+                      /> */}
                     </div>
 
                     {/* Variant Pricing and Stock */}
                     <div className="grid grid-cols-3 gap-3">
-                      <SelectField
-                        label="Category"
-                        value={
-                          currentVariant.category_name || form.category_name
-                        }
-                        onChange={(e) =>
-                          handleVariantChange("category_name", e.target.value)
-                        }
-                        options={filterOptions.categories}
-                      />
                       <InputField
                         label="MRP (₹)"
                         required
                         type="number"
+                        step="0.01"
                         value={currentVariant.price}
                         onChange={(e) =>
                           handleVariantChange("price", e.target.value)
@@ -1033,6 +1197,7 @@ export default function AdminAddProductModal({ isOpen, onClose }) {
                         label="Selling Price (₹)"
                         required
                         type="number"
+                        step="0.01"
                         value={currentVariant.selling_price}
                         onChange={(e) =>
                           handleVariantChange("selling_price", e.target.value)
@@ -1040,21 +1205,21 @@ export default function AdminAddProductModal({ isOpen, onClose }) {
                         error={getVariantError("selling_price")}
                         placeholder="0.00"
                       />
-                    </div>
-
-                    {/* Variant Optional Fields */}
-                    <div className="grid grid-cols-3 gap-3">
                       <InputField
                         label="Stock"
                         required
                         type="number"
-                        value={currentVariant.stock_quantity}
+                        value={currentVariant.stock}
                         onChange={(e) =>
-                          handleVariantChange("stock_quantity", e.target.value)
+                          handleVariantChange("stock", e.target.value)
                         }
                         error={getVariantError("stock")}
                         placeholder="Units"
                       />
+                    </div>
+
+                    {/* Variant Optional Fields */}
+                    <div className="grid grid-cols-3 gap-3">
                       <SelectField
                         label="Packing Type"
                         value={currentVariant.packing_type}
@@ -1073,17 +1238,6 @@ export default function AdminAddProductModal({ isOpen, onClose }) {
                         placeholder={`Default: ${form.pairs_per_ctn || "N/A"}`}
                       />
                     </div>
-
-                    {/* Variant Image */}
-                    <ImageUpload
-                      label="Variant Image"
-                      required
-                      error={getVariantError("image")}
-                      preview={currentVariant.preview}
-                      onImageChange={handleVariantImageChange}
-                      imageName={currentVariant.image?.name}
-                      id={`variant-image-${currentVariant.id}`}
-                    />
 
                     {/* Save/Cancel Buttons */}
                     <div className="flex gap-2 pt-2">
@@ -1116,11 +1270,11 @@ export default function AdminAddProductModal({ isOpen, onClose }) {
             <SelectField
               label="Status"
               value={form.status}
-              onChange={(e) => setForm({ ...form, status: e.target.value })}
+              onChange={(e) => handleFormChange("status", e.target.value)}
               options={["active", "inactive"]}
             />
 
-            {/* Buttons */}
+            {/* Action Buttons */}
             <div className="flex gap-3 pt-3 border-t">
               <button
                 type="button"
