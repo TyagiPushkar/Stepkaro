@@ -70,7 +70,7 @@ export default function BannersPage() {
   const [toast, setToast] = useState(null);
 
   // Position options
-  const positions = ["HEADER", "SIDEBAR", "FOOTER", "POPUP", "MOBILE"];
+  const positions = ["HEADER", "FOOTER"];
   
   const showToast = (message, type = "success") => {
     setToast({ message, type });
@@ -355,7 +355,7 @@ export default function BannersPage() {
     }
 
     // Headers for CSV
-    const headers = ["ID", "Title", "Position", "Link", "Status", "Created At"];
+    const headers = ["ID", "Title", "Position", "Brand", "Status", "Created At"];
     
     // Map data to rows
     const rows = banners.map(banner => [
@@ -393,7 +393,7 @@ export default function BannersPage() {
       return;
     }
 
-    const headers = ["ID", "Title", "Position", "Link", "Status", "Created At"];
+    const headers = ["ID", "Title", "Position", "Brand", "Status", "Created At"];
     
     const rows = filteredBanners.map(banner => [
       banner.id,
@@ -613,7 +613,7 @@ export default function BannersPage() {
                       </span>
                     </div>
                     <div className="flex gap-4 mt-2 text-xs">
-                      <span className="text-gray-500 truncate">Link: {banner.link || "—"}</span>
+                      <span className="text-gray-500 truncate">Brand: {banner.link || "—"}</span>
                     </div>
                   </div>
                 </div>
@@ -734,13 +734,13 @@ export default function BannersPage() {
           </div>
           
           <div>
-            <label className="text-sm font-medium text-gray-700 block mb-1">Link URL</label>
+            <label className="text-sm font-medium text-gray-700 block mb-1">Brand Name</label>
             <input
               type="text"
               value={formData.link}
               onChange={(e) => setFormData({...formData, link: e.target.value})}
               className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              placeholder="/promotion-page"
+              placeholder="Enter Brand Name"
             />
           </div>
           
@@ -827,7 +827,7 @@ export default function BannersPage() {
           </div>
           
           <div>
-            <label className="text-sm font-medium text-gray-700 block mb-1">Link URL</label>
+            <label className="text-sm font-medium text-gray-700 block mb-1">Brand Name</label>
             <input
               type="text"
               value={formData.link}
@@ -930,7 +930,7 @@ export default function BannersPage() {
                 />
                 <h3 className="text-xl font-bold text-gray-900">{selectedBanner.name}</h3>
                 <p className="text-gray-500 mt-2">Position: {selectedBanner.position}</p>
-                <p className="text-gray-500">Link: {selectedBanner.link || "—"}</p>
+                <p className="text-gray-500">Brand : {selectedBanner.link || "—"}</p>
               </div>
             </div>
             <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
