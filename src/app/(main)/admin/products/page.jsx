@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef, Fragment } from "react";
 import { useRouter } from "next/navigation";
 import {
   Search,
@@ -68,6 +68,110 @@ const Modal = ({ isOpen, onClose, title, children }) => {
   );
 };
 
+const VariantsDetailTable = ({
+  variants,
+  productId,
+  onToggleVariantStatus,
+  togglingVariantId,
+}) => {
+  if (!variants?.length) {
+    return (
+      <p className="text-sm text-gray-500 py-2">No variants available</p>
+    );
+  }
+
+  return (
+    <div className="overflow-x-auto rounded-lg border border-blue-100 bg-blue-50/40">
+      <table className="w-full min-w-[700px] text-sm">
+        <thead className="bg-blue-100/60">
+          <tr>
+            <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">
+              Image
+            </th>
+            <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">
+              Size
+            </th>
+            <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">
+              Color
+            </th>
+            <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">
+              MRP
+            </th>
+            <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">
+              Selling
+            </th>
+            <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">
+              Stock
+            </th>
+            <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">
+              Packing
+            </th>
+            <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">
+              Pairs/Ctn
+            </th>
+            <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">
+              Status
+            </th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-blue-100 bg-white">
+          {variants.map((variant) => (
+            <tr key={variant.id} className="hover:bg-blue-50/50">
+              <td className="px-3 py-2">
+                <div className="w-8 h-8 rounded border border-gray-200 overflow-hidden">
+                  <img
+                    src={normalizeProductImageUrl(variant.image)}
+                    alt={variant.variant_size || "Variant"}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </td>
+              <td className="px-3 py-2 text-gray-900">
+                {variant.variant_size || "-"}
+              </td>
+              <td className="px-3 py-2 text-gray-900">
+                {variant.color || "-"}
+              </td>
+              <td className="px-3 py-2 text-gray-500 line-through">
+                ₹{variant.price || 0}
+              </td>
+              <td className="px-3 py-2 font-medium text-emerald-600">
+                ₹{variant.selling_price || 0}
+              </td>
+              <td className="px-3 py-2 text-gray-900">{variant.stock ?? 0}</td>
+              <td className="px-3 py-2 text-gray-900">
+                {variant.packing_type || "-"}
+              </td>
+              <td className="px-3 py-2 text-gray-900">
+                {variant.pairs_per_ctn ?? "-"}
+              </td>
+              <td className="px-3 py-2">
+                <button
+                  type="button"
+                  disabled={togglingVariantId === variant.id}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleVariantStatus(productId, variant.id);
+                  }}
+                  className={`relative w-10 h-5 rounded-full transition-colors cursor-pointer flex-shrink-0 disabled:opacity-60 ${
+                    variant.status === "active" ? "bg-green-500" : "bg-red-500"
+                  }`}
+                >
+                  <div
+                    className={`absolute w-4 h-4 bg-white rounded-full top-0.5 transition-all duration-300 shadow-sm ${
+                      variant.status === "active" ? "left-5" : "left-0.5"
+                    }`}
+                  />
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
 export default function ProductsPage() {
   const router = useRouter();
   const [selectedFilter, setSelectedFilter] = useState("all");
@@ -90,6 +194,10 @@ export default function ProductsPage() {
   const [selectedProductId, setSelectedProductId] = useState(null);
   const [commission, setCommission] = useState("");
   const [commissionType, setCommissionType] = useState("");
+  const [expandedVariantsProductId, setExpandedVariantsProductId] =
+    useState(null);
+  const [togglingVariantId, setTogglingVariantId] = useState(null);
+  const variantsPanelRef = useRef(null);
 
   // Form states for add/edit
   const [formData, setFormData] = useState({
@@ -130,6 +238,39 @@ export default function ProductsPage() {
     };
     getProducts();
   }, [token]);
+
+  useEffect(() => {
+    if (expandedVariantsProductId === null) return;
+
+    const handleClickOutside = (e) => {
+      if (
+        variantsPanelRef.current &&
+        !variantsPanelRef.current.contains(e.target) &&
+        !e.target.closest("[data-variants-toggle]")
+      ) {
+        setExpandedVariantsProductId(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [expandedVariantsProductId]);
+
+  const toggleVariantsPanel = (e, productId) => {
+    e.stopPropagation();
+    setExpandedVariantsProductId((prev) =>
+      prev === productId ? null : productId,
+    );
+  };
+
+  const getVariantCount = (product) =>
+    Array.isArray(product.variants) ? product.variants.length : 0;
+
+  const isOutOfStock = (product) => {
+    if (product.stock === "out_of_stock") return true;
+    const qty = product.stock_quantity ?? product.qty;
+    return qty === 0 || qty === "0";
+  };
 
   // Handle approval action
   const handleApprovalAction = async (
@@ -185,9 +326,8 @@ export default function ProductsPage() {
   const productsListingRequestedCount = products.filter(
     (p) => p.status === "approve_request",
   ).length;
-  const outOfStockCount = products.filter(
-    (p) => p.stock === "out_of_stock" || p.qty === 0,
-  ).length;
+  const outOfStockCount = products.filter(isOutOfStock).length;
+  const rejectedCount = products.filter((p) => p.status === "reject").length;
 
   const filters = [
     {
@@ -218,6 +358,20 @@ export default function ProductsPage() {
       icon: XCircle,
       color: "red",
     },
+    {
+      label: "Out of Stock Product",
+      value: "out_of_stock",
+      count: outOfStockCount,
+      icon: AlertCircle,
+      color: "red",
+    },
+    {
+      label: "Rejected Product",
+      value: "reject",
+      count: rejectedCount,
+      icon: XCircle,
+      color: "red",
+    },
   ];
 
   const handleCommissionChange = (e) => {
@@ -238,9 +392,9 @@ export default function ProductsPage() {
     } else if (selectedFilter === "approve_request") {
       filtered = filtered.filter((p) => p.status === "approve_request");
     } else if (selectedFilter === "out_of_stock") {
-      filtered = filtered.filter(
-        (p) => p.stock === "out_of_stock" || p.qty === 0,
-      );
+      filtered = filtered.filter(isOutOfStock);
+    } else if (selectedFilter === "reject") {
+      filtered = filtered.filter((p) => p.status === "reject");
     }
 
     if (searchQuery) {
@@ -315,6 +469,72 @@ export default function ProductsPage() {
         ),
       );
       showToast(error.message || "Failed to update status", "error");
+    }
+  };
+
+  const toggleVariantStatus = async (productId, variantId) => {
+    const product = products.find((p) => p.id === productId);
+    const variant = product?.variants?.find((v) => v.id === variantId);
+    if (!variant) return;
+
+    const newStatus = variant.status === "active" ? "inactive" : "active";
+
+    setProducts((prev) =>
+      prev.map((p) =>
+        p.id === productId
+          ? {
+              ...p,
+              variants: p.variants.map((v) =>
+                v.id === variantId ? { ...v, status: newStatus } : v,
+              ),
+            }
+          : p,
+      ),
+    );
+
+    setTogglingVariantId(variantId);
+
+    try {
+      const response = await api.post(
+        "https://namami-infotech.com/Stepkaro/src/admin/toggle_variants.php",
+        {
+          variant_id: variantId,
+          action: newStatus,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (!response.data?.success) {
+        throw new Error(response.data?.message || "Toggle failed");
+      }
+
+      showToast(
+        `Variant ${newStatus === "active" ? "activated" : "deactivated"} successfully`,
+      );
+    } catch (error) {
+      console.error("Variant Toggle Error:", error);
+      setProducts((prev) =>
+        prev.map((p) =>
+          p.id === productId
+            ? {
+                ...p,
+                variants: p.variants.map((v) =>
+                  v.id === variantId ? { ...v, status: variant.status } : v,
+                ),
+              }
+            : p,
+        ),
+      );
+      showToast(
+        error.message || "Failed to update variant status",
+        "error",
+      );
+    } finally {
+      setTogglingVariantId(null);
     }
   };
 
@@ -692,7 +912,7 @@ export default function ProductsPage() {
   };
 
   const getStockBadge = (stock, qty) => {
-    if (qty === 0 || stock === "out_of_stock") {
+    if (qty === 0 || qty === "0" || stock === "out_of_stock") {
       return { label: "Out of Stock", color: "bg-red-100 text-red-700" };
     } else if (qty < 5) {
       return { label: "Low Stock", color: "bg-yellow-100 text-yellow-700" };
@@ -795,7 +1015,7 @@ export default function ProductsPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-nowrap gap-3 overflow-x-auto pb-2 scrollbar-hide">
+      <div className="flex flex-wrap gap-3 pb-2">
         {filters.map((filter) => {
           const Icon = filter.icon;
           const isActive = selectedFilter === filter.value;
@@ -885,10 +1105,13 @@ export default function ProductsPage() {
                   S.No
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Product Info
+                  ProductS
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Qty
+                  Brand
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Stock
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Owner
@@ -896,18 +1119,20 @@ export default function ProductsPage() {
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Price
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                {/* <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Orders
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Brand
-                </th>
+                </th> */}
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Commission
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                {/* <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Stock
+                </th> */}
+
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Variants
                 </th>
+
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
@@ -925,10 +1150,13 @@ export default function ProductsPage() {
                   );
                   const isListingRequested =
                     product.status === "approve_request";
+                  const variantCount = getVariantCount(product);
+                  const isVariantsExpanded =
+                    expandedVariantsProductId === product.id;
 
                   return (
+                    <Fragment key={product.id}>
                     <tr
-                      key={product.id}
                       className="hover:bg-gray-50 transition-colors"
                     >
                       <td className="px-4 py-3">
@@ -936,6 +1164,8 @@ export default function ProductsPage() {
                           {startIndex + index + 1}
                         </span>
                       </td>
+
+
 
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
@@ -964,6 +1194,12 @@ export default function ProductsPage() {
                       </td>
 
                       <td className="px-4 py-3">
+                        <span className="text-sm text-gray-900">
+                          {product.brand_name}
+                        </span>
+                      </td>
+
+                      <td className="px-4 py-3">
                         <span
                           className={`text-sm font-medium ${product.stock_quantity === 0 ? "text-red-600" : "text-gray-900"}`}
                         >
@@ -988,30 +1224,62 @@ export default function ProductsPage() {
                         </div>
                       </td>
 
-                      <td className="px-4 py-3">
+                      {/* <td className="px-4 py-3">
                         <span className="text-sm text-gray-900">
                           {product.orders || 0}
                         </span>
-                      </td>
+                      </td> */}
 
-                      <td className="px-4 py-3">
-                        <span className="text-sm text-gray-900">
-                          {product.brand_name}
-                        </span>
-                      </td>
+                     
 
-                      <td className="px-4 py-3">
+                      {/* <td className="px-4 py-3">
                         <span className="text-sm font-semibold text-purple-600">
                           {product.commission ? `${product.commission}%` : "0%"}
                         </span>
+                      </td> */}
+                      <td className="px-4 py-3">
+                        <div className="flex flex-col">
+                          <span className="text-sm font-semibold text-purple-600">
+                            {product.commission_type === "percentage"
+                              ? `${product.commission || 0}%`
+                              : `₹${product.commission || 0}`}
+                          </span>
+
+                          {product.commission_type === "per_piece_rate" && (
+                            <span className="text-xs text-gray-500">
+                              Per piece rate
+                            </span>
+                          )}
+                        </div>
                       </td>
 
-                      <td className="px-4 py-3">
+                      {/* <td className="px-4 py-3">
                         <span
                           className={`text-xs px-2 py-1 rounded-full ${stockBadge.color}`}
                         >
                           {stockBadge.label}
                         </span>
+                      </td> */}
+                      <td className="px-4 py-3">
+                        {variantCount > 0 ? (
+                          <button
+                            type="button"
+                            data-variants-toggle
+                            onClick={(e) => toggleVariantsPanel(e, product.id)}
+                            className={`text-sm font-semibold cursor-pointer hover:underline ${
+                              isVariantsExpanded
+                                ? "text-blue-800"
+                                : "text-blue-600"
+                            }`}
+                          >
+                            {variantCount}{" "}
+                            {variantCount === 1 ? "Variant" : "Variants"}
+                          </button>
+                        ) : (
+                          <span className="text-sm text-gray-400">
+                            No Variants
+                          </span>
+                        )}
                       </td>
 
                       <td className="px-4 py-3">
@@ -1091,6 +1359,24 @@ export default function ProductsPage() {
                         </div>
                       </td>
                     </tr>
+                    {isVariantsExpanded && variantCount > 0 && (
+                      <tr>
+                        <td colSpan={10} className="px-4 py-3 bg-gray-50">
+                          <div ref={variantsPanelRef}>
+                            <p className="text-xs font-medium text-blue-700 mb-2">
+                              Variants for {product.article_name}
+                            </p>
+                            <VariantsDetailTable
+                              variants={product.variants}
+                              productId={product.id}
+                              onToggleVariantStatus={toggleVariantStatus}
+                              togglingVariantId={togglingVariantId}
+                            />
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                    </Fragment>
                   );
                 })
               ) : (
@@ -1118,6 +1404,9 @@ export default function ProductsPage() {
                   product.stock_quantity,
                 );
                 const isListingRequested = product.status === "approve_request";
+                const variantCount = getVariantCount(product);
+                const isVariantsExpanded =
+                  expandedVariantsProductId === product.id;
 
                 return (
                   <div key={product.id} className="p-4 space-y-3">
@@ -1186,8 +1475,29 @@ export default function ProductsPage() {
                       <div>
                         <span className="text-gray-500">Commission:</span>
                         <span className="text-purple-600 ml-1 font-semibold">
-                          {product.commission ? `${product.commission}%` : "0%"}
+                          {product.commission_type === "percentage"
+                            ? `${product.commission || 0}%`
+                            : `₹${product.commission || 0}`}
                         </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Variants:</span>
+                        {variantCount > 0 ? (
+                          <button
+                            type="button"
+                            data-variants-toggle
+                            onClick={(e) => toggleVariantsPanel(e, product.id)}
+                            className={`ml-1 text-sm font-semibold cursor-pointer hover:underline ${
+                              isVariantsExpanded
+                                ? "text-blue-800"
+                                : "text-blue-600"
+                            }`}
+                          >
+                            {variantCount}
+                          </button>
+                        ) : (
+                          <span className="text-gray-400 ml-1">None</span>
+                        )}
                       </div>
                       <div>
                         <span className="text-gray-500">Status:</span>
@@ -1234,6 +1544,23 @@ export default function ProductsPage() {
                         )}
                       </div>
                     </div>
+
+                    {isVariantsExpanded && variantCount > 0 && (
+                      <div
+                        ref={variantsPanelRef}
+                        className="pt-2 border-t border-gray-100"
+                      >
+                        <p className="text-xs font-medium text-blue-700 mb-2">
+                          Variants for {product.article_name}
+                        </p>
+                        <VariantsDetailTable
+                          variants={product.variants}
+                          productId={product.id}
+                          onToggleVariantStatus={toggleVariantStatus}
+                          togglingVariantId={togglingVariantId}
+                        />
+                      </div>
+                    )}
 
                     <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
                       <button

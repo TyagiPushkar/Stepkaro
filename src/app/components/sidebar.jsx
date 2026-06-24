@@ -35,6 +35,7 @@ const adminNavItems = [
   // { name: "Category", href: "/admin/categories", icon: Tag },
   { name: "Users", href: "/admin/users", icon: Users },
   { name: "Sellers", href: "/admin/vendors", icon: Store },
+  { name: "Coupons", href: "/admin/coupons", icon: Coupon },
   // { name: "Collections", href: "/admin/collections", icon: Layers },
   { name: "Wallets", href: "/admin/wallets", icon: Wallet },
   { name: "Accounts", href: "/admin/accounts", icon: Wallet },
