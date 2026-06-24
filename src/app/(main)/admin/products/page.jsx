@@ -118,7 +118,7 @@ export default function ProductsPage() {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
         setProducts(response.data.data);
         console.log("Products fetched successfully:", response.data.data);
@@ -135,7 +135,7 @@ export default function ProductsPage() {
   const handleApprovalAction = async (
     productId,
     action,
-    commissionValue = null
+    commissionValue = null,
   ) => {
     try {
       const response = await api.post(
@@ -150,7 +150,7 @@ export default function ProductsPage() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       if (response.data.success) {
@@ -163,8 +163,8 @@ export default function ProductsPage() {
                   commission: commissionValue,
                   commission_type: commissionType || "percentage",
                 }
-              : product
-          )
+              : product,
+          ),
         );
 
         setShowCommissionModal(false);
@@ -183,10 +183,10 @@ export default function ProductsPage() {
   const activeCount = products.filter((p) => p.status === "active").length;
   const inactiveCount = products.filter((p) => p.status === "inactive").length;
   const productsListingRequestedCount = products.filter(
-    (p) => p.status === "approve_request"
+    (p) => p.status === "approve_request",
   ).length;
   const outOfStockCount = products.filter(
-    (p) => p.stock === "out_of_stock" || p.qty === 0
+    (p) => p.stock === "out_of_stock" || p.qty === 0,
   ).length;
 
   const filters = [
@@ -239,7 +239,7 @@ export default function ProductsPage() {
       filtered = filtered.filter((p) => p.status === "approve_request");
     } else if (selectedFilter === "out_of_stock") {
       filtered = filtered.filter(
-        (p) => p.stock === "out_of_stock" || p.qty === 0
+        (p) => p.stock === "out_of_stock" || p.qty === 0,
       );
     }
 
@@ -249,7 +249,7 @@ export default function ProductsPage() {
         (p) =>
           p.article_name?.toLowerCase().includes(query) ||
           p.category_name?.toLowerCase().includes(query) ||
-          p.id?.toString().includes(query)
+          p.id?.toString().includes(query),
       );
     }
 
@@ -284,7 +284,7 @@ export default function ProductsPage() {
     const newStatus = product.status === "active" ? "inactive" : "active";
 
     setProducts((prev) =>
-      prev.map((p) => (p.id === productId ? { ...p, status: newStatus } : p))
+      prev.map((p) => (p.id === productId ? { ...p, status: newStatus } : p)),
     );
 
     try {
@@ -298,19 +298,21 @@ export default function ProductsPage() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       if (!response.data?.success) {
         throw new Error(response.data?.message || "Toggle failed");
       }
-      showToast(`Product ${newStatus === "active" ? "activated" : "deactivated"} successfully`);
+      showToast(
+        `Product ${newStatus === "active" ? "activated" : "deactivated"} successfully`,
+      );
     } catch (error) {
       console.error("Toggle Error:", error);
       setProducts((prev) =>
         prev.map((p) =>
-          p.id === productId ? { ...p, status: product.status } : p
-        )
+          p.id === productId ? { ...p, status: product.status } : p,
+        ),
       );
       showToast(error.message || "Failed to update status", "error");
     }
@@ -331,7 +333,7 @@ export default function ProductsPage() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       if (response.data.status === "success") {
@@ -341,7 +343,7 @@ export default function ProductsPage() {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
         setProducts(getResponse.data.data);
         setShowAddModal(false);
@@ -379,7 +381,7 @@ export default function ProductsPage() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       if (response.data.status === "success") {
@@ -389,7 +391,7 @@ export default function ProductsPage() {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
         setProducts(getResponse.data.data);
         setShowEditModal(false);
@@ -413,35 +415,35 @@ export default function ProductsPage() {
   };
 
   // Delete product
-  // const handleDeleteProduct = async () => {
-  //   try {
-  //     const response = await api.post(
-  //       "https://namami-infotech.com/Stepkaro/src/product/delete_product.php",
-  //       {
-  //         product_id: selectedProduct.id,
-  //       },
-  //       {
-  //         headers: {
-  //           Authorization: `Bearer ${token}`,
-  //         },
-  //       }
-  //     );
+  const handleDeleteProduct = async () => {
+    try {
+      const response = await api.post(
+        "https://namami-infotech.com/Stepkaro/src/product/delete_product.php",
+        {
+          product_id: selectedProduct.id,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
 
-  //     if (response.data.status === "success") {
-  //       setProducts(
-  //         products.filter((product) => product.id !== selectedProduct.id)
-  //       );
-  //       setShowDeleteModal(false);
-  //       setSelectedProduct(null);
-  //       showToast("Product deleted successfully!");
-  //     } else {
-  //       showToast(response.data.message || "Failed to delete product", "error");
-  //     }
-  //   } catch (error) {
-  //     console.error("Error deleting product:", error);
-  //     showToast("Failed to delete product", "error");
-  //   }
-  // };
+      if (response.data.status === "success") {
+        setProducts(
+          products.filter((product) => product.id !== selectedProduct.id),
+        );
+        setShowDeleteModal(false);
+        setSelectedProduct(null);
+        showToast("Product deleted successfully!");
+      } else {
+        showToast(response.data.message || "Failed to delete product", "error");
+      }
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      showToast("Failed to delete product", "error");
+    }
+  };
 
   // Navigate to product detail page
   const goToProductDetail = (productId) => {
@@ -481,7 +483,8 @@ export default function ProductsPage() {
       return;
     }
 
-    const exportData = filteredProducts.length > 0 ? filteredProducts : products;
+    const exportData =
+      filteredProducts.length > 0 ? filteredProducts : products;
 
     const headers = [
       "ID",
@@ -505,7 +508,7 @@ export default function ProductsPage() {
       "Material",
       "Gender",
       "Origin",
-      "Created At"
+      "Created At",
     ];
 
     const rows = exportData.map((p) => [
@@ -530,7 +533,7 @@ export default function ProductsPage() {
       p.material || "",
       p.gender || "",
       p.origin || "",
-      p.created_at || ""
+      p.created_at || "",
     ]);
 
     const csvContent = [headers, ...rows]
@@ -579,7 +582,7 @@ export default function ProductsPage() {
       "Material",
       "Gender",
       "Origin",
-      "Created At"
+      "Created At",
     ];
 
     const rows = filteredProducts.map((p) => [
@@ -604,7 +607,7 @@ export default function ProductsPage() {
       p.material || "",
       p.gender || "",
       p.origin || "",
-      p.created_at || ""
+      p.created_at || "",
     ]);
 
     const csvContent = [headers, ...rows]
@@ -621,7 +624,9 @@ export default function ProductsPage() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 
-    showToast(`Exported ${filteredProducts.length} filtered products successfully`);
+    showToast(
+      `Exported ${filteredProducts.length} filtered products successfully`,
+    );
   };
 
   // Bulk import handler
@@ -656,7 +661,7 @@ export default function ProductsPage() {
               headers: {
                 Authorization: `Bearer ${token}`,
               },
-            }
+            },
           );
 
           if (response.data.status === "success") {
@@ -666,13 +671,16 @@ export default function ProductsPage() {
                 headers: {
                   Authorization: `Bearer ${token}`,
                 },
-              }
+              },
             );
             setProducts(getResponse.data.data);
             setShowBulkImportModal(false);
             showToast("Products imported successfully!");
           } else {
-            showToast(response.data.message || "Failed to import products", "error");
+            showToast(
+              response.data.message || "Failed to import products",
+              "error",
+            );
           }
         } catch (error) {
           console.error("Error importing products:", error);
@@ -711,8 +719,8 @@ export default function ProductsPage() {
             toast.type === "success"
               ? "bg-emerald-500"
               : toast.type === "error"
-              ? "bg-red-500"
-              : "bg-blue-500"
+                ? "bg-red-500"
+                : "bg-blue-500"
           }`}
         >
           {toast.type === "success" ? (
@@ -773,15 +781,16 @@ export default function ProductsPage() {
             Export All
           </button>
 
-          {filteredProducts.length < products.length && filteredProducts.length > 0 && (
-            <button
-              onClick={handleExportFilteredCSV}
-              className="bg-white hover:bg-gray-50 text-gray-600 px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-colors border border-gray-200 hover:border-purple-300"
-            >
-              <Download size={16} />
-              Export Filtered ({filteredProducts.length})
-            </button>
-          )}
+          {filteredProducts.length < products.length &&
+            filteredProducts.length > 0 && (
+              <button
+                onClick={handleExportFilteredCSV}
+                className="bg-white hover:bg-gray-50 text-gray-600 px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-colors border border-gray-200 hover:border-purple-300"
+              >
+                <Download size={16} />
+                Export Filtered ({filteredProducts.length})
+              </button>
+            )}
         </div>
       </div>
 
@@ -912,7 +921,7 @@ export default function ProductsPage() {
                 currentProducts.map((product, index) => {
                   const stockBadge = getStockBadge(
                     product.stock,
-                    product.stock_quantity
+                    product.stock_quantity,
                   );
                   const isListingRequested =
                     product.status === "approve_request";
@@ -1106,7 +1115,7 @@ export default function ProductsPage() {
               {currentProducts.map((product, index) => {
                 const stockBadge = getStockBadge(
                   product.stock,
-                  product.stock_quantity
+                  product.stock_quantity,
                 );
                 const isListingRequested = product.status === "approve_request";
 

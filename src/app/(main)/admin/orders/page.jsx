@@ -17,12 +17,13 @@ import axios from "axios";
 import ViewOrderDetailsModal from "@/app/components/shared/ViewOrderDetailsModal";
 
 const allowedStatuses = [
-  "processing",
+  "accepted",
   "rejected",
-  "dispatched",
-  "packed",
+  "dispatched_to_wr",
+  "received_in_wr",
   "shipped",
-  "delivered",
+  "book_to_tp",
+  //  "delivered",
 ];
 
 export default function OrdersPage() {
@@ -55,7 +56,7 @@ export default function OrdersPage() {
               "Content-Type": "application/json",
               Authorization: token ? `Bearer ${token}` : "",
             },
-          }
+          },
         );
 
         const resData = await response.json();
@@ -86,11 +87,18 @@ export default function OrdersPage() {
         color: "purple",
       },
       {
-        label: "Order Confirmation",
+        label: "Pending Orders",
         value: "pending",
         count: orders.filter((o) => o.status === "pending").length,
-        icon: Clock,
-        color: "yellow",
+        icon: Loader2,
+        color: "orange",
+      },
+      {
+        label: "NEW Orders",
+        value: "new",
+        count: orders.filter((o) => o.status === "new").length,
+        icon: Package,
+        color: "purple",
       },
       {
         label: "Order Accepted",
@@ -107,19 +115,40 @@ export default function OrdersPage() {
         color: "red",
       },
       {
-        label: "Order Dispatched",
-        value: "dispatched",
-        count: orders.filter((o) => o.status === "dispatched").length,
+        label: "Order Dispatched to WR",
+        value: "dispatched_to_wr",
+        count: orders.filter((o) => o.status === "dispatched_to_wr").length,
         icon: Truck,
         color: "blue",
       },
       {
+        label: "Order Received in WR",
+        value: "received_in_wr",
+        count: orders.filter((o) => o.status === "received_in_wr").length,
+        icon: Clock,
+        color: "yellow",
+      },
+      {
+        label: "Order Shipped",
+        value: "shipped",
+        count: orders.filter((o) => o.status === "shipped").length,
+        icon: Truck,
+        color: "green",
+      },
+      {
         label: "Booked For Transport",
-        value: "transport",
-        count: orders.filter((o) => o.status === "transport").length,
+        value: "book_to_tp",
+        count: orders.filter((o) => o.status === "book_to_tp").length,
         icon: Package,
         color: "purple",
       },
+      // {
+      //   label: "Delivered",
+      //   value: "delivered",
+      //   count: orders.filter((o) => o.status === "delivered").length,
+      //   icon: CheckCircle,
+      //   color: "green",
+      // },
     ];
   }, [orders]);
 
@@ -132,18 +161,20 @@ export default function OrdersPage() {
       pending: { label: "Pending", color: "bg-yellow-100 text-yellow-700" },
       accepted: { label: "Accepted", color: "bg-blue-100 text-blue-700" },
       rejected: { label: "Rejected", color: "bg-red-100 text-red-700" },
-      dispatched: {
-        label: "Dispatched",
+      dispatched_to_wr: {
+        label: "Dispatched to WR",
         color: "bg-purple-100 text-purple-700",
       },
-      transport: {
+      book_to_tp: {
         label: "Booked for Transport",
-        color: "bg-indigo-100 text-indigo-700",
+        color: "bg-green-100 text-green-700",
       },
-      processing: {
-        label: "Processing",
-        color: "bg-orange-100 text-orange-700",
+      received_in_wr: {
+        label: "Received in WR",
+        color: "bg-yellow-100 text-yellow-700",
       },
+      shipped: { label: "Shipped", color: "bg-teal-100 text-teal-700" },
+      // delivered: { label: "Delivered", color: "bg-green-100 text-green-700" },
       new: { label: "New", color: "bg-teal-100 text-teal-700" },
     };
     return (
@@ -174,7 +205,7 @@ export default function OrdersPage() {
           (order.owner_name &&
             order.owner_name.toLowerCase().includes(query)) ||
           (order.article_name &&
-            order.article_name.toLowerCase().includes(query))
+            order.article_name.toLowerCase().includes(query)),
       );
     }
 
@@ -224,7 +255,7 @@ export default function OrdersPage() {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       if (response.data?.success) {
@@ -232,8 +263,8 @@ export default function OrdersPage() {
 
         setOrders((prev) =>
           prev.map((order) =>
-            order.order_id === orderId ? { ...order, status } : order
-          )
+            order.order_id === orderId ? { ...order, status } : order,
+          ),
         );
         showToast(`Order ${orderId} updated to ${status}`);
       } else {
@@ -266,7 +297,7 @@ export default function OrdersPage() {
       "Total Amount",
       "Order Date",
       "Order Time",
-      "Status"
+      "Status",
     ];
 
     const rows = exportData.map((order) => {
@@ -274,7 +305,9 @@ export default function OrdersPage() {
         ? order.created_at.split(" ")
         : ["", ""];
       const orderDate = dateTimeParts[0] || "";
-      const orderTime = dateTimeParts[1] ? dateTimeParts[1].substring(0, 5) : "";
+      const orderTime = dateTimeParts[1]
+        ? dateTimeParts[1].substring(0, 5)
+        : "";
 
       return [
         order.order_id || "",
@@ -287,7 +320,7 @@ export default function OrdersPage() {
         parseFloat(order.total_amount || 0).toLocaleString("en-IN"),
         orderDate,
         orderTime,
-        order.status || "Pending"
+        order.status || "Pending",
       ];
     });
 
@@ -326,7 +359,7 @@ export default function OrdersPage() {
       "Total Amount",
       "Order Date",
       "Order Time",
-      "Status"
+      "Status",
     ];
 
     const rows = filteredOrders.map((order) => {
@@ -334,7 +367,9 @@ export default function OrdersPage() {
         ? order.created_at.split(" ")
         : ["", ""];
       const orderDate = dateTimeParts[0] || "";
-      const orderTime = dateTimeParts[1] ? dateTimeParts[1].substring(0, 5) : "";
+      const orderTime = dateTimeParts[1]
+        ? dateTimeParts[1].substring(0, 5)
+        : "";
 
       return [
         order.order_id || "",
@@ -347,7 +382,7 @@ export default function OrdersPage() {
         parseFloat(order.total_amount || 0).toLocaleString("en-IN"),
         orderDate,
         orderTime,
-        order.status || "Pending"
+        order.status || "Pending",
       ];
     });
 
@@ -400,8 +435,8 @@ export default function OrdersPage() {
             toast.type === "success"
               ? "bg-emerald-500"
               : toast.type === "error"
-              ? "bg-red-500"
-              : "bg-blue-500"
+                ? "bg-red-500"
+                : "bg-blue-500"
           }`}
         >
           {toast.type === "success" ? (
@@ -430,15 +465,16 @@ export default function OrdersPage() {
             <Download size={16} />
             Export All
           </button>
-          {filteredOrders.length < orders.length && filteredOrders.length > 0 && (
-            <button
-              onClick={handleExportFilteredOrders}
-              className="bg-white hover:bg-gray-50 text-gray-600 px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-colors border border-gray-200 hover:border-purple-300"
-            >
-              <Download size={16} />
-              Export Filtered ({filteredOrders.length})
-            </button>
-          )}
+          {filteredOrders.length < orders.length &&
+            filteredOrders.length > 0 && (
+              <button
+                onClick={handleExportFilteredOrders}
+                className="bg-white hover:bg-gray-50 text-gray-600 px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-colors border border-gray-200 hover:border-purple-300"
+              >
+                <Download size={16} />
+                Export Filtered ({filteredOrders.length})
+              </button>
+            )}
         </div>
       </div>
 
@@ -639,7 +675,7 @@ export default function OrdersPage() {
                         <span className="text-sm font-semibold text-gray-900">
                           ₹
                           {parseFloat(order.total_amount).toLocaleString(
-                            "en-IN"
+                            "en-IN",
                           )}
                         </span>
                       </td>
@@ -667,7 +703,7 @@ export default function OrdersPage() {
                                 onClick={() =>
                                   handleUpdateOrderStatus(
                                     order.order_id,
-                                    "rejected"
+                                    "rejected",
                                   )
                                 }
                                 className="px-3 py-1.5 text-xs bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition-colors"
@@ -676,10 +712,7 @@ export default function OrdersPage() {
                               </button>
                               <button
                                 onClick={() =>
-                                  handleUpdateOrderStatus(
-                                    order.order_id,
-                                    "processing"
-                                  )
+                                  handleUpdateOrderStatus(order.order_id, "new")
                                 }
                                 className="px-3 py-1.5 text-xs bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg transition-colors"
                               >
@@ -692,7 +725,7 @@ export default function OrdersPage() {
                               onChange={(e) =>
                                 handleUpdateOrderStatus(
                                   order.order_id,
-                                  e.target.value
+                                  e.target.value,
                                 )
                               }
                               className="bg-gray-50 border border-gray-200 text-gray-700 text-xs rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-purple-500"
