@@ -19,6 +19,9 @@ import {
   IndianRupee,
   Wallet,
   Store,
+  CornerUpLeftIcon,
+  Ticket,
+  MessageSquare,
 } from "lucide-react";
 
 import { useEffect, useState } from "react";
@@ -31,11 +34,12 @@ const adminNavItems = [
   { name: "Product", href: "/admin/products", icon: Package },
   { name: "Banners", href: "/admin/banners", icon: ImageIcon },
   { name: "Orders", href: "/admin/orders", icon: ShoppingCart },
-  { name: "QR/BANK Orders", href: "/admin/qr-orders", icon: ShoppingCart },
+  // { name: "QR/BANK Orders", href: "/admin/qr-orders", icon: ShoppingCart },
   // { name: "Category", href: "/admin/categories", icon: Tag },
   { name: "Users", href: "/admin/users", icon: Users },
   { name: "Sellers", href: "/admin/vendors", icon: Store },
-  { name: "Coupons", href: "/admin/coupons", icon: Coupon },
+  { name: "Coupons", href: "/admin/coupons", icon: Ticket },
+  { name: "Enquiry", href: "/admin/enquiry", icon: MessageSquare },
   // { name: "Collections", href: "/admin/collections", icon: Layers },
   { name: "Wallets", href: "/admin/wallets", icon: Wallet },
   { name: "Accounts", href: "/admin/accounts", icon: Wallet },

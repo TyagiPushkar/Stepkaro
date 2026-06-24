@@ -75,9 +75,7 @@ const VariantsDetailTable = ({
   togglingVariantId,
 }) => {
   if (!variants?.length) {
-    return (
-      <p className="text-sm text-gray-500 py-2">No variants available</p>
-    );
+    return <p className="text-sm text-gray-500 py-2">No variants available</p>;
   }
 
   return (
@@ -446,6 +444,7 @@ export default function ProductsPage() {
         "https://namami-infotech.com/Stepkaro/src/admin/toggle_products.php",
         {
           product_id: productId,
+          type: "product",
           action: newStatus,
         },
         {
@@ -496,9 +495,10 @@ export default function ProductsPage() {
 
     try {
       const response = await api.post(
-        "https://namami-infotech.com/Stepkaro/src/admin/toggle_variants.php",
+        "https://namami-infotech.com/Stepkaro/src/admin/toggle_products.php",
         {
           variant_id: variantId,
+          type: "variant",
           action: newStatus,
         },
         {
@@ -529,10 +529,7 @@ export default function ProductsPage() {
             : p,
         ),
       );
-      showToast(
-        error.message || "Failed to update variant status",
-        "error",
-      );
+      showToast(error.message || "Failed to update variant status", "error");
     } finally {
       setTogglingVariantId(null);
     }
@@ -985,13 +982,13 @@ export default function ProductsPage() {
             Add Product
           </button>
 
-          <button
+          {/* <button
             onClick={() => setShowBulkImportModal(true)}
             className="bg-white hover:bg-gray-50 text-gray-600 px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-colors border border-gray-200 hover:border-purple-300"
           >
             <Upload size={16} />
             Bulk Import
-          </button>
+          </button> */}
 
           <button
             onClick={handleExportCSV}
@@ -1156,226 +1153,222 @@ export default function ProductsPage() {
 
                   return (
                     <Fragment key={product.id}>
-                    <tr
-                      className="hover:bg-gray-50 transition-colors"
-                    >
-                      <td className="px-4 py-3">
-                        <span className="text-sm text-gray-500">
-                          {startIndex + index + 1}
-                        </span>
-                      </td>
+                      <tr className="hover:bg-gray-50 transition-colors">
+                        <td className="px-4 py-3">
+                          <span className="text-sm text-gray-500">
+                            {startIndex + index + 1}
+                          </span>
+                        </td>
 
-
-
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-3">
-                          <div
-                            onClick={() => goToProductDetail(product.id)}
-                            className="w-10 h-10 bg-gradient-to-br from-purple-100 to-orange-100 rounded-lg flex items-center justify-center border border-gray-200 cursor-pointer hover:scale-110 transition-transform overflow-hidden flex-shrink-0"
-                          >
-                            <img
-                              src={normalizeProductImageUrl(product.image)}
-                              alt={product.article_name || "Product"}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <div>
-                            <p
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-3">
+                            <div
                               onClick={() => goToProductDetail(product.id)}
-                              className="text-sm font-medium text-gray-900 cursor-pointer hover:text-purple-600 transition-colors"
+                              className="w-10 h-10 bg-gradient-to-br from-purple-100 to-orange-100 rounded-lg flex items-center justify-center border border-gray-200 cursor-pointer hover:scale-110 transition-transform overflow-hidden flex-shrink-0"
                             >
-                              {product.article_name}
-                            </p>
-                            <p className="text-xs text-gray-500 mt-0.5">
-                              {product.category_name}
-                            </p>
+                              <img
+                                src={normalizeProductImageUrl(product.image)}
+                                alt={product.article_name || "Product"}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <div>
+                              <p
+                                onClick={() => goToProductDetail(product.id)}
+                                className="text-sm font-medium text-gray-900 cursor-pointer hover:text-purple-600 transition-colors"
+                              >
+                                {product.article_name}
+                              </p>
+                              <p className="text-xs text-gray-500 mt-0.5">
+                                {product.category_name}
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      </td>
+                        </td>
 
-                      <td className="px-4 py-3">
-                        <span className="text-sm text-gray-900">
-                          {product.brand_name}
-                        </span>
-                      </td>
-
-                      <td className="px-4 py-3">
-                        <span
-                          className={`text-sm font-medium ${product.stock_quantity === 0 ? "text-red-600" : "text-gray-900"}`}
-                        >
-                          {product.stock_quantity}
-                        </span>
-                      </td>
-
-                      <td className="px-4 py-3">
-                        <span className="text-sm text-gray-900">
-                          {product.owner_name}
-                        </span>
-                      </td>
-
-                      <td className="px-4 py-3">
-                        <div className="flex flex-col">
-                          <span className="text-xs text-gray-400 line-through">
-                            ₹{product.price || 0}
+                        <td className="px-4 py-3">
+                          <span className="text-sm text-gray-900">
+                            {product.brand_name}
                           </span>
-                          <span className="text-sm font-semibold text-emerald-600">
-                            ₹{product.selling_price || 0}
-                          </span>
-                        </div>
-                      </td>
+                        </td>
 
-                      {/* <td className="px-4 py-3">
+                        <td className="px-4 py-3">
+                          <span
+                            className={`text-sm font-medium ${product.stock_quantity === 0 ? "text-red-600" : "text-gray-900"}`}
+                          >
+                            {product.stock_quantity}
+                          </span>
+                        </td>
+
+                        <td className="px-4 py-3">
+                          <span className="text-sm text-gray-900">
+                            {product.owner_name}
+                          </span>
+                        </td>
+
+                        <td className="px-4 py-3">
+                          <div className="flex flex-col">
+                            <span className="text-xs text-gray-400 line-through">
+                              ₹{product.price || 0}
+                            </span>
+                            <span className="text-sm font-semibold text-emerald-600">
+                              ₹{product.selling_price || 0}
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* <td className="px-4 py-3">
                         <span className="text-sm text-gray-900">
                           {product.orders || 0}
                         </span>
                       </td> */}
 
-                     
-
-                      {/* <td className="px-4 py-3">
+                        {/* <td className="px-4 py-3">
                         <span className="text-sm font-semibold text-purple-600">
                           {product.commission ? `${product.commission}%` : "0%"}
                         </span>
                       </td> */}
-                      <td className="px-4 py-3">
-                        <div className="flex flex-col">
-                          <span className="text-sm font-semibold text-purple-600">
-                            {product.commission_type === "percentage"
-                              ? `${product.commission || 0}%`
-                              : `₹${product.commission || 0}`}
-                          </span>
-
-                          {product.commission_type === "per_piece_rate" && (
-                            <span className="text-xs text-gray-500">
-                              Per piece rate
+                        <td className="px-4 py-3">
+                          <div className="flex flex-col">
+                            <span className="text-sm font-semibold text-purple-600">
+                              {product.commission_type === "percentage"
+                                ? `${product.commission || 0}%`
+                                : `₹${product.commission || 0}`}
                             </span>
-                          )}
-                        </div>
-                      </td>
 
-                      {/* <td className="px-4 py-3">
+                            {product.commission_type === "per_piece_rate" && (
+                              <span className="text-xs text-gray-500">
+                                Per piece rate
+                              </span>
+                            )}
+                          </div>
+                        </td>
+
+                        {/* <td className="px-4 py-3">
                         <span
                           className={`text-xs px-2 py-1 rounded-full ${stockBadge.color}`}
                         >
                           {stockBadge.label}
                         </span>
                       </td> */}
-                      <td className="px-4 py-3">
-                        {variantCount > 0 ? (
-                          <button
-                            type="button"
-                            data-variants-toggle
-                            onClick={(e) => toggleVariantsPanel(e, product.id)}
-                            className={`text-sm font-semibold cursor-pointer hover:underline ${
-                              isVariantsExpanded
-                                ? "text-blue-800"
-                                : "text-blue-600"
-                            }`}
-                          >
-                            {variantCount}{" "}
-                            {variantCount === 1 ? "Variant" : "Variants"}
-                          </button>
-                        ) : (
-                          <span className="text-sm text-gray-400">
-                            No Variants
-                          </span>
-                        )}
-                      </td>
-
-                      <td className="px-4 py-3">
-                        {product.status === "reject" ? (
-                          <span className="px-2 py-1 text-xs bg-red-100 text-red-700 rounded-lg">
-                            Reject
-                          </span>
-                        ) : isListingRequested ? (
-                          <div className="flex flex-wrap gap-2">
+                        <td className="px-4 py-3">
+                          {variantCount > 0 ? (
                             <button
-                              onClick={() => {
-                                setSelectedProductId(product.id);
-                                setCommission("");
-                                setShowCommissionModal(true);
-                              }}
-                              className="px-3 py-1 text-xs bg-emerald-100 text-emerald-700 hover:bg-emerald-200 rounded-lg flex items-center gap-1 transition-colors cursor-pointer"
-                              title="Approve Product"
-                            >
-                              <ThumbsUp size={14} />
-                              Approve
-                            </button>
-
-                            <button
-                              onClick={() =>
-                                handleApprovalAction(product.id, "reject")
+                              type="button"
+                              data-variants-toggle
+                              onClick={(e) =>
+                                toggleVariantsPanel(e, product.id)
                               }
-                              className="px-3 py-1 text-xs bg-red-100 text-red-700 hover:bg-red-200 rounded-lg flex items-center gap-1 transition-colors cursor-pointer"
-                              title="Reject Product"
-                            >
-                              <ThumbsDown size={14} />
-                              Reject
-                            </button>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => toggleStatus(product.id)}
-                            className={`relative w-10 h-5 rounded-full transition-colors cursor-pointer flex-shrink-0 ${
-                              product.status === "active"
-                                ? "bg-green-500"
-                                : "bg-red-500"
-                            }`}
-                          >
-                            <div
-                              className={`absolute w-4 h-4 bg-white rounded-full top-0.5 transition-all duration-300 shadow-sm ${
-                                product.status === "active"
-                                  ? "left-5"
-                                  : "left-0.5"
+                              className={`text-sm font-semibold cursor-pointer hover:underline ${
+                                isVariantsExpanded
+                                  ? "text-blue-800"
+                                  : "text-blue-600"
                               }`}
-                            />
-                          </button>
-                        )}
-                      </td>
+                            >
+                              {variantCount}{" "}
+                              {variantCount === 1 ? "Variant" : "Variants"}
+                            </button>
+                          ) : (
+                            <span className="text-sm text-gray-400">
+                              No Variants
+                            </span>
+                          )}
+                        </td>
 
-                      <td className="px-4 py-3">
-                        <div className="flex flex-wrap gap-1">
-                          <button
-                            onClick={() => handleViewProduct(product)}
-                            className="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-                            title="View Product"
-                          >
-                            <Eye size={16} />
-                          </button>
-                          <button
-                            onClick={() => goToProductDetail(product.id)}
-                            className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                            title="Edit Product"
-                          >
-                            <Edit size={16} />
-                          </button>
-                          {/* <button
+                        <td className="px-4 py-3">
+                          {product.status === "reject" ? (
+                            <span className="px-2 py-1 text-xs bg-red-100 text-red-700 rounded-lg">
+                              Reject
+                            </span>
+                          ) : isListingRequested ? (
+                            <div className="flex flex-wrap gap-2">
+                              <button
+                                onClick={() => {
+                                  setSelectedProductId(product.id);
+                                  setCommission("");
+                                  setShowCommissionModal(true);
+                                }}
+                                className="px-3 py-1 text-xs bg-emerald-100 text-emerald-700 hover:bg-emerald-200 rounded-lg flex items-center gap-1 transition-colors cursor-pointer"
+                                title="Approve Product"
+                              >
+                                <ThumbsUp size={14} />
+                                Approve
+                              </button>
+
+                              <button
+                                onClick={() =>
+                                  handleApprovalAction(product.id, "reject")
+                                }
+                                className="px-3 py-1 text-xs bg-red-100 text-red-700 hover:bg-red-200 rounded-lg flex items-center gap-1 transition-colors cursor-pointer"
+                                title="Reject Product"
+                              >
+                                <ThumbsDown size={14} />
+                                Reject
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => toggleStatus(product.id)}
+                              className={`relative w-10 h-5 rounded-full transition-colors cursor-pointer flex-shrink-0 ${
+                                product.status === "active"
+                                  ? "bg-green-500"
+                                  : "bg-red-500"
+                              }`}
+                            >
+                              <div
+                                className={`absolute w-4 h-4 bg-white rounded-full top-0.5 transition-all duration-300 shadow-sm ${
+                                  product.status === "active"
+                                    ? "left-5"
+                                    : "left-0.5"
+                                }`}
+                              />
+                            </button>
+                          )}
+                        </td>
+
+                        <td className="px-4 py-3">
+                          <div className="flex flex-wrap gap-1">
+                            <button
+                              onClick={() => handleViewProduct(product)}
+                              className="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                              title="View Product"
+                            >
+                              <Eye size={16} />
+                            </button>
+                            <button
+                              onClick={() => goToProductDetail(product.id)}
+                              className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                              title="Edit Product"
+                            >
+                              <Edit size={16} />
+                            </button>
+                            {/* <button
                             onClick={() => openDeleteModal(product)}
                             className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                             title="Delete Product"
                           >
                             <Trash2 size={16} />
                           </button> */}
-                        </div>
-                      </td>
-                    </tr>
-                    {isVariantsExpanded && variantCount > 0 && (
-                      <tr>
-                        <td colSpan={10} className="px-4 py-3 bg-gray-50">
-                          <div ref={variantsPanelRef}>
-                            <p className="text-xs font-medium text-blue-700 mb-2">
-                              Variants for {product.article_name}
-                            </p>
-                            <VariantsDetailTable
-                              variants={product.variants}
-                              productId={product.id}
-                              onToggleVariantStatus={toggleVariantStatus}
-                              togglingVariantId={togglingVariantId}
-                            />
                           </div>
                         </td>
                       </tr>
-                    )}
+                      {isVariantsExpanded && variantCount > 0 && (
+                        <tr>
+                          <td colSpan={10} className="px-4 py-3 bg-gray-50">
+                            <div ref={variantsPanelRef}>
+                              <p className="text-xs font-medium text-blue-700 mb-2">
+                                Variants for {product.article_name}
+                              </p>
+                              <VariantsDetailTable
+                                variants={product.variants}
+                                productId={product.id}
+                                onToggleVariantStatus={toggleVariantStatus}
+                                togglingVariantId={togglingVariantId}
+                              />
+                            </div>
+                          </td>
+                        </tr>
+                      )}
                     </Fragment>
                   );
                 })
