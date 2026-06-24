@@ -1459,12 +1459,12 @@ export default function ProductsPage() {
           >
             Cancel
           </button>
-          <button
+          {/* <button
             onClick={handleDeleteProduct}
             className="flex-1 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
           >
             Delete
-          </button>
+          </button> */}
         </div>
       </Modal>
 
