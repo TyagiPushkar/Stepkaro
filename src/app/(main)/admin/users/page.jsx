@@ -134,10 +134,12 @@ export default function UsersPage() {
           state: buyer.state,
           district: buyer.district,
           delivery_location: buyer.delivery_location,
-          logistic_partner_name: buyer.logistic_partner_name,
-          logistic_contact_no: buyer.logistic_contact_no,
+         wallet_value: buyer.wallet_value,
+buyer_id: buyer.buyer_id,
           document_number: buyer.document_number,
-          document_image: buyer.document_image,
+        document_image: buyer.document_image
+  ? `https://namami-infotech.com/Stepkaro/${buyer.document_image}`
+  : "",
           wallet_value: buyer.wallet_value || "",
         }));
 
@@ -156,6 +158,17 @@ export default function UsersPage() {
           business_name: vendor.business_name,
           gst_number: vendor.gst_number,
           pan_number: vendor.pan_number,
+          brand_name: vendor.brand_name,
+gst_image: vendor.gst_image
+  ? `https://namami-infotech.com/Stepkaro/${vendor.gst_image}`
+  : "",
+tmc_image: vendor.tmc_image
+  ? `https://namami-infotech.com/Stepkaro/${vendor.tmc_image}`
+  : "",
+gst_verified: vendor.gst_verified,
+tm_verified: vendor.tm_verified,
+minimum_order_value: vendor.minimum_order_value,
+commission_percentage: vendor.commission_percentage,
           city: vendor.city,
           state: vendor.state,
           country: vendor.country,
@@ -224,15 +237,16 @@ export default function UsersPage() {
 
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (u) =>
-          u.name?.toLowerCase().includes(query) ||
-          u.email?.toLowerCase().includes(query) ||
-          u.phone?.includes(query) ||
-          u.address?.toLowerCase().includes(query) ||
-          u.id?.toString().includes(query) ||
-          u.business_name?.toLowerCase().includes(query),
-      );
+    filtered = filtered.filter(
+  (u) =>
+    u.name?.toLowerCase().includes(query) ||
+    u.email?.toLowerCase().includes(query) ||
+    u.phone?.includes(query) ||
+    u.address?.toLowerCase().includes(query) ||
+    u.id?.toString().includes(query) ||
+    u.business_name?.toLowerCase().includes(query) ||
+    u.brand_name?.toLowerCase().includes(query)
+);
     }
 
     return filtered;
@@ -491,7 +505,9 @@ export default function UsersPage() {
             logistic_partner_name: buyer.logistic_partner_name,
             logistic_contact_no: buyer.logistic_contact_no,
             document_number: buyer.document_number,
-            document_image: buyer.document_image,
+           document_image: buyer.document_image
+  ? `https://namami-infotech.com/Stepkaro/${buyer.document_image}`
+  : "",
             wallet_value: buyer.wallet_value || "",
           }));
 
@@ -515,6 +531,23 @@ export default function UsersPage() {
             pincode: vendor.pincode,
             wallet_value: vendor.wallet_value || "",
             rawData: vendor,
+            brand_name: vendor.brand_name,
+
+gst_image: vendor.gst_image
+  ? `https://namami-infotech.com/Stepkaro/${vendor.gst_image}`
+  : "",
+
+tmc_image: vendor.tmc_image
+  ? `https://namami-infotech.com/Stepkaro/${vendor.tmc_image}`
+  : "",
+
+gst_verified: vendor.gst_verified,
+
+tm_verified: vendor.tm_verified,
+
+minimum_order_value: vendor.minimum_order_value,
+
+commission_percentage: vendor.commission_percentage,
           }));
 
           setUsers([...buyers, ...vendors]);
@@ -1247,65 +1280,11 @@ export default function UsersPage() {
                   className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 />
               </div>
-              <div className="col-span-2">
-                <label className="text-sm font-medium text-gray-700 block mb-1">
-                  Delivery Location
-                </label>
-                <input
-                  type="text"
-                  value={formData.delivery_location}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      delivery_location: e.target.value,
-                    })
-                  }
-                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                />
-              </div>
+             
             </div>
           </div>
 
-          {/* Logistic Details */}
-          <div className="border-t border-gray-200 pt-4">
-            <p className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
-              <Truck size={16} /> Logistic Details
-            </p>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium text-gray-700 block mb-1">
-                  Partner Name
-                </label>
-                <input
-                  type="text"
-                  value={formData.logistic_partner_name}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      logistic_partner_name: e.target.value,
-                    })
-                  }
-                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 block mb-1">
-                  Contact No
-                </label>
-                <input
-                  type="text"
-                  value={formData.logistic_contact_no}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      logistic_contact_no: e.target.value,
-                    })
-                  }
-                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                />
-              </div>
-            </div>
-          </div>
+         
 
           {/* Document Details */}
           <div className="border-t border-gray-200 pt-4">
@@ -1333,15 +1312,18 @@ export default function UsersPage() {
                 <label className="text-sm font-medium text-gray-700 block mb-1">
                   Document Image URL
                 </label>
-                <input
-                  type="text"
-                  value={formData.document_image}
-                  onChange={(e) =>
-                    setFormData({ ...formData, document_image: e.target.value })
-                  }
-                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="Path to document image"
-                />
+               <img
+    src={formData.document_image}
+    className="w-48 rounded border"
+/>
+
+<a
+    href={formData.document_image}
+    target="_blank"
+    download
+>
+    Download
+</a>
               </div>
             </div>
           </div>
@@ -1471,7 +1453,7 @@ export default function UsersPage() {
       <Modal
         isOpen={showViewModal}
         onClose={() => setShowViewModal(false)}
-        title="User Details"
+       title={selectedUser?.role === "seller" ? "Vendor Details" : "Buyer Details"}
         maxWidth="max-w-2xl"
       >
         {selectedUser && (
@@ -1585,45 +1567,29 @@ export default function UsersPage() {
                     </div>
                   )}
                   {selectedUser.document_image && (
-                    <div className="col-span-2">
-                      <p className="text-xs text-gray-500">Document Image</p>
-                      <a
-                        href={`https://namami-infotech.com/${selectedUser.document_image}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-purple-600 hover:text-purple-700 underline"
-                      >
-                        View Document
-                      </a>
-                    </div>
-                  )}
+  <div className="col-span-2">
+    <p className="text-xs text-gray-500 mb-2">Document Image</p>
+
+    <img
+      src={selectedUser.document_image}
+      alt="Buyer Document"
+      className="w-full max-w-sm rounded-lg border shadow"
+    />
+
+    <a
+      href={selectedUser.document_image}
+      download
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-2 mt-3 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+    >
+      <Download size={16} />
+      Download Document
+    </a>
+  </div>
+)}
                 </div>
-                {(selectedUser.logistic_partner_name ||
-                  selectedUser.logistic_contact_no) && (
-                  <div className="border-t border-gray-200 pt-3 mt-2">
-                    <p className="text-xs text-gray-500 flex items-center gap-1">
-                      <Truck size={14} /> Logistic Details
-                    </p>
-                    <div className="grid grid-cols-2 gap-3 mt-2">
-                      {selectedUser.logistic_partner_name && (
-                        <div>
-                          <p className="text-xs text-gray-500">Partner</p>
-                          <p className="text-sm text-gray-900">
-                            {selectedUser.logistic_partner_name}
-                          </p>
-                        </div>
-                      )}
-                      {selectedUser.logistic_contact_no && (
-                        <div>
-                          <p className="text-xs text-gray-500">Contact</p>
-                          <p className="text-sm text-gray-900">
-                            {selectedUser.logistic_contact_no}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
+                
               </div>
             )}
 
@@ -1642,14 +1608,57 @@ export default function UsersPage() {
                       </p>
                     </div>
                   )}
-                  {selectedUser.gst_number && (
-                    <div>
-                      <p className="text-xs text-gray-500">GST Number</p>
-                      <p className="text-sm text-gray-900 font-mono">
-                        {selectedUser.gst_number}
-                      </p>
-                    </div>
-                  )}
+                 {selectedUser.brand_name && (
+<div className="col-span-2">
+<p className="text-xs text-gray-500">
+Brand Name
+</p>
+
+<p className="text-sm font-semibold">
+{selectedUser.brand_name}
+</p>
+</div>
+)}
+<div className="col-span-2">
+<p className="text-xs text-gray-500 mb-2">
+GST Certificate
+</p>
+
+<img
+src={selectedUser.gst_image}
+className="w-60 rounded border"
+/>
+
+<a
+href={selectedUser.gst_image}
+download
+target="_blank"
+className="inline-flex mt-3 px-4 py-2 rounded-lg bg-purple-600 text-white"
+>
+<Download size={16}/>
+Download GST
+</a>
+</div>
+<div className="col-span-2">
+<p className="text-xs text-gray-500 mb-2">
+Trademark Certificate
+</p>
+
+<img
+src={selectedUser.tmc_image}
+className="w-60 rounded border"
+/>
+
+<a
+href={selectedUser.tmc_image}
+download
+target="_blank"
+className="inline-flex mt-3 px-4 py-2 rounded-lg bg-purple-600 text-white"
+>
+<Download size={16}/>
+Download Trademark
+</a>
+</div>
                   {selectedUser.pan_number && (
                     <div>
                       <p className="text-xs text-gray-500">PAN Number</p>
@@ -1658,6 +1667,46 @@ export default function UsersPage() {
                       </p>
                     </div>
                   )}
+                  <div>
+<p className="text-xs text-gray-500">
+GST Verification
+</p>
+
+<p className="text-sm font-medium">
+{selectedUser.gst_verified == 1
+? "✅ Verified"
+: "❌ Not Verified"}
+</p>
+</div>
+<div>
+<p className="text-xs text-gray-500">
+Trademark Verification
+</p>
+
+<p className="text-sm font-medium">
+{selectedUser.tm_verified == 1
+? "✅ Verified"
+: "❌ Not Verified"}
+</p>
+</div>
+<div>
+<p className="text-xs text-gray-500">
+Minimum Order Value
+</p>
+
+<p className="text-sm font-semibold">
+₹{selectedUser.minimum_order_value}
+</p>
+</div>
+<div>
+<p className="text-xs text-gray-500">
+Commission
+</p>
+
+<p className="text-sm font-semibold">
+{selectedUser.commission_percentage}%
+</p>
+</div>
                   {selectedUser.pincode && (
                     <div>
                       <p className="text-xs text-gray-500">Pincode</p>
