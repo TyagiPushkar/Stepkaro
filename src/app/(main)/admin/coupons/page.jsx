@@ -18,48 +18,28 @@ import {
 } from "lucide-react";
 import axios from "axios";
 
-// --- Types based on your API Response ---
-interface Coupon {
-  id: number;
-  vendor_id: number;
-  coupon_type: "code" | "order_value";
-  coupon_code: string | null;
-  discount_type: "fixed" | "percentage";
-  discount_value: string | number;
-  start_date: string | null;
-  end_date: string | null;
-  per_user_limit: number;
-  used_count: number;
-  min_order_amount: string | number;
-  status: number; // 1 = Active, 0 = Inactive
-  created_at?: string;
-  updated_at?: string;
-}
-
 export default function SellerCouponPage() {
   // State Management
-  const [coupons, setCoupons] = useState<Coupon[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [coupons, setCoupons] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [typeFilter, setTypeFilter] = useState("all");
 
   // Notification Toast State
-  const [toast, setToast] = useState<{
-    message: string;
-    type: "success" | "error";
-  } | null>(null);
+  const [toast, setToast] = useState(null);
+
   //token
-  const token = localStorage.getItem("access_token");
+  const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
 
   // Modal Control
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingCoupon, setEditingCoupon] = useState(null);
 
   // Form State
   const [formData, setFormData] = useState({
-    coupon_type: "code" as "code" | "order_value",
+    coupon_type: "code",
     coupon_code: "",
-    discount_type: "fixed" as "fixed" | "percentage",
+    discount_type: "fixed",
     discount_value: "",
     per_user_limit: "1",
     min_order_amount: "",
@@ -73,8 +53,6 @@ export default function SellerCouponPage() {
   const fetchCoupons = async () => {
     setLoading(true);
     try {
-      // const res = await fetch("https://namami-infotech.com/Stepkaro/src/coupens/get_vendor_coupen.php");
-      // const result = await res.json();
       const response = await axios.get(
         "https://namami-infotech.com/Stepkaro/src/coupens/get_vendor_coupen.php",
         {
@@ -82,12 +60,10 @@ export default function SellerCouponPage() {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        },
+        }
       );
 
-      // Axios wraps response payloads in a '.data' object automatically
       const result = response?.data;
-      // console.log("Fetched result:", result);
       if (result.success) {
         setCoupons(result.data);
       } else {
@@ -105,7 +81,7 @@ export default function SellerCouponPage() {
   }, []);
 
   // 2. Toggle Coupon Status (POST)
-  const handleToggleStatus = async (id: number) => {
+  const handleToggleStatus = async (id) => {
     try {
       const res = await fetch(
         "https://namami-infotech.com/Stepkaro/src/coupens/toggle_coupen.php",
@@ -113,14 +89,14 @@ export default function SellerCouponPage() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ coupon_id: id }),
-        },
+        }
       );
 
-      // Optimistically update UI or re-fetch
+      // Optimistically update UI
       setCoupons((prev) =>
         prev.map((c) =>
-          c.id === id ? { ...c, status: c.status === 1 ? 0 : 1 } : c,
-        ),
+          c.id === id ? { ...c, status: c.status === 1 ? 0 : 1 } : c
+        )
       );
       showToast("Coupon status updated successfully", "success");
     } catch (error) {
@@ -129,7 +105,7 @@ export default function SellerCouponPage() {
   };
 
   // 3. Create or Update Coupon (POST)
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const isEdit = !!editingCoupon;
@@ -138,7 +114,7 @@ export default function SellerCouponPage() {
       : "https://namami-infotech.com/Stepkaro/src/coupens/create_coupen.php";
 
     // Prepare payload dynamically structured according to coupon types
-    const payload: any = {
+    const payload = {
       coupon_type: formData.coupon_type,
       discount_type: formData.discount_type,
       discount_value: Number(formData.discount_value),
@@ -175,7 +151,7 @@ export default function SellerCouponPage() {
         isEdit
           ? "Coupon updated successfully!"
           : "Coupon created successfully!",
-        "success",
+        "success"
       );
       setIsModalOpen(false);
       fetchCoupons(); // Refresh data
@@ -185,12 +161,12 @@ export default function SellerCouponPage() {
   };
 
   // --- Helpers ---
-  const showToast = (message: string, type: "success" | "error") => {
+  const showToast = (message, type) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
   };
 
-  const openModal = (coupon: Coupon | null = null) => {
+  const openModal = (coupon = null) => {
     if (coupon) {
       setEditingCoupon(coupon);
       setFormData({
@@ -224,7 +200,7 @@ export default function SellerCouponPage() {
     return coupons.filter((coupon) => {
       const matchesSearch =
         (coupon.coupon_code?.toLowerCase() || "").includes(
-          searchQuery.toLowerCase(),
+          searchQuery.toLowerCase()
         ) ||
         coupon.coupon_type.toLowerCase().includes(searchQuery.toLowerCase());
 
@@ -334,7 +310,9 @@ export default function SellerCouponPage() {
               >
                 {/* Decorative Side Tag Ribbon */}
                 <div
-                  className={`absolute top-0 left-0 w-1.5 h-full ${coupon.coupon_type === "code" ? "bg-indigo-500" : "bg-amber-500"}`}
+                  className={`absolute top-0 left-0 w-1.5 h-full ${
+                    coupon.coupon_type === "code" ? "bg-indigo-500" : "bg-amber-500"
+                  }`}
                 />
 
                 <div>
@@ -370,7 +348,9 @@ export default function SellerCouponPage() {
                     {/* Status Toggle Switch Icon */}
                     <button
                       onClick={() => handleToggleStatus(coupon.id)}
-                      className={`text-2xl transition focus:outline-none ${coupon.status === 1 ? "text-emerald-500" : "text-slate-300"}`}
+                      className={`text-2xl transition focus:outline-none ${
+                        coupon.status === 1 ? "text-emerald-500" : "text-slate-300"
+                      }`}
                       title={coupon.status === 1 ? "Deactivate" : "Activate"}
                     >
                       {coupon.status === 1 ? (
@@ -474,7 +454,7 @@ export default function SellerCouponPage() {
                 <div className="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-xl">
                   <button
                     type="button"
-                    disabled={!!editingCoupon} // Lock structural type change on edit
+                    disabled={!!editingCoupon}
                     onClick={() =>
                       setFormData({ ...formData, coupon_type: "code" })
                     }
@@ -536,7 +516,7 @@ export default function SellerCouponPage() {
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        discount_type: e.target.value as "fixed" | "percentage",
+                        discount_type: e.target.value,
                       })
                     }
                     className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
