@@ -1,5 +1,12 @@
 "use client";
-import { useState, useMemo, useEffect, useRef, Fragment, useCallback } from "react";
+import {
+  useState,
+  useMemo,
+  useEffect,
+  useRef,
+  Fragment,
+  useCallback,
+} from "react";
 import { useRouter } from "next/navigation";
 import {
   Search,
@@ -48,7 +55,7 @@ const normalizeProductImageUrl = (image) => {
 // Components
 const Modal = ({ isOpen, onClose, title, children }) => {
   if (!isOpen) return null;
-  
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="bg-white rounded-xl border border-gray-200 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl">
@@ -79,19 +86,40 @@ const VariantsDetailTable = ({
   }
 
   return (
-    <div data-variants-panel="true" className="overflow-x-auto rounded-lg border border-blue-100 bg-blue-50/40">
+    <div
+      data-variants-panel="true"
+      className="overflow-x-auto rounded-lg border border-blue-100 bg-blue-50/40"
+    >
       <table className="w-full min-w-[700px] text-sm">
         <thead className="bg-blue-100/60">
           <tr>
-            <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">Image</th>
-            <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">Size</th>
-            <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">Color</th>
-            <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">MRP</th>
-            <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">Selling</th>
-            <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">Stock</th>
-            <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">Packing</th>
-            <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">Pairs/Ctn</th>
-            <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">Status</th>
+            <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">
+              Image
+            </th>
+            <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">
+              Size
+            </th>
+            <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">
+              Color
+            </th>
+            <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">
+              MRP
+            </th>
+            <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">
+              Selling
+            </th>
+            <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">
+              Stock
+            </th>
+            <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">
+              Packing
+            </th>
+            <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">
+              Pairs/Ctn
+            </th>
+            <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">
+              Status
+            </th>
           </tr>
         </thead>
         <tbody className="divide-y divide-blue-100 bg-white">
@@ -107,13 +135,25 @@ const VariantsDetailTable = ({
                   />
                 </div>
               </td>
-              <td className="px-3 py-2 text-gray-900">{variant.variant_size || "-"}</td>
-              <td className="px-3 py-2 text-gray-900">{variant.color || "-"}</td>
-              <td className="px-3 py-2 text-gray-500 line-through">₹{variant.price || 0}</td>
-              <td className="px-3 py-2 font-medium text-emerald-600">₹{variant.selling_price || 0}</td>
+              <td className="px-3 py-2 text-gray-900">
+                {variant.variant_size || "-"}
+              </td>
+              <td className="px-3 py-2 text-gray-900">
+                {variant.color || "-"}
+              </td>
+              <td className="px-3 py-2 text-gray-500 line-through">
+                ₹{variant.price || 0}
+              </td>
+              <td className="px-3 py-2 font-medium text-emerald-600">
+                ₹{variant.selling_price || 0}
+              </td>
               <td className="px-3 py-2 text-gray-900">{variant.stock ?? 0}</td>
-              <td className="px-3 py-2 text-gray-900">{variant.packing_type || "-"}</td>
-              <td className="px-3 py-2 text-gray-900">{variant.pairs_per_ctn ?? "-"}</td>
+              <td className="px-3 py-2 text-gray-900">
+                {variant.packing_type || "-"}
+              </td>
+              <td className="px-3 py-2 text-gray-900">
+                {variant.pairs_per_ctn ?? "-"}
+              </td>
               <td className="px-3 py-2">
                 <button
                   type="button"
@@ -145,7 +185,7 @@ const VariantsDetailTable = ({
 
 export default function ProductsPage() {
   const router = useRouter();
-  
+
   // State
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -161,11 +201,18 @@ export default function ProductsPage() {
   const [selectedProductId, setSelectedProductId] = useState(null);
   const [commission, setCommission] = useState("");
   const [commissionType, setCommissionType] = useState("");
-  const [expandedVariantsProductId, setExpandedVariantsProductId] = useState(null);
+  const [expandedVariantsProductId, setExpandedVariantsProductId] =
+    useState(null);
   const [togglingVariantId, setTogglingVariantId] = useState(null);
-  
+
+  // best selling products
+  const [showBestProductsModal, setShowBestProductsModal] = useState(false);
+  const [bestProductSearch, setBestProductSearch] = useState("");
+  const [selectedBestProducts, setSelectedBestProducts] = useState([]);
+
   const variantsPanelRef = useRef(null);
-  const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
 
   // Toast handler
   const showToast = useCallback((message, type = "success") => {
@@ -181,17 +228,23 @@ export default function ProductsPage() {
         showToast("Authentication required", "error");
         return;
       }
-      
+
       try {
         setLoading(true);
-        const response = await api.get(`${API_BASE}/product/get_all_products.php`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        
+        const response = await api.get(
+          `${API_BASE}/product/get_all_products.php`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
+
         if (response.data?.success) {
           setProducts(response.data.data || []);
         } else {
-          showToast(response.data?.message || "Failed to fetch products", "error");
+          showToast(
+            response.data?.message || "Failed to fetch products",
+            "error",
+          );
         }
       } catch (error) {
         console.error("Products fetch error:", error);
@@ -211,15 +264,18 @@ export default function ProductsPage() {
     const handleClickOutside = (e) => {
       // Don't close if clicking on toggle buttons or inputs
       if (
-        e.target.closest("[data-variants-toggle]") || 
-        e.target.closest("button") || 
+        e.target.closest("[data-variants-toggle]") ||
+        e.target.closest("button") ||
         e.target.tagName === "INPUT"
       ) {
         return;
       }
 
       // Don't close if clicking inside variants panel
-      if (variantsPanelRef.current && variantsPanelRef.current.contains(e.target)) {
+      if (
+        variantsPanelRef.current &&
+        variantsPanelRef.current.contains(e.target)
+      ) {
         return;
       }
 
@@ -230,10 +286,79 @@ export default function ProductsPage() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [expandedVariantsProductId]);
 
+  useEffect(() => {
+    const selected = products
+      .filter((p) => p.is_top_pick === "1")
+      .map((p) => p.id);
+
+    setSelectedBestProducts(selected);
+  }, [products]);
+
+  const filteredBestProducts = useMemo(() => {
+    const search = bestProductSearch.toLowerCase();
+
+    return products.filter(
+      (p) =>
+        p.article_name?.toLowerCase().includes(search) ||
+        p.brand_name?.toLowerCase().includes(search) ||
+        p.category_name?.toLowerCase().includes(search) ||
+        p.id?.toString().includes(search),
+    );
+  }, [products, bestProductSearch]);
+
+  const toggleBestProduct = (productId) => {
+    setSelectedBestProducts((prev) => {
+      if (prev.includes(productId)) {
+        return prev.filter((id) => id !== productId);
+      }
+
+      if (prev.length >= 50) {
+        showToast("Maximum 50 products allowed", "error");
+        return prev;
+      }
+
+      return [...prev, productId];
+    });
+  };
+  const saveBestProducts = async () => {
+    console.log("that products was selected", selectedBestProducts);
+    try {
+      const response = await api.post(
+        `${API_BASE}/admin/update_top_pick.php`,
+        {
+          product_ids: selectedBestProducts,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (response.data.success) {
+        setProducts((prev) =>
+          prev.map((product) => ({
+            ...product,
+            is_top_pick: selectedBestProducts.includes(product.id) ? "1" : "0",
+          })),
+        );
+
+        showToast("Best 50 products updated");
+        setShowBestProductsModal(false);
+      } else {
+        showToast(response.data.message, "error");
+      }
+    } catch (error) {
+      showToast("Failed to update products", "error");
+    }
+  };
+
   // Toggle variants panel
   const toggleVariantsPanel = useCallback((e, productId) => {
     e.stopPropagation();
-    setExpandedVariantsProductId((prev) => prev === productId ? null : productId);
+    setExpandedVariantsProductId((prev) =>
+      prev === productId ? null : productId,
+    );
   }, []);
 
   // Get variant count
@@ -249,151 +374,186 @@ export default function ProductsPage() {
   }, []);
 
   // Handle approval action
-  const handleApprovalAction = useCallback(async (productId, action, commissionValue = null) => {
-    if (!token) {
-      showToast("Authentication required", "error");
-      return;
-    }
-
-    try {
-      const payload = {
-        product_id: productId,
-        action,
-        commission_type: commissionType || "percentage",
-      };
-
-      if (commissionValue !== null) {
-        payload.commission = parseFloat(commissionValue);
+  const handleApprovalAction = useCallback(
+    async (productId, action, commissionValue = null) => {
+      if (!token) {
+        showToast("Authentication required", "error");
+        return;
       }
 
-      const response = await api.post(`${API_BASE}/admin/approve_products.php`, payload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      try {
+        const payload = {
+          product_id: productId,
+          action,
+          commission_type: commissionType || "percentage",
+        };
 
-      if (response.data?.success) {
-        setProducts((prev) =>
-          prev.map((product) =>
-            product.id === productId
-              ? {
-                  ...product,
-                  status: action,
-                  commission: commissionValue || product.commission,
-                  commission_type: commissionType || product.commission_type,
-                }
-              : product
-          )
+        if (commissionValue !== null) {
+          payload.commission = parseFloat(commissionValue);
+        }
+
+        const response = await api.post(
+          `${API_BASE}/admin/approve_products.php`,
+          payload,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
         );
 
-        setShowCommissionModal(false);
-        showToast(`Product ${action === "active" ? "approved" : "rejected"} successfully`);
-      } else {
-        showToast(response.data?.message || "Failed to update product", "error");
+        if (response.data?.success) {
+          setProducts((prev) =>
+            prev.map((product) =>
+              product.id === productId
+                ? {
+                    ...product,
+                    status: action,
+                    commission: commissionValue || product.commission,
+                    commission_type: commissionType || product.commission_type,
+                  }
+                : product,
+            ),
+          );
+
+          setShowCommissionModal(false);
+          showToast(
+            `Product ${action === "active" ? "approved" : "rejected"} successfully`,
+          );
+        } else {
+          showToast(
+            response.data?.message || "Failed to update product",
+            "error",
+          );
+        }
+      } catch (error) {
+        console.error("Approval error:", error);
+        showToast("Failed to update product", "error");
       }
-    } catch (error) {
-      console.error("Approval error:", error);
-      showToast("Failed to update product", "error");
-    }
-  }, [token, commissionType, showToast]);
+    },
+    [token, commissionType, showToast],
+  );
 
   // Toggle product status
-  const toggleStatus = useCallback(async (productId) => {
-    const product = products.find((p) => p.id === productId);
-    if (!product || !token) return;
+  const toggleStatus = useCallback(
+    async (productId) => {
+      const product = products.find((p) => p.id === productId);
+      if (!product || !token) return;
 
-    const newStatus = product.status === "active" ? "inactive" : "active";
+      const newStatus = product.status === "active" ? "inactive" : "active";
 
-    // Optimistic update
-    setProducts((prev) =>
-      prev.map((p) => (p.id === productId ? { ...p, status: newStatus } : p))
-    );
-
-    try {
-      const response = await api.post(`${API_BASE}/admin/toggle_products.php`, {
-        product_id: productId,
-        type: "product",
-        action: newStatus,
-      }, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!response.data?.success) {
-        throw new Error(response.data?.message || "Toggle failed");
-      }
-      
-      showToast(`Product ${newStatus === "active" ? "activated" : "deactivated"} successfully`);
-    } catch (error) {
-      console.error("Toggle Error:", error);
-      // Revert on error
+      // Optimistic update
       setProducts((prev) =>
-        prev.map((p) => (p.id === productId ? { ...p, status: product.status } : p))
+        prev.map((p) => (p.id === productId ? { ...p, status: newStatus } : p)),
       );
-      showToast(error.message || "Failed to update status", "error");
-    }
-  }, [products, token, showToast]);
+
+      try {
+        const response = await api.post(
+          `${API_BASE}/admin/toggle_products.php`,
+          {
+            product_id: productId,
+            type: "product",
+            action: newStatus,
+          },
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
+
+        if (!response.data?.success) {
+          throw new Error(response.data?.message || "Toggle failed");
+        }
+
+        showToast(
+          `Product ${newStatus === "active" ? "activated" : "deactivated"} successfully`,
+        );
+      } catch (error) {
+        console.error("Toggle Error:", error);
+        // Revert on error
+        setProducts((prev) =>
+          prev.map((p) =>
+            p.id === productId ? { ...p, status: product.status } : p,
+          ),
+        );
+        showToast(error.message || "Failed to update status", "error");
+      }
+    },
+    [products, token, showToast],
+  );
 
   // Toggle variant status
-  const toggleVariantStatus = useCallback(async (productId, variantId) => {
-    const product = products.find((p) => p.id === productId);
-    const variant = product?.variants?.find((v) => v.id === variantId);
-    if (!variant || !token) return;
+  const toggleVariantStatus = useCallback(
+    async (productId, variantId) => {
+      const product = products.find((p) => p.id === productId);
+      const variant = product?.variants?.find((v) => v.id === variantId);
+      if (!variant || !token) return;
 
-    const newStatus = variant.status === "active" ? "inactive" : "active";
+      const newStatus = variant.status === "active" ? "inactive" : "active";
 
-    // Optimistic update
-    setProducts((prev) =>
-      prev.map((p) =>
-        p.id === productId
-          ? {
-              ...p,
-              variants: p.variants.map((v) =>
-                v.id === variantId ? { ...v, status: newStatus } : v
-              ),
-            }
-          : p
-      )
-    );
-
-    setTogglingVariantId(variantId);
-
-    try {
-      const response = await api.post(`${API_BASE}/admin/toggle_products.php`, {
-        variant_id: variantId,
-        type: "variant",
-        action: newStatus,
-      }, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!response.data?.success) {
-        throw new Error(response.data?.message || "Toggle failed");
-      }
-
-      showToast(`Variant ${newStatus === "active" ? "activated" : "deactivated"} successfully`);
-    } catch (error) {
-      console.error("Variant Toggle Error:", error);
-      // Revert on error
+      // Optimistic update
       setProducts((prev) =>
         prev.map((p) =>
           p.id === productId
             ? {
                 ...p,
                 variants: p.variants.map((v) =>
-                  v.id === variantId ? { ...v, status: variant.status } : v
+                  v.id === variantId ? { ...v, status: newStatus } : v,
                 ),
               }
-            : p
-        )
+            : p,
+        ),
       );
-      showToast(error.message || "Failed to update variant status", "error");
-    } finally {
-      setTogglingVariantId(null);
-    }
-  }, [products, token, showToast]);
+
+      setTogglingVariantId(variantId);
+
+      try {
+        const response = await api.post(
+          `${API_BASE}/admin/toggle_products.php`,
+          {
+            variant_id: variantId,
+            type: "variant",
+            action: newStatus,
+          },
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
+
+        if (!response.data?.success) {
+          throw new Error(response.data?.message || "Toggle failed");
+        }
+
+        showToast(
+          `Variant ${newStatus === "active" ? "activated" : "deactivated"} successfully`,
+        );
+      } catch (error) {
+        console.error("Variant Toggle Error:", error);
+        // Revert on error
+        setProducts((prev) =>
+          prev.map((p) =>
+            p.id === productId
+              ? {
+                  ...p,
+                  variants: p.variants.map((v) =>
+                    v.id === variantId ? { ...v, status: variant.status } : v,
+                  ),
+                }
+              : p,
+          ),
+        );
+        showToast(error.message || "Failed to update variant status", "error");
+      } finally {
+        setTogglingVariantId(null);
+      }
+    },
+    [products, token, showToast],
+  );
 
   // Navigate to product detail
-  const goToProductDetail = useCallback((productId) => {
-    router.push(`/admin/products/${productId}`);
-  }, [router]);
+  const goToProductDetail = useCallback(
+    (productId) => {
+      router.push(`/admin/products/${productId}`);
+    },
+    [router],
+  );
 
   // Handle view product
   const handleViewProduct = useCallback((product) => {
@@ -424,22 +584,76 @@ export default function ProductsPage() {
     const all = products.length;
     const active = products.filter((p) => p.status === "active").length;
     const inactive = products.filter((p) => p.status === "inactive").length;
-    const approveRequest = products.filter((p) => p.status === "approve_request").length;
+    const approveRequest = products.filter(
+      (p) => p.status === "approve_request",
+    ).length;
     const outOfStock = products.filter(isOutOfStock).length;
     const rejected = products.filter((p) => p.status === "reject").length;
+    const best_selected = products.filter((p) => p.is_top_pick === "1").length;
 
-    return { all, active, inactive, approveRequest, outOfStock, rejected };
+    return {
+      all,
+      active,
+      inactive,
+      approveRequest,
+      outOfStock,
+      rejected,
+      best_selected,
+    };
   }, [products, isOutOfStock]);
 
   // Filters configuration
   const filters = useMemo(() => [
-    { label: "All Product", value: "all", count: counts.all, icon: Package, color: "purple" },
-    { label: "Products Listing Requested", value: "approve_request", count: counts.approveRequest, icon: AlertCircle, color: "yellow" },
-    { label: "Active Product", value: "active", count: counts.active, icon: CheckCircle, color: "green" },
-    { label: "In-Active Product", value: "inactive", count: counts.inactive, icon: XCircle, color: "red" },
-    { label: "Out of Stock Product", value: "out_of_stock", count: counts.outOfStock, icon: AlertCircle, color: "red" },
-    { label: "Rejected Product", value: "reject", count: counts.rejected, icon: XCircle, color: "red" },
-  ], [counts]);
+    {
+      label: "All Product",
+      value: "all",
+      count: counts.all,
+      icon: Package,
+      color: "purple",
+    },
+    {
+      label: "Products Listing Requested",
+      value: "approve_request",
+      count: counts.approveRequest,
+      icon: AlertCircle,
+      color: "yellow",
+    },
+    {
+      label: "Active Product",
+      value: "active",
+      count: counts.active,
+      icon: CheckCircle,
+      color: "green",
+    },
+    {
+      label: "In-Active Product",
+      value: "inactive",
+      count: counts.inactive,
+      icon: XCircle,
+      color: "red",
+    },
+    {
+      label: "Out of Stock Product",
+      value: "out_of_stock",
+      count: counts.outOfStock,
+      icon: AlertCircle,
+      color: "red",
+    },
+    {
+      label: "Rejected Product",
+      value: "reject",
+      count: counts.rejected,
+      icon: XCircle,
+      color: "red",
+    },
+    {
+      label: "Best 50 product",
+      value: "best_selected",
+      count: counts.best_selected,
+      icon: CheckCircle,
+      color: "green",
+    },
+  ]);
 
   // Filter and search products
   const filteredProducts = useMemo(() => {
@@ -461,6 +675,9 @@ export default function ProductsPage() {
       case "reject":
         filtered = filtered.filter((p) => p.status === "reject");
         break;
+      case "best_selected":
+        filtered = filtered.filter((p) => p.is_top_pick === "1");
+        break;
       default:
         break;
     }
@@ -472,7 +689,7 @@ export default function ProductsPage() {
           p.article_name?.toLowerCase().includes(query) ||
           p.category_name?.toLowerCase().includes(query) ||
           p.id?.toString().includes(query) ||
-          p.brand_name?.toLowerCase().includes(query)
+          p.brand_name?.toLowerCase().includes(query),
       );
     }
 
@@ -487,24 +704,56 @@ export default function ProductsPage() {
     }
 
     // Use filteredProducts if available, otherwise use all products
-    const exportData = filteredProducts.length > 0 ? filteredProducts : products;
+    const exportData =
+      filteredProducts.length > 0 ? filteredProducts : products;
 
     const headers = [
-      "ID", "Product Name", "Category", "Brand", "Owner Name", 
-      "Business Name", "Quantity", "Price (Original)", "Selling Price", 
-      "Commission (%)", "Orders", "Returns", "Revenue", "Status", 
-      "Stock Status", "Variant", "Color", "Size", "Material", 
-      "Gender", "Origin", "Created At"
+      "ID",
+      "Product Name",
+      "Category",
+      "Brand",
+      "Owner Name",
+      "Business Name",
+      "Quantity",
+      "Price (Original)",
+      "Selling Price",
+      "Commission (%)",
+      "Orders",
+      "Returns",
+      "Revenue",
+      "Status",
+      "Stock Status",
+      "Variant",
+      "Color",
+      "Size",
+      "Material",
+      "Gender",
+      "Origin",
+      "Created At",
     ];
 
     const rows = exportData.map((p) => [
-      p.id || "", p.article_name || "", p.category_name || "",
-      p.brand_name || "", p.owner_name || "", p.business_name || "",
-      p.stock_quantity || 0, p.price || 0, p.selling_price || 0,
-      p.commission || "0", p.orders || 0, p.returns || 0,
-      p.revenue || 0, p.status || "", p.stock || "in_stock",
-      p.variant || "", p.color || "", p.size || "",
-      p.material || "", p.gender || "", p.origin || "",
+      p.id || "",
+      p.article_name || "",
+      p.category_name || "",
+      p.brand_name || "",
+      p.owner_name || "",
+      p.business_name || "",
+      p.stock_quantity || 0,
+      p.price || 0,
+      p.selling_price || 0,
+      p.commission || "0",
+      p.orders || 0,
+      p.returns || 0,
+      p.revenue || 0,
+      p.status || "",
+      p.stock || "in_stock",
+      p.variant || "",
+      p.color || "",
+      p.size || "",
+      p.material || "",
+      p.gender || "",
+      p.origin || "",
       p.created_at || "",
     ]);
 
@@ -531,9 +780,12 @@ export default function ProductsPage() {
   const endIndex = startIndex + itemsPerPage;
   const currentProducts = filteredProducts.slice(startIndex, endIndex);
 
-  const goToPage = useCallback((page) => {
-    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
-  }, [totalPages]);
+  const goToPage = useCallback(
+    (page) => {
+      setCurrentPage(Math.max(1, Math.min(page, totalPages)));
+    },
+    [totalPages],
+  );
 
   const handleFilterChange = useCallback((filterValue) => {
     setSelectedFilter(filterValue);
@@ -569,7 +821,11 @@ export default function ProductsPage() {
                 : "bg-blue-500"
           }`}
         >
-          {toast.type === "success" ? <CheckCircle size={18} /> : <XCircle size={18} />}
+          {toast.type === "success" ? (
+            <CheckCircle size={18} />
+          ) : (
+            <XCircle size={18} />
+          )}
           {toast.message}
         </div>
       )}
@@ -578,13 +834,18 @@ export default function ProductsPage() {
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Products</h1>
-          <p className="text-gray-500 text-sm mt-1">Manage your product catalog</p>
+          <p className="text-gray-500 text-sm mt-1">
+            Manage your product catalog
+          </p>
         </div>
 
         {/* Action Buttons */}
         <div className="flex flex-wrap gap-3">
           <div className="relative flex-1 lg:w-64 min-w-[180px]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <Search
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              size={18}
+            />
             <input
               type="text"
               value={searchQuery}
@@ -611,15 +872,16 @@ export default function ProductsPage() {
             Export All
           </button>
 
-          {filteredProducts.length < products.length && filteredProducts.length > 0 && (
-            <button
-              onClick={handleExportCSV}
-              className="bg-white hover:bg-gray-50 text-gray-600 px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-colors border border-gray-200 hover:border-purple-300"
-            >
-              <Download size={16} />
-              Export Filtered ({filteredProducts.length})
-            </button>
-          )}
+          {filteredProducts.length < products.length &&
+            filteredProducts.length > 0 && (
+              <button
+                onClick={handleExportCSV}
+                className="bg-white hover:bg-gray-50 text-gray-600 px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-colors border border-gray-200 hover:border-purple-300"
+              >
+                <Download size={16} />
+                Export Filtered ({filteredProducts.length})
+              </button>
+            )}
         </div>
       </div>
 
@@ -635,27 +897,34 @@ export default function ProductsPage() {
             red: "bg-red-100 text-red-700 border-red-200",
           };
           const inactiveColorMap = {
-            purple: "bg-white text-gray-600 border-gray-200 hover:border-purple-300 hover:text-purple-600",
-            yellow: "bg-white text-gray-600 border-gray-200 hover:border-yellow-300 hover:text-yellow-600",
-            green: "bg-white text-gray-600 border-gray-200 hover:border-green-300 hover:text-green-600",
+            purple:
+              "bg-white text-gray-600 border-gray-200 hover:border-purple-300 hover:text-purple-600",
+            yellow:
+              "bg-white text-gray-600 border-gray-200 hover:border-yellow-300 hover:text-yellow-600",
+            green:
+              "bg-white text-gray-600 border-gray-200 hover:border-green-300 hover:text-green-600",
             red: "bg-white text-gray-600 border-gray-200 hover:border-red-300 hover:text-red-600",
           };
-          
+
           return (
             <button
               key={filter.value}
               onClick={() => handleFilterChange(filter.value)}
               className={`px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-all duration-200 whitespace-nowrap border ${
                 isActive
-                  ? colorMap[filter.color] || "bg-purple-600 text-white border-purple-600"
-                  : inactiveColorMap[filter.color] || "bg-white text-gray-600 border-gray-200 hover:border-purple-300"
+                  ? colorMap[filter.color] ||
+                    "bg-purple-600 text-white border-purple-600"
+                  : inactiveColorMap[filter.color] ||
+                    "bg-white text-gray-600 border-gray-200 hover:border-purple-300"
               }`}
             >
               <Icon size={16} />
               {filter.label}
               <span
                 className={`px-2 py-0.5 rounded-full text-xs ${
-                  isActive ? "bg-white/20 text-white" : "bg-gray-100 text-gray-600"
+                  isActive
+                    ? "bg-white/20 text-white"
+                    : "bg-gray-100 text-gray-600"
                 }`}
               >
                 {filter.count}
@@ -669,12 +938,23 @@ export default function ProductsPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <p className="text-sm text-gray-500">
           Showing{" "}
-          <span className="text-gray-900">{filteredProducts.length > 0 ? startIndex + 1 : 0}</span>
+          <span className="text-gray-900">
+            {filteredProducts.length > 0 ? startIndex + 1 : 0}
+          </span>
           {" to "}
-          <span className="text-gray-900">{Math.min(endIndex, filteredProducts.length)}</span>
+          <span className="text-gray-900">
+            {Math.min(endIndex, filteredProducts.length)}
+          </span>
           {" of "}
-          <span className="text-gray-900">{filteredProducts.length}</span> products
+          <span className="text-gray-900">{filteredProducts.length}</span>{" "}
+          products
         </p>
+        <button
+          onClick={() => setShowBestProductsModal(true)}
+          className="px-4 py-2 border border-gray-300 rounded-md text-sm text-gray-700 bg-white hover:bg-gray-50"
+        >
+          Add 50 Products
+        </button>
         <div className="flex items-center gap-2">
           <span className="text-sm text-gray-500">Show:</span>
           <select
@@ -701,31 +981,58 @@ export default function ProductsPage() {
           <table className="w-full min-w-[900px]">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">S.No</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Brand</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Commission</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Variants</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  S.No
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Product
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Brand
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Stock
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Owner
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Price
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Commission
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Variants
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {currentProducts.length > 0 ? (
                 currentProducts.map((product, index) => {
-                  const stockBadge = getStockBadge(product.stock, product.stock_quantity);
-                  const isListingRequested = product.status === "approve_request";
+                  const stockBadge = getStockBadge(
+                    product.stock,
+                    product.stock_quantity,
+                  );
+                  const isListingRequested =
+                    product.status === "approve_request";
                   const variantCount = getVariantCount(product);
-                  const isVariantsExpanded = expandedVariantsProductId === product.id;
+                  const isVariantsExpanded =
+                    expandedVariantsProductId === product.id;
 
                   return (
                     <Fragment key={product.id}>
                       <tr className="hover:bg-gray-50 transition-colors">
                         <td className="px-4 py-3">
-                          <span className="text-sm text-gray-500">{startIndex + index + 1}</span>
+                          <span className="text-sm text-gray-500">
+                            {startIndex + index + 1}
+                          </span>
                         </td>
 
                         <td className="px-4 py-3">
@@ -748,29 +1055,41 @@ export default function ProductsPage() {
                               >
                                 {product.article_name}
                               </p>
-                              <p className="text-xs text-gray-500 mt-0.5">{product.category_name}</p>
+                              <p className="text-xs text-gray-500 mt-0.5">
+                                {product.category_name}
+                              </p>
                             </div>
                           </div>
                         </td>
 
                         <td className="px-4 py-3">
-                          <span className="text-sm text-gray-900">{product.brand_name}</span>
+                          <span className="text-sm text-gray-900">
+                            {product.brand_name}
+                          </span>
                         </td>
 
                         <td className="px-4 py-3">
-                          <span className={`text-sm font-medium ${product.stock_quantity === 0 ? "text-red-600" : "text-gray-900"}`}>
+                          <span
+                            className={`text-sm font-medium ${product.stock_quantity === 0 ? "text-red-600" : "text-gray-900"}`}
+                          >
                             {product.stock_quantity}
                           </span>
                         </td>
 
                         <td className="px-4 py-3">
-                          <span className="text-sm text-gray-900">{product.owner_name}</span>
+                          <span className="text-sm text-gray-900">
+                            {product.owner_name}
+                          </span>
                         </td>
 
                         <td className="px-4 py-3">
                           <div className="flex flex-col">
-                            <span className="text-xs text-gray-400 line-through">₹{product.price || 0}</span>
-                            <span className="text-sm font-semibold text-emerald-600">₹{product.selling_price || 0}</span>
+                            <span className="text-xs text-gray-400 line-through">
+                              ₹{product.price || 0}
+                            </span>
+                            <span className="text-sm font-semibold text-emerald-600">
+                              ₹{product.selling_price || 0}
+                            </span>
                           </div>
                         </td>
 
@@ -782,7 +1101,9 @@ export default function ProductsPage() {
                                 : `₹${product.commission || 0}`}
                             </span>
                             {product.commission_type === "per_piece_rate" && (
-                              <span className="text-xs text-gray-500">Per piece rate</span>
+                              <span className="text-xs text-gray-500">
+                                Per piece rate
+                              </span>
                             )}
                           </div>
                         </td>
@@ -792,21 +1113,30 @@ export default function ProductsPage() {
                             <button
                               type="button"
                               data-variants-toggle
-                              onClick={(e) => toggleVariantsPanel(e, product.id)}
+                              onClick={(e) =>
+                                toggleVariantsPanel(e, product.id)
+                              }
                               className={`text-sm font-semibold cursor-pointer hover:underline ${
-                                isVariantsExpanded ? "text-blue-800" : "text-blue-600"
+                                isVariantsExpanded
+                                  ? "text-blue-800"
+                                  : "text-blue-600"
                               }`}
                             >
-                              {variantCount} {variantCount === 1 ? "Variant" : "Variants"}
+                              {variantCount}{" "}
+                              {variantCount === 1 ? "Variant" : "Variants"}
                             </button>
                           ) : (
-                            <span className="text-sm text-gray-400">No Variants</span>
+                            <span className="text-sm text-gray-400">
+                              No Variants
+                            </span>
                           )}
                         </td>
 
                         <td className="px-4 py-3">
                           {product.status === "reject" ? (
-                            <span className="px-2 py-1 text-xs bg-red-100 text-red-700 rounded-lg">Reject</span>
+                            <span className="px-2 py-1 text-xs bg-red-100 text-red-700 rounded-lg">
+                              Reject
+                            </span>
                           ) : isListingRequested ? (
                             <div className="flex flex-wrap gap-2">
                               <button
@@ -824,7 +1154,9 @@ export default function ProductsPage() {
                               </button>
 
                               <button
-                                onClick={() => handleApprovalAction(product.id, "reject")}
+                                onClick={() =>
+                                  handleApprovalAction(product.id, "reject")
+                                }
                                 className="px-3 py-1 text-xs bg-red-100 text-red-700 hover:bg-red-200 rounded-lg flex items-center gap-1 transition-colors cursor-pointer"
                                 title="Reject Product"
                               >
@@ -836,13 +1168,17 @@ export default function ProductsPage() {
                             <button
                               onClick={() => toggleStatus(product.id)}
                               className={`relative w-10 h-5 rounded-full transition-colors cursor-pointer flex-shrink-0 ${
-                                product.status === "active" ? "bg-green-500" : "bg-red-500"
+                                product.status === "active"
+                                  ? "bg-green-500"
+                                  : "bg-red-500"
                               }`}
                               aria-label={`Toggle product status`}
                             >
                               <div
                                 className={`absolute w-4 h-4 bg-white rounded-full top-0.5 transition-all duration-300 shadow-sm ${
-                                  product.status === "active" ? "left-5" : "left-0.5"
+                                  product.status === "active"
+                                    ? "left-5"
+                                    : "left-0.5"
                                 }`}
                               />
                             </button>
@@ -874,8 +1210,14 @@ export default function ProductsPage() {
                       {/* Variants Sub-table */}
                       {isVariantsExpanded && (
                         <tr>
-                          <td colSpan={10} className="p-4 bg-gray-50/50 border-l-4 border-blue-500 pl-12">
-                            <div ref={variantsPanelRef} className="animate-fadeIn">
+                          <td
+                            colSpan={10}
+                            className="p-4 bg-gray-50/50 border-l-4 border-blue-500 pl-12"
+                          >
+                            <div
+                              ref={variantsPanelRef}
+                              className="animate-fadeIn"
+                            >
                               <div className="flex items-center gap-2 mb-2">
                                 <span className="w-1.5 h-1.5 bg-blue-600 rounded-full" />
                                 <h5 className="font-semibold text-gray-700 text-xs uppercase tracking-wider">
@@ -900,7 +1242,9 @@ export default function ProductsPage() {
                   <td colSpan="10" className="px-4 py-12 text-center">
                     <Package size={48} className="text-gray-300 mx-auto mb-3" />
                     <p className="text-gray-500">No products found</p>
-                    <p className="text-sm text-gray-400 mt-1">Try adjusting your search or filter</p>
+                    <p className="text-sm text-gray-400 mt-1">
+                      Try adjusting your search or filter
+                    </p>
                   </td>
                 </tr>
               )}
@@ -913,10 +1257,14 @@ export default function ProductsPage() {
           {currentProducts.length > 0 ? (
             <div className="divide-y divide-gray-100">
               {currentProducts.map((product) => {
-                const stockBadge = getStockBadge(product.stock, product.stock_quantity);
+                const stockBadge = getStockBadge(
+                  product.stock,
+                  product.stock_quantity,
+                );
                 const isListingRequested = product.status === "approve_request";
                 const variantCount = getVariantCount(product);
-                const isVariantsExpanded = expandedVariantsProductId === product.id;
+                const isVariantsExpanded =
+                  expandedVariantsProductId === product.id;
 
                 return (
                   <div key={product.id} className="p-4 space-y-3">
@@ -939,13 +1287,21 @@ export default function ProductsPage() {
                         >
                           {product.article_name}
                         </p>
-                        <p className="text-xs text-gray-500">{product.category_name}</p>
+                        <p className="text-xs text-gray-500">
+                          {product.category_name}
+                        </p>
                         <div className="flex items-center gap-2 mt-1">
-                          <span className="text-xs text-gray-400 line-through">₹{product.price || 0}</span>
-                          <span className="text-sm font-semibold text-emerald-600">₹{product.selling_price || 0}</span>
+                          <span className="text-xs text-gray-400 line-through">
+                            ₹{product.price || 0}
+                          </span>
+                          <span className="text-sm font-semibold text-emerald-600">
+                            ₹{product.selling_price || 0}
+                          </span>
                         </div>
                       </div>
-                      <span className={`text-xs px-2 py-1 rounded-full ${stockBadge.color} flex-shrink-0`}>
+                      <span
+                        className={`text-xs px-2 py-1 rounded-full ${stockBadge.color} flex-shrink-0`}
+                      >
                         {stockBadge.label}
                       </span>
                     </div>
@@ -953,15 +1309,21 @@ export default function ProductsPage() {
                     <div className="grid grid-cols-2 gap-2 text-sm">
                       <div>
                         <span className="text-gray-500">Qty:</span>
-                        <span className="text-gray-900 ml-1">{product.stock_quantity}</span>
+                        <span className="text-gray-900 ml-1">
+                          {product.stock_quantity}
+                        </span>
                       </div>
                       <div>
                         <span className="text-gray-500">Owner:</span>
-                        <span className="text-gray-900 ml-1 truncate">{product.owner_name}</span>
+                        <span className="text-gray-900 ml-1 truncate">
+                          {product.owner_name}
+                        </span>
                       </div>
                       <div>
                         <span className="text-gray-500">Brand:</span>
-                        <span className="text-gray-900 ml-1 truncate">{product.brand_name}</span>
+                        <span className="text-gray-900 ml-1 truncate">
+                          {product.brand_name}
+                        </span>
                       </div>
                       <div>
                         <span className="text-gray-500">Commission:</span>
@@ -979,7 +1341,9 @@ export default function ProductsPage() {
                             data-variants-toggle
                             onClick={(e) => toggleVariantsPanel(e, product.id)}
                             className={`ml-1 text-sm font-semibold cursor-pointer hover:underline ${
-                              isVariantsExpanded ? "text-blue-800" : "text-blue-600"
+                              isVariantsExpanded
+                                ? "text-blue-800"
+                                : "text-blue-600"
                             }`}
                           >
                             {variantCount}
@@ -1006,7 +1370,9 @@ export default function ProductsPage() {
                               <ThumbsUp size={12} /> Approve
                             </button>
                             <button
-                              onClick={() => handleApprovalAction(product.id, "reject")}
+                              onClick={() =>
+                                handleApprovalAction(product.id, "reject")
+                              }
                               className="px-2 py-0.5 text-xs bg-red-100 text-red-700 hover:bg-red-200 rounded flex items-center gap-1"
                             >
                               <ThumbsDown size={12} /> Reject
@@ -1016,13 +1382,17 @@ export default function ProductsPage() {
                           <button
                             onClick={() => toggleStatus(product.id)}
                             className={`relative w-10 h-5 rounded-full transition-colors cursor-pointer ml-1 ${
-                              product.status === "active" ? "bg-green-500" : "bg-red-500"
+                              product.status === "active"
+                                ? "bg-green-500"
+                                : "bg-red-500"
                             }`}
                             aria-label={`Toggle product status`}
                           >
                             <div
                               className={`absolute w-4 h-4 bg-white rounded-full top-0.5 transition-all duration-300 shadow-sm ${
-                                product.status === "active" ? "left-5" : "left-0.5"
+                                product.status === "active"
+                                  ? "left-5"
+                                  : "left-0.5"
                               }`}
                             />
                           </button>
@@ -1032,7 +1402,10 @@ export default function ProductsPage() {
 
                     {/* Mobile Variants Panel */}
                     {isVariantsExpanded && (
-                      <div ref={variantsPanelRef} className="mt-3 p-4 bg-gray-50/50 border-l-4 border-blue-500 animate-fadeIn">
+                      <div
+                        ref={variantsPanelRef}
+                        className="mt-3 p-4 bg-gray-50/50 border-l-4 border-blue-500 animate-fadeIn"
+                      >
                         <div className="flex items-center gap-2 mb-2">
                           <span className="w-1.5 h-1.5 bg-blue-600 rounded-full" />
                           <h5 className="font-semibold text-gray-700 text-xs uppercase tracking-wider">
@@ -1072,7 +1445,9 @@ export default function ProductsPage() {
             <div className="p-8 text-center">
               <Package size={48} className="text-gray-300 mx-auto mb-3" />
               <p className="text-gray-500">No products found</p>
-              <p className="text-sm text-gray-400 mt-1">Try adjusting your search or filter</p>
+              <p className="text-sm text-gray-400 mt-1">
+                Try adjusting your search or filter
+              </p>
             </div>
           )}
         </div>
@@ -1190,6 +1565,77 @@ export default function ProductsPage() {
           >
             Approve Product
           </button>
+        </div>
+      </Modal>
+
+      {/* set best products  */}
+      <Modal
+        isOpen={showBestProductsModal}
+        onClose={() => setShowBestProductsModal(false)}
+        title={`Best 50 Products (${selectedBestProducts.length}/50)`}
+      >
+        <div className="space-y-4">
+          <input
+            type="text"
+            value={bestProductSearch}
+            onChange={(e) => setBestProductSearch(e.target.value)}
+            placeholder="Search products..."
+            className="w-full border rounded-lg px-3 py-2"
+          />
+
+          <div className="max-h-[400px] overflow-y-auto border rounded-lg">
+            {filteredBestProducts.map((product) => (
+              <div
+                key={product.id}
+                className="flex items-center justify-between p-3 border-b hover:bg-gray-50"
+              >
+                <div className="flex items-center gap-3">
+                  <img
+                    src={normalizeProductImageUrl(product.image)}
+                    alt={product.article_name}
+                    className="w-12 h-12 rounded object-cover border"
+                  />
+
+                  <div>
+                    <p className="font-medium text-sm">
+                      {product.article_name}
+                    </p>
+
+                    <p className="text-xs text-gray-500">
+                      {product.category_name}
+                    </p>
+
+                    <p className="text-xs text-gray-400">
+                      {product.brand_name}
+                    </p>
+                  </div>
+                </div>
+
+                <input
+                  type="checkbox"
+                  checked={selectedBestProducts.includes(product.id)}
+                  onChange={() => toggleBestProduct(product.id)}
+                  className="w-5 h-5"
+                />
+              </div>
+            ))}
+          </div>
+
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => setShowBestProductsModal(false)}
+              className="px-4 py-2 border rounded-lg"
+            >
+              Cancel
+            </button>
+
+            <button
+              onClick={saveBestProducts}
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg"
+            >
+              Save Products
+            </button>
+          </div>
         </div>
       </Modal>
 
