@@ -4,25 +4,30 @@ import { useState, useEffect, useMemo } from "react";
 import {
   Search,
   Eye,
-  Trash2,
   ChevronLeft,
   ChevronRight,
   Download,
   MessageSquare,
-  Phone,
-  Building2,
-  MapPin,
-  Calendar,
   X,
   User,
-  Mail,
   Loader2,
   CheckCircle,
   XCircle,
-  Plus,
+  Image as ImageIcon,
+  Package,
+  IndianRupee,
+  Tag,
+  Layers,
+  Ruler,
+  Palette,
+  Info,
+  MapPin,
+  Calendar,
+  Phone,
+  Building2,
 } from "lucide-react";
 
-const Modal = ({ isOpen, onClose, title, children, maxWidth = "max-w-2xl" }) => {
+const Modal = ({ isOpen, onClose, title, children, maxWidth = "max-w-4xl" }) => {
   if (!isOpen) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
@@ -49,7 +54,6 @@ export default function EnquiriesPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedEnquiry, setSelectedEnquiry] = useState(null);
 
@@ -107,7 +111,8 @@ export default function EnquiriesPage() {
           e.mobile?.includes(query) ||
           e.business_name?.toLowerCase().includes(query) ||
           e.city?.toLowerCase().includes(query) ||
-          e.message?.toLowerCase().includes(query)
+          e.message?.toLowerCase().includes(query) ||
+          e.article_name?.toLowerCase().includes(query)
       );
     }
 
@@ -134,41 +139,6 @@ export default function EnquiriesPage() {
     setShowViewModal(true);
   };
 
-  const openDeleteModal = (enquiry) => {
-    setSelectedEnquiry(enquiry);
-    setShowDeleteModal(true);
-  };
-
-  const handleDelete = async () => {
-    try {
-      const response = await fetch(
-        "https://namami-infotech.com/Stepkaro/src/enquiry/delete_enquiry.php",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ id: selectedEnquiry.id }),
-        }
-      );
-
-      const result = await response.json();
-
-      if (result.success) {
-        setEnquiries(enquiries.filter((e) => e.id !== selectedEnquiry.id));
-        setShowDeleteModal(false);
-        setSelectedEnquiry(null);
-        showToast("Enquiry deleted successfully");
-      } else {
-        showToast(result.message || "Failed to delete enquiry", "error");
-      }
-    } catch (error) {
-      console.error("Delete error:", error);
-      showToast("Failed to delete enquiry", "error");
-    }
-  };
-
   // Export to CSV
   const handleExportCSV = () => {
     if (enquiries.length === 0) {
@@ -180,6 +150,7 @@ export default function EnquiriesPage() {
 
     const headers = [
       "ID",
+      "Product",
       "Name",
       "Mobile",
       "City",
@@ -190,6 +161,7 @@ export default function EnquiriesPage() {
 
     const rows = exportData.map((e) => [
       e.id || "",
+      e.article_name || "",
       e.name || "",
       e.mobile || "",
       e.city || "",
@@ -225,6 +197,18 @@ export default function EnquiriesPage() {
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+
+  // Get product status badge
+  const getProductStatusBadge = (status) => {
+    if (status === "active") {
+      return "bg-emerald-100 text-emerald-700";
+    } else if (status === "inactive") {
+      return "bg-red-100 text-red-700";
+    } else if (status === "approve_request") {
+      return "bg-yellow-100 text-yellow-700";
+    }
+    return "bg-gray-100 text-gray-600";
   };
 
   if (loading) {
@@ -370,29 +354,29 @@ export default function EnquiriesPage() {
       {/* Enquiries Table */}
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[900px]">
+          <table className="w-full min-w-[1000px]">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   ID
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Product
+                </th>
+                <th className="px-4 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Customer
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Business
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   City
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Message
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Created
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
+                <th className="px-4 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Action
                 </th>
               </tr>
             </thead>
@@ -403,11 +387,40 @@ export default function EnquiriesPage() {
                     key={enquiry.id}
                     className="hover:bg-gray-50 transition-colors"
                   >
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-4">
                       <span className="text-sm text-gray-500">#{enquiry.id}</span>
                     </td>
 
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0 bg-gray-50">
+                          {enquiry.image ? (
+                            <img
+                              src={enquiry.image}
+                              alt={enquiry.article_name || "Product"}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.target.src = "/placeholder.png";
+                              }}
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <ImageIcon size={20} className="text-gray-400" />
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">
+                            {enquiry.article_name || "—"}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            ₹{enquiry.selling_price || enquiry.price || 0}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+
+                    <td className="px-4 py-4">
                       <div className="flex flex-col">
                         <span className="text-sm font-medium text-gray-900">
                           {enquiry.name || "—"}
@@ -418,19 +431,13 @@ export default function EnquiriesPage() {
                       </div>
                     </td>
 
-                    <td className="px-6 py-4">
-                      <span className="text-sm text-gray-600">
-                        {enquiry.business_name || "—"}
-                      </span>
-                    </td>
-
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-4">
                       <span className="text-sm text-gray-600">
                         {enquiry.city || "—"}
                       </span>
                     </td>
 
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-4">
                       <span className="text-sm text-gray-600 max-w-xs truncate block">
                         {enquiry.message ? (
                           enquiry.message.length > 30 
@@ -440,29 +447,21 @@ export default function EnquiriesPage() {
                       </span>
                     </td>
 
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-4">
                       <span className="text-sm text-gray-500">
                         {formatDate(enquiry.created_at)}
                       </span>
                     </td>
 
-                    <td className="px-6 py-4">
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => openViewModal(enquiry)}
-                          className="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-                          title="View Details"
-                        >
-                          <Eye size={16} />
-                        </button>
-                        <button
-                          onClick={() => openDeleteModal(enquiry)}
-                          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Delete Enquiry"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
+                    <td className="px-4 py-4">
+                      <button
+                        onClick={() => openViewModal(enquiry)}
+                        className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors flex items-center gap-1"
+                        title="View Details"
+                      >
+                        <Eye size={16} />
+                        <span className="text-xs font-medium">View</span>
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -534,108 +533,194 @@ export default function EnquiriesPage() {
         )}
       </div>
 
-      {/* View Enquiry Modal */}
+      {/* View Enquiry Modal with Product Details */}
       <Modal
         isOpen={showViewModal}
         onClose={() => setShowViewModal(false)}
         title="Enquiry Details"
       >
         {selectedEnquiry && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-3 bg-gray-50 rounded-lg">
+          <div className="space-y-6">
+            {/* Enquiry & Customer Info */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
                 <p className="text-xs text-gray-500">Enquiry ID</p>
                 <p className="text-sm font-medium text-gray-900">#{selectedEnquiry.id}</p>
-              </div>
-            </div>
-
-            <div className="border-t border-gray-200 pt-4">
-              <p className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
-                <User size={16} className="text-purple-600" />
-                Customer Details
-              </p>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-3 bg-gray-50 rounded-lg">
-                  <p className="text-xs text-gray-500">Name</p>
-                  <p className="text-sm font-medium text-gray-900">
-                    {selectedEnquiry.name || "—"}
-                  </p>
-                </div>
-                <div className="p-3 bg-gray-50 rounded-lg">
-                  <p className="text-xs text-gray-500">Mobile</p>
-                  <p className="text-sm font-medium text-gray-900">
-                    {selectedEnquiry.mobile || "—"}
-                  </p>
-                </div>
-                <div className="p-3 bg-gray-50 rounded-lg">
-                  <p className="text-xs text-gray-500">Business Name</p>
-                  <p className="text-sm font-medium text-gray-900">
-                    {selectedEnquiry.business_name || "—"}
-                  </p>
-                </div>
-                <div className="p-3 bg-gray-50 rounded-lg">
-                  <p className="text-xs text-gray-500">City</p>
-                  <p className="text-sm font-medium text-gray-900">
-                    {selectedEnquiry.city || "—"}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="border-t border-gray-200 pt-4">
-              <p className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
-                <MessageSquare size={16} className="text-orange-500" />
-                Message
-              </p>
-              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                <p className="text-gray-700 whitespace-pre-wrap">
-                  {selectedEnquiry.message || "No message provided"}
-                </p>
-              </div>
-            </div>
-
-            <div className="border-t border-gray-200 pt-4">
-              <div className="p-3 bg-gray-50 rounded-lg">
-                <p className="text-xs text-gray-500">Created At</p>
+                <p className="text-xs text-gray-500 mt-2">Created At</p>
                 <p className="text-sm font-medium text-gray-900">
                   {formatDate(selectedEnquiry.created_at)}
                 </p>
               </div>
+              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <p className="text-xs text-gray-500 flex items-center gap-1">
+                  <User size={14} className="text-purple-600" /> Customer
+                </p>
+                <p className="text-sm font-medium text-gray-900">
+                  {selectedEnquiry.name || "—"}
+                </p>
+                <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
+                  <Phone size={14} className="text-purple-600" /> Mobile
+                </p>
+                <p className="text-sm font-medium text-gray-900">
+                  {selectedEnquiry.mobile || "—"}
+                </p>
+                <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
+                  <Building2 size={14} className="text-purple-600" /> Business
+                </p>
+                <p className="text-sm font-medium text-gray-900">
+                  {selectedEnquiry.business_name || "—"}
+                </p>
+                <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
+                  <MapPin size={14} className="text-purple-600" /> City
+                </p>
+                <p className="text-sm font-medium text-gray-900">
+                  {selectedEnquiry.city || "—"}
+                </p>
+              </div>
+            </div>
+
+            {/* Message */}
+            <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <p className="text-xs text-gray-500 flex items-center gap-1 mb-2">
+                <MessageSquare size={14} className="text-orange-500" /> Message
+              </p>
+              <p className="text-gray-700 whitespace-pre-wrap">
+                {selectedEnquiry.message || "No message provided"}
+              </p>
+            </div>
+
+            {/* Product Details */}
+            <div className="border-t border-gray-200 pt-4">
+              <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <Package size={18} className="text-purple-600" />
+                Product Details
+              </h3>
+
+              {selectedEnquiry.article_name ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Product Image */}
+                  <div className="flex justify-center">
+                    <div className="w-48 h-48 rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
+                      {selectedEnquiry.image ? (
+                        <img
+                          src={selectedEnquiry.image}
+                          alt={selectedEnquiry.article_name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.src = "/placeholder.png";
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <ImageIcon size={48} className="text-gray-300" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Product Info */}
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-xs text-gray-500">Product Name</p>
+                      <p className="text-sm font-medium text-gray-900">
+                        {selectedEnquiry.article_name}
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <p className="text-xs text-gray-500">Selling Price</p>
+                        <p className="text-sm font-semibold text-emerald-600">
+                          ₹{selectedEnquiry.selling_price || 0}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500">Original Price</p>
+                        <p className="text-sm text-gray-500 line-through">
+                          ₹{selectedEnquiry.price || 0}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <p className="text-xs text-gray-500">Stock</p>
+                        <p className="text-sm font-medium text-gray-900">
+                          {selectedEnquiry.stock_quantity || 0} units
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500">Status</p>
+                        <span className={`text-xs px-2 py-1 rounded-full ${getProductStatusBadge(selectedEnquiry.product_status)}`}>
+                          {selectedEnquiry.product_status || "—"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2">
+                      {selectedEnquiry.variant && (
+                        <div>
+                          <p className="text-xs text-gray-500">Variant</p>
+                          <p className="text-sm text-gray-900">{selectedEnquiry.variant}</p>
+                        </div>
+                      )}
+                      {selectedEnquiry.size && (
+                        <div>
+                          <p className="text-xs text-gray-500">Size</p>
+                          <p className="text-sm text-gray-900">{selectedEnquiry.size}</p>
+                        </div>
+                      )}
+                      {selectedEnquiry.color && (
+                        <div>
+                          <p className="text-xs text-gray-500">Color</p>
+                          <p className="text-sm text-gray-900">{selectedEnquiry.color}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {(selectedEnquiry.gender || selectedEnquiry.material || selectedEnquiry.origin) && (
+                      <div className="grid grid-cols-3 gap-2">
+                        {selectedEnquiry.gender && (
+                          <div>
+                            <p className="text-xs text-gray-500">Gender</p>
+                            <p className="text-sm text-gray-900">{selectedEnquiry.gender}</p>
+                          </div>
+                        )}
+                        {selectedEnquiry.material && (
+                          <div>
+                            <p className="text-xs text-gray-500">Material</p>
+                            <p className="text-sm text-gray-900">{selectedEnquiry.material}</p>
+                          </div>
+                        )}
+                        {selectedEnquiry.origin && (
+                          <div>
+                            <p className="text-xs text-gray-500">Origin</p>
+                            <p className="text-sm text-gray-900">{selectedEnquiry.origin}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {selectedEnquiry.product_description && (
+                      <div>
+                        <p className="text-xs text-gray-500">Description</p>
+                        <p className="text-sm text-gray-600 line-clamp-2">
+                          {selectedEnquiry.product_description}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <Package size={40} className="mx-auto mb-2 text-gray-300" />
+                  <p>No product associated with this enquiry</p>
+                </div>
+              )}
             </div>
           </div>
         )}
       </Modal>
-
-      {/* Delete Enquiry Modal */}
-      <Modal
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        title="Delete Enquiry"
-        maxWidth="max-w-md"
-      >
-        <p className="text-gray-600 mb-6">
-          Are you sure you want to delete this enquiry from{" "}
-          <span className="text-gray-900 font-semibold">{selectedEnquiry?.name}</span>?
-          This action cannot be undone.
-        </p>
-        <div className="flex gap-3">
-          <button
-            onClick={() => setShowDeleteModal(false)}
-            className="flex-1 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleDelete}
-            className="flex-1 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
-          >
-            Delete
-          </button>
-        </div>
-      </Modal>
     </div>
   );
-}   
-
-
-
+}
