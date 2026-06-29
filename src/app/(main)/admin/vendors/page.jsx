@@ -1,5 +1,6 @@
 "use client";
 import { useState, useMemo, useEffect } from "react";
+import Link from "next/link";
 import axios from "axios";
 import {
   Search,
@@ -972,20 +973,20 @@ export default function SellerPage() {
 
                     <td className="px-6 py-4">
                       <div className="flex gap-2">
-                        <button
-                          onClick={() => openViewModal(user)}
+                        <Link
+                          href={`/admin/vendors/${user.id}`}
                           className="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
                           title="View Details"
                         >
                           <Eye size={16} />
-                        </button>
-                        <button
-                          onClick={() => openEditModal(user)}
+                        </Link>
+                        <Link
+                          href={`/admin/vendors/${user.id}?tab=edit`}
                           className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          title="Edit User"
+                          title="Edit Vendor"
                         >
                           <Edit size={16} />
-                        </button>
+                        </Link>
                       </div>
                     </td>
                   </tr>

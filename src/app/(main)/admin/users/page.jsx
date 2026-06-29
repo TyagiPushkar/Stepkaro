@@ -1,5 +1,6 @@
 "use client";
 import { useState, useMemo, useEffect } from "react";
+import Link from "next/link";
 import axios from "axios";
 import {
   Search,
@@ -65,6 +66,8 @@ export default function UsersPage() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [showApprovalModal, setShowApprovalModal] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
+  //token were niklna
+  const token = localStorage.getItem("access_token");
 
   const [approvalData, setApprovalData] = useState({
     wallet_value: "",
@@ -225,12 +228,12 @@ export default function UsersPage() {
       count: users.filter((u) => u.status === "inactive").length,
       color: "red",
     },
-    {
-      label: "Rejected",
-      value: "reject",
-      count: users.filter((u) => u.status === "reject").length,
-      color: "red",
-    },
+    // {
+    //   label: "Rejected",
+    //   value: "reject",
+    //   count: users.filter((u) => u.status === "reject").length,
+    //   color: "red",
+    // },
   ];
 
   // Filter users
@@ -370,6 +373,7 @@ export default function UsersPage() {
     }
   };
 
+  // add wallets and updated walltest...
   // Delete user
   const handleDeleteUser = () => {
     setUsers(users.filter((user) => user.id !== selectedUser.id));
@@ -679,24 +683,77 @@ export default function UsersPage() {
     amount: "",
     description: "",
   });
+
   const handleWalletSubmit = async () => {
-    const payload = {
-      buyer_id: selectedUser.id,
-      amount: walletForm.amount,
-      description: walletForm.description,
-    };
+    // 1. Validation checks
+    if (!selectedUser || !selectedUser.id) {
+      showToast("No user selected!", "error");
+      return;
+    }
 
-    console.log(payload);
+    if (!walletForm.amount || parseFloat(walletForm.amount) <= 0) {
+      showToast("Please enter a valid amount greater than 0.", "error");
+      return;
+    }
 
-    // await api.post("/admin/add-wallet", payload);
+    // Fixed syntax: added assignment operator and optional chaining to prevent crashes
+    const currentRole = selectedUser?.role;
 
-    setOpenWalletModal(false);
+    // 2. API Request and State Updates
+    try {
+      // Added the missing try block keyword here
+      const payload = {
+        buyer_id: selectedUser.id,
+        amount: walletForm.amount,
+        role: "buyer",
+        description: walletForm.description,
+      };
 
-    setWalletForm({
-      amount: "",
-      description: "",
-    });
+      const url =
+        "https://namami-infotech.com/Stepkaro/src/super_admin/approve_seller_buyer.php";
+
+      const response = await axios.post(url, payload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const result = response.data;
+
+      if (result.success) {
+        setUsers((prev) =>
+          prev.map((u) =>
+            u.id === selectedUser.id && u.type === selectedUser.type
+              ? {
+                  ...u,
+                  wallet_value:
+                    currentRole === "buyer"
+                      ? selectedUser.wallet_value
+                      : u.wallet_value,
+                }
+              : u,
+          ),
+        );
+
+        showToast("User approved successfully");
+        setOpenWalletModal(false);
+
+        setWalletForm({
+          amount: "",
+          description: "",
+        });
+      } else {
+        alert(result.message || "Failed to process approval request.");
+      }
+    } catch (error) {
+      // Aligns correctly with the added try block
+      console.error("Axios request failure:", error);
+      const errorMsg =
+        error.response?.data?.message || "Network communication error.";
+      alert(errorMsg);
+    }
   };
+
   // end of wallets logic
 
   if (loading) {
@@ -985,10 +1042,10 @@ export default function UsersPage() {
                             setSelectedUser(user);
                             setOpenWalletModal(true);
                           }}
-                          className="flex items-center justify-center w-8 h-8 rounded-full bg-green-100 text-green-600 hover:bg-green-600 hover:text-white transition-all duration-200 shadow-sm"
+                          className="text-green-600 cursor-pointer"
                           title="Add Wallet Amount"
                         >
-                          <PlusCircle size={18} />
+                          <Plus size={18} />
                         </button>
                       </div>
                     </td>
@@ -1001,12 +1058,12 @@ export default function UsersPage() {
                           >
                             Accept
                           </button>
-                          <button
+                          {/* <button
                             onClick={() => updateUserStatus(user, "inactive")}
                             className="px-3 py-1 text-xs rounded-lg bg-red-500 text-white hover:bg-red-600 transition"
                           >
                             Reject
-                          </button>
+                          </button> */}
                         </div>
                       ) : (
                         <div className="flex items-center gap-2">
@@ -1043,20 +1100,20 @@ export default function UsersPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex gap-2">
-                        <button
-                          onClick={() => openViewModal(user)}
+                        <Link
+                          href={`/admin/users/${user.id}`}
                           className="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
                           title="View Details"
                         >
                           <Eye size={16} />
-                        </button>
-                        <button
-                          onClick={() => openEditModal(user)}
+                        </Link>
+                        <Link
+                          href={`/admin/users/${user.id}?tab=edit`}
                           className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                           title="Edit User"
                         >
                           <Edit size={16} />
-                        </button>
+                        </Link>
                       </div>
                     </td>
                   </tr>
