@@ -55,7 +55,7 @@ const normalizeVendor = (item) => ({
   email: item.email || "",
   phone: item.phone || "",
   status: item.status || "pending",
-  wallet_value: item.wallet_value || 0,
+  wallet_value: item.minimum_order_value || 0,
   business_name: item.business_name || item.brand_name || "",
   brand_name: item.brand_name || "",
   gst_number: item.gst_number || "",
@@ -301,7 +301,7 @@ export default function VendorDetailsPage() {
   const summaryCards = useMemo(
     () => [
       {
-        label: "Wallet balance",
+        label: "Minimum Card Value",
         value: formatCurrency(vendor?.wallet_value),
         icon: Wallet,
         tone: "from-violet-500 to-fuchsia-500",
@@ -360,7 +360,7 @@ export default function VendorDetailsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-4 md:p-6">
+    <div className="min-h-screen bg-slate-50 p-2 md:p-0">
       <div className="mx-auto max-w-7xl space-y-5">
         <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
