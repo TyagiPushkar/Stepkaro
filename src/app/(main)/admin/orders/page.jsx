@@ -86,13 +86,13 @@ export default function OrdersPage() {
         icon: Package,
         color: "purple",
       },
-      {
-        label: "Pending Orders",
-        value: "pending",
-        count: orders.filter((o) => o.status === "pending").length,
-        icon: Loader2,
-        color: "orange",
-      },
+      // {
+      //   label: "Pending Orders",
+      //   value: "pending",
+      //   count: orders.filter((o) => o.status === "pending").length,
+      //   icon: Loader2,
+      //   color: "orange",
+      // },
       {
         label: "NEW Orders",
         value: "new",

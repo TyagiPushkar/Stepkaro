@@ -49,7 +49,7 @@ export default function Qrbankpage() {
       try {
         setLoading(true);
         const response = await fetch(
-          "https://namami-infotech.com/Stepkaro/src/order/admin_get_orders.php",
+          "https://namami-infotech.com/Stepkaro/src/order/admin_get_orders.php?status=pending",
           {
             method: "GET",
             headers: {
@@ -94,61 +94,19 @@ export default function Qrbankpage() {
         color: "orange",
       },
       {
-        label: "NEW Orders",
-        value: "new",
-        count: orders.filter((o) => o.status === "new").length,
-        icon: Package,
-        color: "purple",
-      },
-      {
-        label: "Order Accepted",
+        label: "Payment Verified",
         value: "accepted",
-        count: orders.filter((o) => o.status === "accepted").length,
+        count: orders.filter((o) => o.payment_status === "Verified").length,
         icon: CheckCircle,
         color: "green",
       },
       {
-        label: "Order Rejected",
+        label: "Payment Rejected",
         value: "rejected",
-        count: orders.filter((o) => o.status === "rejected").length,
+        count: orders.filter((o) => o.payment_status === "Rejected").length,
         icon: XCircle,
         color: "red",
       },
-      {
-        label: "Order Dispatched to WR",
-        value: "dispatched_to_wr",
-        count: orders.filter((o) => o.status === "dispatched_to_wr").length,
-        icon: Truck,
-        color: "blue",
-      },
-      {
-        label: "Order Received in WR",
-        value: "received_in_wr",
-        count: orders.filter((o) => o.status === "received_in_wr").length,
-        icon: Clock,
-        color: "yellow",
-      },
-      {
-        label: "Order Shipped",
-        value: "shipped",
-        count: orders.filter((o) => o.status === "shipped").length,
-        icon: Truck,
-        color: "green",
-      },
-      {
-        label: "Booked For Transport",
-        value: "book_to_tp",
-        count: orders.filter((o) => o.status === "book_to_tp").length,
-        icon: Package,
-        color: "purple",
-      },
-      // {
-      //   label: "Delivered",
-      //   value: "delivered",
-      //   count: orders.filter((o) => o.status === "delivered").length,
-      //   icon: CheckCircle,
-      //   color: "green",
-      // },
     ];
   }, [orders]);
 
@@ -316,7 +274,7 @@ export default function Qrbankpage() {
         order.owner_name || "N/A",
         order.owner_phone || "N/A",
         order.article_name || "N/A",
-        order.payment_method || "COD",
+        order.payment_method || "N/A",
         parseFloat(order.total_amount || 0).toLocaleString("en-IN"),
         orderDate,
         orderTime,
@@ -408,7 +366,7 @@ export default function Qrbankpage() {
     if (image.startsWith("http://") || image.startsWith("https://")) {
       return image;
     }
-    return `https://namami-infotech.com/${image}`;
+    return `https://namami-infotech.com/Stepkaro/${image}`;
   };
 
   const handleViewOrder = (order) => {
@@ -591,7 +549,10 @@ export default function Qrbankpage() {
                   Article
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Payment
+                  Payment Mode
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Payment SS
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Amount
@@ -666,9 +627,35 @@ export default function Qrbankpage() {
                       </td>
 
                       <td className="px-6 py-4">
-                        <span className="text-xs uppercase bg-gray-100 text-gray-600 px-2 py-1 rounded">
-                          {order.payment_method || "COD"}
-                        </span>
+                        {order.payment_method === "bank" && (
+                          <span className="text-xs uppercase bg-blue-100 text-blue-700 px-2 py-1 rounded font-medium">
+                            BANK
+                          </span>
+                        )}
+
+                        {order.payment_method === "qr_code" && (
+                          <span className="text-xs uppercase bg-green-100 text-green-700 px-2 py-1 rounded font-medium">
+                            QR CODE
+                          </span>
+                        )}
+
+                        {!["BANK", "QR_CODE"].includes(
+                          order.payment_method,
+                        ) && <span className="text-xs text-gray-400">-</span>}
+                      </td>
+
+                      <td className="px-6 py-4">
+                        {order.payment_ss ? (
+                          <img
+                            src={getImageUrl(order.payment_ss)}
+                            alt="Payment Screenshot"
+                            className="w-16 h-16 object-cover rounded border cursor-pointer"
+                          />
+                        ) : (
+                          <span className="text-xs text-gray-500">
+                            No Screenshot
+                          </span>
+                        )}
                       </td>
 
                       <td className="px-6 py-4">

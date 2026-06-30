@@ -146,7 +146,10 @@ export default function SellerPage() {
         const vendors = result.data.vendors.map((vendor) => ({
           id: vendor.id,
           name: vendor.owner_name,
-          brand: vendor.brand,
+          brand: vendor.brand_name,
+          ranking: vendor.ranking,
+          minimum_value: vendor.minimum_order_value,
+          ranking: vendor.sort_order,
           email: vendor.email,
           phone: vendor.phone,
           role: "seller",
@@ -212,12 +215,12 @@ export default function SellerPage() {
       count: users.filter((u) => u.status === "inactive").length,
       color: "red",
     },
-    {
-      label: "Rejected",
-      value: "reject",
-      count: users.filter((u) => u.status === "reject").length,
-      color: "red",
-    },
+    // {
+    //   label: "Rejected",
+    //   value: "reject",
+    //   count: users.filter((u) => u.status === "reject").length,
+    //   color: "red",
+    // },
   ];
 
   // Filter users
@@ -854,10 +857,13 @@ export default function SellerPage() {
                   Brand
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Brand Ranking
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Email
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Role
+                  Minimum Value
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Address
@@ -902,6 +908,11 @@ export default function SellerPage() {
                     <td className="px-6 py-4">
                       <p className="text-sm text-gray-600">{user.brand}</p>
                     </td>
+                    <td className="px-6 py-4">
+                      <p className="text-sm text-gray-600">
+                        {user.ranking ?? "-"}
+                      </p>
+                    </td>
 
                     <td className="px-6 py-4">
                       <p className="text-sm text-gray-600">{user.email}</p>
@@ -911,14 +922,15 @@ export default function SellerPage() {
                       <span
                         className={`text-xs px-2 py-1 rounded-full ${getRoleBadge(user.role)}`}
                       >
-                        {user.role === "seller" ? "Seller" : "Buyer"}
+                        {/* {user.role === "seller" ? "Seller" : "Buyer"} */}
+                        {user.minimum_value}
                       </span>
                     </td>
 
                     <td className="px-6 py-4">
-                      <p className="text-sm text-gray-500 max-w-xs truncate">
+                      <div className="text-sm text-gray-500 max-w-s whitespace-pre-wrap break-words">
                         {user.address || user.city || "—"}
-                      </p>
+                      </div>
                     </td>
 
                     <td className="px-6 py-4">
