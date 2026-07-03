@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
@@ -12,7 +12,7 @@ import {
   Download,
   Store,
   Package,
- Truck,
+  Truck,
 } from "lucide-react";
 
 const USER_API =
@@ -310,10 +310,10 @@ export default function UserDetailsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-500">Loading user details...</p>
+      <div className="min-h-screen bg-slate-50 p-6 flex items-center justify-center">
+        <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm text-center">
+          <Loader2 className="mx-auto mb-3 h-6 w-6 animate-spin text-violet-600" />
+          <p className="text-sm text-slate-600">Loading user profile…</p>
         </div>
       </div>
     );
@@ -356,13 +356,10 @@ export default function UserDetailsPage() {
         <div className="flex flex-wrap gap-3 items-center">
           <Link
             href="/admin/users"
-            className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+            className="mt-4 inline-flex items-center gap-2 rounded-xl text-sm font-medium text-violet-600"
           >
-            <ArrowLeft size={16} /> Back to Users
+            <ArrowLeft className="h-4 w-4" /> Back to Users
           </Link>
-          <span className="inline-flex items-center gap-2 rounded-xl bg-gray-100 px-4 py-2 text-sm text-gray-600">
-            <User size={16} /> #{user.id}
-          </span>
         </div>
       </div>
 
@@ -585,28 +582,40 @@ export default function UserDetailsPage() {
                   </p>
                   <div className="mt-3 grid gap-3 sm:grid-cols-2">
                     {user.business_name && (
-                      <div>
-                        <p className="text-xs text-gray-400">Business Name</p>
-                        <p className="mt-1 text-sm text-gray-900">{user.business_name}</p>
-                      </div>
-                    )}
-                    {user.brand_name && (
-                      <div>
-                        <p className="text-xs text-gray-400">Brand</p>
-                        <p className="mt-1 text-sm text-gray-900">{user.brand_name}</p>
-                      </div>
-                    )}
-                    {user.gst_number && (
-                      <div>
-                        <p className="text-xs text-gray-400">GST Number</p>
-                        <p className="mt-1 text-sm font-mono text-gray-900">{user.gst_number}</p>
-                      </div>
-                    )}
-                    {user.pan_number && (
-                      <div>
-                        <p className="text-xs text-gray-400">PAN Number</p>
-                        <p className="mt-1 text-sm font-mono text-gray-900">{user.pan_number}</p>
-                      </div>
+                      <>
+                        <div>
+                          <p className="text-xs text-gray-400">Business Name</p>
+                          <p className="mt-1 text-sm text-gray-900">{user.business_name}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-400">Brand</p>
+                          <p className="mt-1 text-sm text-gray-900">{user.brand_name}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-400">GST Number</p>
+                          <p className="mt-1 text-sm font-mono text-gray-900">{user.gst_number}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-400">PAN Number</p>
+                          <p className="mt-1 text-sm font-mono text-gray-900">{user.pan_number}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-400">City</p>
+                          <p className="mt-1 text-sm text-gray-900">{user.city}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-400">Country</p>
+                          <p className="mt-1 text-sm text-gray-900">{user.country}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-400">Pincode</p>
+                          <p className="mt-1 text-sm text-gray-900">{user.pincode}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-400">State</p>
+                          <p className="mt-1 text-sm text-gray-900">{user.state}</p>
+                        </div>
+                      </>
                     )}
                   </div>
                 </div>
@@ -878,21 +887,19 @@ export default function UserDetailsPage() {
                   type="button"
                   onClick={handleEditSubmit}
                   disabled={saving}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-purple-600 to-orange-500 px-5 py-3 text-sm font-semibold text-white transition hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-purple-600 to-orange-500 px-5 py-3 text-sm font-semibold text-white transition hover:shadow-lg disabled:opacity-50"
                 >
                   {saving ? (
-                    <Loader2 size={16} className="animate-spin" />
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      Updating...
+                    </>
                   ) : (
-                    <CheckCircle size={16} />
+                    <>
+                      <CheckCircle size={16} />
+                      Update User
+                    </>
                   )}
-                  {saving ? "Saving..." : "Save Changes"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("overview")}
-                  className="inline-flex items-center justify-center rounded-2xl border border-gray-200 bg-white px-5 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
-                >
-                  Cancel
                 </button>
               </div>
             </div>
@@ -900,20 +907,13 @@ export default function UserDetailsPage() {
 
           {activeTab === "wallets" && (
             <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Wallet History</h3>
-                  <p className="text-sm text-gray-500">
-                    Transaction history for this user
-                  </p>
-                </div>
-                <div className="inline-flex items-center gap-2 rounded-2xl bg-purple-50 px-4 py-2 text-sm text-purple-700">
-                  <Wallet size={16} /> Balance: {formatCurrency(user.wallet_value)}
-                </div>
-              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Wallet History</h3>
+              <p className="text-sm text-gray-500 mb-4">
+                Transaction history for this user
+              </p>
 
               {/* Wallet Stats */}
-              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              <div className="grid gap-3 sm:grid-cols-3 mb-6">
                 <div className="rounded-xl bg-emerald-50 p-4 border border-emerald-100">
                   <p className="text-xs text-emerald-600">Total Credit</p>
                   <p className="mt-1 text-lg font-semibold text-emerald-700">
@@ -934,7 +934,7 @@ export default function UserDetailsPage() {
                 </div>
               </div>
 
-              <div className="mt-6 overflow-x-auto">
+              <div className="overflow-x-auto">
                 {walletLoading ? (
                   <div className="flex items-center justify-center py-16">
                     <Loader2 size={24} className="animate-spin text-purple-600" />
