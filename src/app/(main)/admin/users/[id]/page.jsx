@@ -364,7 +364,7 @@ export default function UserDetailsPage() {
         </div>
       </div>
     );
-  }
+  
 
       <div className="grid gap-4 xl:grid-cols-[1.3fr_0.7fr]">
         <div className="space-y-4">
