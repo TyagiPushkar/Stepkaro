@@ -1,10 +1,9 @@
-﻿"use client";
+"use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
-  BadgeCheck,
   CheckCircle,
   Loader2,
   Wallet,
@@ -13,7 +12,7 @@ import {
   Download,
   Store,
   Package,
- Truck,
+  Truck,
 } from "lucide-react";
 
 const USER_API =
@@ -363,8 +362,6 @@ export default function UserDetailsPage() {
           </Link>
         </div>
       </div>
-    );
-  
 
       <div className="grid gap-4 xl:grid-cols-[1.3fr_0.7fr]">
         <div className="space-y-4">
@@ -427,7 +424,6 @@ export default function UserDetailsPage() {
               </div>
             </div>
           </div>
-        </div>
 
           {/* Tabs */}
           <div className="rounded-3xl border border-gray-200 bg-white p-4 shadow-sm">
@@ -487,7 +483,6 @@ export default function UserDetailsPage() {
                   </div>
                 </div>
               </div>
-            </div>
 
               {/* Address */}
               {(user.address || user.city || user.state) && (
@@ -587,55 +582,46 @@ export default function UserDetailsPage() {
                   </p>
                   <div className="mt-3 grid gap-3 sm:grid-cols-2">
                     {user.business_name && (
-                      <div>
-                        <p className="text-xs text-gray-400">Business Name</p>
-                        <p className="mt-1 text-sm text-gray-900">{user.business_name}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-400">Brand</p>
-                        <p className="mt-1 text-sm text-gray-900">{user.brand_name}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-400">GST Number</p>
-                        <p className="mt-1 text-sm font-mono text-gray-900">{user.gst_number}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-400">PAN Number</p>
-                        <p className="mt-1 text-sm font-mono text-gray-900">{user.pan_number}</p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">
-                          Country
-                        </label>
-                        <input
-                          value={editData.country}
-                          onChange={(e) =>
-                            setEditData((prev) => ({
-                              ...prev,
-                              country: e.target.value,
-                            }))
-                          }
-                          className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-300"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">
-                          Pincode
-                        </label>
-                        <input
-                          value={editData.pincode}
-                          onChange={(e) =>
-                            setEditData((prev) => ({
-                              ...prev,
-                              pincode: e.target.value,
-                            }))
-                          }
-                          className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-300"
-                        />
-                      </div>
-                    </>
-                  )}
+                      <>
+                        <div>
+                          <p className="text-xs text-gray-400">Business Name</p>
+                          <p className="mt-1 text-sm text-gray-900">{user.business_name}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-400">Brand</p>
+                          <p className="mt-1 text-sm text-gray-900">{user.brand_name}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-400">GST Number</p>
+                          <p className="mt-1 text-sm font-mono text-gray-900">{user.gst_number}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-400">PAN Number</p>
+                          <p className="mt-1 text-sm font-mono text-gray-900">{user.pan_number}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-400">City</p>
+                          <p className="mt-1 text-sm text-gray-900">{user.city}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-400">Country</p>
+                          <p className="mt-1 text-sm text-gray-900">{user.country}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-400">Pincode</p>
+                          <p className="mt-1 text-sm text-gray-900">{user.pincode}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-400">State</p>
+                          <p className="mt-1 text-sm text-gray-900">{user.state}</p>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
+              )}
+            </div>
+          )}
 
           {activeTab === "edit" && (
             <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
@@ -891,7 +877,6 @@ export default function UserDetailsPage() {
                         }
                         className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-300"
                       />
-                      No wallet history found for this user yet.
                     </div>
                   </>
                 )}
@@ -902,83 +887,33 @@ export default function UserDetailsPage() {
                   type="button"
                   onClick={handleEditSubmit}
                   disabled={saving}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-purple-600 to-orange-500 px-5 py-3 text-sm font-semibold text-white transition hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-purple-600 to-orange-500 px-5 py-3 text-sm font-semibold text-white transition hover:shadow-lg disabled:opacity-50"
                 >
                   {saving ? (
-                    <Loader2 size={16} className="animate-spin" />
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      Updating...
+                    </>
                   ) : (
-                    <table className="min-w-full text-left text-sm text-gray-600">
-                      <thead className="border-b border-gray-200 bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
-                        <tr>
-                          <th className="px-4 py-3">Date</th>
-                          <th className="px-4 py-3">Type</th>
-                          <th className="px-4 py-3">Amount</th>
-                          <th className="px-4 py-3">Before</th>
-                          <th className="px-4 py-3">After</th>
-                          <th className="px-4 py-3">Note</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-100">
-                        {walletHistory.map((entry) => (
-                          <tr
-                            key={entry.id}
-                            className="hover:bg-gray-50 transition"
-                          >
-                            <td className="px-4 py-3 text-sm">{entry.date}</td>
-                            <td className="px-4 py-3">
-                              <span
-                                className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
-                                  entry.type === "credit"
-                                    ? "bg-emerald-100 text-emerald-700"
-                                    : "bg-red-100 text-red-700"
-                                }`}
-                              >
-                                {entry.type}
-                              </span>
-                            </td>
-                            <td className="px-4 py-3 font-medium">
-                              {formatCurrency(entry.amount)}
-                            </td>
-                            <td className="px-4 py-3">
-                              {formatCurrency(entry.wallet_before)}
-                            </td>
-                            <td className="px-4 py-3">
-                              {formatCurrency(entry.wallet_after)}
-                            </td>
-                            <td className="px-4 py-3 max-w-xs truncate">
-                              {entry.note}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                    <>
+                      <CheckCircle size={16} />
+                      Update User
+                    </>
                   )}
-                </div>
+                </button>
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
-          {/* Sidebar */}
-          <aside className="space-y-4">
+          {activeTab === "wallets" && (
             <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
-              <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                <MapPin size={16} className="text-purple-600" />
-                Quick Profile
-              </h3>
-              <div className="mt-4 space-y-3 text-sm">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Wallet History</h3>
-                  <p className="text-sm text-gray-500">
-                    Transaction history for this user
-                  </p>
-                </div>
-                <div className="inline-flex items-center gap-2 rounded-2xl bg-purple-50 px-4 py-2 text-sm text-purple-700">
-                  <Wallet size={16} /> Balance: {formatCurrency(user.wallet_value)}
-                </div>
-              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Wallet History</h3>
+              <p className="text-sm text-gray-500 mb-4">
+                Transaction history for this user
+              </p>
 
               {/* Wallet Stats */}
-              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              <div className="grid gap-3 sm:grid-cols-3 mb-6">
                 <div className="rounded-xl bg-emerald-50 p-4 border border-emerald-100">
                   <p className="text-xs text-emerald-600">Total Credit</p>
                   <p className="mt-1 text-lg font-semibold text-emerald-700">
@@ -999,7 +934,7 @@ export default function UserDetailsPage() {
                 </div>
               </div>
 
-              <div className="mt-6 overflow-x-auto">
+              <div className="overflow-x-auto">
                 {walletLoading ? (
                   <div className="flex items-center justify-center py-16">
                     <Loader2 size={24} className="animate-spin text-purple-600" />
