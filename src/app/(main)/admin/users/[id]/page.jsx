@@ -13,7 +13,7 @@ import {
   Download,
   Store,
   Package,
-  Truck,
+ Truck,
 } from "lucide-react";
 
 const USER_API =
@@ -122,9 +122,7 @@ export default function UserDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
   const [activeTab, setActiveTab] = useState(
-    ["overview", "edit", "wallets"].includes(initialTab)
-      ? initialTab
-      : "overview",
+    ["overview", "edit", "wallets"].includes(initialTab) ? initialTab : "overview",
   );
   const [toast, setToast] = useState(null);
   const [editData, setEditData] = useState({});
@@ -217,7 +215,7 @@ export default function UserDetailsPage() {
             : [];
         const normalized = history.map(normalizeWalletItem);
         setWalletHistory(normalized);
-
+        
         // Calculate stats
         let totalCredit = 0;
         let totalDebit = 0;
@@ -324,9 +322,39 @@ export default function UserDetailsPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-slate-50 p-6 flex items-center justify-center">
-        <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm text-center">
-          <p className="text-lg font-semibold text-slate-900">User not found</p>
+      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 text-center">
+        <p className="text-lg font-semibold text-gray-900">User not found</p>
+        <Link
+          href="/admin/users"
+          className="inline-flex items-center gap-2 rounded-xl bg-purple-600 px-4 py-2 text-white hover:bg-purple-700 transition"
+        >
+          <ArrowLeft size={16} /> Back to Users
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {toast && (
+        <div
+          className={`fixed top-20 right-6 z-50 rounded-xl px-4 py-3 text-white shadow-lg ${
+            toast.type === "success" ? "bg-emerald-500" : "bg-red-500"
+          }`}
+        >
+          {toast.message}
+        </div>
+      )}
+
+      {/* Header */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">User Details</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Manage buyer or seller details and wallet history
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-3 items-center">
           <Link
             href="/admin/users"
             className="mt-4 inline-flex items-center gap-2 rounded-xl text-sm font-medium text-violet-600"
@@ -338,663 +366,242 @@ export default function UserDetailsPage() {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="mx-auto max-w-7xl space-y-5">
-        {toast && (
-          <div
-            className={`fixed top-20 right-6 z-50 rounded-xl px-4 py-3 text-white shadow-lg ${
-              toast.type === "success" ? "bg-emerald-500" : "bg-red-500"
-            }`}
-          >
-            {toast.message}
-          </div>
-        )}
-
-        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div className="flex items-start gap-4">
-              <Link
-                href="/admin/users"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:bg-slate-100"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Link>
-              <div className="space-y-2">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-violet-700">
-                    User profile
-                  </span>
-                  <span
-                    className={`rounded-full px-3 py-1 text-xs font-semibold ${getBadgeClasses(user.status)}`}
-                  >
-                    {String(user.status || "pending").toUpperCase()}
-                  </span>
+      <div className="grid gap-4 xl:grid-cols-[1.3fr_0.7fr]">
+        <div className="space-y-4">
+          {/* User Profile Card */}
+          <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-4">
+                <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br from-purple-100 to-orange-100 text-3xl">
+                  {user.avatar}
                 </div>
                 <div>
-                  <h1 className="text-2xl font-semibold text-slate-900">
-                    {user.name || "User"}
-                  </h1>
-                  <p className="text-sm text-slate-500">
-                    {user.email || "No email"} · #{user.id}
-                  </p>
+                  <h2 className="text-xl font-semibold text-gray-900">
+                    {user.name}
+                  </h2>
+                  <div className="flex flex-wrap items-center gap-2 mt-1">
+                    <span className="text-sm text-gray-500">{user.email}</span>
+                    <span className="w-1 h-1 rounded-full bg-gray-300"></span>
+                    <span className="text-sm text-gray-500">{user.phone}</span>
+                  </div>
                 </div>
               </div>
-            </div>
-
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
               <div className="flex items-center gap-2">
-                <BadgeCheck className="h-4 w-4 text-emerald-600" />
-                <span>User details updated here</span>
-              </div>
-              <p className="mt-1 text-xs text-slate-500">
-                Review profile, wallet history and status from this panel.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-3">
-          {[
-            {
-              label: "Wallet Balance",
-              value: formatCurrency(user.wallet_value),
-              icon: Wallet,
-              tone: "from-violet-500 to-fuchsia-500",
-            },
-            {
-              label: "Transactions",
-              value: walletHistory.length,
-              icon: User,
-              tone: "from-sky-500 to-cyan-500",
-            },
-            {
-              label: "Role",
-              value: user.role === "seller" ? "Seller" : "Buyer",
-              icon: BadgeCheck,
-              tone: "from-emerald-500 to-teal-500",
-            },
-          ].map((card) => {
-            const Icon = card.icon;
-            return (
-              <div
-                key={card.label}
-                className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
-              >
-                <div
-                  className={`inline-flex rounded-xl bg-gradient-to-r ${card.tone} p-2 text-white`}
+                <span className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.15em] ${
+                  user.role === "seller" 
+                    ? "bg-blue-50 text-blue-700" 
+                    : "bg-green-50 text-green-700"
+                }`}>
+                  {user.role === "seller" ? "Seller" : "Buyer"}
+                </span>
+                <span
+                  className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getBadgeClasses(user.status)}`}
                 >
-                  <Icon className="h-4 w-4" />
-                </div>
-                <p className="mt-3 text-sm text-slate-500">{card.label}</p>
-                <p className="text-xl font-semibold text-slate-900">
-                  {card.value}
+                  {user.status || "Unknown"}
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-6 grid gap-3 sm:grid-cols-4">
+              <div className="rounded-2xl bg-gray-50 p-4">
+                <p className="text-xs text-gray-500">User ID</p>
+                <p className="mt-1 text-sm font-semibold text-gray-900">#{user.id}</p>
+              </div>
+              <div className="rounded-2xl bg-gray-50 p-4">
+                <p className="text-xs text-gray-500">Wallet Balance</p>
+                <p className="mt-1 text-lg font-semibold text-purple-600">
+                  {formatCurrency(user.wallet_value)}
                 </p>
               </div>
-            );
-          })}
+              <div className="rounded-2xl bg-gray-50 p-4">
+                <p className="text-xs text-gray-500">Joined</p>
+                <p className="mt-1 text-sm font-semibold text-gray-900">
+                  {user.createdAt?.split(" ")[0] || "—"}
+                </p>
+              </div>
+              <div className="rounded-2xl bg-gray-50 p-4">
+                <p className="text-xs text-gray-500">Transactions</p>
+                <p className="mt-1 text-sm font-semibold text-gray-900">
+                  {walletHistory.length}
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
-          <div className="space-y-4">
-            {/* User Profile Card */}
-            <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br from-purple-100 to-orange-100 text-3xl">
-                    {user.avatar}
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-semibold text-gray-900">
-                      {user.name}
-                    </h2>
-                    <div className="flex flex-wrap items-center gap-2 mt-1">
-                      <span className="text-sm text-gray-500">
-                        {user.email}
-                      </span>
-                      <span className="w-1 h-1 rounded-full bg-gray-300"></span>
-                      <span className="text-sm text-gray-500">
-                        {user.phone}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.15em] ${
-                      user.role === "seller"
-                        ? "bg-blue-50 text-blue-700"
-                        : "bg-green-50 text-green-700"
+          {/* Tabs */}
+          <div className="rounded-3xl border border-gray-200 bg-white p-4 shadow-sm">
+            <nav className="flex flex-wrap gap-2">
+              {[
+                { key: "overview", label: "Overview", icon: User },
+                { key: "edit", label: "Edit", icon: CheckCircle },
+                { key: "wallets", label: "Wallet History", icon: Wallet },
+              ].map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    onClick={() => setActiveTab(tab.key)}
+                    className={`flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-medium transition ${
+                      activeTab === tab.key
+                        ? "bg-purple-600 text-white"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                     }`}
                   >
-                    {user.role === "seller" ? "Seller" : "Buyer"}
-                  </span>
-                  <span
-                    className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getBadgeClasses(user.status)}`}
-                  >
-                    {user.status || "Unknown"}
-                  </span>
-                </div>
-              </div>
+                    <Icon size={16} />
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
 
-              <div className="mt-6 grid gap-3 sm:grid-cols-4">
-                <div className="rounded-2xl bg-gray-50 p-4">
-                  <p className="text-xs text-gray-500">User ID</p>
-                  <p className="mt-1 text-sm font-semibold text-gray-900">
-                    #{user.id}
-                  </p>
-                </div>
-                <div className="rounded-2xl bg-gray-50 p-4">
-                  <p className="text-xs text-gray-500">Wallet Balance</p>
-                  <p className="mt-1 text-lg font-semibold text-purple-600">
-                    {formatCurrency(user.wallet_value)}
-                  </p>
-                </div>
-                <div className="rounded-2xl bg-gray-50 p-4">
-                  <p className="text-xs text-gray-500">Joined</p>
-                  <p className="mt-1 text-sm font-semibold text-gray-900">
-                    {user.createdAt?.split(" ")[0] || "—"}
-                  </p>
-                </div>
-                <div className="rounded-2xl bg-gray-50 p-4">
-                  <p className="text-xs text-gray-500">Transactions</p>
-                  <p className="mt-1 text-sm font-semibold text-gray-900">
-                    {walletHistory.length}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Tabs */}
-            <div className="rounded-3xl border border-gray-200 bg-white p-4 shadow-sm">
-              <nav className="flex flex-wrap gap-2">
-                {[
-                  { key: "overview", label: "Overview", icon: User },
-                  { key: "edit", label: "Edit", icon: CheckCircle },
-                  { key: "wallets", label: "Wallet History", icon: Wallet },
-                ].map((tab) => {
-                  const Icon = tab.icon;
-                  return (
-                    <button
-                      key={tab.key}
-                      type="button"
-                      onClick={() => setActiveTab(tab.key)}
-                      className={`flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-medium transition ${
-                        activeTab === tab.key
-                          ? "bg-purple-600 text-white"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      }`}
-                    >
-                      <Icon size={16} />
-                      {tab.label}
-                    </button>
-                  );
-                })}
-              </nav>
-            </div>
-
-            {/* Tab Content */}
-            {activeTab === "overview" && (
-              <div className="space-y-4 rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
-                {/* Contact Info */}
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                    <User size={16} className="text-purple-600" />
-                    Contact Information
-                  </h3>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="rounded-xl bg-gray-50 p-3">
-                      <p className="text-xs text-gray-500">Full Name</p>
-                      <p className="mt-1 text-sm font-medium text-gray-900">
-                        {user.name || "—"}
-                      </p>
-                    </div>
-                    <div className="rounded-xl bg-gray-50 p-3">
-                      <p className="text-xs text-gray-500">Email</p>
-                      <p className="mt-1 text-sm font-medium text-gray-900">
-                        {user.email || "—"}
-                      </p>
-                    </div>
-                    <div className="rounded-xl bg-gray-50 p-3">
-                      <p className="text-xs text-gray-500">Phone</p>
-                      <p className="mt-1 text-sm font-medium text-gray-900">
-                        {user.phone || "—"}
-                      </p>
-                    </div>
-                    <div className="rounded-xl bg-gray-50 p-3">
-                      <p className="text-xs text-gray-500">Status</p>
-                      <span
-                        className={`mt-1 inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getBadgeClasses(user.status)}`}
-                      >
-                        {user.status || "Unknown"}
-                      </span>
-                    </div>
+          {/* Tab Content */}
+          {activeTab === "overview" && (
+            <div className="space-y-4 rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+              {/* Contact Info */}
+              <div>
+                <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                  <User size={16} className="text-purple-600" />
+                  Contact Information
+                </h3>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-xl bg-gray-50 p-3">
+                    <p className="text-xs text-gray-500">Full Name</p>
+                    <p className="mt-1 text-sm font-medium text-gray-900">{user.name || "—"}</p>
+                  </div>
+                  <div className="rounded-xl bg-gray-50 p-3">
+                    <p className="text-xs text-gray-500">Email</p>
+                    <p className="mt-1 text-sm font-medium text-gray-900">{user.email || "—"}</p>
+                  </div>
+                  <div className="rounded-xl bg-gray-50 p-3">
+                    <p className="text-xs text-gray-500">Phone</p>
+                    <p className="mt-1 text-sm font-medium text-gray-900">{user.phone || "—"}</p>
+                  </div>
+                  <div className="rounded-xl bg-gray-50 p-3">
+                    <p className="text-xs text-gray-500">Status</p>
+                    <span className={`mt-1 inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getBadgeClasses(user.status)}`}>
+                      {user.status || "Unknown"}
+                    </span>
                   </div>
                 </div>
+              </div>
+            </div>
 
-                {/* Address */}
-                {(user.address || user.city || user.state) && (
-                  <div className="rounded-xl bg-gray-50 p-4 border border-gray-200">
-                    <p className="text-xs text-gray-500 flex items-center gap-1">
-                      <MapPin size={14} className="text-purple-600" /> Address
+              {/* Address */}
+              {(user.address || user.city || user.state) && (
+                <div className="rounded-xl bg-gray-50 p-4 border border-gray-200">
+                  <p className="text-xs text-gray-500 flex items-center gap-1">
+                    <MapPin size={14} className="text-purple-600" /> Address
+                  </p>
+                  <p className="mt-2 text-sm text-gray-900">
+                    {user.address || "No address provided."}
+                  </p>
+                  {(user.city || user.state || user.country || user.pincode) && (
+                    <p className="mt-1 text-sm text-gray-500">
+                      {[user.city, user.state, user.country, user.pincode]
+                        .filter(Boolean)
+                        .join(", ")}
                     </p>
-                    <p className="mt-2 text-sm text-gray-900">
-                      {user.address || "No address provided."}
-                    </p>
-                    {(user.city ||
-                      user.state ||
-                      user.country ||
-                      user.pincode) && (
-                      <p className="mt-1 text-sm text-gray-500">
-                        {[user.city, user.state, user.country, user.pincode]
-                          .filter(Boolean)
-                          .join(", ")}
-                      </p>
+                  )}
+                </div>
+              )}
+
+              {/* Buyer Specific Details */}
+              {user.role === "buyer" && (
+                <div className="rounded-xl bg-gray-50 p-4 border border-gray-200">
+                  <p className="text-xs text-gray-500 flex items-center gap-1">
+                    <Package size={14} className="text-purple-600" /> Buyer Details
+                  </p>
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                    {user.district && (
+                      <div>
+                        <p className="text-xs text-gray-400">District</p>
+                        <p className="mt-1 text-sm text-gray-900">{user.district}</p>
+                      </div>
+                    )}
+                    {user.delivery_location && (
+                      <div>
+                        <p className="text-xs text-gray-400">Delivery Location</p>
+                        <p className="mt-1 text-sm text-gray-900">{user.delivery_location}</p>
+                      </div>
+                    )}
+                    {user.document_number && (
+                      <div className="col-span-2">
+                        <p className="text-xs text-gray-400">Document Number</p>
+                        <p className="mt-1 text-sm text-gray-900">{user.document_number}</p>
+                      </div>
+                    )}
+                    {user.document_image && (
+                      <div className="col-span-2">
+                        <p className="text-xs text-gray-400 mb-2">Document</p>
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={user.document_image}
+                            alt="Document"
+                            className="w-20 h-20 rounded-xl border object-cover"
+                            onError={(e) => e.target.src = "/placeholder.png"}
+                          />
+                          <a
+                            href={user.document_image}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-2 rounded-xl bg-purple-100 px-4 py-2 text-sm font-medium text-purple-700 hover:bg-purple-200 transition"
+                          >
+                            <Download size={16} /> View Document
+                          </a>
+                        </div>
+                      </div>
                     )}
                   </div>
-                )}
-
-                {/* Buyer Specific Details */}
-                {user.role === "buyer" && (
-                  <div className="rounded-xl bg-gray-50 p-4 border border-gray-200">
-                    <p className="text-xs text-gray-500 flex items-center gap-1">
-                      <Package size={14} className="text-purple-600" /> Buyer
-                      Details
-                    </p>
-                    <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                      {user.district && (
-                        <div>
-                          <p className="text-xs text-gray-400">District</p>
-                          <p className="mt-1 text-sm text-gray-900">
-                            {user.district}
-                          </p>
-                        </div>
-                      )}
-                      {user.delivery_location && (
-                        <div>
-                          <p className="text-xs text-gray-400">
-                            Delivery Location
-                          </p>
-                          <p className="mt-1 text-sm text-gray-900">
-                            {user.delivery_location}
-                          </p>
-                        </div>
-                      )}
-                      {user.document_number && (
-                        <div className="col-span-2">
-                          <p className="text-xs text-gray-400">
-                            Document Number
-                          </p>
-                          <p className="mt-1 text-sm text-gray-900">
-                            {user.document_number}
-                          </p>
-                        </div>
-                      )}
-                      {user.document_image && (
-                        <div className="col-span-2">
-                          <p className="text-xs text-gray-400 mb-2">Document</p>
-                          <div className="flex items-center gap-3">
-                            <img
-                              src={user.document_image}
-                              alt="Document"
-                              className="w-20 h-20 rounded-xl border object-cover"
-                              onError={(e) =>
-                                (e.target.src = "/placeholder.png")
-                              }
-                            />
-                            <a
-                              href={user.document_image}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="inline-flex items-center gap-2 rounded-xl bg-purple-100 px-4 py-2 text-sm font-medium text-purple-700 hover:bg-purple-200 transition"
-                            >
-                              <Download size={16} /> View Document
-                            </a>
+                  {(user.logistic_partner_name || user.logistic_contact_no) && (
+                    <div className="mt-3 pt-3 border-t border-gray-200">
+                      <p className="text-xs text-gray-400 flex items-center gap-1">
+                        <Truck size={14} className="text-purple-600" /> Logistics
+                      </p>
+                      <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                        {user.logistic_partner_name && (
+                          <div>
+                            <p className="text-xs text-gray-400">Partner</p>
+                            <p className="text-sm text-gray-900">{user.logistic_partner_name}</p>
                           </div>
-                        </div>
-                      )}
+                        )}
+                        {user.logistic_contact_no && (
+                          <div>
+                            <p className="text-xs text-gray-400">Contact</p>
+                            <p className="text-sm text-gray-900">{user.logistic_contact_no}</p>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    {(user.logistic_partner_name ||
-                      user.logistic_contact_no) && (
-                      <div className="mt-3 pt-3 border-t border-gray-200">
-                        <p className="text-xs text-gray-400 flex items-center gap-1">
-                          <Truck size={14} className="text-purple-600" />{" "}
-                          Logistics
-                        </p>
-                        <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                          {user.logistic_partner_name && (
-                            <div>
-                              <p className="text-xs text-gray-400">Partner</p>
-                              <p className="text-sm text-gray-900">
-                                {user.logistic_partner_name}
-                              </p>
-                            </div>
-                          )}
-                          {user.logistic_contact_no && (
-                            <div>
-                              <p className="text-xs text-gray-400">Contact</p>
-                              <p className="text-sm text-gray-900">
-                                {user.logistic_contact_no}
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
+                  )}
+                </div>
+              )}
 
-                {/* Seller Specific Details */}
-                {user.role === "seller" && (
-                  <div className="rounded-xl bg-gray-50 p-4 border border-gray-200">
-                    <p className="text-xs text-gray-500 flex items-center gap-1">
-                      <Store size={14} className="text-purple-600" /> Seller
-                      Details
-                    </p>
-                    <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                      {user.business_name && (
-                        <div>
-                          <p className="text-xs text-gray-400">Business Name</p>
-                          <p className="mt-1 text-sm text-gray-900">
-                            {user.business_name}
-                          </p>
-                        </div>
-                      )}
-                      {user.brand_name && (
-                        <div>
-                          <p className="text-xs text-gray-400">Brand</p>
-                          <p className="mt-1 text-sm text-gray-900">
-                            {user.brand_name}
-                          </p>
-                        </div>
-                      )}
-                      {user.gst_number && (
-                        <div>
-                          <p className="text-xs text-gray-400">GST Number</p>
-                          <p className="mt-1 text-sm font-mono text-gray-900">
-                            {user.gst_number}
-                          </p>
-                        </div>
-                      )}
-                      {user.pan_number && (
-                        <div>
-                          <p className="text-xs text-gray-400">PAN Number</p>
-                          <p className="mt-1 text-sm font-mono text-gray-900">
-                            {user.pan_number}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {activeTab === "edit" && (
-              <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">
-                      Name *
-                    </label>
-                    <input
-                      value={editData.name}
-                      onChange={(e) =>
-                        setEditData((prev) => ({
-                          ...prev,
-                          name: e.target.value,
-                        }))
-                      }
-                      className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-300"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">
-                      Email *
-                    </label>
-                    <input
-                      type="email"
-                      value={editData.email}
-                      onChange={(e) =>
-                        setEditData((prev) => ({
-                          ...prev,
-                          email: e.target.value,
-                        }))
-                      }
-                      className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-300"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">
-                      Phone *
-                    </label>
-                    <input
-                      value={editData.phone}
-                      onChange={(e) =>
-                        setEditData((prev) => ({
-                          ...prev,
-                          phone: e.target.value,
-                        }))
-                      }
-                      className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-300"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">
-                      Status
-                    </label>
-                    <select
-                      value={editData.status}
-                      onChange={(e) =>
-                        setEditData((prev) => ({
-                          ...prev,
-                          status: e.target.value,
-                        }))
-                      }
-                      className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-300"
-                    >
-                      <option value="active">Active</option>
-                      <option value="inactive">Inactive</option>
-                      <option value="pending">Pending</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">
-                      Wallet Value
-                    </label>
-                    <input
-                      type="number"
-                      value={editData.wallet_value}
-                      onChange={(e) =>
-                        setEditData((prev) => ({
-                          ...prev,
-                          wallet_value: e.target.value,
-                        }))
-                      }
-                      className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-300"
-                    />
-                  </div>
-                  <div className="sm:col-span-2">
-                    <label className="text-sm font-medium text-gray-700">
-                      Address
-                    </label>
-                    <input
-                      value={editData.address}
-                      onChange={(e) =>
-                        setEditData((prev) => ({
-                          ...prev,
-                          address: e.target.value,
-                        }))
-                      }
-                      className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-300"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">
-                      State
-                    </label>
-                    <input
-                      value={editData.state}
-                      onChange={(e) =>
-                        setEditData((prev) => ({
-                          ...prev,
-                          state: e.target.value,
-                        }))
-                      }
-                      className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-300"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">
-                      District
-                    </label>
-                    <input
-                      value={editData.district}
-                      onChange={(e) =>
-                        setEditData((prev) => ({
-                          ...prev,
-                          district: e.target.value,
-                        }))
-                      }
-                      className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-300"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">
-                      Delivery Location
-                    </label>
-                    <input
-                      value={editData.delivery_location}
-                      onChange={(e) =>
-                        setEditData((prev) => ({
-                          ...prev,
-                          delivery_location: e.target.value,
-                        }))
-                      }
-                      className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-300"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">
-                      Logistics Contact
-                    </label>
-                    <input
-                      value={editData.logistic_contact_no}
-                      onChange={(e) =>
-                        setEditData((prev) => ({
-                          ...prev,
-                          logistic_contact_no: e.target.value,
-                        }))
-                      }
-                      className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-300"
-                    />
-                  </div>
-                  <div className="sm:col-span-2">
-                    <label className="text-sm font-medium text-gray-700">
-                      Document Number
-                    </label>
-                    <input
-                      value={editData.document_number}
-                      onChange={(e) =>
-                        setEditData((prev) => ({
-                          ...prev,
-                          document_number: e.target.value,
-                        }))
-                      }
-                      className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-300"
-                    />
-                  </div>
-                  <div className="sm:col-span-2">
-                    <label className="text-sm font-medium text-gray-700">
-                      Document Image URL
-                    </label>
-                    <input
-                      value={editData.document_image}
-                      onChange={(e) =>
-                        setEditData((prev) => ({
-                          ...prev,
-                          document_image: e.target.value,
-                        }))
-                      }
-                      className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-300"
-                    />
-                  </div>
-                  {user.type === "vendor" && (
-                    <>
-                      <div className="sm:col-span-2">
-                        <label className="text-sm font-medium text-gray-700">
-                          Business Name
-                        </label>
-                        <input
-                          value={editData.business_name}
-                          onChange={(e) =>
-                            setEditData((prev) => ({
-                              ...prev,
-                              business_name: e.target.value,
-                            }))
-                          }
-                          className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-300"
-                        />
+              {/* Seller Specific Details */}
+              {user.role === "seller" && (
+                <div className="rounded-xl bg-gray-50 p-4 border border-gray-200">
+                  <p className="text-xs text-gray-500 flex items-center gap-1">
+                    <Store size={14} className="text-purple-600" /> Seller Details
+                  </p>
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                    {user.business_name && (
+                      <div>
+                        <p className="text-xs text-gray-400">Business Name</p>
+                        <p className="mt-1 text-sm text-gray-900">{user.business_name}</p>
                       </div>
                       <div>
-                        <label className="text-sm font-medium text-gray-700">
-                          Brand Name
-                        </label>
-                        <input
-                          value={editData.brand_name}
-                          onChange={(e) =>
-                            setEditData((prev) => ({
-                              ...prev,
-                              brand_name: e.target.value,
-                            }))
-                          }
-                          className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-300"
-                        />
+                        <p className="text-xs text-gray-400">Brand</p>
+                        <p className="mt-1 text-sm text-gray-900">{user.brand_name}</p>
                       </div>
                       <div>
-                        <label className="text-sm font-medium text-gray-700">
-                          GST Number
-                        </label>
-                        <input
-                          value={editData.gst_number}
-                          onChange={(e) =>
-                            setEditData((prev) => ({
-                              ...prev,
-                              gst_number: e.target.value,
-                            }))
-                          }
-                          className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-300"
-                        />
+                        <p className="text-xs text-gray-400">GST Number</p>
+                        <p className="mt-1 text-sm font-mono text-gray-900">{user.gst_number}</p>
                       </div>
                       <div>
-                        <label className="text-sm font-medium text-gray-700">
-                          PAN Number
-                        </label>
-                        <input
-                          value={editData.pan_number}
-                          onChange={(e) =>
-                            setEditData((prev) => ({
-                              ...prev,
-                              pan_number: e.target.value,
-                            }))
-                          }
-                          className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-300"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">
-                          City
-                        </label>
-                        <input
-                          value={editData.city}
-                          onChange={(e) =>
-                            setEditData((prev) => ({
-                              ...prev,
-                              city: e.target.value,
-                            }))
-                          }
-                          className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-300"
-                        />
+                        <p className="text-xs text-gray-400">PAN Number</p>
+                        <p className="mt-1 text-sm font-mono text-gray-900">{user.pan_number}</p>
                       </div>
                       <div>
                         <label className="text-sm font-medium text-gray-700">
@@ -1030,86 +637,275 @@ export default function UserDetailsPage() {
                   )}
                 </div>
 
-                <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                  <button
-                    type="button"
-                    onClick={handleEditSubmit}
-                    disabled={saving}
-                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-purple-600 to-orange-500 px-5 py-3 text-sm font-semibold text-white transition hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
+          {activeTab === "edit" && (
+            <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Name *</label>
+                  <input
+                    value={editData.name}
+                    onChange={(e) =>
+                      setEditData((prev) => ({ ...prev, name: e.target.value }))
+                    }
+                    className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-300"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Email *</label>
+                  <input
+                    type="email"
+                    value={editData.email}
+                    onChange={(e) =>
+                      setEditData((prev) => ({
+                        ...prev,
+                        email: e.target.value,
+                      }))
+                    }
+                    className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-300"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Phone *</label>
+                  <input
+                    value={editData.phone}
+                    onChange={(e) =>
+                      setEditData((prev) => ({
+                        ...prev,
+                        phone: e.target.value,
+                      }))
+                    }
+                    className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-300"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Status</label>
+                  <select
+                    value={editData.status}
+                    onChange={(e) =>
+                      setEditData((prev) => ({
+                        ...prev,
+                        status: e.target.value,
+                      }))
+                    }
+                    className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-300"
                   >
-                    {saving ? (
-                      <Loader2 size={16} className="animate-spin" />
-                    ) : (
-                      <CheckCircle size={16} />
-                    )}
-                    {saving ? "Saving..." : "Save Changes"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab("overview")}
-                    className="inline-flex items-center justify-center rounded-2xl border border-gray-200 bg-white px-5 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
-                  >
-                    Cancel
-                  </button>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="pending">Pending</option>
+                  </select>
                 </div>
-              </div>
-            )}
-
-            {activeTab === "wallets" && (
-              <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      Wallet History
-                    </h3>
-                    <p className="text-sm text-gray-500">
-                      Transaction history for this user
-                    </p>
-                  </div>
-                  <div className="inline-flex items-center gap-2 rounded-2xl bg-purple-50 px-4 py-2 text-sm text-purple-700">
-                    <Wallet size={16} /> Balance:{" "}
-                    {formatCurrency(user.wallet_value)}
-                  </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Wallet Value</label>
+                  <input
+                    type="number"
+                    value={editData.wallet_value}
+                    onChange={(e) =>
+                      setEditData((prev) => ({
+                        ...prev,
+                        wallet_value: e.target.value,
+                      }))
+                    }
+                    className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-300"
+                  />
                 </div>
-
-                {/* Wallet Stats */}
-                <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                  <div className="rounded-xl bg-emerald-50 p-4 border border-emerald-100">
-                    <p className="text-xs text-emerald-600">Total Credit</p>
-                    <p className="mt-1 text-lg font-semibold text-emerald-700">
-                      {formatCurrency(walletStats.totalCredit)}
-                    </p>
-                  </div>
-                  <div className="rounded-xl bg-red-50 p-4 border border-red-100">
-                    <p className="text-xs text-red-600">Total Debit</p>
-                    <p className="mt-1 text-lg font-semibold text-red-700">
-                      {formatCurrency(walletStats.totalDebit)}
-                    </p>
-                  </div>
-                  <div className="rounded-xl bg-purple-50 p-4 border border-purple-100">
-                    <p className="text-xs text-purple-600">Transactions</p>
-                    <p className="mt-1 text-lg font-semibold text-purple-700">
-                      {walletStats.transactionCount}
-                    </p>
-                  </div>
+                <div className="sm:col-span-2">
+                  <label className="text-sm font-medium text-gray-700">Address</label>
+                  <input
+                    value={editData.address}
+                    onChange={(e) =>
+                      setEditData((prev) => ({
+                        ...prev,
+                        address: e.target.value,
+                      }))
+                    }
+                    className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-300"
+                  />
                 </div>
-
-                <div className="mt-6 overflow-x-auto">
-                  {walletLoading ? (
-                    <div className="flex items-center justify-center py-16">
-                      <Loader2
-                        size={24}
-                        className="animate-spin text-purple-600"
+                <div>
+                  <label className="text-sm font-medium text-gray-700">State</label>
+                  <input
+                    value={editData.state}
+                    onChange={(e) =>
+                      setEditData((prev) => ({
+                        ...prev,
+                        state: e.target.value,
+                      }))
+                    }
+                    className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-300"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700">District</label>
+                  <input
+                    value={editData.district}
+                    onChange={(e) =>
+                      setEditData((prev) => ({
+                        ...prev,
+                        district: e.target.value,
+                      }))
+                    }
+                    className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-300"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Delivery Location</label>
+                  <input
+                    value={editData.delivery_location}
+                    onChange={(e) =>
+                      setEditData((prev) => ({
+                        ...prev,
+                        delivery_location: e.target.value,
+                      }))
+                    }
+                    className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-300"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Logistics Contact</label>
+                  <input
+                    value={editData.logistic_contact_no}
+                    onChange={(e) =>
+                      setEditData((prev) => ({
+                        ...prev,
+                        logistic_contact_no: e.target.value,
+                      }))
+                    }
+                    className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-300"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="text-sm font-medium text-gray-700">Document Number</label>
+                  <input
+                    value={editData.document_number}
+                    onChange={(e) =>
+                      setEditData((prev) => ({
+                        ...prev,
+                        document_number: e.target.value,
+                      }))
+                    }
+                    className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-300"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="text-sm font-medium text-gray-700">Document Image URL</label>
+                  <input
+                    value={editData.document_image}
+                    onChange={(e) =>
+                      setEditData((prev) => ({
+                        ...prev,
+                        document_image: e.target.value,
+                      }))
+                    }
+                    className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-300"
+                  />
+                </div>
+                {user.type === "vendor" && (
+                  <>
+                    <div className="sm:col-span-2">
+                      <label className="text-sm font-medium text-gray-700">Business Name</label>
+                      <input
+                        value={editData.business_name}
+                        onChange={(e) =>
+                          setEditData((prev) => ({
+                            ...prev,
+                            business_name: e.target.value,
+                          }))
+                        }
+                        className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-300"
                       />
                     </div>
-                  ) : walletHistory.length === 0 ? (
-                    <div className="text-center py-12 text-gray-500">
-                      <Wallet
-                        size={48}
-                        className="mx-auto mb-3 text-gray-300"
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">Brand Name</label>
+                      <input
+                        value={editData.brand_name}
+                        onChange={(e) =>
+                          setEditData((prev) => ({
+                            ...prev,
+                            brand_name: e.target.value,
+                          }))
+                        }
+                        className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-300"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">GST Number</label>
+                      <input
+                        value={editData.gst_number}
+                        onChange={(e) =>
+                          setEditData((prev) => ({
+                            ...prev,
+                            gst_number: e.target.value,
+                          }))
+                        }
+                        className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-300"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">PAN Number</label>
+                      <input
+                        value={editData.pan_number}
+                        onChange={(e) =>
+                          setEditData((prev) => ({
+                            ...prev,
+                            pan_number: e.target.value,
+                          }))
+                        }
+                        className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-300"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">City</label>
+                      <input
+                        value={editData.city}
+                        onChange={(e) =>
+                          setEditData((prev) => ({
+                            ...prev,
+                            city: e.target.value,
+                          }))
+                        }
+                        className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-300"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">Country</label>
+                      <input
+                        value={editData.country}
+                        onChange={(e) =>
+                          setEditData((prev) => ({
+                            ...prev,
+                            country: e.target.value,
+                          }))
+                        }
+                        className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-300"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">Pincode</label>
+                      <input
+                        value={editData.pincode}
+                        onChange={(e) =>
+                          setEditData((prev) => ({
+                            ...prev,
+                            pincode: e.target.value,
+                          }))
+                        }
+                        className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-300"
                       />
                       No wallet history found for this user yet.
                     </div>
+                  </>
+                )}
+              </div>
+
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                <button
+                  type="button"
+                  onClick={handleEditSubmit}
+                  disabled={saving}
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-purple-600 to-orange-500 px-5 py-3 text-sm font-semibold text-white transition hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {saving ? (
+                    <Loader2 size={16} className="animate-spin" />
                   ) : (
                     <table className="min-w-full text-left text-sm text-gray-600">
                       <thead className="border-b border-gray-200 bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
@@ -1171,93 +967,176 @@ export default function UserDetailsPage() {
               </h3>
               <div className="mt-4 space-y-3 text-sm">
                 <div>
-                  <p className="text-xs text-gray-500">User ID</p>
-                  <p className="mt-1 font-semibold text-gray-900">#{user.id}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">Role</p>
-                  <p className="mt-1 text-gray-900 capitalize">{user.role}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">Status</p>
-                  <span
-                    className={`mt-1 inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getBadgeClasses(user.status)}`}
-                  >
-                    {user.status || "Unknown"}
-                  </span>
-                </div>
-                {user.address && (
-                  <div>
-                    <p className="text-xs text-gray-500">Address</p>
-                    <p className="mt-1 text-gray-900">{user.address}</p>
-                  </div>
-                )}
-                {user.delivery_location && (
-                  <div>
-                    <p className="text-xs text-gray-500">Delivery Location</p>
-                    <p className="mt-1 text-gray-900">
-                      {user.delivery_location}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
-              <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                <Wallet size={16} className="text-purple-600" />
-                Wallet Summary
-              </h3>
-              <div className="mt-4 space-y-3">
-                <div className="rounded-2xl bg-purple-50 p-4 border border-purple-100">
-                  <p className="text-xs text-purple-500">Current Balance</p>
-                  <p className="mt-1 text-xl font-bold text-purple-700">
-                    {formatCurrency(user.wallet_value)}
+                  <h3 className="text-lg font-semibold text-gray-900">Wallet History</h3>
+                  <p className="text-sm text-gray-500">
+                    Transaction history for this user
                   </p>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="rounded-2xl bg-emerald-50 p-3 border border-emerald-100 text-center">
-                    <p className="text-xs text-emerald-500">Credit</p>
-                    <p className="mt-1 text-sm font-semibold text-emerald-700">
-                      {formatCurrency(walletStats.totalCredit)}
-                    </p>
+                <div className="inline-flex items-center gap-2 rounded-2xl bg-purple-50 px-4 py-2 text-sm text-purple-700">
+                  <Wallet size={16} /> Balance: {formatCurrency(user.wallet_value)}
+                </div>
+              </div>
+
+              {/* Wallet Stats */}
+              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                <div className="rounded-xl bg-emerald-50 p-4 border border-emerald-100">
+                  <p className="text-xs text-emerald-600">Total Credit</p>
+                  <p className="mt-1 text-lg font-semibold text-emerald-700">
+                    {formatCurrency(walletStats.totalCredit)}
+                  </p>
+                </div>
+                <div className="rounded-xl bg-red-50 p-4 border border-red-100">
+                  <p className="text-xs text-red-600">Total Debit</p>
+                  <p className="mt-1 text-lg font-semibold text-red-700">
+                    {formatCurrency(walletStats.totalDebit)}
+                  </p>
+                </div>
+                <div className="rounded-xl bg-purple-50 p-4 border border-purple-100">
+                  <p className="text-xs text-purple-600">Transactions</p>
+                  <p className="mt-1 text-lg font-semibold text-purple-700">
+                    {walletStats.transactionCount}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-6 overflow-x-auto">
+                {walletLoading ? (
+                  <div className="flex items-center justify-center py-16">
+                    <Loader2 size={24} className="animate-spin text-purple-600" />
                   </div>
-                  <div className="rounded-2xl bg-red-50 p-3 border border-red-100 text-center">
-                    <p className="text-xs text-red-500">Debit</p>
-                    <p className="mt-1 text-sm font-semibold text-red-700">
-                      {formatCurrency(walletStats.totalDebit)}
-                    </p>
+                ) : walletHistory.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500">
+                    <Wallet size={48} className="mx-auto mb-3 text-gray-300" />
+                    No wallet history found for this user yet.
                   </div>
+                ) : (
+                  <table className="min-w-full text-left text-sm text-gray-600">
+                    <thead className="border-b border-gray-200 bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
+                      <tr>
+                        <th className="px-4 py-3">Date</th>
+                        <th className="px-4 py-3">Type</th>
+                        <th className="px-4 py-3">Amount</th>
+                        <th className="px-4 py-3">Before</th>
+                        <th className="px-4 py-3">After</th>
+                        <th className="px-4 py-3">Note</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {walletHistory.map((entry) => (
+                        <tr key={entry.id} className="hover:bg-gray-50 transition">
+                          <td className="px-4 py-3 text-sm">{entry.date}</td>
+                          <td className="px-4 py-3">
+                            <span className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
+                              entry.type === "credit" 
+                                ? "bg-emerald-100 text-emerald-700" 
+                                : "bg-red-100 text-red-700"
+                            }`}>
+                              {entry.type}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 font-medium">
+                            {formatCurrency(entry.amount)}
+                          </td>
+                          <td className="px-4 py-3">{formatCurrency(entry.wallet_before)}</td>
+                          <td className="px-4 py-3">{formatCurrency(entry.wallet_after)}</td>
+                          <td className="px-4 py-3 max-w-xs truncate">{entry.note}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Sidebar */}
+        <aside className="space-y-4">
+          <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+            <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+              <MapPin size={16} className="text-purple-600" />
+              Quick Profile
+            </h3>
+            <div className="mt-4 space-y-3 text-sm">
+              <div>
+                <p className="text-xs text-gray-500">User ID</p>
+                <p className="mt-1 font-semibold text-gray-900">#{user.id}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">Role</p>
+                <p className="mt-1 text-gray-900 capitalize">{user.role}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">Status</p>
+                <span className={`mt-1 inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getBadgeClasses(user.status)}`}>
+                  {user.status || "Unknown"}
+                </span>
+              </div>
+              {user.address && (
+                <div>
+                  <p className="text-xs text-gray-500">Address</p>
+                  <p className="mt-1 text-gray-900">{user.address}</p>
+                </div>
+              )}
+              {user.delivery_location && (
+                <div>
+                  <p className="text-xs text-gray-500">Delivery Location</p>
+                  <p className="mt-1 text-gray-900">{user.delivery_location}</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+            <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+              <Wallet size={16} className="text-purple-600" />
+              Wallet Summary
+            </h3>
+            <div className="mt-4 space-y-3">
+              <div className="rounded-2xl bg-purple-50 p-4 border border-purple-100">
+                <p className="text-xs text-purple-500">Current Balance</p>
+                <p className="mt-1 text-xl font-bold text-purple-700">
+                  {formatCurrency(user.wallet_value)}
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="rounded-2xl bg-emerald-50 p-3 border border-emerald-100 text-center">
+                  <p className="text-xs text-emerald-500">Credit</p>
+                  <p className="mt-1 text-sm font-semibold text-emerald-700">
+                    {formatCurrency(walletStats.totalCredit)}
+                  </p>
+                </div>
+                <div className="rounded-2xl bg-red-50 p-3 border border-red-100 text-center">
+                  <p className="text-xs text-red-500">Debit</p>
+                  <p className="mt-1 text-sm font-semibold text-red-700">
+                    {formatCurrency(walletStats.totalDebit)}
+                  </p>
                 </div>
               </div>
             </div>
+          </div>
 
-            {user.logistic_partner_name && (
-              <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
-                <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                  <Truck size={16} className="text-purple-600" />
-                  Logistics
-                </h3>
-                <div className="mt-4 space-y-2 text-sm">
-                  <div>
-                    <p className="text-xs text-gray-500">Partner</p>
-                    <p className="mt-1 text-gray-900">
-                      {user.logistic_partner_name}
-                    </p>
-                  </div>
-                  {user.logistic_contact_no && (
-                    <div>
-                      <p className="text-xs text-gray-500">Contact</p>
-                      <p className="mt-1 text-gray-900">
-                        {user.logistic_contact_no}
-                      </p>
-                    </div>
-                  )}
+          {user.logistic_partner_name && (
+            <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+              <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                <Truck size={16} className="text-purple-600" />
+                Logistics
+              </h3>
+              <div className="mt-4 space-y-2 text-sm">
+                <div>
+                  <p className="text-xs text-gray-500">Partner</p>
+                  <p className="mt-1 text-gray-900">{user.logistic_partner_name}</p>
                 </div>
+                {user.logistic_contact_no && (
+                  <div>
+                    <p className="text-xs text-gray-500">Contact</p>
+                    <p className="mt-1 text-gray-900">{user.logistic_contact_no}</p>
+                  </div>
+                )}
               </div>
-            )}
-          </aside>
-        </div>
+            </div>
+          )}
+        </aside>
       </div>
     </div>
   );
