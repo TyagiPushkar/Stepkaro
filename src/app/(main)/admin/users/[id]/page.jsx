@@ -1,5 +1,6 @@
 ﻿"use client";
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import {
@@ -19,7 +20,7 @@ import {
 const USER_API =
   "https://namami-infotech.com/Stepkaro/src/home/get_vendor_and_buyer.php?type=buyer";
 const WALLET_API =
-  "https://namami-infotech.com/Stepkaro/src/admin/get_wallet_history.php";
+  "https://namami-infotech.com/Stepkaro/src/wallets/get_user_wallet_history.php";
 const ORDER_API =
   "https://namami-infotech.com/Stepkaro/src/order/admin_get_orders.php";
 
@@ -92,15 +93,18 @@ const normalizeWalletItem = (item) => {
   return {
     id: item.id || item.transaction_id || "-",
     type,
-    amount: Number(item.amount || item.transaction_amount || 0),
+    amount: Number(item.amount || item.transaction_amount || item.amount || 0),
     wallet_before: Number(item.wallet_before || item.balance_before || 0),
     wallet_after: Number(
       item.wallet_after || item.balance_after || item.current_balance || 0,
     ),
     note: item.note || item.description || item.remarks || "-",
     date: item.created_at || item.transaction_date || item.date || "-",
+    raw: item,
   };
 };
+
+const isFile = (value) => value instanceof File;
 
 export default function UserDetailsPage() {
   const params = useParams();
@@ -114,6 +118,7 @@ export default function UserDetailsPage() {
       ? initialTab
       : "overview",
   );
+
   const [toast, setToast] = useState(null);
   const [editData, setEditData] = useState({});
   const [saving, setSaving] = useState(false);
@@ -127,11 +132,22 @@ export default function UserDetailsPage() {
     setTimeout(() => setToast(null), 3000);
   };
 
+  const getAuthHeaders = () => {
+    if (typeof window === "undefined") return {};
+    const token = localStorage.getItem("access_token");
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
   useEffect(() => {
     if (!userId) return;
     const fetchUser = async () => {
       setLoading(true);
       try {
+        // const response = await fetch(USER_API, {
+        //   headers: {
+        //     ...getAuthHeaders(),
+        //   },
+        // });
         const response = await fetch(USER_API);
         const data = await response.json();
         const buyers = Array.isArray(data?.data?.buyers)
@@ -192,14 +208,23 @@ export default function UserDetailsPage() {
     const fetchWalletHistory = async () => {
       setWalletLoading(true);
       try {
-        const url = `${WALLET_API}?user_id=${encodeURIComponent(user.id)}`;
-        const res = await fetch(url);
+        console.log("user id ", user.buyer_id);
+        const url = `${WALLET_API}?user_id=${encodeURIComponent(user.buyer_id)}`;
+        console.log(url);
+
+        const res = await fetch(url, {
+          headers: {
+            ...getAuthHeaders(),
+          },
+        });
         const data = await res.json();
+        console.log("wallet history data ", data);
         const history = Array.isArray(data?.data)
           ? data.data
           : Array.isArray(data)
             ? data
             : [];
+        // console.log("wallet history ", history);
         setWalletHistory(history.map(normalizeWalletItem));
       } catch (error) {
         console.error(error);
@@ -211,7 +236,11 @@ export default function UserDetailsPage() {
     const fetchOrderHistory = async () => {
       setOrderLoading(true);
       try {
-        const res = await fetch(ORDER_API);
+        const res = await fetch(ORDER_API, {
+          headers: {
+            ...getAuthHeaders(),
+          },
+        });
         const data = await res.json();
         const orders = Array.isArray(data?.data)
           ? data.data
@@ -249,46 +278,91 @@ export default function UserDetailsPage() {
         typeof window !== "undefined"
           ? localStorage.getItem("access_token")
           : null;
-      const payload = {
-        id: Number(user.id),
-        name: editData.name,
-        email: editData.email,
-        phone: editData.phone,
-        status: editData.status,
-        address: editData.address,
-        state: editData.state,
-        district: editData.district,
-        delivery_location: editData.delivery_location,
-        logistic_partner_name: editData.logistic_partner_name,
-        logistic_contact_no: editData.logistic_contact_no,
-        document_number: editData.document_number,
-        document_image: editData.document_image,
-      };
-      if (editData.wallet_value !== "" && editData.wallet_value !== null) {
-        payload.wallet_value = Number(editData.wallet_value);
-      }
       let endpoint = "";
+      let body;
+      let headers = {};
+
       if (user.type === "buyer") {
         endpoint =
           "https://namami-infotech.com/Stepkaro/src/buyer/edit_buyer.php";
-        payload.buyer_id = user.id;
       } else {
         endpoint =
           "https://namami-infotech.com/Stepkaro/src/vender/edit_vendor.php";
-        payload.business_name = editData.business_name;
-        payload.gst_number = editData.gst_number;
-        payload.pan_number = editData.pan_number;
-        payload.city = editData.city;
-        payload.country = editData.country;
-        payload.pincode = editData.pincode;
       }
+
+      if (isFile(editData.document_image)) {
+        body = new FormData();
+        body.append("id", String(user.id));
+        body.append("name", editData.name || "");
+        body.append("email", editData.email || "");
+        body.append("phone", editData.phone || "");
+        body.append("status", editData.status || "");
+        body.append("address", editData.address || "");
+        body.append("state", editData.state || "");
+        body.append("district", editData.district || "");
+        body.append("delivery_location", editData.delivery_location || "");
+        body.append(
+          "logistic_partner_name",
+          editData.logistic_partner_name || "",
+        );
+        body.append("logistic_contact_no", editData.logistic_contact_no || "");
+        body.append("document_number", editData.document_number || "");
+        body.append("document_image", editData.document_image);
+        if (editData.wallet_value !== "" && editData.wallet_value !== null) {
+          body.append("wallet_value", String(editData.wallet_value));
+        }
+        if (user.type === "buyer") {
+          body.append("buyer_id", String(user.id));
+        }
+        if (user.type !== "buyer") {
+          body.append("business_name", editData.business_name || "");
+          body.append("gst_number", editData.gst_number || "");
+          body.append("pan_number", editData.pan_number || "");
+          body.append("city", editData.city || "");
+          body.append("country", editData.country || "");
+          body.append("pincode", editData.pincode || "");
+        }
+      } else {
+        body = {
+          id: Number(user.id),
+          name: editData.name,
+          email: editData.email,
+          phone: editData.phone,
+          status: editData.status,
+          address: editData.address,
+          state: editData.state,
+          district: editData.district,
+          delivery_location: editData.delivery_location,
+          logistic_partner_name: editData.logistic_partner_name,
+          logistic_contact_no: editData.logistic_contact_no,
+          document_number: editData.document_number,
+          document_image: editData.document_image,
+        };
+        if (editData.wallet_value !== "" && editData.wallet_value !== null) {
+          body.wallet_value = Number(editData.wallet_value);
+        }
+        if (user.type === "buyer") {
+          body.buyer_id = user.id;
+        }
+        if (user.type !== "buyer") {
+          body.business_name = editData.business_name;
+          body.gst_number = editData.gst_number;
+          body.pan_number = editData.pan_number;
+          body.city = editData.city;
+          body.country = editData.country;
+          body.pincode = editData.pincode;
+        }
+        headers["Content-Type"] = "application/json";
+      }
+
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
       const response = await fetch(endpoint, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify(payload),
+        headers,
+        body: isFile(editData.document_image) ? body : JSON.stringify(body),
       });
       const text = await response.text();
       let result;
@@ -300,7 +374,28 @@ export default function UserDetailsPage() {
       }
       if (result.success) {
         showToast(result.message || "User updated successfully");
-        setUser({ ...user, ...editData, wallet_value: editData.wallet_value });
+        const rawDocumentImage =
+          result.data?.document_image ||
+          (isFile(editData.document_image)
+            ? user.document_image
+            : editData.document_image);
+        const documentImageUrl = rawDocumentImage
+          ? String(rawDocumentImage).startsWith("http")
+            ? String(rawDocumentImage)
+            : `https://namami-infotech.com/Stepkaro/${String(rawDocumentImage)}`
+          : "";
+        setUser({
+          ...user,
+          ...editData,
+          wallet_value: editData.wallet_value,
+          document_image: documentImageUrl,
+        });
+        if (isFile(editData.document_image)) {
+          setEditData((prev) => ({
+            ...prev,
+            document_image: documentImageUrl,
+          }));
+        }
       } else {
         showToast(result.message || "Failed to update user", "error");
       }
@@ -419,8 +514,7 @@ export default function UserDetailsPage() {
                 { key: "overview", label: "Overview" },
                 { key: "edit", label: "Edit" },
                 { key: "wallets", label: "Wallet History" },
-                { key: "orders", label: "Order History" },
-                { key: "more", label: "More" },
+                // { key: "orders", label: "Order History" },
               ].map((tab) => (
                 <button
                   key={tab.key}
@@ -516,11 +610,14 @@ export default function UserDetailsPage() {
                         <p className="text-xs text-gray-500 mb-2">
                           Document Image
                         </p>
-                        <img
-                          src={user.document_image}
-                          alt="Document"
-                          className="w-full max-w-xs rounded-xl border"
-                        />
+                        <div className="relative h-72 w-full max-w-xs overflow-hidden rounded-xl border bg-gray-100">
+                          <Image
+                            src={user.document_image}
+                            alt="Document"
+                            fill
+                            className="object-contain"
+                          />
+                        </div>
                         <div className="mt-3 flex gap-2">
                           <a
                             href={user.document_image}
@@ -754,18 +851,36 @@ export default function UserDetailsPage() {
                 </div>
                 <div className="sm:col-span-2">
                   <label className="text-sm font-medium text-gray-700">
-                    Document Image URL
+                    Document Image / File
                   </label>
                   <input
-                    value={editData.document_image}
+                    type="file"
+                    accept="image/*,application/pdf"
                     onChange={(e) =>
                       setEditData((prev) => ({
                         ...prev,
-                        document_image: e.target.value,
+                        document_image:
+                          e.target.files[0] || prev.document_image,
                       }))
                     }
-                    className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-300"
+                    className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 file:mr-3 file:rounded-lg file:border-0 file:bg-purple-600 file:px-4 file:py-2 file:text-white hover:file:bg-purple-700 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-300"
                   />
+                  {isFile(editData.document_image) ? (
+                    <p className="mt-2 text-sm text-gray-500">
+                      Selected file: {editData.document_image.name}
+                    </p>
+                  ) : editData.document_image ? (
+                    <div className="mt-3 flex flex-col gap-2">
+                      <a
+                        href={editData.document_image}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-sm font-medium text-purple-700 hover:underline"
+                      >
+                        View current document
+                      </a>
+                    </div>
+                  ) : null}
                 </div>
                 {user.type === "vendor" && (
                   <>
@@ -919,7 +1034,7 @@ export default function UserDetailsPage() {
                   {formatCurrency(user.wallet_value)}
                 </div>
               </div>
-              <div className="mt-6 overflow-x-auto">
+              <div className="mt-6 overflow-hidden">
                 {walletLoading ? (
                   <div className="flex items-center justify-center py-16">
                     <Loader2
@@ -932,42 +1047,51 @@ export default function UserDetailsPage() {
                     No wallet history found for this user yet.
                   </div>
                 ) : (
-                  <table className="min-w-full text-left text-sm text-gray-600">
-                    <thead className="border-b border-gray-200 bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
-                      <tr>
-                        <th className="px-4 py-3">Date</th>
-                        <th className="px-4 py-3">Type</th>
-                        <th className="px-4 py-3">Amount</th>
-                        <th className="px-4 py-3">Before</th>
-                        <th className="px-4 py-3">After</th>
-                        <th className="px-4 py-3">Note</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {walletHistory.map((entry) => (
-                        <tr key={entry.id}>
-                          <td className="px-4 py-3">{entry.date}</td>
-                          <td className="px-4 py-3 capitalize">{entry.type}</td>
-                          <td className="px-4 py-3">
-                            {formatCurrency(entry.amount)}
-                          </td>
-                          <td className="px-4 py-3">
-                            {formatCurrency(entry.wallet_before)}
-                          </td>
-                          <td className="px-4 py-3">
-                            {formatCurrency(entry.wallet_after)}
-                          </td>
-                          <td className="px-4 py-3">{entry.note}</td>
+                  <div className="max-h-[420px] overflow-y-auto">
+                    <table className="min-w-full text-left text-sm text-gray-600">
+                      <thead className="border-b border-gray-200 bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
+                        <tr>
+                          <th className="px-4 py-3">Date</th>
+                          <th className="px-4 py-3">Description</th>
+                          <th className="px-4 py-3">Amount</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {walletHistory.map((entry) => {
+                          const isCredit = entry.type === "credit";
+                          const amountLabel = `${isCredit ? "+" : "-"}${formatCurrency(entry.amount)}`;
+                          const badgeClasses = isCredit
+                            ? "bg-emerald-100 text-emerald-700"
+                            : "bg-rose-100 text-rose-700";
+                          const arrow = isCredit ? "▲" : "▼";
+                          return (
+                            <tr key={entry.id}>
+                              <td className="px-4 py-3 align-top text-sm text-gray-700">
+                                {entry.date}
+                              </td>
+                              <td className="px-4 py-3 align-top text-sm text-gray-700">
+                                {entry.note}
+                              </td>
+                              <td className="px-4 py-3 align-top">
+                                <span
+                                  className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-semibold ${badgeClasses}`}
+                                >
+                                  <span>{arrow}</span>
+                                  <span>{amountLabel}</span>
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 )}
               </div>
             </div>
           )}
 
-          {activeTab === "orders" && (
+          {/* {activeTab === "orders" && (
             <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -984,7 +1108,7 @@ export default function UserDetailsPage() {
                 </div>
               </div>
 
-              <div className="mt-6 overflow-x-auto">
+              <div className="mt-6 overflow-hidden">
                 {orderLoading ? (
                   <div className="flex items-center justify-center py-16">
                     <Loader2
@@ -997,47 +1121,49 @@ export default function UserDetailsPage() {
                     No order history available yet for this user.
                   </div>
                 ) : (
-                  <table className="min-w-full text-left text-sm text-gray-600">
-                    <thead className="border-b border-gray-200 bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
-                      <tr>
-                        <th className="px-4 py-3">Order ID</th>
-                        <th className="px-4 py-3">Status</th>
-                        <th className="px-4 py-3">Buyer</th>
-                        <th className="px-4 py-3">Seller</th>
-                        <th className="px-4 py-3">Amount</th>
-                        <th className="px-4 py-3">Date</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {orderHistory.map((order, index) => (
-                        <tr key={`${order.order_id || order.id || index}`}>
-                          <td className="px-4 py-3">
-                            {order.order_id || order.id || "—"}
-                          </td>
-                          <td className="px-4 py-3">{order.status || "—"}</td>
-                          <td className="px-4 py-3">
-                            {order.buyer_name ||
-                              order.customer_name ||
-                              order.user_name ||
-                              "—"}
-                          </td>
-                          <td className="px-4 py-3">
-                            {order.seller_name || order.vendor_name || "—"}
-                          </td>
-                          <td className="px-4 py-3">
-                            {order.total_amount
-                              ? formatCurrency(order.total_amount)
-                              : order.amount
-                                ? formatCurrency(order.amount)
-                                : "—"}
-                          </td>
-                          <td className="px-4 py-3">
-                            {order.created_at || order.order_date || "—"}
-                          </td>
+                  <div className="max-h-[420px] overflow-y-auto">
+                    <table className="min-w-full text-left text-sm text-gray-600">
+                      <thead className="border-b border-gray-200 bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
+                        <tr>
+                          <th className="px-4 py-3">Order ID</th>
+                          <th className="px-4 py-3">Status</th>
+                          <th className="px-4 py-3">Buyer</th>
+                          <th className="px-4 py-3">Seller</th>
+                          <th className="px-4 py-3">Amount</th>
+                          <th className="px-4 py-3">Date</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {orderHistory.map((order, index) => (
+                          <tr key={`${order.order_id || order.id || index}`}>
+                            <td className="px-4 py-3">
+                              {order.order_id || order.id || "—"}
+                            </td>
+                            <td className="px-4 py-3">{order.status || "—"}</td>
+                            <td className="px-4 py-3">
+                              {order.buyer_name ||
+                                order.customer_name ||
+                                order.user_name ||
+                                "—"}
+                            </td>
+                            <td className="px-4 py-3">
+                              {order.seller_name || order.vendor_name || "—"}
+                            </td>
+                            <td className="px-4 py-3">
+                              {order.total_amount
+                                ? formatCurrency(order.total_amount)
+                                : order.amount
+                                  ? formatCurrency(order.amount)
+                                  : "—"}
+                            </td>
+                            <td className="px-4 py-3">
+                              {order.created_at || order.order_date || "—"}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 )}
               </div>
             </div>
@@ -1054,7 +1180,7 @@ export default function UserDetailsPage() {
                 comments.
               </p>
             </div>
-          )}
+          )} */}
         </div>
 
         <aside className="space-y-4">
