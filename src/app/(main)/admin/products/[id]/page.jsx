@@ -543,74 +543,72 @@ export default function ProductDetailPage() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validate()) return;
+  e.preventDefault();
+  if (!validate()) return;
 
-    setSubmitting(true);
-    setErrorMessage("");
-    try {
-      const formData = new FormData();
-      formData.append("product_id", form.product_id || productId);
+  setSubmitting(true);
+  setErrorMessage("");
+  try {
+    const formData = new FormData();
+    formData.append("product_id", form.product_id || productId);
 
-      Object.entries(form).forEach(([key, value]) => {
-        if (key === "product_id") return;
-        if (value === undefined || value === null || value === "") return;
-        if (key === "commission_type" && value === "per pairs rate") {
-          formData.append(key, "per_piece_rate");
-          return;
-        }
-        formData.append(key, value);
-      });
-
-      // If variants exist, use first variant's details for main product
-      if (variants.length > 0) {
-        const first = variants[0];
-        formData.append("variant", `${first.min_size || ""}x${first.max_size || ""}`);
-        formData.append("color", first.color || form.color || "");
-        formData.append("stock_quantity", first.stock || form.stock_quantity || "");
-        formData.append("price", first.price || form.price || "");
-        formData.append("selling_price", first.selling_price || form.selling_price || "");
+    // 1. Append Main Product Data exactly as it is in the form state
+    Object.entries(form).forEach(([key, value]) => {
+      if (key === "product_id") return;
+      if (value === undefined || value === null || value === "") return;
+      if (key === "commission_type" && value === "per pairs rate") {
+        formData.append(key, "per_piece_rate");
+        return;
       }
+      formData.append(key, value);
+    });
 
-      variants.forEach((v, index) => {
-        if (v.api_id) formData.append(`multi_variants[${index}][id]`, v.api_id);
-        formData.append(`multi_variants[${index}][variant_name]`, v.variant_name || "");
-        formData.append(`multi_variants[${index}][color]`, v.color || "");
-        formData.append(`multi_variants[${index}][variant_size]`, `${v.min_size || ""}x${v.max_size || ""}`);
-        formData.append(`multi_variants[${index}][min_size]`, v.min_size || "");
-        formData.append(`multi_variants[${index}][max_size]`, v.max_size || "");
-        formData.append(`multi_variants[${index}][price]`, v.price || "");
-        formData.append(`multi_variants[${index}][selling_price]`, v.selling_price || "");
-        formData.append(`multi_variants[${index}][stock]`, v.stock || "");
-        formData.append(`multi_variants[${index}][packing_type]`, v.packing_type || form.packing_type || "");
-        formData.append(`multi_variants[${index}][pairs_per_ctn]`, v.pairs_per_ctn || form.pairs_per_ctn || "");
-        if (v.image instanceof File) {
-          formData.append(`multi_variants[${index}][image]`, v.image);
-        }
-      });
-
-      if (image) formData.append("image", image);
-
-      const res = await fetch(`${API_BASE}/product/admin_update_product_details.php`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
-      const data = await res.json();
-
-      if (!data.success) {
-        throw new Error(data.message || "Failed to update product");
-      }
-
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 2500);
-    } catch (error) {
-      console.error("Update error:", error);
-      setErrorMessage(error.message || "Error updating product");
-    } finally {
-      setSubmitting(false);
+    // 2. Main product variant string calculation based on main form sizes
+    if (form.min_size && form.max_size) {
+      formData.append("variant", `${form.min_size}x${form.max_size}`);
     }
-  };
+
+    // 3. Append Variants safely without leaking main product fields unless intended
+    variants.forEach((v, index) => {
+      if (v.api_id) formData.append(`multi_variants[${index}][id]`, v.api_id);
+      formData.append(`multi_variants[${index}][variant_name]`, v.variant_name || form.article_name || "");
+      formData.append(`multi_variants[${index}][color]`, v.color || ""); 
+      formData.append(`multi_variants[${index}][variant_size]`, `${v.min_size || ""}x${v.max_size || ""}`);
+      formData.append(`multi_variants[${index}][min_size]`, v.min_size || "");
+      formData.append(`multi_variants[${index}][max_size]`, v.max_size || "");
+      formData.append(`multi_variants[${index}][price]`, v.price !== "" ? v.price : "");
+      formData.append(`multi_variants[${index}][selling_price]`, v.selling_price !== "" ? v.selling_price : "");
+      formData.append(`multi_variants[${index}][stock]`, v.stock !== "" ? v.stock : "0");
+      formData.append(`multi_variants[${index}][packing_type]`, v.packing_type || "");
+      formData.append(`multi_variants[${index}][pairs_per_ctn]`, v.pairs_per_ctn || "");
+      
+      if (v.image instanceof File) {
+        formData.append(`multi_variants[${index}][image]`, v.image);
+      }
+    });
+
+    if (image) formData.append("image", image);
+
+    const res = await fetch(`${API_BASE}/product/admin_update_product_details.php`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+    const data = await res.json();
+
+    if (!data.success) {
+      throw new Error(data.message || "Failed to update product");
+    }
+
+    setShowSuccess(true);
+    setTimeout(() => setShowSuccess(false), 2500);
+  } catch (error) {
+    console.error("Update error:", error);
+    setErrorMessage(error.message || "Error updating product");
+  } finally {
+    setSubmitting(false);
+  }
+};
 
   const attributeFields = useMemo(() => [
     { key: "brand_name", label: "Brand", options: filterOptions.brands },
