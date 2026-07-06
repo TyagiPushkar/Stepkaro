@@ -874,7 +874,7 @@ export default function UserDetailsPage() {
                           e.target.files[0] || prev.document_image,
                       }))
                     }
-                    className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 file:mr-3 file:rounded-lg file:border-0 file:bg-purple-600 file:px-4 file:py-2 file:text-white hover:file:bg-purple-700 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-300"
+                    className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 file:mr-3 file:rounded-lg file:border-0 file:bg-purple-600 file:px-4 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-purple-700"
                   />
                   {isFile(editData.document_image) ? (
                     <p className="mt-2 text-sm text-gray-500">
@@ -1084,38 +1084,9 @@ export default function UserDetailsPage() {
                           <td className="px-4 py-3">{formatCurrency(entry.wallet_after)}</td>
                           <td className="px-4 py-3 max-w-xs truncate">{entry.note}</td>
                         </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-100">
-                        {orderHistory.map((order, index) => (
-                          <tr key={`${order.order_id || order.id || index}`}>
-                            <td className="px-4 py-3">
-                              {order.order_id || order.id || "—"}
-                            </td>
-                            <td className="px-4 py-3">{order.status || "—"}</td>
-                            <td className="px-4 py-3">
-                              {order.buyer_name ||
-                                order.customer_name ||
-                                order.user_name ||
-                                "—"}
-                            </td>
-                            <td className="px-4 py-3">
-                              {order.seller_name || order.vendor_name || "—"}
-                            </td>
-                            <td className="px-4 py-3">
-                              {order.total_amount
-                                ? formatCurrency(order.total_amount)
-                                : order.amount
-                                  ? formatCurrency(order.amount)
-                                  : "—"}
-                            </td>
-                            <td className="px-4 py-3">
-                              {order.created_at || order.order_date || "—"}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                      ))}
+                    </tbody>
+                  </table>
                 )}
               </div>
             </div>
