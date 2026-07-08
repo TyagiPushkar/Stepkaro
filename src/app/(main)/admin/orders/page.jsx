@@ -38,6 +38,14 @@ export default function OrdersPage() {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const token = localStorage.getItem("access_token");
 
+  // this is the status reject
+  const [statusModalOpen, setStatusModalOpen] = useState(false);
+  const [selectedOrderId, setSelectedOrderId] = useState(null);
+  const [selectedStatus, setSelectedStatus] = useState("");
+
+  const [rejectReason, setRejectReason] = useState("");
+  const [transportFile, setTransportFile] = useState(null);
+
   const showToast = (message, type = "success") => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
@@ -240,40 +248,84 @@ export default function OrdersPage() {
     setCurrentPage(1);
   };
 
-  const handleUpdateOrderStatus = async (orderId, status) => {
-    console.log(`${status} order ${orderId}`);
+  // const handleUpdateOrderStatus = async (orderId, status) => {
+  //   console.log(`${status} order ${orderId}`);
 
+  //   try {
+  //     const response = await axios.put(
+  //       "https://namami-infotech.com/Stepkaro/src/order/admin_update_order_status.php",
+  //       {
+  //         order_id: orderId,
+  //         status: status,
+  //       },
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //           "Content-Type": "application/json",
+  //         },
+  //       },
+  //     );
+
+  //     if (response.data?.success) {
+  //       console.log("Order updated successfully");
+
+  //       setOrders((prev) =>
+  //         prev.map((order) =>
+  //           order.order_id === orderId ? { ...order, status } : order,
+  //         ),
+  //       );
+  //       showToast(`Order ${orderId} updated to ${status}`);
+  //     } else {
+  //       console.log(response.data?.message || "Failed to update order");
+  //       showToast(response.data?.message || "Failed to update order", "error");
+  //     }
+  //   } catch (error) {
+  //     console.error("API Error:", error);
+  //     showToast("Failed to update order", "error");
+  //   }
+  // };
+
+  const handleSubmitStatus = async () => {
     try {
-      const response = await axios.put(
-        "https://namami-infotech.com/Stepkaro/src/order/admin_update_order_status.php",
-        {
-          order_id: orderId,
-          status: status,
-        },
+      const formData = new FormData();
+
+      formData.append("order_id", selectedOrderId);
+      formData.append("status", selectedStatus);
+
+      if (selectedStatus === "rejected") {
+        formData.append("reject_reason", rejectReason);
+      }
+
+      if (selectedStatus === "book_to_tp") {
+        formData.append("transport_doc", transportFile);
+      }
+
+      const response = await axios.post(
+        "https://namami-infotech.com/Stepkaro/src/order/admin_update_order_status_new.php",
+        formData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
+            "Content-Type": "multipart/form-data",
           },
         },
       );
 
-      if (response.data?.success) {
-        console.log("Order updated successfully");
-
+      if (response.data.success) {
         setOrders((prev) =>
           prev.map((order) =>
-            order.order_id === orderId ? { ...order, status } : order,
+            order.order_id === selectedOrderId
+              ? { ...order, status: selectedStatus }
+              : order,
           ),
         );
-        showToast(`Order ${orderId} updated to ${status}`);
-      } else {
-        console.log(response.data?.message || "Failed to update order");
-        showToast(response.data?.message || "Failed to update order", "error");
+
+        setStatusModalOpen(false);
+
+        showToast("Status Updated");
       }
-    } catch (error) {
-      console.error("API Error:", error);
-      showToast("Failed to update order", "error");
+    } catch (err) {
+      console.log(err);
     }
   };
 
@@ -722,12 +774,13 @@ export default function OrdersPage() {
                           ) : (
                             <select
                               value={order.status}
-                              onChange={(e) =>
-                                handleUpdateOrderStatus(
-                                  order.order_id,
-                                  e.target.value,
-                                )
-                              }
+                              onChange={(e) => {
+                                setSelectedOrderId(order.order_id);
+                                setSelectedStatus(e.target.value);
+                                setRejectReason("");
+                                setTransportFile(null);
+                                setStatusModalOpen(true);
+                              }}
                               className="bg-gray-50 border border-gray-200 text-gray-700 text-xs rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-purple-500"
                             >
                               {allowedStatuses.map((status) => (
@@ -831,6 +884,51 @@ export default function OrdersPage() {
         showFinancials={true}
         token={token || ""}
       />
+      {statusModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md">
+            <h2 className="text-xl font-semibold mb-4">Update Order Status</h2>
+
+            <p className="mb-4">
+              Status :<b>{selectedStatus}</b>
+            </p>
+
+            {selectedStatus === "rejected" && (
+              <textarea
+                className="w-full border rounded-lg p-3"
+                rows={4}
+                placeholder="Enter Reject Reason"
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+              />
+            )}
+
+            {selectedStatus === "book_to_tp" && (
+              <input
+                type="file"
+                accept="image/*,.pdf"
+                onChange={(e) => setTransportFile(e.target.files[0])}
+              />
+            )}
+
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => setStatusModalOpen(false)}
+                className="px-4 py-2 border rounded-lg"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={handleSubmitStatus}
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg"
+              >
+                Submit
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

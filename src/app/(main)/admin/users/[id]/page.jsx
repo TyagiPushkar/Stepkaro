@@ -125,7 +125,9 @@ export default function UserDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
   const [activeTab, setActiveTab] = useState(
-    ["overview", "edit", "wallets"].includes(initialTab) ? initialTab : "overview",
+    ["overview", "edit", "wallets"].includes(initialTab)
+      ? initialTab
+      : "overview",
   );
 
   const [toast, setToast] = useState(null);
@@ -238,7 +240,7 @@ export default function UserDetailsPage() {
             : [];
         const normalized = history.map(normalizeWalletItem);
         setWalletHistory(normalized);
-        
+
         // Calculate stats
         let totalCredit = 0;
         let totalDebit = 0;
@@ -474,11 +476,13 @@ export default function UserDetailsPage() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <span className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.15em] ${
-                  user.role === "seller" 
-                    ? "bg-blue-50 text-blue-700" 
-                    : "bg-green-50 text-green-700"
-                }`}>
+                <span
+                  className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.15em] ${
+                    user.role === "seller"
+                      ? "bg-blue-50 text-blue-700"
+                      : "bg-green-50 text-green-700"
+                  }`}
+                >
                   {user.role === "seller" ? "Seller" : "Buyer"}
                 </span>
                 <span
@@ -492,7 +496,9 @@ export default function UserDetailsPage() {
             <div className="mt-6 grid gap-3 sm:grid-cols-4">
               <div className="rounded-2xl bg-gray-50 p-4">
                 <p className="text-xs text-gray-500">User ID</p>
-                <p className="mt-1 text-sm font-semibold text-gray-900">#{user.id}</p>
+                <p className="mt-1 text-sm font-semibold text-gray-900">
+                  #{user.id}
+                </p>
               </div>
               <div className="rounded-2xl bg-gray-50 p-4">
                 <p className="text-xs text-gray-500">Wallet Balance</p>
@@ -555,19 +561,27 @@ export default function UserDetailsPage() {
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="rounded-xl bg-gray-50 p-3">
                     <p className="text-xs text-gray-500">Full Name</p>
-                    <p className="mt-1 text-sm font-medium text-gray-900">{user.name || "—"}</p>
+                    <p className="mt-1 text-sm font-medium text-gray-900">
+                      {user.name || "—"}
+                    </p>
                   </div>
                   <div className="rounded-xl bg-gray-50 p-3">
                     <p className="text-xs text-gray-500">Email</p>
-                    <p className="mt-1 text-sm font-medium text-gray-900">{user.email || "—"}</p>
+                    <p className="mt-1 text-sm font-medium text-gray-900">
+                      {user.email || "—"}
+                    </p>
                   </div>
                   <div className="rounded-xl bg-gray-50 p-3">
                     <p className="text-xs text-gray-500">Phone</p>
-                    <p className="mt-1 text-sm font-medium text-gray-900">{user.phone || "—"}</p>
+                    <p className="mt-1 text-sm font-medium text-gray-900">
+                      {user.phone || "—"}
+                    </p>
                   </div>
                   <div className="rounded-xl bg-gray-50 p-3">
                     <p className="text-xs text-gray-500">Status</p>
-                    <span className={`mt-1 inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getBadgeClasses(user.status)}`}>
+                    <span
+                      className={`mt-1 inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getBadgeClasses(user.status)}`}
+                    >
                       {user.status || "Unknown"}
                     </span>
                   </div>
@@ -583,7 +597,10 @@ export default function UserDetailsPage() {
                   <p className="mt-2 text-sm text-gray-900">
                     {user.address || "No address provided."}
                   </p>
-                  {(user.city || user.state || user.country || user.pincode) && (
+                  {(user.city ||
+                    user.state ||
+                    user.country ||
+                    user.pincode) && (
                     <p className="mt-1 text-sm text-gray-500">
                       {[user.city, user.state, user.country, user.pincode]
                         .filter(Boolean)
@@ -597,25 +614,34 @@ export default function UserDetailsPage() {
               {user.role === "buyer" && (
                 <div className="rounded-xl bg-gray-50 p-4 border border-gray-200">
                   <p className="text-xs text-gray-500 flex items-center gap-1">
-                    <Package size={14} className="text-purple-600" /> Buyer Details
+                    <Package size={14} className="text-purple-600" /> Buyer
+                    Details
                   </p>
                   <div className="mt-3 grid gap-3 sm:grid-cols-2">
                     {user.district && (
                       <div>
                         <p className="text-xs text-gray-400">District</p>
-                        <p className="mt-1 text-sm text-gray-900">{user.district}</p>
+                        <p className="mt-1 text-sm text-gray-900">
+                          {user.district}
+                        </p>
                       </div>
                     )}
                     {user.delivery_location && (
                       <div>
-                        <p className="text-xs text-gray-400">Delivery Location</p>
-                        <p className="mt-1 text-sm text-gray-900">{user.delivery_location}</p>
+                        <p className="text-xs text-gray-400">
+                          Delivery Location
+                        </p>
+                        <p className="mt-1 text-sm text-gray-900">
+                          {user.delivery_location}
+                        </p>
                       </div>
                     )}
                     {user.document_number && (
                       <div className="col-span-2">
                         <p className="text-xs text-gray-400">Document Number</p>
-                        <p className="mt-1 text-sm text-gray-900">{user.document_number}</p>
+                        <p className="mt-1 text-sm text-gray-900">
+                          {user.document_number}
+                        </p>
                       </div>
                     )}
                     {user.document_image && (
@@ -626,7 +652,7 @@ export default function UserDetailsPage() {
                             src={user.document_image}
                             alt="Document"
                             className="w-20 h-20 rounded-xl border object-cover"
-                            onError={(e) => e.target.src = "/placeholder.png"}
+                            onError={(e) => (e.target.src = "/placeholder.png")}
                           />
                           <a
                             href={user.document_image}
@@ -643,19 +669,24 @@ export default function UserDetailsPage() {
                   {(user.logistic_partner_name || user.logistic_contact_no) && (
                     <div className="mt-3 pt-3 border-t border-gray-200">
                       <p className="text-xs text-gray-400 flex items-center gap-1">
-                        <Truck size={14} className="text-purple-600" /> Logistics
+                        <Truck size={14} className="text-purple-600" />{" "}
+                        Logistics
                       </p>
                       <div className="mt-2 grid gap-2 sm:grid-cols-2">
                         {user.logistic_partner_name && (
                           <div>
                             <p className="text-xs text-gray-400">Partner</p>
-                            <p className="text-sm text-gray-900">{user.logistic_partner_name}</p>
+                            <p className="text-sm text-gray-900">
+                              {user.logistic_partner_name}
+                            </p>
                           </div>
                         )}
                         {user.logistic_contact_no && (
                           <div>
                             <p className="text-xs text-gray-400">Contact</p>
-                            <p className="text-sm text-gray-900">{user.logistic_contact_no}</p>
+                            <p className="text-sm text-gray-900">
+                              {user.logistic_contact_no}
+                            </p>
                           </div>
                         )}
                       </div>
@@ -668,42 +699,59 @@ export default function UserDetailsPage() {
               {user.role === "seller" && (
                 <div className="rounded-xl bg-gray-50 p-4 border border-gray-200">
                   <p className="text-xs text-gray-500 flex items-center gap-1">
-                    <Store size={14} className="text-purple-600" /> Seller Details
+                    <Store size={14} className="text-purple-600" /> Seller
+                    Details
                   </p>
                   <div className="mt-3 grid gap-3 sm:grid-cols-2">
                     {user.business_name && (
                       <>
                         <div>
                           <p className="text-xs text-gray-400">Business Name</p>
-                          <p className="mt-1 text-sm text-gray-900">{user.business_name}</p>
+                          <p className="mt-1 text-sm text-gray-900">
+                            {user.business_name}
+                          </p>
                         </div>
                         <div>
                           <p className="text-xs text-gray-400">Brand</p>
-                          <p className="mt-1 text-sm text-gray-900">{user.brand_name}</p>
+                          <p className="mt-1 text-sm text-gray-900">
+                            {user.brand_name}
+                          </p>
                         </div>
                         <div>
                           <p className="text-xs text-gray-400">GST Number</p>
-                          <p className="mt-1 text-sm font-mono text-gray-900">{user.gst_number}</p>
+                          <p className="mt-1 text-sm font-mono text-gray-900">
+                            {user.gst_number}
+                          </p>
                         </div>
                         <div>
                           <p className="text-xs text-gray-400">PAN Number</p>
-                          <p className="mt-1 text-sm font-mono text-gray-900">{user.pan_number}</p>
+                          <p className="mt-1 text-sm font-mono text-gray-900">
+                            {user.pan_number}
+                          </p>
                         </div>
                         <div>
                           <p className="text-xs text-gray-400">City</p>
-                          <p className="mt-1 text-sm text-gray-900">{user.city}</p>
+                          <p className="mt-1 text-sm text-gray-900">
+                            {user.city}
+                          </p>
                         </div>
                         <div>
                           <p className="text-xs text-gray-400">Country</p>
-                          <p className="mt-1 text-sm text-gray-900">{user.country}</p>
+                          <p className="mt-1 text-sm text-gray-900">
+                            {user.country}
+                          </p>
                         </div>
                         <div>
                           <p className="text-xs text-gray-400">Pincode</p>
-                          <p className="mt-1 text-sm text-gray-900">{user.pincode}</p>
+                          <p className="mt-1 text-sm text-gray-900">
+                            {user.pincode}
+                          </p>
                         </div>
                         <div>
                           <p className="text-xs text-gray-400">State</p>
-                          <p className="mt-1 text-sm text-gray-900">{user.state}</p>
+                          <p className="mt-1 text-sm text-gray-900">
+                            {user.state}
+                          </p>
                         </div>
                       </>
                     )}
@@ -717,7 +765,9 @@ export default function UserDetailsPage() {
             <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Name *</label>
+                  <label className="text-sm font-medium text-gray-700">
+                    Name *
+                  </label>
                   <input
                     value={editData.name}
                     onChange={(e) =>
@@ -727,7 +777,9 @@ export default function UserDetailsPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Email *</label>
+                  <label className="text-sm font-medium text-gray-700">
+                    Email *
+                  </label>
                   <input
                     type="email"
                     value={editData.email}
@@ -741,7 +793,9 @@ export default function UserDetailsPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Phone *</label>
+                  <label className="text-sm font-medium text-gray-700">
+                    Phone *
+                  </label>
                   <input
                     value={editData.phone}
                     onChange={(e) =>
@@ -754,7 +808,9 @@ export default function UserDetailsPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Status</label>
+                  <label className="text-sm font-medium text-gray-700">
+                    Status
+                  </label>
                   <select
                     value={editData.status}
                     onChange={(e) =>
@@ -771,7 +827,9 @@ export default function UserDetailsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Wallet Value</label>
+                  <label className="text-sm font-medium text-gray-700">
+                    Wallet Value
+                  </label>
                   <input
                     type="number"
                     value={editData.wallet_value}
@@ -785,7 +843,9 @@ export default function UserDetailsPage() {
                   />
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="text-sm font-medium text-gray-700">Address</label>
+                  <label className="text-sm font-medium text-gray-700">
+                    Address
+                  </label>
                   <input
                     value={editData.address}
                     onChange={(e) =>
@@ -798,7 +858,9 @@ export default function UserDetailsPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">State</label>
+                  <label className="text-sm font-medium text-gray-700">
+                    State
+                  </label>
                   <input
                     value={editData.state}
                     onChange={(e) =>
@@ -811,7 +873,9 @@ export default function UserDetailsPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">District</label>
+                  <label className="text-sm font-medium text-gray-700">
+                    District
+                  </label>
                   <input
                     value={editData.district}
                     onChange={(e) =>
@@ -824,7 +888,9 @@ export default function UserDetailsPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Delivery Location</label>
+                  <label className="text-sm font-medium text-gray-700">
+                    Delivery Location
+                  </label>
                   <input
                     value={editData.delivery_location}
                     onChange={(e) =>
@@ -837,7 +903,9 @@ export default function UserDetailsPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Logistics Contact</label>
+                  <label className="text-sm font-medium text-gray-700">
+                    Logistics Contact
+                  </label>
                   <input
                     value={editData.logistic_contact_no}
                     onChange={(e) =>
@@ -850,7 +918,9 @@ export default function UserDetailsPage() {
                   />
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="text-sm font-medium text-gray-700">Document Number</label>
+                  <label className="text-sm font-medium text-gray-700">
+                    Document Number
+                  </label>
                   <input
                     value={editData.document_number}
                     onChange={(e) =>
@@ -863,7 +933,9 @@ export default function UserDetailsPage() {
                   />
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="text-sm font-medium text-gray-700">Document Image URL</label>
+                  <label className="text-sm font-medium text-gray-700">
+                    Document Image URL
+                  </label>
                   <input
                     type="file"
                     accept="image/*,application/pdf"
@@ -896,7 +968,9 @@ export default function UserDetailsPage() {
                 {user.type === "vendor" && (
                   <>
                     <div className="sm:col-span-2">
-                      <label className="text-sm font-medium text-gray-700">Business Name</label>
+                      <label className="text-sm font-medium text-gray-700">
+                        Business Name
+                      </label>
                       <input
                         value={editData.business_name}
                         onChange={(e) =>
@@ -909,7 +983,9 @@ export default function UserDetailsPage() {
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-700">Brand Name</label>
+                      <label className="text-sm font-medium text-gray-700">
+                        Brand Name
+                      </label>
                       <input
                         value={editData.brand_name}
                         onChange={(e) =>
@@ -922,7 +998,9 @@ export default function UserDetailsPage() {
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-700">GST Number</label>
+                      <label className="text-sm font-medium text-gray-700">
+                        GST Number
+                      </label>
                       <input
                         value={editData.gst_number}
                         onChange={(e) =>
@@ -935,7 +1013,9 @@ export default function UserDetailsPage() {
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-700">PAN Number</label>
+                      <label className="text-sm font-medium text-gray-700">
+                        PAN Number
+                      </label>
                       <input
                         value={editData.pan_number}
                         onChange={(e) =>
@@ -948,7 +1028,9 @@ export default function UserDetailsPage() {
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-700">City</label>
+                      <label className="text-sm font-medium text-gray-700">
+                        City
+                      </label>
                       <input
                         value={editData.city}
                         onChange={(e) =>
@@ -961,7 +1043,9 @@ export default function UserDetailsPage() {
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-700">Country</label>
+                      <label className="text-sm font-medium text-gray-700">
+                        Country
+                      </label>
                       <input
                         value={editData.country}
                         onChange={(e) =>
@@ -974,7 +1058,9 @@ export default function UserDetailsPage() {
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-700">Pincode</label>
+                      <label className="text-sm font-medium text-gray-700">
+                        Pincode
+                      </label>
                       <input
                         value={editData.pincode}
                         onChange={(e) =>
@@ -1015,7 +1101,9 @@ export default function UserDetailsPage() {
 
           {activeTab === "wallets" && (
             <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Wallet History</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Wallet History
+              </h3>
               <p className="text-sm text-gray-500 mb-4">
                 Transaction history for this user
               </p>
@@ -1045,7 +1133,10 @@ export default function UserDetailsPage() {
               <div className="overflow-x-auto">
                 {walletLoading ? (
                   <div className="flex items-center justify-center py-16">
-                    <Loader2 size={24} className="animate-spin text-purple-600" />
+                    <Loader2
+                      size={24}
+                      className="animate-spin text-purple-600"
+                    />
                   </div>
                 ) : walletHistory.length === 0 ? (
                   <div className="text-center py-12 text-gray-500">
@@ -1066,23 +1157,34 @@ export default function UserDetailsPage() {
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                       {walletHistory.map((entry) => (
-                        <tr key={entry.id} className="hover:bg-gray-50 transition">
+                        <tr
+                          key={entry.id}
+                          className="hover:bg-gray-50 transition"
+                        >
                           <td className="px-4 py-3 text-sm">{entry.date}</td>
                           <td className="px-4 py-3">
-                            <span className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
-                              entry.type === "credit" 
-                                ? "bg-emerald-100 text-emerald-700" 
-                                : "bg-red-100 text-red-700"
-                            }`}>
+                            <span
+                              className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
+                                entry.type === "credit"
+                                  ? "bg-emerald-100 text-emerald-700"
+                                  : "bg-red-100 text-red-700"
+                              }`}
+                            >
                               {entry.type}
                             </span>
                           </td>
                           <td className="px-4 py-3 font-medium">
                             {formatCurrency(entry.amount)}
                           </td>
-                          <td className="px-4 py-3">{formatCurrency(entry.wallet_before)}</td>
-                          <td className="px-4 py-3">{formatCurrency(entry.wallet_after)}</td>
-                          <td className="px-4 py-3 max-w-xs truncate">{entry.note}</td>
+                          <td className="px-4 py-3">
+                            {formatCurrency(entry.wallet_before)}
+                          </td>
+                          <td className="px-4 py-3">
+                            {formatCurrency(entry.wallet_after)}
+                          </td>
+                          <td className="px-4 py-3 max-w-xs truncate">
+                            {entry.note}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -1111,7 +1213,9 @@ export default function UserDetailsPage() {
               </div>
               <div>
                 <p className="text-xs text-gray-500">Status</p>
-                <span className={`mt-1 inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getBadgeClasses(user.status)}`}>
+                <span
+                  className={`mt-1 inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getBadgeClasses(user.status)}`}
+                >
                   {user.status || "Unknown"}
                 </span>
               </div>
@@ -1168,12 +1272,16 @@ export default function UserDetailsPage() {
               <div className="mt-4 space-y-2 text-sm">
                 <div>
                   <p className="text-xs text-gray-500">Partner</p>
-                  <p className="mt-1 text-gray-900">{user.logistic_partner_name}</p>
+                  <p className="mt-1 text-gray-900">
+                    {user.logistic_partner_name}
+                  </p>
                 </div>
                 {user.logistic_contact_no && (
                   <div>
                     <p className="text-xs text-gray-500">Contact</p>
-                    <p className="mt-1 text-gray-900">{user.logistic_contact_no}</p>
+                    <p className="mt-1 text-gray-900">
+                      {user.logistic_contact_no}
+                    </p>
                   </div>
                 )}
               </div>
