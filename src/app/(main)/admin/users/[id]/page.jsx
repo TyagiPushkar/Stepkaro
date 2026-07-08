@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -8,19 +8,18 @@ import {
   CheckCircle,
   Loader2,
   Wallet,
-  ClipboardList,
-  Package,
-  Store,
+  User,
   MapPin,
   Download,
-  User,
-  XCircle,
+  Store,
+  Package,
+  Truck,
 } from "lucide-react";
 
 const USER_API =
-  "https://namami-infotech.com/Stepkaro/src/home/get_vendor_and_buyer.php?type=buyer";
+  "https://namami-infotech.com/Stepkaro/src/home/get_vendor_and_buyer.php";
 const WALLET_API =
-  "https://namami-infotech.com/Stepkaro/src/wallets/get_user_wallet_history.php";
+  "https://namami-infotech.com/Stepkaro/src/admin/get_wallet_history.php";
 const ORDER_API =
   "https://namami-infotech.com/Stepkaro/src/order/admin_get_orders.php";
 
@@ -32,7 +31,8 @@ const formatCurrency = (value) => {
 const getBadgeClasses = (status) => {
   if (status === "active") return "bg-emerald-100 text-emerald-700";
   if (status === "pending") return "bg-yellow-100 text-yellow-700";
-  return "bg-red-100 text-red-700";
+  if (status === "inactive") return "bg-red-100 text-red-700";
+  return "bg-gray-100 text-gray-600";
 };
 
 const normalizeUser = (item, type) => {
@@ -49,15 +49,24 @@ const normalizeUser = (item, type) => {
       wallet_value: item.wallet_value || 0,
       business_name: "",
       brand_name: item.brand_name || "",
-      gst_number: item.gst_number || "",
-      pan_number: item.pan_number || "",
+      gst_number: "",
+      pan_number: "",
       city: item.city || "",
+      state: item.state || "",
       country: item.country || "",
       pincode: item.pincode || "",
-      rawData: item,
+      address: item.address || "",
+      district: item.district || "",
+      delivery_location: item.delivery_location || "",
+      logistic_partner_name: item.logistic_partner_name || "",
+      logistic_contact_no: item.logistic_contact_no || "",
+      document_number: item.document_number || "",
       document_image: item.document_image
         ? `https://namami-infotech.com/Stepkaro/${item.document_image}`
         : "",
+      status: item.status || "pending",
+      createdAt: item.created_at || "",
+      rawData: item,
     };
   }
   return {
@@ -75,8 +84,12 @@ const normalizeUser = (item, type) => {
     gst_number: item.gst_number || "",
     pan_number: item.pan_number || "",
     city: item.city || "",
+    state: item.state || "",
     country: item.country || "",
     pincode: item.pincode || "",
+    address: item.address || "",
+    status: item.status || "pending",
+    createdAt: item.created_at || "",
     rawData: item,
   };
 };
@@ -114,9 +127,7 @@ export default function UserDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
   const [activeTab, setActiveTab] = useState(
-    ["overview", "edit", "wallets", "orders", "more"].includes(initialTab)
-      ? initialTab
-      : "overview",
+    ["overview", "edit", "wallets"].includes(initialTab) ? initialTab : "overview",
   );
 
   const [toast, setToast] = useState(null);
@@ -124,8 +135,11 @@ export default function UserDetailsPage() {
   const [saving, setSaving] = useState(false);
   const [walletHistory, setWalletHistory] = useState([]);
   const [walletLoading, setWalletLoading] = useState(false);
-  const [orderHistory, setOrderHistory] = useState([]);
-  const [orderLoading, setOrderLoading] = useState(false);
+  const [walletStats, setWalletStats] = useState({
+    totalCredit: 0,
+    totalDebit: 0,
+    transactionCount: 0,
+  });
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
@@ -177,7 +191,7 @@ export default function UserDetailsPage() {
           phone: fetchedUser.phone || "",
           status: fetchedUser.status || "pending",
           wallet_value: fetchedUser.wallet_value || "",
-          address: fetchedUser.address || fetchedUser.rawData?.address || "",
+          address: fetchedUser.address || "",
           state: fetchedUser.state || "",
           district: fetchedUser.district || "",
           delivery_location: fetchedUser.delivery_location || "",
@@ -224,7 +238,6 @@ export default function UserDetailsPage() {
           : Array.isArray(data)
             ? data
             : [];
-        // console.log("wallet history ", history);
         setWalletHistory(history.map(normalizeWalletItem));
       } catch (error) {
         console.error(error);
@@ -236,11 +249,7 @@ export default function UserDetailsPage() {
     const fetchOrderHistory = async () => {
       setOrderLoading(true);
       try {
-        const res = await fetch(ORDER_API, {
-          headers: {
-            ...getAuthHeaders(),
-          },
-        });
+        const res = await fetch(ORDER_API);
         const data = await res.json();
         const orders = Array.isArray(data?.data)
           ? data.data
@@ -267,7 +276,6 @@ export default function UserDetailsPage() {
       }
     };
     fetchWalletHistory();
-    fetchOrderHistory();
   }, [user]);
 
   const handleEditSubmit = async () => {
@@ -409,10 +417,10 @@ export default function UserDetailsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-500">Loading user details...</p>
+      <div className="min-h-screen bg-slate-50 p-6 flex items-center justify-center">
+        <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm text-center">
+          <Loader2 className="mx-auto mb-3 h-6 w-6 animate-spin text-violet-600" />
+          <p className="text-sm text-slate-600">Loading user profile…</p>
         </div>
       </div>
     );
@@ -436,85 +444,103 @@ export default function UserDetailsPage() {
     <div className="space-y-6">
       {toast && (
         <div
-          className={`fixed top-20 right-6 z-50 rounded-xl px-4 py-3 text-white shadow-lg ${toast.type === "success" ? "bg-emerald-500" : "bg-red-500"}`}
+          className={`fixed top-20 right-6 z-50 rounded-xl px-4 py-3 text-white shadow-lg ${
+            toast.type === "success" ? "bg-emerald-500" : "bg-red-500"
+          }`}
         >
           {toast.message}
         </div>
       )}
 
+      {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">User Details</h1>
           <p className="text-sm text-gray-500 mt-1">
-            Manage buyer or seller details, wallet history, and future order
-            history.
+            Manage buyer or seller details and wallet history
           </p>
         </div>
         <div className="flex flex-wrap gap-3 items-center">
           <Link
             href="/admin/users"
-            className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+            className="mt-4 inline-flex items-center gap-2 rounded-xl text-sm font-medium text-violet-600"
           >
-            <ArrowLeft size={16} /> Back to Users
+            <ArrowLeft className="h-4 w-4" /> Back to Users
           </Link>
-          <span className="inline-flex items-center gap-2 rounded-xl bg-gray-100 px-4 py-2 text-sm text-gray-600">
-            <User size={16} /> #{user.id}
-          </span>
         </div>
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[1.3fr_0.7fr]">
         <div className="space-y-4">
+          {/* User Profile Card */}
           <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-4">
-                <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-purple-50 text-3xl">
+                <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br from-purple-100 to-orange-100 text-3xl">
                   {user.avatar}
                 </div>
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900">
                     {user.name}
                   </h2>
-                  <p className="text-sm text-gray-500">{user.email}</p>
-                  <p className="text-sm text-gray-500">{user.phone}</p>
+                  <div className="flex flex-wrap items-center gap-2 mt-1">
+                    <span className="text-sm text-gray-500">{user.email}</span>
+                    <span className="w-1 h-1 rounded-full bg-gray-300"></span>
+                    <span className="text-sm text-gray-500">{user.phone}</span>
+                  </div>
                 </div>
               </div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.15em] text-gray-600">
-                {user.role === "seller" ? "Seller" : "Buyer"}
-              </div>
-            </div>
-
-            <div className="mt-6 grid gap-3 sm:grid-cols-3">
-              <div className="rounded-2xl bg-gray-50 p-4">
-                <p className="text-xs text-gray-500">Status</p>
+              <div className="flex items-center gap-2">
+                <span className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.15em] ${
+                  user.role === "seller" 
+                    ? "bg-blue-50 text-blue-700" 
+                    : "bg-green-50 text-green-700"
+                }`}>
+                  {user.role === "seller" ? "Seller" : "Buyer"}
+                </span>
                 <span
-                  className={`mt-2 inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getBadgeClasses(user.status)}`}
+                  className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getBadgeClasses(user.status)}`}
                 >
                   {user.status || "Unknown"}
                 </span>
               </div>
+            </div>
+
+            <div className="mt-6 grid gap-3 sm:grid-cols-4">
+              <div className="rounded-2xl bg-gray-50 p-4">
+                <p className="text-xs text-gray-500">User ID</p>
+                <p className="mt-1 text-sm font-semibold text-gray-900">#{user.id}</p>
+              </div>
               <div className="rounded-2xl bg-gray-50 p-4">
                 <p className="text-xs text-gray-500">Wallet Balance</p>
-                <p className="mt-2 text-lg font-semibold text-gray-900">
+                <p className="mt-1 text-lg font-semibold text-purple-600">
                   {formatCurrency(user.wallet_value)}
                 </p>
               </div>
               <div className="rounded-2xl bg-gray-50 p-4">
                 <p className="text-xs text-gray-500">Joined</p>
-                <p className="mt-2 text-lg font-semibold text-gray-900">
+                <p className="mt-1 text-sm font-semibold text-gray-900">
                   {user.createdAt?.split(" ")[0] || "—"}
+                </p>
+              </div>
+              <div className="rounded-2xl bg-gray-50 p-4">
+                <p className="text-xs text-gray-500">Transactions</p>
+                <p className="mt-1 text-sm font-semibold text-gray-900">
+                  {walletHistory.length}
                 </p>
               </div>
             </div>
           </div>
 
+          {/* Tabs */}
           <div className="rounded-3xl border border-gray-200 bg-white p-4 shadow-sm">
             <nav className="flex flex-wrap gap-2">
               {[
                 { key: "overview", label: "Overview" },
                 { key: "edit", label: "Edit" },
                 { key: "wallets", label: "Wallet History" },
-                // { key: "orders", label: "Order History" },
+                { key: "orders", label: "Order History" },
+                { key: "more", label: "More" },
               ].map((tab) => (
                 <button
                   key={tab.key}
@@ -532,77 +558,79 @@ export default function UserDetailsPage() {
             </nav>
           </div>
 
+          {/* Tab Content */}
           {activeTab === "overview" && (
             <div className="space-y-4 rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <p className="text-xs text-gray-500">User ID</p>
-                  <p className="mt-1 text-sm font-semibold text-gray-900">
-                    #{user.id}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">Role</p>
-                  <p className="mt-1 text-sm text-gray-900">{user.role}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">Phone</p>
-                  <p className="mt-1 text-sm text-gray-900">
-                    {user.phone || "—"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">Email</p>
-                  <p className="mt-1 text-sm text-gray-900">
-                    {user.email || "—"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="rounded-3xl bg-gray-50 p-4 border border-gray-200">
-                <h3 className="text-sm font-semibold text-gray-800">Address</h3>
-                <p className="mt-2 text-sm text-gray-700">
-                  {user.address || user.city || "No address provided."}
-                </p>
-                {(user.city || user.state || user.country || user.pincode) && (
-                  <p className="mt-2 text-sm text-gray-500">
-                    {[user.city, user.state, user.country, user.pincode]
-                      .filter(Boolean)
-                      .join(", ")}
-                  </p>
-                )}
-              </div>
-
-              {user.role === "buyer" && (
-                <div className="rounded-3xl bg-gray-50 p-4 border border-gray-200">
-                  <div className="flex items-center gap-2 text-sm font-semibold text-gray-800">
-                    <Package size={16} /> Buyer Details
+              {/* Contact Info */}
+              <div>
+                <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                  <User size={16} className="text-purple-600" />
+                  Contact Information
+                </h3>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-xl bg-gray-50 p-3">
+                    <p className="text-xs text-gray-500">Full Name</p>
+                    <p className="mt-1 text-sm font-medium text-gray-900">{user.name || "—"}</p>
                   </div>
-                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-xl bg-gray-50 p-3">
+                    <p className="text-xs text-gray-500">Email</p>
+                    <p className="mt-1 text-sm font-medium text-gray-900">{user.email || "—"}</p>
+                  </div>
+                  <div className="rounded-xl bg-gray-50 p-3">
+                    <p className="text-xs text-gray-500">Phone</p>
+                    <p className="mt-1 text-sm font-medium text-gray-900">{user.phone || "—"}</p>
+                  </div>
+                  <div className="rounded-xl bg-gray-50 p-3">
+                    <p className="text-xs text-gray-500">Status</p>
+                    <span className={`mt-1 inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getBadgeClasses(user.status)}`}>
+                      {user.status || "Unknown"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Address */}
+              {(user.address || user.city || user.state) && (
+                <div className="rounded-xl bg-gray-50 p-4 border border-gray-200">
+                  <p className="text-xs text-gray-500 flex items-center gap-1">
+                    <MapPin size={14} className="text-purple-600" /> Address
+                  </p>
+                  <p className="mt-2 text-sm text-gray-900">
+                    {user.address || "No address provided."}
+                  </p>
+                  {(user.city || user.state || user.country || user.pincode) && (
+                    <p className="mt-1 text-sm text-gray-500">
+                      {[user.city, user.state, user.country, user.pincode]
+                        .filter(Boolean)
+                        .join(", ")}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Buyer Specific Details */}
+              {user.role === "buyer" && (
+                <div className="rounded-xl bg-gray-50 p-4 border border-gray-200">
+                  <p className="text-xs text-gray-500 flex items-center gap-1">
+                    <Package size={14} className="text-purple-600" /> Buyer Details
+                  </p>
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
                     {user.district && (
                       <div>
-                        <p className="text-xs text-gray-500">District</p>
-                        <p className="mt-1 text-sm text-gray-900">
-                          {user.district}
-                        </p>
+                        <p className="text-xs text-gray-400">District</p>
+                        <p className="mt-1 text-sm text-gray-900">{user.district}</p>
                       </div>
                     )}
                     {user.delivery_location && (
                       <div>
-                        <p className="text-xs text-gray-500">
-                          Delivery Location
-                        </p>
-                        <p className="mt-1 text-sm text-gray-900">
-                          {user.delivery_location}
-                        </p>
+                        <p className="text-xs text-gray-400">Delivery Location</p>
+                        <p className="mt-1 text-sm text-gray-900">{user.delivery_location}</p>
                       </div>
                     )}
                     {user.document_number && (
-                      <div>
-                        <p className="text-xs text-gray-500">Document Number</p>
-                        <p className="mt-1 text-sm text-gray-900">
-                          {user.document_number}
-                        </p>
+                      <div className="col-span-2">
+                        <p className="text-xs text-gray-400">Document Number</p>
+                        <p className="mt-1 text-sm text-gray-900">{user.document_number}</p>
                       </div>
                     )}
                     {user.document_image && (
@@ -610,67 +638,90 @@ export default function UserDetailsPage() {
                         <p className="text-xs text-gray-500 mb-2">
                           Document Image
                         </p>
-                        <div className="relative h-72 w-full max-w-xs overflow-hidden rounded-xl border bg-gray-100">
-                          <Image
-                            src={user.document_image}
-                            alt="Document"
-                            fill
-                            className="object-contain"
-                          />
-                        </div>
+                        <img
+                          src={user.document_image}
+                          alt="Document"
+                          className="w-full max-w-xs rounded-xl border"
+                        />
                         <div className="mt-3 flex gap-2">
                           <a
                             href={user.document_image}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex items-center gap-2 rounded-xl bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 transition"
+                            className="inline-flex items-center gap-2 rounded-xl bg-purple-100 px-4 py-2 text-sm font-medium text-purple-700 hover:bg-purple-200 transition"
                           >
-                            <Download size={16} /> Download Document
+                            <Download size={16} /> View Document
                           </a>
                         </div>
                       </div>
                     )}
                   </div>
+                  {(user.logistic_partner_name || user.logistic_contact_no) && (
+                    <div className="mt-3 pt-3 border-t border-gray-200">
+                      <p className="text-xs text-gray-400 flex items-center gap-1">
+                        <Truck size={14} className="text-purple-600" /> Logistics
+                      </p>
+                      <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                        {user.logistic_partner_name && (
+                          <div>
+                            <p className="text-xs text-gray-400">Partner</p>
+                            <p className="text-sm text-gray-900">{user.logistic_partner_name}</p>
+                          </div>
+                        )}
+                        {user.logistic_contact_no && (
+                          <div>
+                            <p className="text-xs text-gray-400">Contact</p>
+                            <p className="text-sm text-gray-900">{user.logistic_contact_no}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
+              {/* Seller Specific Details */}
               {user.role === "seller" && (
-                <div className="rounded-3xl bg-gray-50 p-4 border border-gray-200">
-                  <div className="flex items-center gap-2 text-sm font-semibold text-gray-800">
-                    <Store size={16} /> Seller Details
-                  </div>
-                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <div className="rounded-xl bg-gray-50 p-4 border border-gray-200">
+                  <p className="text-xs text-gray-500 flex items-center gap-1">
+                    <Store size={14} className="text-purple-600" /> Seller Details
+                  </p>
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
                     {user.business_name && (
-                      <div>
-                        <p className="text-xs text-gray-500">Business Name</p>
-                        <p className="mt-1 text-sm text-gray-900">
-                          {user.business_name}
-                        </p>
-                      </div>
-                    )}
-                    {user.brand_name && (
-                      <div>
-                        <p className="text-xs text-gray-500">Brand Name</p>
-                        <p className="mt-1 text-sm text-gray-900">
-                          {user.brand_name}
-                        </p>
-                      </div>
-                    )}
-                    {user.gst_number && (
-                      <div>
-                        <p className="text-xs text-gray-500">GST Number</p>
-                        <p className="mt-1 text-sm text-gray-900">
-                          {user.gst_number}
-                        </p>
-                      </div>
-                    )}
-                    {user.pan_number && (
-                      <div>
-                        <p className="text-xs text-gray-500">PAN Number</p>
-                        <p className="mt-1 text-sm text-gray-900">
-                          {user.pan_number}
-                        </p>
-                      </div>
+                      <>
+                        <div>
+                          <p className="text-xs text-gray-400">Business Name</p>
+                          <p className="mt-1 text-sm text-gray-900">{user.business_name}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-400">Brand</p>
+                          <p className="mt-1 text-sm text-gray-900">{user.brand_name}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-400">GST Number</p>
+                          <p className="mt-1 text-sm font-mono text-gray-900">{user.gst_number}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-400">PAN Number</p>
+                          <p className="mt-1 text-sm font-mono text-gray-900">{user.pan_number}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-400">City</p>
+                          <p className="mt-1 text-sm text-gray-900">{user.city}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-400">Country</p>
+                          <p className="mt-1 text-sm text-gray-900">{user.country}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-400">Pincode</p>
+                          <p className="mt-1 text-sm text-gray-900">{user.pincode}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-400">State</p>
+                          <p className="mt-1 text-sm text-gray-900">{user.state}</p>
+                        </div>
+                      </>
                     )}
                   </div>
                 </div>
@@ -682,9 +733,7 @@ export default function UserDetailsPage() {
             <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="text-sm font-medium text-gray-700">
-                    Name
-                  </label>
+                  <label className="text-sm font-medium text-gray-700">Name *</label>
                   <input
                     value={editData.name}
                     onChange={(e) =>
@@ -694,9 +743,7 @@ export default function UserDetailsPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">
-                    Email
-                  </label>
+                  <label className="text-sm font-medium text-gray-700">Email *</label>
                   <input
                     type="email"
                     value={editData.email}
@@ -710,9 +757,7 @@ export default function UserDetailsPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">
-                    Phone
-                  </label>
+                  <label className="text-sm font-medium text-gray-700">Phone *</label>
                   <input
                     value={editData.phone}
                     onChange={(e) =>
@@ -725,9 +770,7 @@ export default function UserDetailsPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">
-                    Status
-                  </label>
+                  <label className="text-sm font-medium text-gray-700">Status</label>
                   <select
                     value={editData.status}
                     onChange={(e) =>
@@ -744,9 +787,7 @@ export default function UserDetailsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">
-                    Wallet Value
-                  </label>
+                  <label className="text-sm font-medium text-gray-700">Wallet Value</label>
                   <input
                     type="number"
                     value={editData.wallet_value}
@@ -760,9 +801,7 @@ export default function UserDetailsPage() {
                   />
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="text-sm font-medium text-gray-700">
-                    Address
-                  </label>
+                  <label className="text-sm font-medium text-gray-700">Address</label>
                   <input
                     value={editData.address}
                     onChange={(e) =>
@@ -775,9 +814,7 @@ export default function UserDetailsPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">
-                    State
-                  </label>
+                  <label className="text-sm font-medium text-gray-700">State</label>
                   <input
                     value={editData.state}
                     onChange={(e) =>
@@ -790,9 +827,7 @@ export default function UserDetailsPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">
-                    District
-                  </label>
+                  <label className="text-sm font-medium text-gray-700">District</label>
                   <input
                     value={editData.district}
                     onChange={(e) =>
@@ -805,9 +840,7 @@ export default function UserDetailsPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">
-                    Delivery Location
-                  </label>
+                  <label className="text-sm font-medium text-gray-700">Delivery Location</label>
                   <input
                     value={editData.delivery_location}
                     onChange={(e) =>
@@ -820,9 +853,7 @@ export default function UserDetailsPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">
-                    Logistics Contact
-                  </label>
+                  <label className="text-sm font-medium text-gray-700">Logistics Contact</label>
                   <input
                     value={editData.logistic_contact_no}
                     onChange={(e) =>
@@ -835,9 +866,7 @@ export default function UserDetailsPage() {
                   />
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="text-sm font-medium text-gray-700">
-                    Document Number
-                  </label>
+                  <label className="text-sm font-medium text-gray-700">Document Number</label>
                   <input
                     value={editData.document_number}
                     onChange={(e) =>
@@ -851,7 +880,7 @@ export default function UserDetailsPage() {
                 </div>
                 <div className="sm:col-span-2">
                   <label className="text-sm font-medium text-gray-700">
-                    Document Image / File
+                    Document Image URL
                   </label>
                   <input
                     type="file"
@@ -885,9 +914,7 @@ export default function UserDetailsPage() {
                 {user.type === "vendor" && (
                   <>
                     <div className="sm:col-span-2">
-                      <label className="text-sm font-medium text-gray-700">
-                        Business Name
-                      </label>
+                      <label className="text-sm font-medium text-gray-700">Business Name</label>
                       <input
                         value={editData.business_name}
                         onChange={(e) =>
@@ -900,9 +927,7 @@ export default function UserDetailsPage() {
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        Brand Name
-                      </label>
+                      <label className="text-sm font-medium text-gray-700">Brand Name</label>
                       <input
                         value={editData.brand_name}
                         onChange={(e) =>
@@ -915,9 +940,7 @@ export default function UserDetailsPage() {
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        GST Number
-                      </label>
+                      <label className="text-sm font-medium text-gray-700">GST Number</label>
                       <input
                         value={editData.gst_number}
                         onChange={(e) =>
@@ -930,9 +953,7 @@ export default function UserDetailsPage() {
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        PAN Number
-                      </label>
+                      <label className="text-sm font-medium text-gray-700">PAN Number</label>
                       <input
                         value={editData.pan_number}
                         onChange={(e) =>
@@ -945,9 +966,7 @@ export default function UserDetailsPage() {
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        City
-                      </label>
+                      <label className="text-sm font-medium text-gray-700">City</label>
                       <input
                         value={editData.city}
                         onChange={(e) =>
@@ -960,9 +979,7 @@ export default function UserDetailsPage() {
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        Country
-                      </label>
+                      <label className="text-sm font-medium text-gray-700">Country</label>
                       <input
                         value={editData.country}
                         onChange={(e) =>
@@ -975,9 +992,7 @@ export default function UserDetailsPage() {
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        Pincode
-                      </label>
+                      <label className="text-sm font-medium text-gray-700">Pincode</label>
                       <input
                         value={editData.pincode}
                         onChange={(e) =>
@@ -998,21 +1013,19 @@ export default function UserDetailsPage() {
                   type="button"
                   onClick={handleEditSubmit}
                   disabled={saving}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-purple-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-purple-600 to-orange-500 px-5 py-3 text-sm font-semibold text-white transition hover:shadow-lg disabled:opacity-50"
                 >
                   {saving ? (
-                    <Loader2 size={16} className="animate-spin" />
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      Updating...
+                    </>
                   ) : (
-                    <CheckCircle size={16} />
+                    <>
+                      <CheckCircle size={16} />
+                      Update User
+                    </>
                   )}
-                  {saving ? "Saving..." : "Save Changes"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("overview")}
-                  className="inline-flex items-center justify-center rounded-2xl border border-gray-200 bg-white px-5 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
-                >
-                  Cancel
                 </button>
               </div>
             </div>
@@ -1020,78 +1033,74 @@ export default function UserDetailsPage() {
 
           {activeTab === "wallets" && (
             <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    Wallet History
-                  </h3>
-                  <p className="text-sm text-gray-500">
-                    Transactions for this user&apos;s wallet.
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Wallet History</h3>
+              <p className="text-sm text-gray-500 mb-4">
+                Transaction history for this user
+              </p>
+
+              {/* Wallet Stats */}
+              <div className="grid gap-3 sm:grid-cols-3 mb-6">
+                <div className="rounded-xl bg-emerald-50 p-4 border border-emerald-100">
+                  <p className="text-xs text-emerald-600">Total Credit</p>
+                  <p className="mt-1 text-lg font-semibold text-emerald-700">
+                    {formatCurrency(walletStats.totalCredit)}
                   </p>
                 </div>
-                <div className="inline-flex items-center gap-2 rounded-2xl bg-gray-100 px-4 py-2 text-sm text-gray-700">
-                  <Wallet size={16} /> Current Balance{" "}
-                  {formatCurrency(user.wallet_value)}
+                <div className="rounded-xl bg-red-50 p-4 border border-red-100">
+                  <p className="text-xs text-red-600">Total Debit</p>
+                  <p className="mt-1 text-lg font-semibold text-red-700">
+                    {formatCurrency(walletStats.totalDebit)}
+                  </p>
                 </div>
               </div>
-              <div className="mt-6 overflow-hidden">
+              <div className="mt-6 overflow-x-auto">
                 {walletLoading ? (
                   <div className="flex items-center justify-center py-16">
-                    <Loader2
-                      size={24}
-                      className="animate-spin text-purple-600"
-                    />
+                    <Loader2 size={24} className="animate-spin text-purple-600" />
                   </div>
                 ) : walletHistory.length === 0 ? (
                   <div className="text-center py-12 text-gray-500">
+                    <Wallet size={48} className="mx-auto mb-3 text-gray-300" />
                     No wallet history found for this user yet.
                   </div>
                 ) : (
-                  <div className="max-h-[420px] overflow-y-auto">
-                    <table className="min-w-full text-left text-sm text-gray-600">
-                      <thead className="border-b border-gray-200 bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
-                        <tr>
-                          <th className="px-4 py-3">Date</th>
-                          <th className="px-4 py-3">Description</th>
-                          <th className="px-4 py-3">Amount</th>
+                  <table className="min-w-full text-left text-sm text-gray-600">
+                    <thead className="border-b border-gray-200 bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
+                      <tr>
+                        <th className="px-4 py-3">Date</th>
+                        <th className="px-4 py-3">Type</th>
+                        <th className="px-4 py-3">Amount</th>
+                        <th className="px-4 py-3">Before</th>
+                        <th className="px-4 py-3">After</th>
+                        <th className="px-4 py-3">Note</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {walletHistory.map((entry) => (
+                        <tr key={entry.id}>
+                          <td className="px-4 py-3">{entry.date}</td>
+                          <td className="px-4 py-3 capitalize">{entry.type}</td>
+                          <td className="px-4 py-3">
+                            {formatCurrency(entry.amount)}
+                          </td>
+                          <td className="px-4 py-3">
+                            {formatCurrency(entry.wallet_before)}
+                          </td>
+                          <td className="px-4 py-3">
+                            {formatCurrency(entry.wallet_after)}
+                          </td>
+                          <td className="px-4 py-3">{entry.note}</td>
                         </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-100">
-                        {walletHistory.map((entry) => {
-                          const isCredit = entry.type === "credit";
-                          const amountLabel = `${isCredit ? "+" : "-"}${formatCurrency(entry.amount)}`;
-                          const badgeClasses = isCredit
-                            ? "bg-emerald-100 text-emerald-700"
-                            : "bg-rose-100 text-rose-700";
-                          const arrow = isCredit ? "▲" : "▼";
-                          return (
-                            <tr key={entry.id}>
-                              <td className="px-4 py-3 align-top text-sm text-gray-700">
-                                {entry.date}
-                              </td>
-                              <td className="px-4 py-3 align-top text-sm text-gray-700">
-                                {entry.note}
-                              </td>
-                              <td className="px-4 py-3 align-top">
-                                <span
-                                  className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-semibold ${badgeClasses}`}
-                                >
-                                  <span>{arrow}</span>
-                                  <span>{amountLabel}</span>
-                                </span>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
+                      ))}
+                    </tbody>
+                  </table>
                 )}
               </div>
             </div>
           )}
+        </div>
 
-          {/* {activeTab === "orders" && (
+          {activeTab === "orders" && (
             <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -1108,7 +1117,7 @@ export default function UserDetailsPage() {
                 </div>
               </div>
 
-              <div className="mt-6 overflow-hidden">
+              <div className="mt-6 overflow-x-auto">
                 {orderLoading ? (
                   <div className="flex items-center justify-center py-16">
                     <Loader2
@@ -1121,49 +1130,47 @@ export default function UserDetailsPage() {
                     No order history available yet for this user.
                   </div>
                 ) : (
-                  <div className="max-h-[420px] overflow-y-auto">
-                    <table className="min-w-full text-left text-sm text-gray-600">
-                      <thead className="border-b border-gray-200 bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
-                        <tr>
-                          <th className="px-4 py-3">Order ID</th>
-                          <th className="px-4 py-3">Status</th>
-                          <th className="px-4 py-3">Buyer</th>
-                          <th className="px-4 py-3">Seller</th>
-                          <th className="px-4 py-3">Amount</th>
-                          <th className="px-4 py-3">Date</th>
+                  <table className="min-w-full text-left text-sm text-gray-600">
+                    <thead className="border-b border-gray-200 bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
+                      <tr>
+                        <th className="px-4 py-3">Order ID</th>
+                        <th className="px-4 py-3">Status</th>
+                        <th className="px-4 py-3">Buyer</th>
+                        <th className="px-4 py-3">Seller</th>
+                        <th className="px-4 py-3">Amount</th>
+                        <th className="px-4 py-3">Date</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {orderHistory.map((order, index) => (
+                        <tr key={`${order.order_id || order.id || index}`}>
+                          <td className="px-4 py-3">
+                            {order.order_id || order.id || "—"}
+                          </td>
+                          <td className="px-4 py-3">{order.status || "—"}</td>
+                          <td className="px-4 py-3">
+                            {order.buyer_name ||
+                              order.customer_name ||
+                              order.user_name ||
+                              "—"}
+                          </td>
+                          <td className="px-4 py-3">
+                            {order.seller_name || order.vendor_name || "—"}
+                          </td>
+                          <td className="px-4 py-3">
+                            {order.total_amount
+                              ? formatCurrency(order.total_amount)
+                              : order.amount
+                                ? formatCurrency(order.amount)
+                                : "—"}
+                          </td>
+                          <td className="px-4 py-3">
+                            {order.created_at || order.order_date || "—"}
+                          </td>
                         </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-100">
-                        {orderHistory.map((order, index) => (
-                          <tr key={`${order.order_id || order.id || index}`}>
-                            <td className="px-4 py-3">
-                              {order.order_id || order.id || "—"}
-                            </td>
-                            <td className="px-4 py-3">{order.status || "—"}</td>
-                            <td className="px-4 py-3">
-                              {order.buyer_name ||
-                                order.customer_name ||
-                                order.user_name ||
-                                "—"}
-                            </td>
-                            <td className="px-4 py-3">
-                              {order.seller_name || order.vendor_name || "—"}
-                            </td>
-                            <td className="px-4 py-3">
-                              {order.total_amount
-                                ? formatCurrency(order.total_amount)
-                                : order.amount
-                                  ? formatCurrency(order.amount)
-                                  : "—"}
-                            </td>
-                            <td className="px-4 py-3">
-                              {order.created_at || order.order_date || "—"}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                      ))}
+                    </tbody>
+                  </table>
                 )}
               </div>
             </div>
@@ -1180,73 +1187,58 @@ export default function UserDetailsPage() {
                 comments.
               </p>
             </div>
-          )} */}
+          )}
         </div>
 
-        <aside className="space-y-4">
           <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
-            <div className="flex items-center gap-3 text-sm font-semibold text-gray-900">
-              <MapPin size={18} /> Quick Profile
-            </div>
-            <div className="mt-4 space-y-3 text-sm text-gray-700">
-              <div>
-                <p className="text-xs text-gray-500">Buyer ID</p>
-                <p className="mt-1 text-sm font-semibold text-gray-900">
-                  {user.buyer_id || "—"}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500">Address</p>
-                <p className="mt-1 text-sm text-gray-900">
-                  {user.address || "—"}
-                </p>
-              </div>
-              {user.delivery_location && (
-                <div>
-                  <p className="text-xs text-gray-500">Delivery Location</p>
-                  <p className="mt-1 text-sm text-gray-900">
-                    {user.delivery_location}
-                  </p>
-                </div>
-              )}
-              {user.logistic_partner_name && (
-                <div>
-                  <p className="text-xs text-gray-500">Logistics Partner</p>
-                  <p className="mt-1 text-sm text-gray-900">
-                    {user.logistic_partner_name}
-                  </p>
-                </div>
-              )}
-              {user.logistic_contact_no && (
-                <div>
-                  <p className="text-xs text-gray-500">Logistics Contact</p>
-                  <p className="mt-1 text-sm text-gray-900">
-                    {user.logistic_contact_no}
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
-            <div className="flex items-center gap-3 text-sm font-semibold text-gray-900">
-              <Wallet size={18} /> Wallet Summary
-            </div>
-            <div className="mt-4 grid gap-3">
-              <div className="rounded-2xl bg-gray-50 p-4">
-                <p className="text-xs text-gray-500">Current Balance</p>
-                <p className="mt-2 text-lg font-semibold text-gray-900">
+            <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+              <Wallet size={16} className="text-purple-600" />
+              Wallet Summary
+            </h3>
+            <div className="mt-4 space-y-3">
+              <div className="rounded-2xl bg-purple-50 p-4 border border-purple-100">
+                <p className="text-xs text-purple-500">Current Balance</p>
+                <p className="mt-1 text-xl font-bold text-purple-700">
                   {formatCurrency(user.wallet_value)}
                 </p>
               </div>
-              <div className="rounded-2xl bg-gray-50 p-4">
-                <p className="text-xs text-gray-500">Transaction Count</p>
-                <p className="mt-2 text-lg font-semibold text-gray-900">
-                  {walletHistory.length}
-                </p>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="rounded-2xl bg-emerald-50 p-3 border border-emerald-100 text-center">
+                  <p className="text-xs text-emerald-500">Credit</p>
+                  <p className="mt-1 text-sm font-semibold text-emerald-700">
+                    {formatCurrency(walletStats.totalCredit)}
+                  </p>
+                </div>
+                <div className="rounded-2xl bg-red-50 p-3 border border-red-100 text-center">
+                  <p className="text-xs text-red-500">Debit</p>
+                  <p className="mt-1 text-sm font-semibold text-red-700">
+                    {formatCurrency(walletStats.totalDebit)}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
+
+          {user.logistic_partner_name && (
+            <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+              <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                <Truck size={16} className="text-purple-600" />
+                Logistics
+              </h3>
+              <div className="mt-4 space-y-2 text-sm">
+                <div>
+                  <p className="text-xs text-gray-500">Partner</p>
+                  <p className="mt-1 text-gray-900">{user.logistic_partner_name}</p>
+                </div>
+                {user.logistic_contact_no && (
+                  <div>
+                    <p className="text-xs text-gray-500">Contact</p>
+                    <p className="mt-1 text-gray-900">{user.logistic_contact_no}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </aside>
       </div>
     </div>
