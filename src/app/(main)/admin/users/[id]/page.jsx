@@ -19,9 +19,13 @@ import {
 const USER_API =
   "https://namami-infotech.com/Stepkaro/src/home/get_vendor_and_buyer.php";
 const WALLET_API =
+<<<<<<< HEAD
   "https://namami-infotech.com/Stepkaro/src/admin/get_wallet_history.php";
 const ORDER_API =
   "https://namami-infotech.com/Stepkaro/src/order/admin_get_orders.php";
+=======
+  "https://namami-infotech.com/Stepkaro/src/wallets/get_user_wallet_history.php";
+>>>>>>> e8a9970502023ba4e6bb49e0a14480fb50cca3ab
 
 const formatCurrency = (value) => {
   const amount = Number(value || 0);
@@ -238,7 +242,25 @@ export default function UserDetailsPage() {
           : Array.isArray(data)
             ? data
             : [];
+<<<<<<< HEAD
         setWalletHistory(history.map(normalizeWalletItem));
+=======
+        const normalized = history.map(normalizeWalletItem);
+        setWalletHistory(normalized);
+        
+        // Calculate stats
+        let totalCredit = 0;
+        let totalDebit = 0;
+        normalized.forEach((item) => {
+          if (item.type === "credit") totalCredit += item.amount;
+          else if (item.type === "debit") totalDebit += item.amount;
+        });
+        setWalletStats({
+          totalCredit,
+          totalDebit,
+          transactionCount: normalized.length,
+        });
+>>>>>>> e8a9970502023ba4e6bb49e0a14480fb50cca3ab
       } catch (error) {
         console.error(error);
         setWalletHistory([]);
@@ -246,6 +268,7 @@ export default function UserDetailsPage() {
         setWalletLoading(false);
       }
     };
+<<<<<<< HEAD
     const fetchOrderHistory = async () => {
       setOrderLoading(true);
       try {
@@ -275,6 +298,8 @@ export default function UserDetailsPage() {
         setOrderLoading(false);
       }
     };
+=======
+>>>>>>> e8a9970502023ba4e6bb49e0a14480fb50cca3ab
     fetchWalletHistory();
   }, [user]);
 
@@ -536,6 +561,7 @@ export default function UserDetailsPage() {
           <div className="rounded-3xl border border-gray-200 bg-white p-4 shadow-sm">
             <nav className="flex flex-wrap gap-2">
               {[
+<<<<<<< HEAD
                 { key: "overview", label: "Overview" },
                 { key: "edit", label: "Edit" },
                 { key: "wallets", label: "Wallet History" },
@@ -555,6 +581,29 @@ export default function UserDetailsPage() {
                   {tab.label}
                 </button>
               ))}
+=======
+                { key: "overview", label: "Overview", icon: User },
+                { key: "edit", label: "Edit", icon: CheckCircle },
+                { key: "wallets", label: "Wallet History", icon: Wallet },
+              ].map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    onClick={() => setActiveTab(tab.key)}
+                    className={`flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-medium transition ${
+                      activeTab === tab.key
+                        ? "bg-purple-600 text-white"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                  >
+                    <Icon size={16} />
+                    {tab.label}
+                  </button>
+                );
+              })}
+>>>>>>> e8a9970502023ba4e6bb49e0a14480fb50cca3ab
             </nav>
           </div>
 
@@ -635,6 +684,7 @@ export default function UserDetailsPage() {
                     )}
                     {user.document_image && (
                       <div className="col-span-2">
+<<<<<<< HEAD
                         <p className="text-xs text-gray-500 mb-2">
                           Document Image
                         </p>
@@ -644,6 +694,16 @@ export default function UserDetailsPage() {
                           className="w-full max-w-xs rounded-xl border"
                         />
                         <div className="mt-3 flex gap-2">
+=======
+                        <p className="text-xs text-gray-400 mb-2">Document</p>
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={user.document_image}
+                            alt="Document"
+                            className="w-20 h-20 rounded-xl border object-cover"
+                            onError={(e) => e.target.src = "/placeholder.png"}
+                          />
+>>>>>>> e8a9970502023ba4e6bb49e0a14480fb50cca3ab
                           <a
                             href={user.document_image}
                             target="_blank"
@@ -879,9 +939,13 @@ export default function UserDetailsPage() {
                   />
                 </div>
                 <div className="sm:col-span-2">
+<<<<<<< HEAD
                   <label className="text-sm font-medium text-gray-700">
                     Document Image URL
                   </label>
+=======
+                  <label className="text-sm font-medium text-gray-700">Document Image URL</label>
+>>>>>>> e8a9970502023ba4e6bb49e0a14480fb50cca3ab
                   <input
                     type="file"
                     accept="image/*,application/pdf"
@@ -892,7 +956,7 @@ export default function UserDetailsPage() {
                           e.target.files[0] || prev.document_image,
                       }))
                     }
-                    className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 file:mr-3 file:rounded-lg file:border-0 file:bg-purple-600 file:px-4 file:py-2 file:text-white hover:file:bg-purple-700 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-300"
+                    className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 file:mr-3 file:rounded-lg file:border-0 file:bg-purple-600 file:px-4 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-purple-700"
                   />
                   {isFile(editData.document_image) ? (
                     <p className="mt-2 text-sm text-gray-500">
@@ -1053,7 +1117,12 @@ export default function UserDetailsPage() {
                   </p>
                 </div>
               </div>
+<<<<<<< HEAD
               <div className="mt-6 overflow-x-auto">
+=======
+
+              <div className="overflow-x-auto">
+>>>>>>> e8a9970502023ba4e6bb49e0a14480fb50cca3ab
                 {walletLoading ? (
                   <div className="flex items-center justify-center py-16">
                     <Loader2 size={24} className="animate-spin text-purple-600" />
@@ -1083,6 +1152,7 @@ export default function UserDetailsPage() {
                           <td className="px-4 py-3">
                             {formatCurrency(entry.amount)}
                           </td>
+<<<<<<< HEAD
                           <td className="px-4 py-3">
                             {formatCurrency(entry.wallet_before)}
                           </td>
@@ -1090,6 +1160,11 @@ export default function UserDetailsPage() {
                             {formatCurrency(entry.wallet_after)}
                           </td>
                           <td className="px-4 py-3">{entry.note}</td>
+=======
+                          <td className="px-4 py-3">{formatCurrency(entry.wallet_before)}</td>
+                          <td className="px-4 py-3">{formatCurrency(entry.wallet_after)}</td>
+                          <td className="px-4 py-3 max-w-xs truncate">{entry.note}</td>
+>>>>>>> e8a9970502023ba4e6bb49e0a14480fb50cca3ab
                         </tr>
                       ))}
                     </tbody>
@@ -1098,6 +1173,7 @@ export default function UserDetailsPage() {
               </div>
             </div>
           )}
+<<<<<<< HEAD
         </div>
 
           {activeTab === "orders" && (
@@ -1188,6 +1264,8 @@ export default function UserDetailsPage() {
               </p>
             </div>
           )}
+=======
+>>>>>>> e8a9970502023ba4e6bb49e0a14480fb50cca3ab
         </div>
 
           <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
