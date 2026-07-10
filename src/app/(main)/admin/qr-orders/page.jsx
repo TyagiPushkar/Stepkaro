@@ -36,6 +36,10 @@ export default function Qrbankpage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  //rejected orders
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
+const [rejectReason, setRejectReason] = useState("");
+const [rejectOrderId, setRejectOrderId] = useState(null);
   const token = localStorage.getItem("access_token");
 
   const showToast = (message, type = "success") => {
@@ -44,35 +48,35 @@ export default function Qrbankpage() {
   };
 
   // Fetch real data from your API
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch(
-          "https://namami-infotech.com/Stepkaro/src/order/admin_get_orders.php?status=pending",
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: token ? `Bearer ${token}` : "",
-            },
+  const fetchOrders = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(
+        "https://namami-infotech.com/Stepkaro/src/order/admin_get_orders.php?status=pending",
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token ? `Bearer ${token}` : "",
           },
-        );
+        },
+      );
 
-        const resData = await response.json();
+      const resData = await response.json();
+      console.log("Fetched Orders:", resData);
 
-        if (resData.success) {
-          setOrders(resData.data || []);
-        } else {
-          throw new Error(resData.message || "Failed to fetch data");
-        }
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
+      if (resData.success) {
+        setOrders(resData.data || []);
+      } else {
+        throw new Error(resData.message || "Failed to fetch data");
       }
-    };
-
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
     fetchOrders();
   }, []);
 
@@ -86,27 +90,27 @@ export default function Qrbankpage() {
         icon: Package,
         color: "purple",
       },
-      {
-        label: "Pending Orders",
-        value: "pending",
-        count: orders.filter((o) => o.status === "pending").length,
-        icon: Loader2,
-        color: "orange",
-      },
-      {
-        label: "Payment Verified",
-        value: "accepted",
-        count: orders.filter((o) => o.payment_status === "Verified").length,
-        icon: CheckCircle,
-        color: "green",
-      },
-      {
-        label: "Payment Rejected",
-        value: "rejected",
-        count: orders.filter((o) => o.payment_status === "Rejected").length,
-        icon: XCircle,
-        color: "red",
-      },
+      // {
+      //   label: "Pending Orders",
+      //   value: "pending",
+      //   count: orders.filter((o) => o.status === "pending").length,
+      //   icon: Loader2,
+      //   color: "orange",
+      // },
+      // {
+      //   label: "Payment Verified",
+      //   value: "accepted",
+      //   count: orders.filter((o) => o.payment_status === "Verified").length,
+      //   icon: CheckCircle,
+      //   color: "green",
+      // },
+      // {
+      //   label: "Payment Rejected",
+      //   value: "rejected",
+      //   count: orders.filter((o) => o.payment_status === "Rejected").length,
+      //   icon: XCircle,
+      //   color: "red",
+      // },
     ];
   }, [orders]);
 
@@ -198,16 +202,28 @@ export default function Qrbankpage() {
     setCurrentPage(1);
   };
 
-  const handleUpdateOrderStatus = async (orderId, status) => {
-    console.log(`${status} order ${orderId}`);
+  const handleUpdateOrderStatus = async (
+    orderId,
+    status,
+    reason = ""
+  ) => {
+    // console.log(`${status} order ${orderId}`);
+
+    const payload = {
+      order_id: orderId,
+      status: status,
+    };
+
+    // Reject hone par reason bhi bhejo
+    if (status === "rejected") {
+      payload.reject_reason = reason;
+    }
+    console.log("Payload:", payload);
 
     try {
       const response = await axios.put(
         "https://namami-infotech.com/Stepkaro/src/order/admin_update_order_status.php",
-        {
-          order_id: orderId,
-          status: status,
-        },
+        payload,  
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -217,13 +233,13 @@ export default function Qrbankpage() {
       );
 
       if (response.data?.success) {
-        console.log("Order updated successfully");
-
-        setOrders((prev) =>
-          prev.map((order) =>
-            order.order_id === orderId ? { ...order, status } : order,
-          ),
-        );
+        // console.log("Order updated successfully");
+        await fetchOrders();
+        // setOrders((prev) =>
+        //   prev.map((order) =>
+        //     order.order_id === orderId ? { ...order, status } : order,
+        //   ),
+        // );
         showToast(`Order ${orderId} updated to ${status}`);
       } else {
         console.log(response.data?.message || "Failed to update order");
@@ -645,18 +661,24 @@ export default function Qrbankpage() {
                       </td>
 
                       <td className="px-6 py-4">
-                        {order.payment_ss ? (
-                          <img
-                            src={getImageUrl(order.payment_ss)}
-                            alt="Payment Screenshot"
-                            className="w-16 h-16 object-cover rounded border cursor-pointer"
-                          />
-                        ) : (
-                          <span className="text-xs text-gray-500">
-                            No Screenshot
-                          </span>
-                        )}
-                      </td>
+  {order.payment_ss ? (
+    <a
+      href={getImageUrl(order.payment_ss)}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      <img
+        src={getImageUrl(order.payment_ss)}
+        alt="Payment Screenshot"
+        className="w-16 h-16 object-cover rounded border cursor-pointer hover:opacity-80"
+      />
+    </a>
+  ) : (
+    <span className="text-xs text-gray-500">
+      No Screenshot
+    </span>
+  )}
+</td>
 
                       <td className="px-6 py-4">
                         <span className="text-sm font-semibold text-gray-900">
@@ -687,12 +709,17 @@ export default function Qrbankpage() {
                           {order.status === "pending" ? (
                             <div className="flex gap-2">
                               <button
-                                onClick={() =>
-                                  handleUpdateOrderStatus(
-                                    order.order_id,
-                                    "rejected",
-                                  )
-                                }
+                                // onClick={() =>
+                                //   handleUpdateOrderStatus(
+                                //     order.order_id,
+                                //     "rejected",
+                                //   )
+                                // }
+                                onClick={() => {
+                                  setRejectOrderId(order.order_id);
+                                  setRejectReason("");
+                                  setRejectModalOpen(true);
+                                }}
                                 className="px-3 py-1.5 text-xs bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition-colors"
                               >
                                 Reject
@@ -818,6 +845,62 @@ export default function Qrbankpage() {
         showFinancials={true}
         token={token || ""}
       />
+      {rejectModalOpen && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+    <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+      <h2 className="text-lg font-semibold text-gray-900">
+        Reject Order
+      </h2>
+
+      <p className="text-sm text-gray-500 mt-1">
+        Please enter the rejection reason.
+      </p>
+
+      <textarea
+        value={rejectReason}
+        onChange={(e) => setRejectReason(e.target.value)}
+        placeholder="Enter rejection reason..."
+        rows={4}
+        className="w-full mt-4 border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-red-500"
+      />
+
+      <div className="flex justify-end gap-3 mt-5">
+        <button
+          onClick={() => {
+            setRejectModalOpen(false);
+            setRejectReason("");
+            setRejectOrderId(null);
+          }}
+          className="px-4 py-2 border rounded-lg hover:bg-gray-100"
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={() => {
+            if (!rejectReason.trim()) {
+              showToast("Please enter rejection reason", "error");
+              return;
+            }
+
+            handleUpdateOrderStatus(
+              rejectOrderId,
+              "rejected",
+              rejectReason
+            );
+
+            setRejectModalOpen(false);
+            setRejectReason("");
+            setRejectOrderId(null);
+          }}
+          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+        >
+          Confirm Reject
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }

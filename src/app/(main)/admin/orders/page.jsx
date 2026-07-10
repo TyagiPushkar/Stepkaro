@@ -68,6 +68,7 @@ export default function OrdersPage() {
         );
 
         const resData = await response.json();
+        console.log("Fetched Orders:", resData); // Debugging line
 
         if (resData.success) {
           setOrders(resData.data || []);
@@ -460,7 +461,7 @@ export default function OrdersPage() {
     if (image.startsWith("http://") || image.startsWith("https://")) {
       return image;
     }
-    return `https://namami-infotech.com/${image}`;
+    return `https://namami-infotech.com/Stepkaro/${image}`;
   };
 
   const handleViewOrder = (order) => {
@@ -654,6 +655,22 @@ export default function OrdersPage() {
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
+                {selectedFilter === "rejected" && (
+                  <>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Reject Reason
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Rejected By
+                    </th>
+                  </>
+                )}
+
+                {selectedFilter === "book_to_tp" && (
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Transport Doc
+                  </th>
+                )}
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
@@ -746,6 +763,40 @@ export default function OrdersPage() {
                           {statusBadge.label}
                         </span>
                       </td>
+
+                      {/* extra kaam */}
+                      {selectedFilter === "rejected" && (
+                        <>
+                          <td className="px-6 py-4">
+                            <div className="max-w-xs text-sm text-gray-700 whitespace-pre-wrap break-words">
+                              {order.reject_reason || order.rejectReason || "-"}
+                            </div>
+                          </td>
+
+                          <td className="px-6 py-4">
+                            <div className="text-sm text-gray-700">
+                              {order.reject_by || order.rejected_by || "-"}
+                            </div>
+                          </td>
+                        </>
+                      )}
+
+                      {selectedFilter === "book_to_tp" && (
+                        <td className="px-6 py-4">
+                          {order.transport_doc || order.transportDoc ? (
+                            <img
+                              src={getImageUrl(
+                                order.transport_doc || order.transportDoc,
+                              )}
+                              alt="transport"
+                              className="w-12 h-8 object-cover rounded-md cursor-pointer border"
+                              onClick={() => handleTransportClick(order)}
+                            />
+                          ) : (
+                            <span className="text-xs text-gray-400">-</span>
+                          )}
+                        </td>
+                      )}
 
                       <td className="px-6 py-4">
                         <div className="flex gap-2">
