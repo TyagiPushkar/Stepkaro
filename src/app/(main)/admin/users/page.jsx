@@ -127,11 +127,17 @@ export default function UsersPage() {
           name: buyer.name,
           email: buyer.email,
           phone: buyer.phone,
+          image: buyer.image
+            ? `https://namami-infotech.com/Stepkaro/${buyer.image}`
+            : null,
           role: "buyer",
           address: buyer.address,
+          shop_name: buyer.shop_name,
           status: buyer.status,
           wallet: buyer.wallet_value,
-          avatar: "👤",
+          avatar: buyer.image
+            ? `https://namami-infotech.com/Stepkaro/${buyer.image}`
+            : "👤",
           createdAt: buyer.created_at,
           type: "buyer",
           rawData: buyer,
@@ -690,11 +696,24 @@ export default function UsersPage() {
       showToast("No user selected!", "error");
       return;
     }
+    const amount = parseFloat(walletForm.amount);
+    if (amount === 0) {
+      const confirmReset = window.confirm(
+        `Are you sure you want to set ₹0 wallet balance for ${selectedUser.name}?\n\nThis will reset their wallet to zero.`,
+      );
 
-    if (!walletForm.amount || parseFloat(walletForm.amount) <= 0) {
-      showToast("Please enter a valid amount greater than 0.", "error");
+      if (!confirmReset) {
+        return; // User cancelled
+      }
+    } else if (amount < 0) {
+      showToast("Amount cannot be negative.", "error");
       return;
     }
+
+    // if (!walletForm.amount || parseFloat(walletForm.amount) <= 0) {
+    //   showToast("Please enter a valid amount greater than 0.", "error");
+    //   return;
+    // }
 
     // Fixed syntax: added assignment operator and optional chaining to prevent crashes
     const currentRole = selectedUser?.role;
@@ -972,6 +991,9 @@ export default function UsersPage() {
                   Email
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Shop Name
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Role
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -1000,8 +1022,20 @@ export default function UsersPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-gradient-to-br from-purple-100 to-orange-100 rounded-full flex items-center justify-center text-base border border-gray-200">
-                          {user.avatar}
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-base border border-gray-200 overflow-hidden bg-gradient-to-br from-purple-100 to-orange-100">
+                          {user.image ? (
+                            <img
+                              src={user.image}
+                              alt={user.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.target.style.display = "none";
+                                e.target.parentElement.textContent = "👤";
+                              }}
+                            />
+                          ) : (
+                            user.avatar || "👤"
+                          )}
                         </div>
                         <div>
                           <p className="text-sm font-medium text-gray-900">
@@ -1017,6 +1051,9 @@ export default function UsersPage() {
                     </td>
                     <td className="px-6 py-4">
                       <p className="text-sm text-gray-600">{user.email}</p>
+                    </td>
+                    <td className="px-6 py-4">
+                      <p className="text-sm text-gray-600">{user.shop_name}</p>
                     </td>
                     <td className="px-6 py-4">
                       <span

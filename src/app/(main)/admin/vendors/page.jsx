@@ -928,7 +928,7 @@ export default function SellerPage() {
                     </td>
 
                     <td className="px-6 py-4">
-                      <div className="text-sm text-gray-500 max-w-s whitespace-pre-wrap break-words">
+                      <div className="w-50 whitespace-pre-wrap break-words text-sm text-gray-500">
                         {user.address || user.city || "—"}
                       </div>
                     </td>

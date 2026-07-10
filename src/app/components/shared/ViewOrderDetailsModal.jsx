@@ -147,6 +147,7 @@ export default function ViewOrderDetailsModal({
 
         if (response.ok) {
           const data = await response.json();
+          console.log("data were:", data);
           if (data?.success && data.data) {
             setOrderData(data.data);
           }
@@ -182,7 +183,7 @@ export default function ViewOrderDetailsModal({
         <div className="bg-white border border-slate-100 rounded-xl p-5 max-w-xs w-full text-center shadow-xl">
           <h2 className="text-sm font-bold text-slate-800">Order Not Found</h2>
           <p className="text-slate-400 text-[11px] mt-1">
-           Unable to load this order.
+            Unable to load this order.
           </p>
           <button
             onClick={onClose}
@@ -204,7 +205,7 @@ export default function ViewOrderDetailsModal({
 
   // Payment Receipt Verification URL Parser
   const paymentReceiptUrl = getImageUrl(
-    order?.payment_receipt || order?.receipt_image,
+    order?.payment_ss || order?.payment_ss || order?.receipt_image,
   );
 
   return (
@@ -225,7 +226,7 @@ export default function ViewOrderDetailsModal({
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-xs font-black uppercase tracking-tight text-slate-900">
-                Order Details  
+                  Order Details
                 </h2>
                 <span className="text-[10px] font-mono font-bold bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">
                   #{order?.id}
@@ -278,7 +279,6 @@ export default function ViewOrderDetailsModal({
                 val: order?.payment_method || "COD",
                 cls: "text-indigo-600 font-mono font-bold uppercase",
               },
-           
             ].map((stat, idx) => (
               <div
                 key={idx}
@@ -290,6 +290,32 @@ export default function ViewOrderDetailsModal({
                 <p className={`text-sm mt-0.5 ${stat.cls}`}>{stat.val}</p>
               </div>
             ))}
+            <div className="rounded-xl border border-slate-200/60 bg-white p-2.5 shadow-3xs">
+              <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block mb-2">
+                Payment Receipt
+              </span>
+
+              {paymentReceiptUrl ? (
+                <a
+                  href={paymentReceiptUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block"
+                >
+                  <img
+                    src={paymentReceiptUrl}
+                    alt="Payment Receipt"
+                    className="w-10 h-10 rounded-lg border border-slate-200 object-contain bg-white cursor-pointer hover:opacity-90 transition"
+                  />
+                </a>
+              ) : (
+                <div className="w-8 h-8 flex items-center justify-center ">
+                  <span className="text-xs text-slate-400">
+                    No Payment Receipt
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Dynamic Item Configuration Grid Section */}
@@ -466,10 +492,10 @@ export default function ViewOrderDetailsModal({
           </div>
 
           {/* Lower Financial & Payment Receipt Split Section */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {/* Financial Ledger Breakdown */}
-            <div className="md:col-span-2">
-              {/* <SectionCard title="SaaS Financial Settlement" icon={Wallet}>
+          {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-3"> */}
+          {/* Financial Ledger Breakdown */}
+          {/* <div className="md:col-span-2"> */}
+          {/* <SectionCard title="SaaS Financial Settlement" icon={Wallet}>
                 <div className="grid grid-cols-3 gap-2 text-center">
                   <div className="bg-slate-50 border border-slate-100 rounded-lg p-2">
                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight block">
@@ -498,10 +524,10 @@ export default function ViewOrderDetailsModal({
                   </div>
                 </div>
               </SectionCard> */}
-            </div>
+          {/* </div> */}
 
-            {/* Premium Interactive Payment Receipt Card */}
-            <SectionCard title="Payment Receipt" icon={CreditCard}>
+          {/* Premium Interactive Payment Receipt Card */}
+          {/* <SectionCard title="Payment Receipt" icon={CreditCard}>
               {paymentReceiptUrl ? (
                 <div className="group relative rounded-lg border border-slate-200 bg-slate-50 p-1 overflow-hidden h-[54px] flex items-center gap-2 justify-between">
                   <div className="flex items-center gap-2 min-w-0">
@@ -538,8 +564,8 @@ export default function ViewOrderDetailsModal({
                   </span>
                 </div>
               )}
-            </SectionCard>
-          </div>
+            </SectionCard> */}
+          {/* </div> */}
         </div>
 
         {/* Global Action Footer */}
@@ -548,7 +574,7 @@ export default function ViewOrderDetailsModal({
             onClick={onClose}
             className="px-4 py-1.5 rounded-lg text-xs font-bold transition-all bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200"
           >
-            Close 
+            Close
           </button>
         </div>
       </div>

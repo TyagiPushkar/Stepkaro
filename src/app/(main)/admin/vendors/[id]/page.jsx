@@ -723,6 +723,19 @@ export default function VendorDetailsPage() {
                     </div>
                   </div>
                 </div>
+                {/* <div className="rounded-2xl bg-slate-50 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                    city and state
+                  </p>
+                  <div className="mt-3 space-y-2 text-sm text-slate-600">
+                    <div className="flex items-start gap-2">
+                      <MapPin className="mt-0.5 h-4 w-4 text-violet-600" />
+                      <span>
+                        {vendor.city} {vendor.state} {vendor.pincode}
+                      </span>
+                    </div>
+                  </div>
+                </div> */}
               </div>
             </div>
 
@@ -746,7 +759,7 @@ export default function VendorDetailsPage() {
                     {vendor.pan_number || "—"}
                   </span>
                 </div>
-                <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-3">
+                {/* <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-3">
                   <span>Logistics partner</span>
                   <span className="font-medium text-slate-900">
                     {vendor.logistic_partner_name || "—"}
@@ -757,7 +770,7 @@ export default function VendorDetailsPage() {
                   <span className="font-medium text-slate-900">
                     {vendor.delivery_location || "—"}
                   </span>
-                </div>
+                </div> */}
               </div>
             </div>
 
@@ -895,7 +908,7 @@ export default function VendorDetailsPage() {
                   className="w-full rounded-xl border border-slate-200 px-3 py-2 outline-none ring-0 focus:border-violet-500"
                 />
               </label>
-              <label className="space-y-2 text-sm text-slate-600">
+              {/* <label className="space-y-2 text-sm text-slate-600">
                 <span className="font-medium text-slate-700">Phone</span>
                 <input
                   value={editData.phone || ""}
@@ -907,7 +920,7 @@ export default function VendorDetailsPage() {
                   }
                   className="w-full rounded-xl border border-slate-200 px-3 py-2 outline-none ring-0 focus:border-violet-500"
                 />
-              </label>
+              </label> */}
               <label className="space-y-2 text-sm text-slate-600">
                 <span className="font-medium text-slate-700">Status</span>
                 <select
@@ -952,7 +965,7 @@ export default function VendorDetailsPage() {
                   className="w-full rounded-xl border border-slate-200 px-3 py-2 outline-none ring-0 focus:border-violet-500"
                 />
               </label>
-              <label className="space-y-2 text-sm text-slate-600">
+              {/* <label className="space-y-2 text-sm text-slate-600">
                 <span className="font-medium text-slate-700">CITY</span>
                 <input
                   value={editData.city || ""}
@@ -977,7 +990,7 @@ export default function VendorDetailsPage() {
                   }
                   className="w-full rounded-xl border border-slate-200 px-3 py-2 outline-none ring-0 focus:border-violet-500"
                 />
-              </label>
+              </label> */}
               <label className="space-y-2 text-sm text-slate-600">
                 <span className="font-medium text-slate-700">COUNTRY</span>
                 <input
