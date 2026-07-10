@@ -27,6 +27,7 @@ import {
   Package,
   CreditCard,
   Loader2,
+  Pencil,
 } from "lucide-react";
 
 const Modal = ({ isOpen, onClose, title, children, maxWidth = "max-w-md" }) => {
@@ -65,6 +66,12 @@ export default function SellerPage() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [showApprovalModal, setShowApprovalModal] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
+
+  // editable
+  // const [editLoading, setEditLoading] = useState(false);
+  const [rankingLoading, setRankingLoading] = useState(false); // <-- ADD THIS
+  const [editingRankingId, setEditingRankingId] = useState(null); // <-- ADD THIS
+  const [newRankingValue, setNewRankingValue] = useState(""); // <-- ADD THIS
 
   const [approvalData, setApprovalData] = useState({
     wallet_value: "",
@@ -147,7 +154,8 @@ export default function SellerPage() {
           id: vendor.id,
           name: vendor.owner_name,
           brand: vendor.brand_name,
-          ranking: vendor.ranking,
+          brand_id: vendor.brand_id,
+          // ranking: vendor.ranking,
           minimum_value: vendor.minimum_order_value,
           ranking: vendor.sort_order,
           email: vendor.email,
@@ -170,6 +178,7 @@ export default function SellerPage() {
         }));
 
         setUsers([...buyers, ...vendors]);
+        // console.log("Fetched users:", [...buyers, ...vendors]);
       }
     } catch (error) {
       console.log("Error fetching users:", error);
@@ -406,6 +415,73 @@ export default function SellerPage() {
   const openDeleteModal = (user) => {
     setSelectedUser(user);
     setShowDeleteModal(true);
+  };
+
+  // Handle ranking edit
+  const startRankingEdit = (user) => {
+    setEditingRankingId(user.id);
+    setNewRankingValue(user.ranking?.toString() || "");
+  };
+
+  const cancelRankingEdit = () => {
+    setEditingRankingId(null);
+    setNewRankingValue("");
+  };
+
+  const updateBrandRanking = async (brandId) => {
+    setRankingLoading(true);
+    const token = localStorage.getItem("access_token");
+    console.log(
+      "Updating Brand Ranking for Brand ID:",
+      brandId,
+      "New Ranking Value:",
+      newRankingValue,
+    );
+
+    try {
+      const payload = {
+        brandId: Number(brandId),
+        newPosition: Number(newRankingValue),
+      };
+      console.log("Submitting Brand Ranking Update Payload:", payload);
+
+      const response = await axios.post(
+        "https://namami-infotech.com/Stepkaro/src/admin/set_brand_ranking.php",
+        payload, // 👉 Body data direct doosre argument mein jata hai
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // 👉 Baaki headers teesre argument (config object) mein aayenge
+          },
+        },
+      );
+
+      const result = response.data;
+      console.log("Response:", result);
+
+      if (result.success) {
+        // FIX: Use brandId instead of userId
+        setUsers((prev) =>
+          prev.map((u) =>
+            u.id === brandId ? { ...u, ranking: Number(newRankingValue) } : u,
+          ),
+        );
+
+        showToast("Brand ranking updated successfully!");
+        cancelRankingEdit();
+      } else {
+        showToast(result.message || "Failed to update ranking", "error");
+      }
+    } catch (error) {
+      console.error("Ranking update error:", error);
+      // FIX: Better error handling for axios
+      const errorMsg =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to update ranking";
+      showToast(errorMsg, "error");
+    } finally {
+      setRankingLoading(false);
+    }
   };
 
   // Edit user - handle form submit
@@ -909,9 +985,52 @@ export default function SellerPage() {
                       <p className="text-sm text-gray-600">{user.brand}</p>
                     </td>
                     <td className="px-6 py-4">
-                      <p className="text-sm text-gray-600">
-                        {user.ranking ?? "-"}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        {editingRankingId === user.id ? (
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="number"
+                              value={newRankingValue}
+                              onChange={(e) =>
+                                setNewRankingValue(e.target.value)
+                              }
+                              className="w-16 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
+                              autoFocus
+                              min="1"
+                            />
+                            <button
+                              onClick={() => updateBrandRanking(user.brand_id)}
+                              disabled={rankingLoading}
+                              className="p-1 text-emerald-600 hover:bg-emerald-50 rounded transition-colors disabled:opacity-50"
+                              title="Save ranking"
+                            >
+                              <CheckCircle size={16} />
+                            </button>
+                            <button
+                              onClick={cancelRankingEdit}
+                              className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
+                              title="Cancel"
+                            >
+                              <XCircle size={16} />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-600">
+                              {user.ranking ?? "-"}
+                            </span>
+                            {user.role === "seller" && (
+                              <button
+                                onClick={() => startRankingEdit(user)}
+                                className="p-1 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded transition-colors"
+                                title="Edit ranking"
+                              >
+                                <Pencil size={14} />
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </td>
 
                     <td className="px-6 py-4">
