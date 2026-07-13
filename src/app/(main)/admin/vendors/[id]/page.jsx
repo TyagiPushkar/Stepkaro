@@ -36,9 +36,13 @@ import {
   X,
 } from "lucide-react";
 import axios from "axios";
+import RestrictedDistrictsManager from "@/app/components/shared/vendor_district";
 
 const VENDOR_API =
   "https://namami-infotech.com/Stepkaro/src/home/get_vendor_and_buyer.php";
+
+const VENDOR_UPDATE_API =
+  "https://namami-infotech.com/Stepkaro/src/vender/update_vendor_details.php";
 const WALLET_API =
   "https://namami-infotech.com/Stepkaro/src/admin/get_district_history.php";
 const ORDER_API =
@@ -51,6 +55,12 @@ const UPDATE_COUPON_API =
   "https://namami-infotech.com/Stepkaro/src/coupens/update_coupen.php";
 const TOGGLE_COUPON_API =
   "https://namami-infotech.com/Stepkaro/src/coupens/toggle_coupen.php";
+
+const GET_DISTRICTS_LIST_API =
+  "https://namami-infotech.com/Stepkaro/src/location/get_district.php";
+
+const GET_RESTRICTED_DISTRICTS_API =
+  "https://namami-infotech.com/Stepkaro/src/vender/get_restrict_district.php";
 
 const formatCurrency = (value) => {
   const amount = Number(value || 0);
@@ -67,6 +77,7 @@ const getStatusBadgeClasses = (status) => {
 const normalizeVendor = (item) => ({
   ...item,
   id: item.id,
+  user_id: item.user_id || item.vendor_id || item.seller_id || "",
   name: item.owner_name || item.name || "",
   email: item.email || "",
   phone: item.phone || "",
@@ -74,6 +85,7 @@ const normalizeVendor = (item) => ({
   wallet_value: item.minimum_order_value || 0,
   business_name: item.business_name || item.brand_name || "",
   brand_name: item.brand_name || "",
+  settlement_date: item.due_days || "",
   gst_number: item.gst_number || "",
   pan_number: item.pan_number || "",
   address: item.address || "",
@@ -200,6 +212,7 @@ export default function VendorDetailsPage() {
           phone: normalizedVendor.phone || "",
           status: normalizedVendor.status || "",
           business_name: normalizedVendor.business_name || "",
+          settlement_date: normalizedVendor.settlement_date || "",
           brand_name: normalizedVendor.brand_name || "",
           minimum_card_value: normalizedVendor.wallet_value || 0,
           gst_number: normalizedVendor.gst_number || "",
@@ -459,21 +472,126 @@ export default function VendorDetailsPage() {
 
     setSaving(true);
     try {
-      setVendor((current) =>
-        current
-          ? {
-              ...current,
-              ...editData,
-              name: editData.name || current.name,
-              business_name: editData.business_name || current.business_name,
-              brand_name: editData.brand_name || current.brand_name,
-              email: editData.email || current.email,
-              phone: editData.phone || current.phone,
-              status: editData.status || current.status,
-            }
-          : current,
+      // 1. Form-Data Object banana padega kyuki API images aur text dono leti hai
+      const formData = new FormData();
+
+      // 2. Target Vendor ID extract karna
+      const targetVendorId = editData.id || vendor.id || vendor.vendor_id;
+      if (targetVendorId) {
+        formData.append("id", targetVendorId);
+      }
+
+      // 3. Saare text fields ko append karne ka logic
+      formData.append(
+        "business_name",
+        editData.business_name || vendor.business_name || "",
       );
-      showToast("Vendor profile updated for this session.", "success");
+      formData.append(
+        "owner_name",
+        editData.name || editData.owner_name || vendor.owner_name || "",
+      );
+      formData.append(
+        "brand_name",
+        editData.brand_name || vendor.brand_name || "",
+      );
+      formData.append("email", editData.email || vendor.email || "");
+      formData.append("phone", editData.phone || vendor.phone || "");
+      formData.append("status", editData.status || vendor.status || "");
+      formData.append(
+        "gst_number",
+        editData.gst_number || vendor.gst_number || "",
+      );
+      formData.append(
+        "pan_number",
+        editData.pan_number || vendor.pan_number || "",
+      );
+      formData.append("address", editData.address || vendor.address || "");
+      formData.append("city", editData.city || vendor.city || "");
+      formData.append("state", editData.state || vendor.state || "");
+      formData.append("country", editData.country || vendor.country || "");
+      formData.append("pincode", editData.pincode || vendor.pincode || "");
+      formData.append(
+        "due_days",
+        editData.settlement_date || editData.due_days || vendor.due_days || "",
+      );
+      formData.append(
+        "minimum_order_value",
+        editData.wallet_value ||
+          editData.minimum_card_value ||
+          vendor.wallet_value ||
+          "",
+      );
+
+      // 4. File Input Checks
+      if (editData.gst_image instanceof File) {
+        formData.append("gst_image", editData.gst_image);
+      }
+      if (editData.tmc_image instanceof File) {
+        formData.append("tmc_image", editData.tmc_image);
+      }
+
+      // 🔥 Console Par Form-Data Detail Mein Check Karna
+      // console.log("--- Sending Vendor Update Data via Axios ---");
+      // for (let [key, value] of formData.entries()) {
+      //   if (value instanceof File) {
+      //     console.log(
+      //       `${key}: File -> Name: ${value.name}, Size: ${(value.size / 1024 / 1024).toFixed(2)} MB`,
+      //     );
+      //   } else {
+      //     console.log(`${key}: ${value}`);
+      //   }
+      // }
+      // console.log("----------------------------------");
+
+      // 5. Axios Request with Token & URL Parameter
+      const response = await axios.post(
+        `${VENDOR_UPDATE_API}?id=${targetVendorId}`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      // Axios mein response ka data direct 'response.data' mein milta hai
+      const result = response.data;
+
+      if (result.success) {
+        // 6. API response aane par local UI state ko refresh karna
+        setVendor((current) =>
+          current
+            ? {
+                ...current,
+                ...editData,
+                owner_name:
+                  editData.name || editData.owner_name || current.owner_name,
+                business_name: editData.business_name || current.business_name,
+                brand_name: editData.brand_name || current.brand_name,
+                email: editData.email || current.email,
+                phone: editData.phone || current.phone,
+                status: editData.status || current.status,
+                gst_image: result.gst_image,
+                tmc_image: result.tmc_image,
+              }
+            : current,
+        );
+
+        showToast(
+          result.message || "Vendor profile updated successfully.",
+          "success",
+        );
+      } else {
+        showToast(result.message || "Failed to update profile.", "error");
+      }
+    } catch (error) {
+      console.error("Error updating vendor:", error);
+
+      // Axios error handling (agar server se 400/500 code aaye toh message extract karna)
+      const errorMsg =
+        error.response?.data?.message ||
+        "Something went wrong while connecting to the server.";
+      showToast(errorMsg, "error");
     } finally {
       setSaving(false);
     }
@@ -748,6 +866,12 @@ export default function VendorDetailsPage() {
               </div>
               <div className="mt-5 space-y-3 text-sm text-slate-600">
                 <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-3">
+                  <span>Settlement Date</span>
+                  <span className="font-medium text-slate-900">
+                    {vendor.settlement_date || "—"} DAYS
+                  </span>
+                </div>
+                <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-3">
                   <span>GST</span>
                   <span className="font-medium text-slate-900">
                     {vendor.gst_number || "—"}
@@ -933,10 +1057,10 @@ export default function VendorDetailsPage() {
                   }
                   className="w-full rounded-xl border border-slate-200 px-3 py-2 outline-none ring-0 focus:border-violet-500"
                 >
-                  <option value="pending">Pending</option>
+                  {/* <option value="pending">Pending</option> */}
                   <option value="active">Active</option>
                   <option value="inactive">Inactive</option>
-                  <option value="reject">Rejected</option>
+                  {/* <option value="reject">Rejected</option> */}
                 </select>
               </label>
               <label className="space-y-2 text-sm text-slate-600">
@@ -991,7 +1115,7 @@ export default function VendorDetailsPage() {
                   className="w-full rounded-xl border border-slate-200 px-3 py-2 outline-none ring-0 focus:border-violet-500"
                 />
               </label> */}
-              <label className="space-y-2 text-sm text-slate-600">
+              {/* <label className="space-y-2 text-sm text-slate-600">
                 <span className="font-medium text-slate-700">COUNTRY</span>
                 <input
                   value={editData.country || ""}
@@ -999,6 +1123,21 @@ export default function VendorDetailsPage() {
                     setEditData((current) => ({
                       ...current,
                       country: event.target.value,
+                    }))
+                  }
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2 outline-none ring-0 focus:border-violet-500"
+                />
+              </label> */}
+              <label className="space-y-2 text-sm text-slate-600">
+                <span className="font-medium text-slate-700">
+                  Settelement Days
+                </span>
+                <input
+                  value={editData.settlement_date || ""}
+                  onChange={(event) =>
+                    setEditData((current) => ({
+                      ...current,
+                      settlement_date: event.target.value,
                     }))
                   }
                   className="w-full rounded-xl border border-slate-200 px-3 py-2 outline-none ring-0 focus:border-violet-500"
@@ -1362,13 +1501,15 @@ export default function VendorDetailsPage() {
         )}
 
         {activeTab === "Restricted Districts" && (
-          <div className="p-4">
-            <h3 className="text-lg font-bold text-slate-900 mb-4">
-              Restricted Districts
-            </h3>
-            <p className="text-slate-600">
-              Configure the districts where this campaign is available.
-            </p>
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <RestrictedDistrictsManager
+              vendorId={vendor?.user_id}
+              vendorName={vendor?.business_name || vendor?.name}
+              onUpdate={(updatedDistricts) => {
+                // Optional callback when districts are updated
+                console.log("Updated restricted districts:", updatedDistricts);
+              }}
+            />
           </div>
         )}
       </div>

@@ -158,6 +158,7 @@ export default function SellerPage() {
           // ranking: vendor.ranking,
           minimum_value: vendor.minimum_order_value,
           ranking: vendor.sort_order,
+          settlement_date: vendor.due_days,
           email: vendor.email,
           phone: vendor.phone,
           role: "seller",
@@ -942,6 +943,9 @@ export default function SellerPage() {
                   Minimum Value
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Settlement Date
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Address
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -1043,6 +1047,13 @@ export default function SellerPage() {
                       >
                         {/* {user.role === "seller" ? "Seller" : "Buyer"} */}
                         {user.minimum_value}
+                      </span>
+                    </td>
+
+                    <td className="px-6 py-4">
+                      <span className={`text-xs px-2 py-1 rounded-full`}>
+                        {/* {user.role === "seller" ? "Seller" : "Buyer"} */}
+                        {user.settlement_date || "—"} DAYS
                       </span>
                     </td>
 
