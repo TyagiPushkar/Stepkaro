@@ -1,5 +1,11 @@
 "use client";
-import { useState, useMemo, useEffect } from "react";
+import React, {
+  useState,
+  useMemo,
+  useEffect,
+  useRef,
+  useCallback,
+} from "react";
 import { useRouter } from "next/navigation";
 import {
   Search,
@@ -15,9 +21,132 @@ import {
   Package,
   X,
   Check,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import ProductFormModal from "@/app/components/shared/ProductFormModel";
 import ViewProductModal from "@/app/components/shared/ViewProductModal";
+
+// Utility function for image URL
+const normalizeProductImageUrl = (image) => {
+  if (!image) return "/placeholder.png";
+  const trimmed = String(image).trim();
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    return trimmed;
+  }
+  if (trimmed.startsWith("/Stepkaro") || trimmed.startsWith("Stepkaro")) {
+    return `https://namami-infotech.com${trimmed.startsWith("/") ? "" : "/"}${trimmed}`;
+  }
+  if (trimmed.startsWith("uploads/")) {
+    return `https://namami-infotech.com/Stepkaro/${trimmed}`;
+  }
+  return `https://namami-infotech.com/${trimmed}`;
+};
+
+// Variants Detail Table Component
+const VariantsDetailTable = ({
+  variants,
+  productId,
+  onToggleVariantStatus,
+  togglingVariantId,
+}) => {
+  if (!variants?.length) {
+    return <p className="text-sm text-gray-500 py-2">No variants available</p>;
+  }
+
+  return (
+    <div className="overflow-x-auto rounded-lg border border-blue-100 bg-blue-50/40">
+      <table className="w-full min-w-[700px] text-sm">
+        <thead className="bg-blue-100/60">
+          <tr>
+            <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">
+              Image
+            </th>
+            <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">
+              Size
+            </th>
+            <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">
+              Color
+            </th>
+            <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">
+              MRP
+            </th>
+            <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">
+              Selling
+            </th>
+            <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">
+              Stock
+            </th>
+            <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">
+              Packing
+            </th>
+            <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">
+              Pairs/Ctn
+            </th>
+            <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">
+              Status
+            </th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-blue-100 bg-white">
+          {variants.map((variant) => (
+            <tr key={variant.id} className="hover:bg-blue-50/50">
+              <td className="px-3 py-2">
+                <div className="w-8 h-8 rounded border border-gray-200 overflow-hidden">
+                  <img
+                    src={normalizeProductImageUrl(variant.image)}
+                    alt={variant.variant_size || "Variant"}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                </div>
+              </td>
+              <td className="px-3 py-2 text-gray-900">
+                {variant.variant_size || variant.size || "-"}
+              </td>
+              <td className="px-3 py-2 text-gray-900">
+                {variant.color || "-"}
+              </td>
+              <td className="px-3 py-2 text-gray-500 line-through">
+                ₹{variant.price || 0}
+              </td>
+              <td className="px-3 py-2 font-medium text-emerald-600">
+                ₹{variant.selling_price || 0}
+              </td>
+              <td className="px-3 py-2 text-gray-900">{variant.stock ?? 0}</td>
+              <td className="px-3 py-2 text-gray-900">
+                {variant.packing_type || "-"}
+              </td>
+              <td className="px-3 py-2 text-gray-900">
+                {variant.pairs_per_ctn ?? "-"}
+              </td>
+              <td className="px-3 py-2">
+                <button
+                  type="button"
+                  disabled={togglingVariantId === variant.id}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleVariantStatus(productId, variant.id);
+                  }}
+                  className={`relative w-10 h-5 rounded-full transition-colors cursor-pointer flex-shrink-0 disabled:opacity-60 ${
+                    variant.status === "active" ? "bg-green-500" : "bg-red-500"
+                  }`}
+                  aria-label={`Toggle variant status`}
+                >
+                  <div
+                    className={`absolute w-4 h-4 bg-white rounded-full top-0.5 transition-all duration-300 shadow-sm ${
+                      variant.status === "active" ? "left-5" : "left-0.5"
+                    }`}
+                  />
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
 
 export default function SellerProductsPage() {
   const router = useRouter();
@@ -27,7 +156,6 @@ export default function SellerProductsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -37,6 +165,12 @@ export default function SellerProductsPage() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editProduct, setEditProduct] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
+
+  // New states for filters and variants
+  const [selectedFilter, setSelectedFilter] = useState("all");
+  const [expandedProductId, setExpandedProductId] = useState(null);
+  const [togglingVariantId, setTogglingVariantId] = useState(null);
+  const variantsPanelRef = useRef(null);
 
   // Filter options from API
   const [filterOptions, setFilterOptions] = useState({
@@ -58,7 +192,7 @@ export default function SellerProductsPage() {
     category_name: "",
     min_size: "",
     max_size: "",
-    variants: [], // 👈 NEW (min/max combined)
+    variants: [],
     gender: "",
     color: "",
     material: "",
@@ -75,6 +209,31 @@ export default function SellerProductsPage() {
     fetchProducts();
     fetchFilterOptions();
   }, []);
+
+  // Click outside handler for variants panel
+  useEffect(() => {
+    if (expandedProductId === null) return;
+
+    const handleClickOutside = (e) => {
+      if (
+        e.target.closest("[data-variants-toggle]") ||
+        e.target.closest("button") ||
+        e.target.tagName === "INPUT"
+      ) {
+        return;
+      }
+      if (
+        variantsPanelRef.current &&
+        variantsPanelRef.current.contains(e.target)
+      ) {
+        return;
+      }
+      setExpandedProductId(null);
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [expandedProductId]);
 
   const fetchProducts = async () => {
     try {
@@ -94,7 +253,8 @@ export default function SellerProductsPage() {
         const formattedProducts = result.data.map((p) => ({
           id: p.id,
           name: p.article_name,
-          price: p.selling_price,
+          selling_price: p.selling_price,
+          price: p.price,
           stock: p.status === "active",
           quantity: p.stock_quantity,
           category: p.category_name,
@@ -118,6 +278,7 @@ export default function SellerProductsPage() {
           description: p.description,
           status: p.status,
           commission: p.commission || "0",
+          variants: p.variants || [],
         }));
         setProducts(formattedProducts);
       }
@@ -141,7 +302,6 @@ export default function SellerProductsPage() {
       const result = await response.json();
 
       if (result.success) {
-        // Remove duplicates using Set
         setFilterOptions({
           brands: [...new Set(result.data.brands || [])],
           categories: [...new Set(result.data.categories || [])],
@@ -157,19 +317,56 @@ export default function SellerProductsPage() {
     }
   };
 
-  // Filter products by search
+  // Stats
+  const totalProducts = products.length;
+  const activeProducts = products.filter((p) => p.status === "active").length;
+  const inactiveProducts = products.filter(
+    (p) => p.status === "inactive",
+  ).length;
+  const outOfStockProducts = products.filter(
+    (p) => Number(p.quantity || 0) === 0,
+  ).length;
+
+  // Filters configuration
+  const filters = useMemo(
+    () => [
+      { label: "All Products", value: "all", count: totalProducts },
+      { label: "Active", value: "active", count: activeProducts },
+      { label: "Inactive", value: "inactive", count: inactiveProducts },
+      {
+        label: "Out of Stock",
+        value: "out_of_stock",
+        count: outOfStockProducts,
+      },
+    ],
+    [totalProducts, activeProducts, inactiveProducts, outOfStockProducts],
+  );
+
+  // Filter products by search and filter
   const filteredProducts = useMemo(() => {
     let filtered = products;
+
+    // Filter by status
+    if (selectedFilter === "active") {
+      filtered = filtered.filter((p) => p.status === "active");
+    } else if (selectedFilter === "inactive") {
+      filtered = filtered.filter((p) => p.status === "inactive");
+    } else if (selectedFilter === "out_of_stock") {
+      filtered = filtered.filter((p) => Number(p.quantity || 0) === 0);
+    }
+
+    // Search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
         (p) =>
           p.name?.toLowerCase().includes(query) ||
-          p.category?.toLowerCase().includes(query),
+          p.category?.toLowerCase().includes(query) ||
+          p.brand?.toLowerCase().includes(query),
       );
     }
     return filtered;
-  }, [searchQuery, products]);
+  }, [selectedFilter, searchQuery, products]);
 
   // Pagination
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
@@ -188,10 +385,18 @@ export default function SellerProductsPage() {
     setCurrentPage(1);
   };
 
+  const handleFilterChange = (filterValue) => {
+    setSelectedFilter(filterValue);
+    setCurrentPage(1);
+  };
+
   // Toggle product status
   const toggleStatus = async (productId) => {
     try {
       const token = localStorage.getItem("access_token");
+      const product = products.find((p) => p.id === productId);
+      const newStatus = product?.status === "active" ? "inactive" : "active";
+
       const response = await fetch(
         "https://namami-infotech.com/Stepkaro/src/product/toggle_product_status.php",
         {
@@ -205,7 +410,12 @@ export default function SellerProductsPage() {
       );
       const result = await response.json();
       if (result.success) {
-        fetchProducts();
+        // Update local state
+        setProducts((prev) =>
+          prev.map((p) =>
+            p.id === productId ? { ...p, status: newStatus } : p,
+          ),
+        );
         setShowSuccess(true);
         setTimeout(() => setShowSuccess(false), 2000);
       } else {
@@ -214,6 +424,66 @@ export default function SellerProductsPage() {
     } catch (error) {
       console.log(error);
     }
+  };
+
+  // Toggle variant status
+  const toggleVariantStatus = async (productId, variantId) => {
+    try {
+      setTogglingVariantId(variantId);
+      const token = localStorage.getItem("access_token");
+
+      // Find current variant status
+      const product = products.find((p) => p.id === productId);
+      const variant = product?.variants?.find((v) => v.id === variantId);
+      const newStatus = variant?.status === "active" ? "inactive" : "active";
+
+      const response = await fetch(
+        "https://namami-infotech.com/Stepkaro/src/admin/toggle_products.php",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            variant_id: variantId,
+            type: "variant",
+            action: newStatus,
+          }),
+        },
+      );
+
+      const result = await response.json();
+      if (result.success) {
+        // Update local state
+        setProducts((prev) =>
+          prev.map((p) =>
+            p.id === productId
+              ? {
+                  ...p,
+                  variants: p.variants.map((v) =>
+                    v.id === variantId ? { ...v, status: newStatus } : v,
+                  ),
+                }
+              : p,
+          ),
+        );
+        setShowSuccess(true);
+        setTimeout(() => setShowSuccess(false), 2000);
+      } else {
+        alert(result.message);
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setTogglingVariantId(null);
+    }
+  };
+
+  // Toggle variants panel
+  const toggleVariantsPanel = (e, productId) => {
+    e.stopPropagation();
+    setExpandedProductId((prev) => (prev === productId ? null : productId));
   };
 
   // Edit quantity inline
@@ -293,17 +563,8 @@ export default function SellerProductsPage() {
   };
 
   const handleEditProduct = (product) => {
-    // Parse size range if exists
-    // let minSize = "";
-    // let maxSize = "";
-
     let extractedMin = "";
     let extractedMax = "";
-    // if (product.size && product.size.includes("-")) {
-    //   const [min, max] = product.size.split("-");
-    //   minSize = min;
-    //   maxSize = max;
-    // }
 
     if (product.size && product.size.toLowerCase().includes("x")) {
       const parts = product.size.toLowerCase().split("x");
@@ -330,8 +591,6 @@ export default function SellerProductsPage() {
       price: product.price || "",
       brand_name: product.brand || "",
       category_name: product.category || "",
-      // min_size: minSize,
-      // max_size: maxSize,
       gender: product.gender || "",
       color: product.color || "",
       material: product.material || "",
@@ -342,9 +601,6 @@ export default function SellerProductsPage() {
       stock_quantity: product.quantity || "",
       status: product.status || "inactive",
       image: product.image || "",
-      // min_size: product.min_size || "",
-      // max_size: product.max_size || "",
-
       min_size: extractedMin,
       max_size: extractedMax,
     });
@@ -383,7 +639,7 @@ export default function SellerProductsPage() {
       p.origin,
       p.price,
       p.quantity,
-      p.stock ? "Active" : "Inactive",
+      p.status,
     ]);
     const csvContent = [headers, ...csvData]
       .map((row) => row.join(","))
@@ -432,20 +688,9 @@ export default function SellerProductsPage() {
       formData.append("stock_quantity", newProduct.stock_quantity);
       formData.append("status", newProduct.status);
       formData.append("variants", JSON.stringify(newProduct.variants));
-      // formData.append("min_size", newProduct.min_size);
-      // formData.append("max_size", newProduct.max_size);
-      //   console.log("--- STARTING FORM DATA VALIDATION LOG ---");
-      // for (let [key, value] of formData.entries()) {
-      //   if (value instanceof File) {
-      //     console.log(`${key}: [File] Name: ${value.name}, Size: ${value.size} bytes`);
-      //   } else {
-      //     console.log(`${key}:`, value);
-      //   }
-      // }
-      // console.log("--- END OF FORM DATA LOG ---");
 
       if (newProduct.image) {
-        formData.append("image", newProduct.image); // 👈 Verify if your backend expects "image" or "product_img"
+        formData.append("image", newProduct.image);
       }
 
       let url =
@@ -496,18 +741,7 @@ export default function SellerProductsPage() {
     } catch (error) {
       console.log(error);
     }
-    //    } catch (error) {
-    //   console.error("Error debugging current form state:", error);
-    // }
   };
-
-  // Stats
-  const totalProducts = products.length;
-  const activeProducts = products.filter((p) => p.stock === true).length;
-  const inactiveProducts = products.filter((p) => p.stock === false).length;
-  const outOfStockProducts = products.filter(
-    (p) => Number(p.quantity || 0) === 0,
-  ).length;
 
   if (!isMounted) {
     return (
@@ -565,11 +799,39 @@ export default function SellerProductsPage() {
           <p className="text-xs opacity-90">Inactive Products</p>
           <p className="text-2xl font-bold">{inactiveProducts}</p>
         </div>
-
         <div className="rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 p-4 text-white shadow-lg">
           <p className="text-xs opacity-90">Out of Stock</p>
           <p className="text-2xl font-bold">{outOfStockProducts}</p>
         </div>
+      </div>
+
+      {/* Filters Tabs */}
+      <div className="mb-6 flex flex-wrap gap-3">
+        {filters.map((filter) => {
+          const isActive = selectedFilter === filter.value;
+          return (
+            <button
+              key={filter.value}
+              onClick={() => handleFilterChange(filter.value)}
+              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                isActive
+                  ? "bg-violet-600 text-white shadow-md"
+                  : "bg-white text-violet-700 border border-violet-200 hover:bg-violet-50"
+              }`}
+            >
+              {filter.label}
+              <span
+                className={`ml-2 px-2 py-0.5 rounded-full text-xs ${
+                  isActive
+                    ? "bg-white/20 text-white"
+                    : "bg-violet-100 text-violet-700"
+                }`}
+              >
+                {filter.count}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Search Bar */}
@@ -624,6 +886,7 @@ export default function SellerProductsPage() {
                 <th className="px-6 py-4 font-semibold">ID</th>
                 <th className="px-6 py-4 font-semibold">Product Name</th>
                 <th className="px-6 py-4 font-semibold">Category</th>
+                <th className="px-6 py-4 font-semibold">Variants</th>
                 <th className="px-6 py-4 font-semibold">Commission</th>
                 <th className="px-6 py-4 font-semibold">Price</th>
                 <th className="px-6 py-4 font-semibold">Quantity</th>
@@ -633,110 +896,186 @@ export default function SellerProductsPage() {
             </thead>
             <tbody className="divide-y divide-violet-50">
               {currentProducts.map((product) => (
-                <tr
-                  key={product.id}
-                  className="hover:bg-violet-50/50 transition"
-                >
-                  <td className="px-6 py-4 text-sm text-violet-600">
-                    #{product.id}
-                  </td>
-                  <td className="px-6 py-4">
-                    <p className="text-sm font-medium text-gray-900">
-                      {product.name}
-                    </p>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="text-sm text-violet-600">
-                      {product.category}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="text-sm font-medium text-purple-600 bg-purple-50 px-2.5 py-1 rounded-md border border-purple-100">
-                      {product.commission}%
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="text-sm font-semibold text-teal-600">
-                      ₹{product.price}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    {editingQuantity === product.id ? (
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="number"
-                          value={editValue}
-                          onChange={(e) => setEditValue(e.target.value)}
-                          className="w-20 px-2 py-1 border border-violet-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-violet-500"
-                          autoFocus
-                          min="0"
-                        />
-                        <button
-                          onClick={() => saveQuantity(product.id)}
-                          className="p-1 bg-emerald-500 text-white rounded hover:bg-emerald-600"
-                          title="Save"
-                        >
-                          <Check size={14} />
-                        </button>
-                        <button
-                          onClick={cancelEdit}
-                          className="p-1 bg-gray-400 text-white rounded hover:bg-gray-500"
-                          title="Cancel"
-                        >
-                          <X size={14} />
-                        </button>
+                <React.Fragment key={product.id}>
+                  <tr className="hover:bg-violet-50/50 transition">
+                    <td className="px-6 py-4 text-sm text-violet-600">
+                      #{product.id}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-violet-100 to-orange-100 rounded-lg flex items-center justify-center border border-gray-200 overflow-hidden flex-shrink-0">
+                          <img
+                            src={normalizeProductImageUrl(product.image)}
+                            alt={product.name}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                          />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">
+                            {product.name}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {product.brand}
+                          </p>
+                        </div>
                       </div>
-                    ) : (
-                      <div
-                        onClick={() => startEditQuantity(product)}
-                        className="cursor-pointer group flex items-center gap-2"
-                      >
-                        <span
-                          className={`text-sm ${product.quantity === 0 ? "text-red-500" : "text-gray-700"}`}
-                        >
-                          {product.quantity}
-                        </span>
-                        <Pencil
-                          size={14}
-                          className="text-gray-400 opacity-0 group-hover:opacity-100 transition"
-                        />
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => toggleStatus(product.id)}
-                        className={`relative h-5 w-10 rounded-full transition ${product.stock ? "bg-emerald-500" : "bg-gray-300"}`}
-                      >
-                        <span
-                          className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition ${product.stock ? "left-5" : "left-0.5"}`}
-                        />
-                      </button>
-                      <span className="text-xs text-gray-500">
-                        {product.stock ? "Active" : "Inactive"}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="text-sm text-violet-600">
+                        {product.category}
                       </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleViewProduct(product)}
-                        className="rounded-lg bg-violet-100 p-2 text-violet-600 transition hover:bg-violet-200"
-                        title="View Product"
+                    </td>
+                    <td className="px-6 py-4">
+                      {product.variants?.length > 0 ? (
+                        <button
+                          type="button"
+                          data-variants-toggle
+                          onClick={(e) => toggleVariantsPanel(e, product.id)}
+                          className="text-sm font-semibold text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1"
+                        >
+                          {product.variants.length}{" "}
+                          {product.variants.length === 1
+                            ? "Variant"
+                            : "Variants"}
+                          {expandedProductId === product.id ? (
+                            <ChevronUp size={16} />
+                          ) : (
+                            <ChevronDown size={16} />
+                          )}
+                        </button>
+                      ) : (
+                        <span className="text-sm text-gray-400">
+                          No Variants
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="text-sm font-medium text-purple-600 bg-purple-50 px-2.5 py-1 rounded-md border border-purple-100">
+                        {product.commission}%
+                      </span>
+                    </td>
+                    {/* <td className="px-6 py-4">
+                      <span className="text-sm font-semibold text-teal-600">
+                        ₹{product.price}
+                      </span>
+                    </td> */}
+                    <td className="px-4 py-3">
+                      <div className="flex flex-col">
+                        <span className="text-xs text-gray-400 line-through">
+                          ₹{product.price || 0}
+                        </span>
+                        <span className="text-sm font-semibold text-emerald-600">
+                          ₹{product.selling_price || 0}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      {editingQuantity === product.id ? (
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            value={editValue}
+                            onChange={(e) => setEditValue(e.target.value)}
+                            className="w-20 px-2 py-1 border border-violet-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-violet-500"
+                            autoFocus
+                            min="0"
+                          />
+                          <button
+                            onClick={() => saveQuantity(product.id)}
+                            className="p-1 bg-emerald-500 text-white rounded hover:bg-emerald-600"
+                            title="Save"
+                          >
+                            <Check size={14} />
+                          </button>
+                          <button
+                            onClick={cancelEdit}
+                            className="p-1 bg-gray-400 text-white rounded hover:bg-gray-500"
+                            title="Cancel"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ) : (
+                        <div
+                          onClick={() => startEditQuantity(product)}
+                          className="cursor-pointer group flex items-center gap-2"
+                        >
+                          <span
+                            className={`text-sm ${product.quantity === 0 ? "text-red-500" : "text-gray-700"}`}
+                          >
+                            {product.quantity}
+                          </span>
+                          <Pencil
+                            size={14}
+                            className="text-gray-400 opacity-0 group-hover:opacity-100 transition"
+                          />
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => toggleStatus(product.id)}
+                          className={`relative h-5 w-10 rounded-full transition ${product.status === "active" ? "bg-emerald-500" : "bg-gray-300"}`}
+                        >
+                          <span
+                            className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition ${product.status === "active" ? "left-5" : "left-0.5"}`}
+                          />
+                        </button>
+                        <span className="text-xs text-gray-500">
+                          {product.status === "active" ? "Active" : "Inactive"}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleViewProduct(product)}
+                          className="rounded-lg bg-violet-100 p-2 text-violet-600 transition hover:bg-violet-200"
+                          title="View Product"
+                        >
+                          <Eye size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleEditProduct(product)}
+                          className="rounded-lg bg-violet-100 p-2 text-violet-600 transition hover:bg-violet-200"
+                          title="Edit Product"
+                        >
+                          <Pencil size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+
+                  {/* Variants Sub-table */}
+                  {expandedProductId === product.id && (
+                    <tr>
+                      <td
+                        colSpan="9"
+                        className="px-6 py-4 bg-gray-50/50 border-l-4 border-blue-500"
                       >
-                        <Eye size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleEditProduct(product)}
-                        className="rounded-lg bg-violet-100 p-2 text-violet-600 transition hover:bg-violet-200"
-                        title="Edit Product"
-                      >
-                        <Pencil size={16} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
+                        <div ref={variantsPanelRef} className="animate-fadeIn">
+                          <div className="flex items-center gap-2 mb-3">
+                            <span className="w-1.5 h-1.5 bg-blue-600 rounded-full" />
+                            <h5 className="font-semibold text-gray-700 text-xs uppercase tracking-wider">
+                              Available SKUs / Options Inventory
+                            </h5>
+                            <span className="text-xs text-gray-400 ml-2">
+                              ({product.variants?.length || 0} variants)
+                            </span>
+                          </div>
+                          <VariantsDetailTable
+                            variants={product.variants || []}
+                            productId={product.id}
+                            onToggleVariantStatus={toggleVariantStatus}
+                            togglingVariantId={togglingVariantId}
+                          />
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
               ))}
             </tbody>
           </table>
@@ -792,147 +1131,6 @@ export default function SellerProductsPage() {
       </div>
 
       {/* Add/Edit Product Modal */}
-      {/* {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="bg-slate-800 rounded-2xl border border-white/10 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-slate-800 border-b border-white/10 px-6 py-4 flex justify-between items-center">
-              <h2 className="text-xl font-bold text-white">{isEditing ? "Edit Product" : "Add Product"}</h2>
-              <button onClick={() => setShowAddModal(false)} className="p-1 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
-                <X size={20} />
-              </button>
-            </div>
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input
-                  placeholder="Article Name *"
-                  className="px-4 py-2.5 bg-slate-900 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  value={newProduct.article_name}
-                  onChange={(e) => setNewProduct({ ...newProduct, article_name: e.target.value })}
-                />
-                <input
-                  placeholder="Selling Price *"
-                  type="number"
-                  className="px-4 py-2.5 bg-slate-900 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  value={newProduct.selling_price}
-                  onChange={(e) => setNewProduct({ ...newProduct, selling_price: e.target.value })}
-                />
-                <input
-                  placeholder="Price (MRP) *"
-                  type="number"
-                  className="px-4 py-2.5 bg-slate-900 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  value={newProduct.price}
-                  onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
-                />
-                <select
-                  className="px-4 py-2.5 bg-slate-900 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  value={newProduct.brand_name}
-                  onChange={(e) => setNewProduct({ ...newProduct, brand_name: e.target.value })}
-                >
-                  <option value="">Select Brand *</option>
-                  {filterOptions.brands.map((brand, idx) => (
-                    <option key={`brand-${idx}-${brand}`} value={brand}>{brand}</option>
-                  ))}
-                </select>
-                <select
-                  className="px-4 py-2.5 bg-slate-900 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  value={newProduct.category_name}
-                  onChange={(e) => setNewProduct({ ...newProduct, category_name: e.target.value })}
-                >
-                  <option value="">Select Category *</option>
-                  {filterOptions.categories.map((cat, idx) => (
-                    <option key={`cat-${idx}-${cat}`} value={cat}>{cat}</option>
-                  ))}
-                </select>
-                <input
-                  placeholder="Stock Quantity *"
-                  type="number"
-                  className="px-4 py-2.5 bg-slate-900 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  value={newProduct.stock_quantity}
-                  onChange={(e) => setNewProduct({ ...newProduct, stock_quantity: e.target.value })}
-                />
-                <input
-                  type="number"
-                  placeholder="Min Size *"
-                  className="px-4 py-2.5 bg-slate-900 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  value={newProduct.min_size}
-                  onChange={(e) => setNewProduct({ ...newProduct, min_size: e.target.value })}
-                />
-                <input
-                  type="number"
-                  placeholder="Max Size *"
-                  className="px-4 py-2.5 bg-slate-900 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  value={newProduct.max_size}
-                  onChange={(e) => setNewProduct({ ...newProduct, max_size: e.target.value })}
-                />
-                <select
-                  className="px-4 py-2.5 bg-slate-900 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  value={newProduct.gender}
-                  onChange={(e) => setNewProduct({ ...newProduct, gender: e.target.value })}
-                >
-                  <option value="">Select Gender *</option>
-                  {filterOptions.gender.map((g, idx) => (
-                    <option key={`gender-${idx}-${g}`} value={g}>{g}</option>
-                  ))}
-                </select>
-                <select
-                  className="px-4 py-2.5 bg-slate-900 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  value={newProduct.color}
-                  onChange={(e) => setNewProduct({ ...newProduct, color: e.target.value })}
-                >
-                  <option value="">Select Color *</option>
-                  {filterOptions.colors.map((color, idx) => (
-                    <option key={`color-${idx}-${color}`} value={color}>{color}</option>
-                  ))}
-                </select>
-                <select
-                  className="px-4 py-2.5 bg-slate-900 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  value={newProduct.material}
-                  onChange={(e) => setNewProduct({ ...newProduct, material: e.target.value })}
-                >
-                  <option value="">Select Material *</option>
-                  {filterOptions.materials.map((mat, idx) => (
-                    <option key={`material-${idx}-${mat}`} value={mat}>{mat}</option>
-                  ))}
-                </select>
-                <select
-                  className="px-4 py-2.5 bg-slate-900 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  value={newProduct.packing_type}
-                  onChange={(e) => setNewProduct({ ...newProduct, packing_type: e.target.value })}
-                >
-                  <option value="">Select Packing Type *</option>
-                  {filterOptions.packingTypes.map((type, idx) => (
-                    <option key={`packing-${idx}-${type}`} value={type}>{type}</option>
-                  ))}
-                </select>
-                <input
-                  placeholder="Pairs Per CTN"
-                  type="number"
-                  className="px-4 py-2.5 bg-slate-900 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  value={newProduct.pairs_per_ctn}
-                  onChange={(e) => setNewProduct({ ...newProduct, pairs_per_ctn: e.target.value })}
-                />
-                <input
-                  placeholder="Origin"
-                  className="px-4 py-2.5 bg-slate-900 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  value={newProduct.origin}
-                  onChange={(e) => setNewProduct({ ...newProduct, origin: e.target.value })}
-                />
-                <textarea
-                  placeholder="Description"
-                  rows={3}
-                  className="md:col-span-2 px-4 py-2.5 bg-slate-900 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  value={newProduct.description}
-                  onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
-                />
-              </div>
-              <button onClick={submitProduct} className="mt-6 w-full bg-teal-500 hover:bg-teal-600 text-white py-3 rounded-xl transition-colors font-medium">
-                {isEditing ? "Update Product" : "Add Product"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )} */}
-
       <ProductFormModal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
@@ -943,6 +1141,7 @@ export default function SellerProductsPage() {
         onSubmit={submitProduct}
       />
 
+      {/* View Product Modal */}
       <ViewProductModal
         isOpen={showViewModal}
         onClose={() => setShowViewModal(false)}
