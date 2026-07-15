@@ -54,6 +54,7 @@ const sellerNavItems = [
   { name: "My Home", href: "/seller/home", icon: Home },
   { name: "My Products", href: "/seller/products", icon: Package },
   { name: "My Orders", href: "/seller/orders", icon: ShoppingCart },
+  { name: "My Coupons", href: "/seller/coupons", icon: Tag },
   { name: "Payments", href: "/seller/payments", icon: IndianRupee },
   { name: "Account", href: "/seller/account", icon: User },
   // { name: "Logout", href: "/seller/logout", icon: IndianRupee },

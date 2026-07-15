@@ -14,7 +14,11 @@ import {
   User,
   BadgePercent,
   ShoppingBag,
+  ChevronDown,
+  ChevronUp,
+  Grid,
 } from "lucide-react";
+import { useState } from "react";
 
 export function normalizeProduct(product) {
   if (!product) return null;
@@ -55,6 +59,7 @@ export function normalizeProduct(product) {
     ownerName: product.owner_name || null,
     businessName: product.business_name || null,
     orders: product.orders ?? null,
+    variants: product.variants || [],
   };
 }
 
@@ -98,6 +103,174 @@ function DetailItem({ icon: Icon, label, value, theme }) {
   );
 }
 
+// Variants Table Component for View Modal
+function VariantsTable({ variants, theme }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const isAdmin = theme === "admin";
+
+  if (!variants?.length) {
+    return (
+      <div
+        className={`text-sm ${isAdmin ? "text-gray-500" : "text-gray-400"} py-2`}
+      >
+        No variants available
+      </div>
+    );
+  }
+
+  const displayVariants = isExpanded ? variants : variants.slice(0, 3);
+  const hasMore = variants.length > 3;
+
+  return (
+    <div className="mt-4">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <Grid
+            size={16}
+            className={isAdmin ? "text-teal-400" : "text-violet-500"}
+          />
+          <h5
+            className={`font-semibold text-sm ${isAdmin ? "text-white" : "text-gray-900"}`}
+          >
+            Variants ({variants.length})
+          </h5>
+        </div>
+        {hasMore && (
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className={`flex items-center gap-1 text-xs font-medium transition-colors ${
+              isAdmin
+                ? "text-teal-400 hover:text-teal-300"
+                : "text-violet-600 hover:text-violet-800"
+            }`}
+          >
+            {isExpanded ? (
+              <>
+                Show Less <ChevronUp size={14} />
+              </>
+            ) : (
+              <>
+                Show All <ChevronDown size={14} />
+              </>
+            )}
+          </button>
+        )}
+      </div>
+
+      <div
+        className={`overflow-x-auto rounded-xl border ${
+          isAdmin ? "border-white/10" : "border-violet-100"
+        }`}
+      >
+        <table className="w-full min-w-[600px] text-sm">
+          <thead className={isAdmin ? "bg-slate-800/60" : "bg-violet-50/60"}>
+            <tr>
+              {[
+                "Image",
+                "Size",
+                "Color",
+                "MRP",
+                "Selling",
+                "Stock",
+                "Status",
+              ].map((header) => (
+                <th
+                  key={header}
+                  className={`px-3 py-2 text-left text-xs font-medium uppercase ${
+                    isAdmin ? "text-gray-400" : "text-violet-600"
+                  }`}
+                >
+                  {header}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody
+            className={`divide-y ${isAdmin ? "divide-white/10" : "divide-violet-50"}`}
+          >
+            {displayVariants.map((variant) => (
+              <tr
+                key={variant.id}
+                className={
+                  isAdmin ? "hover:bg-slate-800/40" : "hover:bg-violet-50/50"
+                }
+              >
+                <td className="px-3 py-2">
+                  {/* FIXED: Changed double quotes to backticks for string interpolation */}
+                  <div
+                    className={`w-8 h-8 rounded border overflow-hidden flex-shrink-0 ${
+                      isAdmin ? "border-white/10" : "border-gray-200"
+                    }`}
+                  >
+                    <img
+                      src={getImageUrl(variant.image) || "/placeholder.png"}
+                      alt={variant.variant_size || "Variant"}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                      onError={(e) => {
+                        e.target.src =
+                          "https://placehold.co/40x40/f1f5f9/64748b?text=N/A";
+                      }}
+                    />
+                  </div>
+                </td>
+                <td
+                  className={`px-3 py-2 ${isAdmin ? "text-gray-300" : "text-gray-900"}`}
+                >
+                  {variant.variant_size || variant.size || "-"}
+                </td>
+                <td
+                  className={`px-3 py-2 ${isAdmin ? "text-gray-300" : "text-gray-900"}`}
+                >
+                  {variant.color || "-"}
+                </td>
+                <td
+                  className={`px-3 py-2 ${isAdmin ? "text-gray-500" : "text-gray-400"} line-through`}
+                >
+                  ₹{variant.price || 0}
+                </td>
+                <td
+                  className={`px-3 py-2 font-medium ${isAdmin ? "text-emerald-400" : "text-emerald-600"}`}
+                >
+                  ₹{variant.selling_price || 0}
+                </td>
+                <td
+                  className={`px-3 py-2 ${isAdmin ? "text-gray-300" : "text-gray-900"}`}
+                >
+                  {variant.stock ?? 0}
+                </td>
+                <td className="px-3 py-2">
+                  <span
+                    className={`text-xs px-2 py-1 rounded-full ${
+                      variant.status === "active"
+                        ? isAdmin
+                          ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                          : "bg-emerald-100 text-emerald-700 border border-emerald-200"
+                        : isAdmin
+                          ? "bg-red-500/20 text-red-400 border border-red-500/30"
+                          : "bg-red-100 text-red-700 border border-red-200"
+                    }`}
+                  >
+                    {variant.status === "active" ? "Active" : "Inactive"}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {hasMore && !isExpanded && (
+        <p
+          className={`text-xs mt-2 ${isAdmin ? "text-gray-500" : "text-gray-400"}`}
+        >
+          Showing 3 of {variants.length} variants
+        </p>
+      )}
+    </div>
+  );
+}
+
 export default function ViewProductModal({
   isOpen,
   onClose,
@@ -109,6 +282,7 @@ export default function ViewProductModal({
   if (!isOpen || !product) return null;
 
   const p = normalizeProduct(product);
+  console.log("Normalized Product:", p);
   const isAdmin = variant === "admin";
   const imageUrl = getImageUrl(p.image);
 
@@ -167,7 +341,9 @@ export default function ViewProductModal({
         {/* Header */}
         <div
           className={`flex items-center justify-between px-6 py-4 border-b shrink-0 ${
-            isAdmin ? "border-white/10 bg-slate-900/95" : "border-violet-100 bg-white"
+            isAdmin
+              ? "border-white/10 bg-slate-900/95"
+              : "border-violet-100 bg-white"
           }`}
         >
           <div className="flex items-center gap-3 min-w-0">
@@ -189,7 +365,9 @@ export default function ViewProductModal({
               >
                 Product Details
               </h2>
-              <p className={`text-xs ${isAdmin ? "text-gray-500" : "text-gray-500"}`}>
+              <p
+                className={`text-xs ${isAdmin ? "text-gray-500" : "text-gray-500"}`}
+              >
                 ID #{p.id}
               </p>
             </div>
@@ -236,7 +414,9 @@ export default function ViewProductModal({
                 ) : (
                   <div
                     className={`w-full h-full flex flex-col items-center justify-center gap-2 ${
-                      isAdmin ? "bg-slate-800 text-gray-500" : "bg-violet-100 text-violet-400"
+                      isAdmin
+                        ? "bg-slate-800 text-gray-500"
+                        : "bg-violet-100 text-violet-400"
                     }`}
                   >
                     <Package size={48} />
@@ -285,7 +465,9 @@ export default function ViewProductModal({
                     </span>
                   </div>
                 )}
-                <p className={`text-xs mt-1 ${isAdmin ? "text-gray-500" : "text-gray-500"}`}>
+                <p
+                  className={`text-xs mt-1 ${isAdmin ? "text-gray-500" : "text-gray-500"}`}
+                >
                   Stock:{" "}
                   <span
                     className={
@@ -361,11 +543,15 @@ export default function ViewProductModal({
                   >
                     Vendor
                   </p>
-                  <p className={`text-sm font-semibold ${isAdmin ? "text-white" : "text-gray-900"}`}>
+                  <p
+                    className={`text-sm font-semibold ${isAdmin ? "text-white" : "text-gray-900"}`}
+                  >
                     {p.businessName || p.ownerName}
                   </p>
                   {p.businessName && p.ownerName && (
-                    <p className={`text-xs mt-0.5 ${isAdmin ? "text-gray-400" : "text-gray-500"}`}>
+                    <p
+                      className={`text-xs mt-0.5 ${isAdmin ? "text-gray-400" : "text-gray-500"}`}
+                    >
                       {p.ownerName}
                     </p>
                   )}
@@ -410,6 +596,9 @@ export default function ViewProductModal({
                   />
                 ))}
               </div>
+
+              {/* Variants Section */}
+              <VariantsTable variants={p.variants} theme={variant} />
             </div>
           </div>
         </div>
@@ -417,7 +606,9 @@ export default function ViewProductModal({
         {/* Footer actions */}
         <div
           className={`flex gap-3 px-6 py-4 border-t shrink-0 ${
-            isAdmin ? "border-white/10 bg-slate-900/95" : "border-violet-100 bg-white"
+            isAdmin
+              ? "border-white/10 bg-slate-900/95"
+              : "border-violet-100 bg-white"
           }`}
         >
           {showEditButton && onEdit && (
