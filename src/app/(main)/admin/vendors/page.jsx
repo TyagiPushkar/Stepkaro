@@ -76,6 +76,7 @@ export default function SellerPage() {
   const [approvalData, setApprovalData] = useState({
     wallet_value: "",
     minimum_order_value: "",
+    settlement_days: "",
   });
 
   const [approvalUser, setApprovalUser] = useState(null);
@@ -284,6 +285,7 @@ export default function SellerPage() {
     setApprovalData({
       wallet_value: "",
       minimum_order_value: "",
+      settlement_days: "",
     });
     setShowApprovalModal(true);
   };
@@ -315,6 +317,14 @@ export default function SellerPage() {
         amount:
           rawAmount !== "" && rawAmount !== undefined ? Number(rawAmount) : "",
       };
+      // ✅ Sirf vendor ke liye settlement_days add karo
+      if (currentRole === "vendor") {
+        payload.settlement_days =
+          approvalData.settlement_days !== "" &&
+          approvalData.settlement_days !== undefined
+            ? Number(approvalData.settlement_days)
+            : "";
+      }
 
       console.log("Submitting Admin Approval Payload via Axios:", payload);
 
@@ -336,6 +346,7 @@ export default function SellerPage() {
         setApprovalData({
           wallet_value: "",
           minimum_order_value: "",
+          settlement_days: "",
         });
 
         if (result.success) {
@@ -349,6 +360,10 @@ export default function SellerPage() {
                       approvalUser.role === "buyer"
                         ? approvalData.wallet_value
                         : u.wallet_value,
+                    settlement_days:
+                      approvalUser.role === "vendor"
+                        ? approvalData.settlement_days
+                        : u.settlement_days,
                   }
                 : u,
             ),
@@ -943,7 +958,7 @@ export default function SellerPage() {
                   Minimum Value
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Settlement Date
+                  Settlement Days
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Address
@@ -1263,6 +1278,22 @@ export default function SellerPage() {
                 }
                 className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 placeholder="Enter minimum cart value"
+              />
+              <label className="text-sm font-medium text-gray-700 block mb-1">
+                Settlement Date
+              </label>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={approvalData.settlement_days ?? ""}
+                onChange={(e) =>
+                  setApprovalData((prev) => ({
+                    ...prev,
+                    settlement_days: e.target.value,
+                  }))
+                }
+                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="Enter settlement days"
               />
             </div>
           )}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import {
@@ -61,6 +61,8 @@ const GET_DISTRICTS_LIST_API =
 
 const GET_RESTRICTED_DISTRICTS_API =
   "https://namami-infotech.com/Stepkaro/src/vender/get_restrict_district.php";
+const BANK_DETAILS_API =
+  "https://namami-infotech.com/Stepkaro/src/bank/get_bank_details.php";
 
 const formatCurrency = (value) => {
   const amount = Number(value || 0);
@@ -151,6 +153,8 @@ export default function VendorDetailsPage() {
   const [walletLoading, setWalletLoading] = useState(false);
   const [orderHistory, setOrderHistory] = useState([]);
   const [orderLoading, setOrderLoading] = useState(false);
+  const [bankDetails, setBankDetails] = useState(null);
+  const [bankLoading, setBankLoading] = useState(false);
 
   // Coupon states - FIX: Use single source of truth
   const [coupons, setCoupons] = useState([]);
@@ -171,7 +175,8 @@ export default function VendorDetailsPage() {
     end_date: "",
   });
 
-  const token = localStorage.getItem("access_token");
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("access_token") : "";
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
@@ -238,6 +243,38 @@ export default function VendorDetailsPage() {
     fetchVendor();
   }, [vendorId]);
 
+  useEffect(() => {
+    if (!vendorId || !token) return;
+
+    const fetchBankDetails = async () => {
+      setBankLoading(true);
+      try {
+        const response = await axios.get(BANK_DETAILS_API, {
+          params: { vendor_id: vendorId },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const payload = response?.data?.data ?? response?.data;
+        const bankData = Array.isArray(payload) ? payload[0] : payload;
+
+        if (bankData && typeof bankData === "object") {
+          setBankDetails(bankData);
+        } else {
+          setBankDetails(null);
+        }
+      } catch (error) {
+        console.error("Error fetching bank details:", error);
+        setBankDetails(null);
+      } finally {
+        setBankLoading(false);
+      }
+    };
+
+    fetchBankDetails();
+  }, [vendorId, token]);
+
   // Fetch Wallet & Order History
   // useEffect(() => {
   //   if (!vendor?.id) return;
@@ -296,7 +333,7 @@ export default function VendorDetailsPage() {
   // }, [vendor]);
 
   // FIX: Separate fetchCoupons function that sets coupons state
-  const fetchCoupons = async () => {
+  const fetchCoupons = useCallback(async () => {
     if (!vendor?.id && !vendorId) return;
 
     setCouponLoading(true);
@@ -340,14 +377,66 @@ export default function VendorDetailsPage() {
     } finally {
       setCouponLoading(false);
     }
-  };
+  }, [token, vendor?.id, vendorId]);
 
   // Fetch coupons when vendor is loaded
   useEffect(() => {
-    if (vendor?.id || vendorId) {
-      fetchCoupons();
-    }
-  }, [vendor, vendorId]);
+    if (!vendor?.id && !vendorId) return;
+
+    let isMounted = true;
+
+    const loadCoupons = async () => {
+      setCouponLoading(true);
+      try {
+        const response = await axios.get(
+          `${COUPON_API}?vendor_id=${vendorId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
+
+        if (response.data?.success && isMounted) {
+          const couponData = Array.isArray(response.data.data)
+            ? response.data.data
+            : [];
+
+          const filtered = couponData.filter((coupon) => {
+            const ids = [
+              coupon.vendor_id,
+              coupon.seller_id,
+              coupon.user_id,
+              coupon.vendorId,
+              coupon.sellerId,
+            ];
+            return ids
+              .map((value) => String(value || ""))
+              .includes(String(vendor?.id || vendorId));
+          });
+
+          setCoupons(filtered.length ? filtered : couponData);
+        } else if (isMounted) {
+          setCoupons([]);
+        }
+      } catch (error) {
+        console.error("Error fetching coupons:", error);
+        if (isMounted) {
+          setCoupons([]);
+        }
+      } finally {
+        if (isMounted) {
+          setCouponLoading(false);
+        }
+      }
+    };
+
+    void loadCoupons();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [token, vendor?.id, vendorId]);
 
   // Coupon CRUD Operations
   const handleToggleCouponStatus = async (id) => {
@@ -883,18 +972,55 @@ export default function VendorDetailsPage() {
                     {vendor.pan_number || "—"}
                   </span>
                 </div>
-                {/* <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-3">
-                  <span>Logistics partner</span>
-                  <span className="font-medium text-slate-900">
-                    {vendor.logistic_partner_name || "—"}
-                  </span>
+              </div>
+
+              <div className="mt-5 border-t border-slate-200 pt-5">
+                <div className="flex items-center gap-2">
+                  <CreditCard className="h-5 w-5 text-violet-600" />
+                  <h3 className="text-base font-semibold text-slate-900">
+                    Bank details
+                  </h3>
                 </div>
-                <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-3">
-                  <span>Delivery location</span>
-                  <span className="font-medium text-slate-900">
-                    {vendor.delivery_location || "—"}
-                  </span>
-                </div> */}
+
+                {bankLoading ? (
+                  <div className="mt-3 flex items-center gap-2 text-sm text-slate-500">
+                    <Loader2 className="h-4 w-4 animate-spin text-violet-600" />
+                    Loading bank details...
+                  </div>
+                ) : bankDetails ? (
+                  <div className="mt-3 space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-slate-500">Account holder</span>
+                      <span className="font-medium text-slate-900">
+                        {bankDetails.acc_holder_name ||
+                          bankDetails.account_holder_name ||
+                          "—"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-slate-500">Account number</span>
+                      <span className="font-medium text-slate-900">
+                        {bankDetails.account_number || "—"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-slate-500">IFSC</span>
+                      <span className="font-medium text-slate-900">
+                        {bankDetails.ifsc || "—"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-slate-500">Bank name</span>
+                      <span className="font-medium text-slate-900">
+                        {bankDetails.bank_name || "—"}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mt-3 rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
+                    No bank details found for this vendor.
+                  </div>
+                )}
               </div>
             </div>
 

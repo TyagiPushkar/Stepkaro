@@ -581,10 +581,14 @@ export default function BuyerDetailsPage() {
                     {buyer.document_image && (
                       <div className="flex items-center gap-3">
                         <img
-                          src={buyer.document_image}
+                          src={buyer.document_image || "/placeholder.png"}
                           alt="Document"
                           className="w-16 h-16 rounded-lg border object-cover"
-                          onError={(e) => (e.target.src = "/placeholder.png")}
+                          onError={(e) => {
+                            if (e.target.src.includes("placeholder.png"))
+                              return;
+                            e.target.src = "/placeholder.png";
+                          }}
                         />
                         <a
                           href={buyer.document_image}
@@ -793,95 +797,97 @@ export default function BuyerDetailsPage() {
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
-                      <tr>
-                        <th className="px-4 py-3 text-left">Date</th>
-                        <th className="px-4 py-3 text-left">Type</th>
-                        <th className="px-4 py-3 text-left">Amount</th>
-                        <th className="px-4 py-3 text-left">Description</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y">
-                      {walletHistory.map((entry) => (
-                        <tr
-                          key={entry.id}
-                          className="hover:bg-gray-50 transition-colors"
-                        >
-                          <td className="px-4 py-3 text-gray-600">
-                            {entry.date}
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-2">
-                              <div
-                                className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                                  entry.type === "credit"
-                                    ? "bg-green-100"
-                                    : "bg-red-100"
-                                }`}
-                              >
-                                {entry.type === "credit" ? (
-                                  <svg
-                                    className="w-4 h-4 text-green-600"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2.5}
-                                      d="M5 15l7-7 7 7"
-                                    />
-                                  </svg>
-                                ) : (
-                                  <svg
-                                    className="w-4 h-4 text-red-600"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2.5}
-                                      d="M19 9l-7 7-7-7"
-                                    />
-                                  </svg>
-                                )}
-                              </div>
-                              <span
-                                className={`text-sm font-medium ${
-                                  entry.type === "credit"
-                                    ? "text-green-700"
-                                    : "text-red-700"
-                                }`}
-                              >
-                                {entry.type === "credit"
-                                  ? "Credited"
-                                  : "Debited"}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3">
-                            <span
-                              className={`font-semibold ${
-                                entry.type === "credit"
-                                  ? "text-green-600"
-                                  : "text-red-600"
-                              }`}
-                            >
-                              {entry.type === "credit" ? "+" : "-"}
-                              {formatCurrency(entry.amount)}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-gray-600 max-w-xs truncate">
-                            {entry.note || entry.description || "-"}
-                          </td>
+                  <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
+                        <tr>
+                          <th className="px-4 py-3 text-left">Date</th>
+                          <th className="px-4 py-3 text-left">Type</th>
+                          <th className="px-4 py-3 text-left">Amount</th>
+                          <th className="px-4 py-3 text-left">Description</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y">
+                        {walletHistory.map((entry) => (
+                          <tr
+                            key={entry.id}
+                            className="hover:bg-gray-50 transition-colors"
+                          >
+                            <td className="px-4 py-3 text-gray-600">
+                              {entry.date}
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-2">
+                                <div
+                                  className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                    entry.type === "credit"
+                                      ? "bg-green-100"
+                                      : "bg-red-100"
+                                  }`}
+                                >
+                                  {entry.type === "credit" ? (
+                                    <svg
+                                      className="w-4 h-4 text-green-600"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2.5}
+                                        d="M5 15l7-7 7 7"
+                                      />
+                                    </svg>
+                                  ) : (
+                                    <svg
+                                      className="w-4 h-4 text-red-600"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2.5}
+                                        d="M19 9l-7 7-7-7"
+                                      />
+                                    </svg>
+                                  )}
+                                </div>
+                                <span
+                                  className={`text-sm font-medium ${
+                                    entry.type === "credit"
+                                      ? "text-green-700"
+                                      : "text-red-700"
+                                  }`}
+                                >
+                                  {entry.type === "credit"
+                                    ? "Credited"
+                                    : "Debited"}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3">
+                              <span
+                                className={`font-semibold ${
+                                  entry.type === "credit"
+                                    ? "text-green-600"
+                                    : "text-red-600"
+                                }`}
+                              >
+                                {entry.type === "credit" ? "+" : "-"}
+                                {formatCurrency(entry.amount)}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-gray-600 max-w-xs truncate">
+                              {entry.note || entry.description || "-"}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
             </div>
