@@ -664,84 +664,133 @@ export default function SellerProductsPage() {
   };
 
   // Add/Edit product
-  const submitProduct = async () => {
-    try {
-      const token = localStorage.getItem("access_token");
-      const formData = new FormData();
+ // Add/Edit product
+const submitProduct = async (e) => {
+  e.preventDefault();
+  
+  try {
+    const token = localStorage.getItem("access_token");
+    const formData = new FormData();
 
-      const sizeRange = generateSizes(newProduct.min_size, newProduct.max_size);
+    // Prepare base product data
+    formData.append("article_name", newProduct.article_name);
+    formData.append("description", newProduct.description);
+    formData.append("selling_price", newProduct.selling_price);
+    formData.append("price", newProduct.price);
+    formData.append("brand_name", newProduct.brand_name);
+    formData.append("category_name", newProduct.category_name);
+    formData.append("gender", newProduct.gender);
+    formData.append("color", newProduct.color);
+    formData.append("material", newProduct.material);
+    formData.append("upper_material", newProduct.upper_material);
+    formData.append("packing_type", newProduct.packing_type);
+    formData.append("pairs_per_ctn", newProduct.pairs_per_ctn);
+    formData.append("origin", newProduct.origin);
+    formData.append("stock_quantity", newProduct.stock_quantity);
+    formData.append("min_size", newProduct.min_size);
+    formData.append("max_size", newProduct.max_size);
 
-      formData.append("article_name", newProduct.article_name);
-      formData.append("description", newProduct.description);
-      formData.append("selling_price", newProduct.selling_price);
-      formData.append("price", newProduct.price);
-      formData.append("brand_name", newProduct.brand_name);
-      formData.append("category_name", newProduct.category_name);
-      formData.append("size", sizeRange);
-      formData.append("gender", newProduct.gender);
-      formData.append("color", newProduct.color);
-      formData.append("material", newProduct.material);
-      formData.append("upper_material", newProduct.upper_material);
-      formData.append("packing_type", newProduct.packing_type);
-      formData.append("pairs_per_ctn", newProduct.pairs_per_ctn);
-      formData.append("origin", newProduct.origin);
-      formData.append("stock_quantity", newProduct.stock_quantity);
-      formData.append("status", newProduct.status);
-      formData.append("variants", JSON.stringify(newProduct.variants));
-
-      if (newProduct.image) {
-        formData.append("image", newProduct.image);
-      }
-
-      let url =
-        "https://namami-infotech.com/Stepkaro/src/product/vendor_add_product.php";
-      if (isEditing && editProduct) {
-        formData.append("product_id", editProduct.id);
-        url =
-          "https://namami-infotech.com/Stepkaro/src/product/update_product.php";
-      }
-
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
-
-      const result = await response.json();
-      if (result.success) {
-        setShowAddModal(false);
-        fetchProducts();
-        setNewProduct({
-          article_name: "",
-          description: "",
-          selling_price: "",
-          price: "",
-          brand_name: "",
-          category_name: "",
-          min_size: "",
-          max_size: "",
-          variants: [],
-          gender: "",
-          color: "",
-          material: "",
-          upper_material: "",
-          packing_type: "",
-          pairs_per_ctn: "",
-          origin: "Made in India",
-          stock_quantity: "",
-          status: "inactive",
-        });
-        setShowSuccess(true);
-        setTimeout(() => setShowSuccess(false), 2000);
-      } else {
-        alert(result.message);
-      }
-    } catch (error) {
-      console.log(error);
+    // Add main image if present
+    if (newProduct.image && typeof newProduct.image !== "string") {
+      formData.append("image", newProduct.image);
     }
-  };
+
+    // Prepare variants data for API
+    // The API expects 'multi_variants' array with variant data
+    const multiVariants = newProduct.variants.map((variant) => {
+      const variantData = {
+        variant_name: variant.variant_name,
+        image: variant.image,
+        min_size: variant.min_size,
+        max_size: variant.max_size,
+        color: variant.color,
+        price: variant.price,
+        selling_price: variant.selling_price,
+        stock: variant.stock,
+        packing_type: variant.packing_type,
+        pairs_per_ctn: variant.pairs_per_ctn,
+        status: "active",
+      };
+
+      // If editing, include variant_id
+      if (isEditing && variant.id) {
+        variantData.variant_id = variant.id;
+      }
+
+      return variantData;
+    });
+
+    // Add multi_variants as JSON string
+    formData.append("multi_variants", JSON.stringify(multiVariants));
+
+    // Determine URL based on edit mode
+    // let url = "https://namami-infotech.com/Stepkaro/src/product/vendor_add_product.php";
+    // if (isEditing && editProduct) {
+    //   formData.append("product_id", editProduct.id);
+    //   url = "https://namami-infotech.com/Stepkaro/src/product/update_product.php";
+    // }
+
+   console.log("========== FormData ==========");
+    for (const [key, value] of formData.entries()) {
+      if (value instanceof File) {
+        console.log(`${key}:`, {
+          name: value.name,
+          size: value.size,
+          type: value.type,
+        });
+      } else {
+        console.log(`${key}:`, value);
+      }
+    }
+    console.log("==============================");
+
+    // const response = await fetch(url, {
+    //   method: "POST",
+    //   headers: {
+    //     Authorization: `Bearer ${token}`,
+    //   },
+    //   body: formData,
+    // });
+
+    // const result = await response.json();
+    
+    // if (result.success) {
+    //   setShowAddModal(false);
+    //   // Reset form
+    //   setNewProduct({
+    //     article_name: "",
+    //     description: "",
+    //     selling_price: "",
+    //     price: "",
+    //     brand_name: "",
+    //     category_name: "",
+    //     min_size: "",
+    //     max_size: "",
+    //     variants: [],
+    //     gender: "",
+    //     color: "",
+    //     material: "",
+    //     upper_material: "",
+    //     packing_type: "",
+    //     pairs_per_ctn: "",
+    //     origin: "Made in India",
+    //     stock_quantity: "",
+    //     status: "inactive",
+    //     image: null,
+    //   });
+    //   setPreviewUrl("");
+    //   // Refresh product list
+    //   fetchProducts();
+    //   setShowSuccess(true);
+    //   setTimeout(() => setShowSuccess(false), 2000);
+    // } else {
+    //   alert(result.message || "Failed to save product");
+    // }
+  } catch (error) {
+    console.error("Error submitting product:", error);
+    alert("An error occurred while saving the product. Please try again.");
+  }
+};
 
   if (!isMounted) {
     return (
