@@ -22,6 +22,9 @@ import {
   CornerUpLeftIcon,
   Ticket,
   MessageSquare,
+  Cross,
+  CrossIcon,
+  Crosshair,
 } from "lucide-react";
 
 import { useEffect, useState } from "react";
@@ -55,6 +58,7 @@ const sellerNavItems = [
   { name: "My Products", href: "/seller/products", icon: Package },
   { name: "My Orders", href: "/seller/orders", icon: ShoppingCart },
   { name: "My Coupons", href: "/seller/coupons", icon: Tag },
+  { name: "Restricted Districts", href: "/seller/restricted-districts", icon: Crosshair},
   { name: "Payments", href: "/seller/payments", icon: IndianRupee },
   { name: "Account", href: "/seller/account", icon: User },
   // { name: "Logout", href: "/seller/logout", icon: IndianRupee },

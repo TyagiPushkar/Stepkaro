@@ -349,7 +349,7 @@ export default function SellerCouponPage() {
                     </div>
 
                     {/* Status Toggle Switch Icon */}
-                    <button
+                    {/* <button
                       onClick={() => handleToggleStatus(coupon.id)}
                       className={`text-2xl transition focus:outline-none ${
                         coupon.status === 1
@@ -363,7 +363,7 @@ export default function SellerCouponPage() {
                       ) : (
                         <ToggleLeft className="w-9 h-9" />
                       )}
-                    </button>
+                    </button> */}
                   </div>
 
                   {/* Pricing Matrix */}
@@ -404,6 +404,8 @@ export default function SellerCouponPage() {
                   )}
                 </div>
 
+                {/* edit the offer on */}
+
                 <div className="flex justify-between items-center border-t border-slate-100 pt-4 mt-4">
                   <div className="text-xs text-slate-400">
                     Used:{" "}
@@ -412,12 +414,12 @@ export default function SellerCouponPage() {
                     </span>{" "}
                     times
                   </div>
-                  <button
+                  {/* <button
                     onClick={() => openModal(coupon)}
                     className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 text-indigo-600 hover:bg-indigo-50 border border-indigo-100 rounded-lg transition"
                   >
                     <Pencil className="w-3 h-3" /> Edit Offer
-                  </button>
+                  </button> */}
                 </div>
               </div>
             ))}

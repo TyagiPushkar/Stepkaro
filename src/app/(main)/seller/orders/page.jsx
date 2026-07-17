@@ -36,14 +36,20 @@ const statusConfig = {
     icon: CheckCircle2,
     nextAction: "dispatch",
   },
-  DISPATCHED: {
+
+  DISPATCHED_TO_WR: {
     label: "Dispatched to warehouse",
     color: "bg-purple-100 text-purple-700",
     icon: Truck,
-    nextAction: "deliver",
+    nextAction: "Dilivered",
   },
-  // DELIVERED: { label: "Delivered", color: "bg-green-100 text-green-700", icon: CheckCircle2, nextAction: null },
-  
+
+  RECEIVED_IN_WR: {
+    label: "Received in Warehouse",
+    color: "bg-green-100 text-green-700",
+    icon: CheckCircle2,
+    nextAction: null,
+  },
 
   REJECTED: {
     label: "Rejected",
@@ -53,17 +59,46 @@ const statusConfig = {
   },
 };
 
+const Modal = ({
+  isOpen,
+  onClose,
+  title,
+  children,
+  maxWidth = "max-w-4xl",
+}) => {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <div
+        className={`bg-white rounded-2xl w-full ${maxWidth} max-h-[90vh] overflow-y-auto shadow-2xl`}
+      >
+        <div className="flex justify-between items-center p-4 border-b">
+          <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+          <button
+            onClick={onClose}
+            className="p-1 text-gray-400 hover:text-gray-600"
+          >
+            ✕
+          </button>
+        </div>
+        <div className="p-4">{children}</div>
+      </div>
+    </div>
+  );
+};
+
 export default function SellerOrdersPage() {
   const router = useRouter();
   const [orders, setOrders] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showActionModal, setShowActionModal] = useState(false);
   const [actionType, setActionType] = useState("");
+  const [rejectReason, setRejectReason] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   useEffect(() => {
     fetchOrders();
@@ -106,7 +141,11 @@ export default function SellerOrdersPage() {
 
           quantity: Number(item.total_quantity || 0),
 
-          amount: Number(item.total_amount || 0),
+           amount: Number(item.total_amount || 0),
+
+            admin_commission: Number(item.admin_commission || 0),
+
+          vendor_amount: Number(item.vendor_amount || 0),
 
           status: item.status ? item.status.toUpperCase() : "NEW",
 
@@ -117,6 +156,10 @@ export default function SellerOrdersPage() {
           paymentMethod: "Online",
 
           shippingAddress: item.customer_phone || "-",
+
+          reject_reason: item.reject_reason || "-",
+
+          rejected_by: item.rejected_by || "-",
 
           thumbnailImg:
             item.items && item.items[0] && item.items[0].image
@@ -199,12 +242,19 @@ export default function SellerOrdersPage() {
   const handleRejectOrder = (order) => {
     setSelectedOrder(order);
     setActionType("reject");
+    setRejectReason("");
     setShowActionModal(true);
   };
 
   const handleDispatchOrder = (order) => {
     setSelectedOrder(order);
     setActionType("dispatch");
+    setShowActionModal(true);
+  };
+
+  const handleDeliverOrder = (order) => {
+    setSelectedOrder(order);
+    setActionType("Dilivered");
     setShowActionModal(true);
   };
 
@@ -228,17 +278,26 @@ export default function SellerOrdersPage() {
           break;
 
         case "dispatch":
-          newStatus = "dispatched";
+          newStatus = "dispatched_to_wr";
 
           break;
 
-        case "deliver":
-          newStatus = "delivered";
+        case "Dilivered":
+          newStatus = "received_in_wr";
 
           break;
 
         default:
           return;
+      }
+
+      const payload = {
+        order_id: Number(selectedOrder.id.replace("#", "")),
+        status: newStatus,
+      };
+
+      if (actionType === "reject") {
+        payload.reject_reason = rejectReason;
       }
 
       const response = await fetch(
@@ -252,11 +311,7 @@ export default function SellerOrdersPage() {
             "Content-Type": "application/json",
           },
 
-          body: JSON.stringify({
-            order_id: Number(selectedOrder.id.replace("#", "")),
-
-            status: newStatus,
-          }),
+          body: JSON.stringify(payload),
         },
       );
 
@@ -358,16 +413,16 @@ export default function SellerOrdersPage() {
             <Truck size={16} />
           </button>
         );
-      case "DISPATCHED":
-        return (
-          <button
-            className="rounded-lg bg-gray-100 p-2 text-gray-700 cursor-not-allowed opacity-50"
-            title="Order Dispatched"
-            disabled
-          >
-            <Clock3 size={16} />
-          </button>
-        );
+      // case "DISPATCHED_TO_WR":
+      //   return (
+      //     <button
+      //       onClick={() => handleDeliverOrder(order)}
+      //       className="rounded-lg bg-emerald-100 p-2 text-emerald-700 transition hover:bg-emerald-200"
+      //       title="Mark as Received"
+      //     >
+      //       <CheckCircle2 size={16} />
+      //     </button>
+      //   );
       default:
         return null;
     }
@@ -391,34 +446,7 @@ export default function SellerOrdersPage() {
   //   );
   // };
 
-  const Modal = ({
-    isOpen,
-    onClose,
-    title,
-    children,
-    maxWidth = "max-w-4xl",
-  }) => {
-    if (!isOpen) return null;
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-        {/* 🎯 MaxWidth is now dynamic instead of hardcoded to max-w-md */}
-        <div
-          className={`bg-white rounded-2xl w-full ${maxWidth} max-h-[90vh] overflow-y-auto shadow-2xl`}
-        >
-          <div className="flex justify-between items-center p-4 border-b">
-            <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
-            <button
-              onClick={onClose}
-              className="p-1 text-gray-400 hover:text-gray-600"
-            >
-              ✕
-            </button>
-          </div>
-          <div className="p-4">{children}</div>
-        </div>
-      </div>
-    );
-  };
+  // Modal component moved to top-level to prevent losing input focus during type/re-renders
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-pink-50 p-6">
@@ -507,18 +535,24 @@ export default function SellerOrdersPage() {
 
       {/* Filters */}
       <div className="mb-6 flex flex-wrap gap-3">
-        {["All", "NEW", "ACCEPTED", "DISPATCHED", "DELIVERED", "REJECTED"].map(
+        {["All", "NEW", "ACCEPTED", "DISPATCHED_TO_WR", "RECEIVED_IN_WR", "REJECTED"].map(
           (status) => (
             <button
               key={status}
               onClick={() => handleStatusFilter(status)}
               className={`rounded-full px-5 py-2 text-sm font-medium transition ${
                 selectedStatus === status
-                  ? "bg-violet-600 text-white shadow-md"
+                  ? "bg-violet-600 text-white shadow-md shadow-violet-200"
                   : "bg-white text-violet-700 border border-violet-200 hover:bg-violet-50"
               }`}
             >
-              {status === "All" ? "All Orders" : status}
+              {status === "All"
+                ? "All Orders"
+                : status === "DISPATCHED_TO_WR"
+                ? "DISPATCHED TO WAREHOUSE"
+                : status === "RECEIVED_IN_WR"
+                ? "RECEIVED IN WAREHOUSE"
+                : status}
             </button>
           ),
         )}
@@ -540,9 +574,10 @@ export default function SellerOrdersPage() {
             }}
             className="rounded-lg border border-violet-200 bg-white px-2 py-1 text-sm"
           >
-            <option value={5}>5</option>
+            {/* <option value={5}>5</option> */}
             <option value={10}>10</option>
             <option value={25}>25</option>
+            <option value={50}>50</option>
           </select>
         </div>
       </div>
@@ -556,11 +591,20 @@ export default function SellerOrdersPage() {
                 <th className="px-6 py-4 font-semibold">Order ID</th>
 
                 <th className="px-6 py-4 font-semibold">Items</th>
-                <th className="px-6 py-4 font-semibold">Quantity</th>
+                <th className="px-6 py-4 font-semibold">Total Products</th>
+                <th className="px-6 py-4 font-semibold">Total Quantity</th>
                 <th className="px-6 py-4 font-semibold">Commission</th>
-                <th className="px-6 py-4 font-semibold">Amount</th>
+                <th className="px-6 py-4 font-semibold">Admin Amount</th>
+                <th className="px-6 py-4 font-semibold">Vendor Amount</th>
+                <th className="px-6 py-4 font-semibold">Total Amount</th>
                 <th className="px-6 py-4 font-semibold">Date</th>
                 <th className="px-6 py-4 font-semibold">Status</th>
+                {selectedStatus === "REJECTED" && (
+                  <>
+                <th className="px-6 py-4 font-semibold">Reject Reason</th>
+                <th className="px-6 py-4 font-semibold">Reject By</th>
+              </>
+                )}
                 <th className="px-6 py-4 font-semibold">Actions</th>
               </tr>
             </thead>
@@ -578,7 +622,7 @@ export default function SellerOrdersPage() {
                     <td className="px-6 py-5 font-semibold text-violet-900">
                       <div className="flex items-center gap-3">
                         {/* 📦 DYNAMIC IMAGE THUMBNAIL LAYOUT WRAPPER */}
-                        <div className="w-10 h-10 rounded-lg bg-slate-100 border border-violet-100 overflow-hidden shrink-0 shadow-sm relative flex items-center justify-center">
+                        {/* <div className="w-10 h-10 rounded-lg bg-slate-100 border border-violet-100 overflow-hidden shrink-0 shadow-sm relative flex items-center justify-center">
                           <img
                             src={
                               order.thumbnailImg &&
@@ -598,7 +642,7 @@ export default function SellerOrdersPage() {
                                 "https://placehold.co/40x40?text=📦";
                             }}
                           />
-                        </div>
+                        </div> */}
 
                         {/* ORDER ID LABEL TOKEN */}
                         <span className="text-violet-900 font-semibold">
@@ -626,12 +670,22 @@ export default function SellerOrdersPage() {
                     </td>
 
                     <td className="px-6 py-5 text-gray-700">
-                      {order.quantity}
+                      {order.productsList?.length || 0} Products
+                    </td>
+
+                    <td className="px-6 py-5 text-gray-700">
+                      {order.productsList?.reduce((sum, prod) => sum + Number(prod.quantity || 0), 0) || 0} Qty
                     </td>
                     <td className="px-6 py-5">
                       <span className="text-sm font-medium text-purple-600 bg-purple-50 px-2.5 py-1 rounded-md border border-purple-100">
                         {parseFloat(order.commission)}%
                       </span>
+                    </td>
+                    <td className="px-6 py-5 font-semibold text-gray-900">
+                      ₹{order.admin_commission.toLocaleString()}
+                    </td>
+                    <td className="px-6 py-5 font-semibold text-gray-900">
+                      ₹{order.vendor_amount.toLocaleString()}
                     </td>
                     <td className="px-6 py-5 font-semibold text-gray-900">
                       ₹{order.amount.toLocaleString()}
@@ -648,6 +702,25 @@ export default function SellerOrdersPage() {
                         {statusInfo.label}
                       </span>
                     </td>
+
+
+                      {selectedStatus === "REJECTED" && (
+                        <>
+                    {/* reject reason */}
+                    <td className="px-6 py-5">
+                      <span className="text-sm font-medium text-red-600 bg-red-50 px-2.5 py-1 rounded-md border border-red-100">
+                        {order.reject_reason}
+                      </span>
+                    </td>
+
+                    {/* reject by */}
+                    <td className="px-6 py-5">
+                      <span className="text-sm font-medium text-red-600 bg-red-50 px-2.5 py-1 rounded-md border border-red-100">
+                        {order.rejected_by}
+                      </span>
+                    </td>
+                    </>
+                    )}
                     <td className="px-6 py-5">
                       <div className="flex items-center gap-2">
                         <button
@@ -834,182 +907,123 @@ export default function SellerOrdersPage() {
             {/* DYNAMIC PRODUCT LIST BREAKDOWN */}
             <div className="space-y-4">
               <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wide flex items-center gap-2">
-                <span className="w-1.5 h-3.5 bg-violet-600 rounded-full inline-block"></span>
-                Ordered Items Breakdown (
-                {selectedOrder.productsList?.length || 0})
+                <span className="w-1.5 h-3.5 bg-violet-650 rounded-full inline-block"></span>
+                Ordered Items Breakdown ({selectedOrder.productsList?.length || 0} line items)
               </h3>
 
-              {selectedOrder.productsList &&
-              selectedOrder.productsList.length > 0 ? (
-                selectedOrder.productsList.map((prod, idx) => {
-                  const productImgUrl =
-                    prod.image && prod.image.trim() !== ""
-                      ? prod.image.startsWith("http")
-                        ? prod.image
-                        : `https://namami-infotech.com/Stepkaro/${prod.image.replace("Stepkaro/", "")}`
-                      : "https://placehold.co/100x100?text=📦";
+              <div className="border border-violet-100 rounded-xl overflow-hidden shadow-xs bg-white">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="bg-violet-50/50 border-b border-violet-100 text-violet-750 font-bold uppercase tracking-wider text-[10px]">
+                        <th className="p-3">Product</th>
+                        <th className="p-3">Variant</th>
+                        <th className="p-3">Specs</th>
+                        <th className="p-3 text-right">Pairs/Ctn</th>
+                        <th className="p-3 text-right">Carton Qty</th>
+                        <th className="p-3 text-right">Selling Price</th>
+                        {/* <th className="p-3 text-right">Commission</th> */}
+                        <th className="p-3 text-right">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-violet-50 text-gray-700">
+                      {selectedOrder.productsList && selectedOrder.productsList.length > 0 ? (
+                        selectedOrder.productsList.map((prod, idx) => {
+                          const productImgUrl =
+                            prod.image && prod.image.trim() !== ""
+                              ? prod.image.startsWith("http")
+                                ? prod.image
+                                : `https://namami-infotech.com/Stepkaro/${prod.image.replace("Stepkaro/", "")}`
+                              : "https://placehold.co/100x100?text=📦";
 
-                  return (
-                    <div
-                      key={idx}
-                      className="bg-white border border-gray-200/80 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200"
-                    >
-                      <div className="bg-gray-50/70 p-3.5 border-b border-gray-100 flex gap-4 items-center">
-                        <div className="w-12 h-12 rounded-lg bg-white border border-gray-200 overflow-hidden shrink-0 shadow-xs relative">
-                          <img
-                            src={productImgUrl}
-                            alt="Ordered Item"
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.target.src =
-                                "https://placehold.co/100x100?text=📦";
-                            }}
-                          />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-xs font-bold text-violet-600 tracking-wide uppercase">
-                            {prod.brand_name || "Generic Brand"}
-                          </p>
-                          <p className="font-bold text-gray-900 text-sm truncate mt-0.5">
-                            {prod.article_name || "Unnamed Product Line"}
-                          </p>
-                        </div>
-                        <div className="text-right shrink-0 bg-violet-100/60 border border-violet-200/50 rounded-lg px-2.5 py-1">
-                          <p className="text-xs text-violet-700 font-medium">
-                            Item Qty
-                          </p>
-                          <p className="text-sm font-black text-violet-950 text-center">
-                            {prod.quantity || 1}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 border-b border-gray-100 bg-white">
-                        {/* 👥 LEFT COLUMN (50% WIDTH) */}
-                        <div className="p-4 space-y-3.5">
-                          <div className="flex flex-col gap-0.5">
-                            <span className="text-[11px] font-bold uppercase tracking-wider text-violet-500/80">
-                              Category
-                            </span>
-                            <span className="text-[14px] font-bold text-slate-800">
-                              {prod.category_name || "—"}
-                            </span>
-                          </div>
-                          <div className="flex flex-col gap-0.5">
-                            <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">
-                              Gender Target
-                            </span>
-                            <span className="text-[14px] font-semibold text-slate-700 capitalize">
-                              {prod.gender || "—"}
-                            </span>
-                          </div>
-                          <div className="flex flex-col gap-0.5">
-                            <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">
-                              Color Scheme
-                            </span>
-                            <span className="text-[14px] font-semibold text-slate-700 capitalize">
-                              {prod.color || "—"}
-                            </span>
-                          </div>
-                          <div className="flex flex-col gap-0.5">
-                            <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">
-                              Material
-                            </span>
-                            <span className="text-[14px] font-semibold text-slate-700">
-                              {prod.material || "—"}
-                            </span>
-                          </div>
-                          <div className="flex flex-col gap-0.5">
-                            <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">
-                              Product Added
-                            </span>
-                            <span className="text-[13px] font-medium text-slate-600">
-                              {prod.created_at
-                                ? new Date(prod.created_at).toLocaleDateString()
-                                : "—"}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* 📦 RIGHT COLUMN (50% WIDTH) - Separated by a sharp structural border */}
-                        <div className="p-4 space-y-3.5 border-l border-gray-100 bg-slate-50/30">
-                          <div className="flex flex-col gap-0.5">
-                            <span className="text-[11px] font-bold uppercase tracking-wider text-purple-500">
-                              Size Variant
-                            </span>
-                            <span className="text-[15px] font-black text-purple-700">
-                              {prod.variant || "—"}
-                            </span>
-                          </div>
-                          <div className="flex flex-col gap-0.5">
-                            <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">
-                              Packing Type
-                            </span>
-                            <span className="text-[14px] font-semibold text-slate-700">
-                              {prod.packing_type || "Loose"}
-                            </span>
-                          </div>
-                          <div className="flex flex-col gap-0.5">
-                            <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">
-                              Pairs Per Carton
-                            </span>
-                            <span className="text-[14px] font-bold text-slate-800">
-                              {prod.pairs_per_ctn || "—"}
-                            </span>
-                          </div>
-                          <div className="flex flex-col gap-0.5">
-                            <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">
-                              Vendor Commission
-                            </span>
-                            <div>
-                              <span className="inline-block text-[13px] font-bold text-amber-700 bg-amber-50 border border-amber-100 rounded px-2 py-0.5 mt-0.5">
-                                {prod.commission
-                                  ? `${parseFloat(prod.commission)}%`
-                                  : "0%"}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="flex flex-col gap-0.5">
-                            <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">
-                              Item Status
-                            </span>
-                            <div>
-                              <span className="inline-block text-[13px] font-bold text-emerald-700 bg-emerald-50 rounded px-2 py-0.5 mt-0.5 capitalize">
-                                {prod.status || "—"}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="bg-gray-50/50 px-3.5 py-2.5 flex justify-between items-center text-xs">
-                        <div>
-                          <span className="text-gray-400 font-medium">
-                            Unit Selling Price:{" "}
-                          </span>
-                          <span className="font-bold text-gray-900">
-                            ₹
-                            {prod.selling_price
-                              ? Number(prod.selling_price).toLocaleString()
-                              : prod.price
-                                ? Number(prod.price).toLocaleString()
-                                : "0"}
-                          </span>
-                        </div>
-                        {/* <div className="text-right">
-                          <span className="text-gray-500 font-bold">Line Total Cost: </span>
-                          <span className="text-sm font-black text-teal-600 bg-teal-50 border border-teal-100 rounded-lg px-2 py-0.5">₹{Number(prod.total_price || 0).toLocaleString()}</span>
-                        </div> */}
-                      </div>
-                    </div>
-                  );
-                })
-              ) : (
-                <div className="p-6 text-center bg-gray-50 rounded-xl border border-dashed border-gray-200 text-sm text-gray-400">
-                  No comprehensive itemized breakdown records available for this
-                  order reference item.
+                          return (
+                            <tr key={idx} className="hover:bg-violet-50/30 transition-colors">
+                              <td className="p-3">
+                                <div className="flex items-center gap-2.5">
+                                  <div className="w-10 h-10 rounded-lg overflow-hidden bg-white border border-gray-200 shrink-0 shadow-3xs">
+                                    <img
+                                      src={productImgUrl}
+                                      alt="Ordered Item"
+                                      className="w-full h-full object-cover"
+                                      onError={(e) => {
+                                        e.target.src =
+                                          "https://placehold.co/100x100?text=📦";
+                                      }}
+                                    />
+                                  </div>
+                                  <div className="min-w-0">
+                                    <p className="font-bold text-gray-900 truncate">
+                                      {prod.article_name || "Unnamed Product"}
+                                    </p>
+                                    {prod.brand_name && (
+                                      <p className="text-[10px] text-violet-500 font-semibold uppercase tracking-tight">
+                                        {prod.brand_name}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="p-3 font-mono font-bold text-violet-700">
+                                {prod.variant || "—"}
+                              </td>
+                              <td className="p-3 text-gray-500 text-[11px] leading-normal">
+                                <div>Gender: {prod.gender || "—"}</div>
+                                <div>Color: <span className="capitalize">{prod.color || "—"}</span></div>
+                                {prod.material && <div>Mat: {prod.material}</div>}
+                                {prod.packing_type && <div>Pkg: {prod.packing_type}</div>}
+                              </td>
+                              <td className="p-3 text-right font-medium">
+                                {prod.pairs_per_ctn || "—"}
+                              </td>
+                              <td className="p-3 text-right font-bold text-gray-900">
+                                {prod.quantity || 1}
+                              </td>
+                              <td className="p-3 text-right font-medium">
+                                ₹
+                                {prod.selling_price
+                                  ? Number(prod.selling_price).toLocaleString()
+                                  : prod.price
+                                    ? Number(prod.price).toLocaleString()
+                                    : "0"}
+                              </td>
+                              {/* <td className="p-3 text-right">
+                                <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-100 rounded px-1.5 py-0.5">
+                                  {prod.commission ? `${parseFloat(prod.commission)}%` : "0%"}
+                                </span>
+                              </td> */}
+                              <td className="p-3 text-right font-bold text-emerald-600">
+                                ₹{Number(prod.total_price || 0).toLocaleString()}
+                              </td>
+                            </tr>
+                          );
+                        })
+                      ) : (
+                        <tr>
+                          <td colSpan="8" className="p-6 text-center text-gray-400">
+                            No comprehensive itemized breakdown records available for this order.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                    <tfoot>
+                      <tr className="bg-violet-50/20 border-t border-violet-100 font-bold">
+                        <td colSpan="4" className="p-3 text-gray-550 text-right uppercase tracking-wider text-[10px]">
+                          Totals
+                        </td>
+                        <td className="p-3 text-right text-xs bg-violet-100/30 text-violet-750 font-extrabold border-x border-violet-100">
+                          Qty: {selectedOrder.productsList?.reduce((sum, prod) => sum + Number(prod.quantity || 0), 0) || 0}
+                        </td>
+                        <td colSpan="2" className="p-3 text-gray-400 text-right uppercase tracking-wider text-[10px]">
+                          {selectedOrder.productsList?.length || 0} items
+                        </td>
+                        <td className="p-3 text-right text-[13px] text-emerald-700 font-black bg-emerald-50/20">
+                          ₹{selectedOrder.amount.toLocaleString()}
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
                 </div>
-              )}
+              </div>
             </div>
 
             {/* 🎯 HIGHLIGHTED CHANGE: REPLACED GENERIC AGGREGATE TEXT LABELS */}
@@ -1019,8 +1033,8 @@ export default function SellerOrdersPage() {
                   Total Products Enclosed
                 </p>
                 <p className="font-semibold text-purple-300 mt-0.5">
-                  {selectedOrder.items} Line Items / Total Quantity:{" "}
-                  {selectedOrder.quantity}
+                  {selectedOrder.productsList?.length || 0} Line Items / Total Quantity:{" "}
+                  {selectedOrder.productsList?.reduce((sum, prod) => sum + Number(prod.quantity || 0), 0) || 0}
                 </p>
               </div>
               <div className="text-right">
@@ -1051,15 +1065,27 @@ export default function SellerOrdersPage() {
       >
         {selectedOrder && (
           <div className="space-y-4">
-            <p className="text-gray-700">
+            <p className="text-gray-700 font-medium">
               Are you sure you want to{" "}
-              <span className="font-semibold">{actionType}</span> order
+              <span className="font-semibold text-violet-750">{actionType}</span> order
               <span className="font-semibold text-violet-900">
                 {" "}
-                {selectedOrder.id}
+                #{selectedOrder.id}
               </span>
               ?
             </p>
+            {actionType === "reject" && (
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold uppercase tracking-wide text-gray-450 block">Rejection Reason</label>
+                <textarea
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  placeholder="Enter rejection reason..."
+                  rows={4}
+                  className="w-full border border-violet-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 bg-violet-50/20"
+                />
+              </div>
+            )}
             <div className="flex gap-3">
               <button
                 onClick={() => setShowActionModal(false)}
