@@ -265,7 +265,7 @@ export default function ProfilePage() {
   const tabs = [
     { id: "profile", label: "Business Profile", icon: Building2 },
     { id: "bank", label: "Bank Details", icon: Banknote },
-    { id: "tickets", label: "Support Tickets", icon: Ticket },
+    // { id: "tickets", label: "Support Tickets", icon: Ticket },
   ];
 
   if (loading) {
