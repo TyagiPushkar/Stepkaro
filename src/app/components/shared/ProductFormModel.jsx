@@ -955,6 +955,29 @@ import {
 } from "lucide-react";
 import React, { useState, useEffect } from "react";
 
+const resolveImageUrl = (img) => {
+  if (!img) return "";
+  if (img instanceof File) {
+    try {
+      return URL.createObjectURL(img);
+    } catch (e) {
+      return "";
+    }
+  }
+  if (typeof img === "string") {
+    if (
+      img.startsWith("http://") ||
+      img.startsWith("https://") ||
+      img.startsWith("blob:") ||
+      img.startsWith("data:")
+    ) {
+      return img;
+    }
+    return `https://namami-infotech.com/Stepkaro/${img}`;
+  }
+  return "";
+};
+
 // Compact Input Field Component
 const InputField = ({
   label,
@@ -1029,6 +1052,7 @@ const ImageUpload = ({
   onImageChange,
   id,
   compact = false,
+  disabled = false,
 }) => (
   <div>
     <label className="text-xs font-medium text-gray-700 block mb-0.5">
@@ -1055,19 +1079,27 @@ const ImageUpload = ({
         )}
       </div>
       <div className="flex-1">
-        <input
-          type="file"
-          accept="image/*"
-          onChange={onImageChange}
-          className="hidden"
-          id={id}
-        />
-        <label
-          htmlFor={id}
-          className={`${compact ? "px-2 py-0.5 text-xs" : "px-3 py-1 text-sm"} border rounded-lg cursor-pointer hover:bg-gray-50 transition inline-block`}
-        >
-          Choose
-        </label>
+        {disabled ? (
+          <span className="text-xs font-medium text-slate-400 bg-gray-50 px-2 py-1 rounded-lg border select-none inline-block">
+            Photo Locked
+          </span>
+        ) : (
+          <>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={onImageChange}
+              className="hidden"
+              id={id}
+            />
+            <label
+              htmlFor={id}
+              className={`${compact ? "px-2 py-0.5 text-xs" : "px-3 py-1 text-sm"} border rounded-lg cursor-pointer hover:bg-gray-50 transition inline-block`}
+            >
+              Choose
+            </label>
+          </>
+        )}
       </div>
     </div>
     {error && (
@@ -1091,9 +1123,9 @@ const VariantCard = ({ variant, index, onRemove, onEdit, filterOptions }) => {
       >
         <div className="flex items-center gap-2 min-w-0 flex-1">
           <div className="w-8 h-8 rounded-lg border flex items-center justify-center bg-gray-50 overflow-hidden flex-shrink-0">
-            {variant.preview ? (
+            {variant.preview || variant.image ? (
               <img
-                src={variant.preview}
+                src={resolveImageUrl(variant.preview || variant.image)}
                 alt="Variant"
                 className="w-full h-full object-cover"
               />
@@ -1208,14 +1240,15 @@ export default function ProductFormModal({
   });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showVariantsSection, setShowVariantsSection] = useState(false);
 
-  // Initialize with one default variant when modal opens
+  // Initialize empty variants when modal opens
   useEffect(() => {
     if (isOpen && !isEditing) {
       if (!newProduct.variants || newProduct.variants.length === 0) {
         setNewProduct((prev) => ({
           ...prev,
-          variants: [{ min_size: "", max_size: "" }],
+          variants: [],
         }));
       }
     }
@@ -1224,15 +1257,19 @@ export default function ProductFormModal({
   useEffect(() => {
     if (isOpen) {
       setShowValidationErrors(false);
-      if (newProduct.image && typeof newProduct.image === "string") {
-        setPreviewUrl(newProduct.image);
-      } else if (newProduct.image instanceof File) {
-        setPreviewUrl(URL.createObjectURL(newProduct.image));
+      if (newProduct.image) {
+        setPreviewUrl(resolveImageUrl(newProduct.image));
       } else {
         setPreviewUrl("");
       }
+
+      if (isEditing && newProduct.variants && newProduct.variants.length > 0) {
+        setShowVariantsSection(true);
+      } else {
+        setShowVariantsSection(false);
+      }
     }
-  }, [isOpen, newProduct.image]);
+  }, [isOpen, newProduct.image, isEditing, newProduct.variants]);
 
   if (!isOpen) return null;
 
@@ -1476,6 +1513,7 @@ export default function ProductFormModal({
               }}
               id="product-image-input"
               compact={false}
+              disabled={isEditing}
             />
 
             {/* MAIN FIELDS - Compact Grid */}
@@ -1733,155 +1771,181 @@ export default function ProductFormModal({
 
             {/* VARIANTS SECTION */}
             <div className="border-t border-slate-200 pt-4">
-              <div className="flex justify-between items-center mb-3">
-                <h3 className="text-sm font-semibold text-slate-900">
-                  Variants ({newProduct.variants?.length || 0})
-                </h3>
-                <button
-                  type="button"
-                  onClick={handleAddVariant}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-xs rounded-lg transition"
-                >
-                  <Plus size={14} />
-                  Add Variant
-                </button>
+              <div 
+                className="flex justify-between items-center mb-3 cursor-pointer hover:bg-slate-50 p-1.5 rounded-lg transition-all"
+                onClick={() => {
+                  const nextState = !showVariantsSection;
+                  setShowVariantsSection(nextState);
+                  if (nextState && (!newProduct.variants || newProduct.variants.length === 0)) {
+                    handleAddVariant();
+                  }
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-semibold text-slate-900 select-none">
+                    Variants ({newProduct.variants?.length || 0})
+                  </h3>
+                  {showVariantsSection ? (
+                    <ChevronUp size={16} className="text-slate-500" />
+                  ) : (
+                    <ChevronDown size={16} className="text-slate-500" />
+                  )}
+                </div>
+                {showVariantsSection && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAddVariant();
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-xs rounded-lg transition"
+                  >
+                    <Plus size={14} />
+                    Add Variant
+                  </button>
+                )}
               </div>
 
-              {/* Variants List */}
-              {newProduct.variants && newProduct.variants.length > 0 && (
-                <div className="space-y-1.5 mb-3">
-                  {newProduct.variants.map((variant, index) => (
-                    <VariantCard
-                      key={variant.id || index}
-                      variant={variant}
-                      index={index}
-                      onRemove={handleRemoveVariant}
-                      onEdit={handleEditVariant}
-                      filterOptions={filterOptions}
-                    />
-                  ))}
-                </div>
-              )}
-
-              {/* Variant Form */}
-              {showVariantForm && (
-                <div className="border rounded-lg p-3 bg-gray-50 mt-2">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="text-xs font-medium text-gray-700">
-                      {editingVariantId ? "Edit Variant" : "New Variant"}
-                    </h4>
-                  </div>
-                  <div className="space-y-2">
-                    <ImageUpload
-                      label="Variant Image"
-                      preview={currentVariant.preview}
-                      onImageChange={handleVariantImageChange}
-                      id={`variant-image-${currentVariant.id}`}
-                      compact={true}
-                    />
-
-                    <div className="grid grid-cols-3 gap-2">
-                      <InputField
-                        label="Min Size"
-                        required
-                        type="number"
-                        value={currentVariant.min_size}
-                        onChange={(e) =>
-                          handleVariantChange("min_size", e.target.value)
-                        }
-                        error={errors.min_size}
-                      />
-                      <InputField
-                        label="Max Size"
-                        required
-                        type="number"
-                        value={currentVariant.max_size}
-                        onChange={(e) =>
-                          handleVariantChange("max_size", e.target.value)
-                        }
-                        error={errors.max_size}
-                      />
-                      <SelectField
-                        label="Color"
-                        value={currentVariant.color}
-                        onChange={(e) =>
-                          handleVariantChange("color", e.target.value)
-                        }
-                        options={filterOptions.colors || []}
-                      />
+              {showVariantsSection && (
+                <div className="space-y-3">
+                  {/* Variants List */}
+                  {newProduct.variants && newProduct.variants.length > 0 && (
+                    <div className="space-y-1.5 mb-3">
+                      {newProduct.variants.map((variant, index) => (
+                        <VariantCard
+                          key={variant.id || index}
+                          variant={variant}
+                          index={index}
+                          onRemove={handleRemoveVariant}
+                          onEdit={handleEditVariant}
+                          filterOptions={filterOptions}
+                        />
+                      ))}
                     </div>
+                  )}
 
-                    <div className="grid grid-cols-3 gap-2">
-                      <InputField
-                        label="MRP (₹)"
-                        required
-                        type="number"
-                        step="0.01"
-                        value={currentVariant.price}
-                        onChange={(e) =>
-                          handleVariantChange("price", e.target.value)
-                        }
-                        error={errors.price}
-                      />
-                      <InputField
-                        label="Selling (₹)"
-                        required
-                        type="number"
-                        step="0.01"
-                        value={currentVariant.selling_price}
-                        onChange={(e) =>
-                          handleVariantChange("selling_price", e.target.value)
-                        }
-                        error={errors.selling_price}
-                      />
-                      <InputField
-                        label="Stock"
-                        required
-                        type="number"
-                        value={currentVariant.stock}
-                        onChange={(e) =>
-                          handleVariantChange("stock", e.target.value)
-                        }
-                        error={errors.stock}
-                      />
-                    </div>
+                  {/* Variant Form */}
+                  {showVariantForm && (
+                    <div className="border rounded-lg p-3 bg-gray-50 mt-2">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-xs font-medium text-gray-700">
+                          {editingVariantId ? "Edit Variant" : "New Variant"}
+                        </h4>
+                      </div>
+                      <div className="space-y-2">
+                        <ImageUpload
+                          label="Variant Image"
+                          preview={resolveImageUrl(currentVariant.preview || currentVariant.image)}
+                          onImageChange={handleVariantImageChange}
+                          id={`variant-image-${currentVariant.id}`}
+                          compact={true}
+                          disabled={!!editingVariantId && typeof currentVariant.image === "string"}
+                        />
 
-                    <div className="grid grid-cols-2 gap-2">
-                      <SelectField
-                        label="Packing Type"
-                        value={currentVariant.packing_type}
-                        onChange={(e) =>
-                          handleVariantChange("packing_type", e.target.value)
-                        }
-                        options={filterOptions.packingTypes || []}
-                      />
-                      <InputField
-                        label="Pairs/Ctn"
-                        type="number"
-                        value={currentVariant.pairs_per_ctn}
-                        onChange={(e) =>
-                          handleVariantChange("pairs_per_ctn", e.target.value)
-                        }
-                      />
-                    </div>
+                        <div className="grid grid-cols-3 gap-2">
+                          <InputField
+                            label="Min Size"
+                            required
+                            type="number"
+                            value={currentVariant.min_size}
+                            onChange={(e) =>
+                              handleVariantChange("min_size", e.target.value)
+                            }
+                            error={errors.min_size}
+                          />
+                          <InputField
+                            label="Max Size"
+                            required
+                            type="number"
+                            value={currentVariant.max_size}
+                            onChange={(e) =>
+                              handleVariantChange("max_size", e.target.value)
+                            }
+                            error={errors.max_size}
+                          />
+                          <SelectField
+                            label="Color"
+                            value={currentVariant.color}
+                            onChange={(e) =>
+                              handleVariantChange("color", e.target.value)
+                            }
+                            options={filterOptions.colors || []}
+                          />
+                        </div>
 
-                    <div className="flex gap-2 pt-1">
-                      <button
-                        type="button"
-                        onClick={handleVariantSave}
-                        className="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-xs rounded-lg transition"
-                      >
-                        {editingVariantId ? "Update" : "Add"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleCancelVariant}
-                        className="px-3 py-1.5 border rounded-lg text-xs hover:bg-gray-100 transition"
-                      >
-                        Cancel
-                      </button>
+                        <div className="grid grid-cols-3 gap-2">
+                          <InputField
+                            label="MRP (₹)"
+                            required
+                            type="number"
+                            step="0.01"
+                            value={currentVariant.price}
+                            onChange={(e) =>
+                              handleVariantChange("price", e.target.value)
+                            }
+                            error={errors.price}
+                          />
+                          <InputField
+                            label="Selling (₹)"
+                            required
+                            type="number"
+                            step="0.01"
+                            value={currentVariant.selling_price}
+                            onChange={(e) =>
+                              handleVariantChange("selling_price", e.target.value)
+                            }
+                            error={errors.selling_price}
+                          />
+                          <InputField
+                            label="Stock"
+                            required
+                            type="number"
+                            value={currentVariant.stock}
+                            onChange={(e) =>
+                              handleVariantChange("stock", e.target.value)
+                            }
+                            error={errors.stock}
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <SelectField
+                            label="Packing Type"
+                            value={currentVariant.packing_type}
+                            onChange={(e) =>
+                              handleVariantChange("packing_type", e.target.value)
+                            }
+                            options={filterOptions.packingTypes || []}
+                          />
+                          <InputField
+                            label="Pairs/Ctn"
+                            type="number"
+                            value={currentVariant.pairs_per_ctn}
+                            onChange={(e) =>
+                              handleVariantChange("pairs_per_ctn", e.target.value)
+                            }
+                          />
+                        </div>
+
+                        <div className="flex gap-2 pt-1">
+                          <button
+                            type="button"
+                            onClick={handleVariantSave}
+                            className="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-xs rounded-lg transition"
+                          >
+                            {editingVariantId ? "Update" : "Add"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleCancelVariant}
+                            className="px-3 py-1.5 border rounded-lg text-xs hover:bg-gray-100 transition"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               )}
             </div>

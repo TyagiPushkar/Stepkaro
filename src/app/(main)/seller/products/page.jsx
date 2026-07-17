@@ -44,11 +44,18 @@ const normalizeProductImageUrl = (image) => {
 };
 
 // Variants Detail Table Component
+// Variants Detail Table Component - FIXED
 const VariantsDetailTable = ({
   variants,
   productId,
   onToggleVariantStatus,
   togglingVariantId,
+  editingVariantId,
+  editVariantValue,
+  setEditVariantValue,
+  startEditVariantQuantity,
+  saveVariantQuantity,
+  cancelVariantEdit,
 }) => {
   if (!variants?.length) {
     return <p className="text-sm text-gray-500 py-2">No variants available</p>;
@@ -113,7 +120,62 @@ const VariantsDetailTable = ({
               <td className="px-3 py-2 font-medium text-emerald-600">
                 ₹{variant.selling_price || 0}
               </td>
-              <td className="px-3 py-2 text-gray-900">{variant.stock ?? 0}</td>
+              {/* Stock column with inline editing */}
+              <td className="px-3 py-2">
+                {editingVariantId === variant.id ? (
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="number"
+                      value={editVariantValue}
+                      onChange={(e) => setEditVariantValue(e.target.value)}
+                      className="w-16 px-1.5 py-0.5 border border-blue-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      autoFocus   
+                      min="0"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          const newQty = parseInt(editVariantValue);
+                          if (!isNaN(newQty) && newQty >= 0) {
+                            saveVariantQuantity(productId, variant.id, newQty);
+                          }
+                        }
+                        if (e.key === 'Escape') cancelVariantEdit();
+                      }}
+                    />
+                    <button
+                      onClick={() => {
+                        const newQty = parseInt(editVariantValue);
+                        if (!isNaN(newQty) && newQty >= 0) {
+                          saveVariantQuantity(productId, variant.id, newQty);
+                        }
+                      }}
+                      className="p-0.5 bg-emerald-500 text-white rounded hover:bg-emerald-600"
+                      title="Save"
+                    >
+                      <Check size={12} />
+                    </button>
+                    <button
+                      onClick={cancelVariantEdit}
+                      className="p-0.5 bg-gray-400 text-white rounded hover:bg-gray-500"
+                      title="Cancel"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => startEditVariantQuantity(variant.id, variant.stock)}
+                    className="cursor-pointer group flex items-center gap-1.5"
+                  >
+                    <span className={`text-sm ${variant.stock === 0 ? "text-red-500" : "text-gray-900"}`}>
+                      {variant.stock ?? 0}
+                    </span>
+                    <Pencil
+                      size={12}
+                      className="text-gray-400 opacity-0 group-hover:opacity-100 transition"
+                    />
+                  </div>
+                )}
+              </td>
               <td className="px-3 py-2 text-gray-900">
                 {variant.packing_type || "-"}
               </td>
@@ -165,6 +227,9 @@ export default function SellerProductsPage() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editProduct, setEditProduct] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
+
+  const [editingVariantId, setEditingVariantId] = useState(null);
+const [editVariantValue, setEditVariantValue] = useState("");
 
   // New states for filters and variants
   const [selectedFilter, setSelectedFilter] = useState("all");
@@ -270,6 +335,7 @@ export default function SellerProductsPage() {
           max_size: p.max_size,
           color: p.color,
           material: p.material,
+          upperMaterial: p.upper_material,
           packingType: p.packing_type,
           pairsPerCTN: p.pairs_per_ctn,
           origin: p.origin,
@@ -291,7 +357,7 @@ export default function SellerProductsPage() {
     try {
       const token = localStorage.getItem("access_token");
       const response = await fetch(
-        "https://namami-infotech.com/Stepkaro/src/product/get_product_filters.php",
+        "https://namami-infotech.com/Stepkaro/src/product/get_product_filters_new.php",
         {
           method: "GET",
           headers: {
@@ -306,10 +372,10 @@ export default function SellerProductsPage() {
           brands: [...new Set(result.data.brands || [])],
           categories: [...new Set(result.data.categories || [])],
           gender: [...new Set(result.data.gender || [])],
-          colors: [...new Set(result.data.color || [])],
-          materials: [...new Set(result.data.material || [])],
-          upper_materials: [...new Set(result.data.upper_material || [])],
-          packingTypes: [...new Set(result.data.packing_type || [])],
+          colors: [...new Set(result.data.colors || [])],
+          materials: [...new Set(result.data.materials || [])],
+          upper_materials: [...new Set(result.data.upper_materials || [])],
+          packingTypes: [...new Set(result.data.packingTypes || [])],
         });
       }
     } catch (error) {
@@ -492,14 +558,74 @@ export default function SellerProductsPage() {
     setEditValue(product.quantity.toString());
   };
 
-  const saveQuantity = async (productId) => {
-    const newQuantity = parseInt(editValue);
-    if (isNaN(newQuantity) || newQuantity < 0) {
-      return;
-    }
+  // const saveQuantity = async (productId) => {
+  //   const newQuantity = parseInt(editValue);
+  //   if (isNaN(newQuantity) || newQuantity < 0) {
+  //     return;
+  //   }
 
-    try {
-      const token = localStorage.getItem("access_token");
+  //   try {
+  //     const token = localStorage.getItem("access_token");
+  //     const response = await fetch(
+  //       "https://namami-infotech.com/Stepkaro/src/stock/update_stock.php",
+  //       {
+  //         method: "POST",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //         body: JSON.stringify({
+  //           product_id: productId,
+  //           stock_quantity: newQuantity,
+  //         }),
+  //       },
+  //     );
+  //     const result = await response.json();
+  //     if (result.success) {
+  //       fetchProducts();
+  //       setEditingQuantity(null);
+  //       setShowSuccess(true);
+  //       setTimeout(() => setShowSuccess(false), 2000);
+  //     } else {
+  //       alert(result.message);
+  //     }
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+  // };
+
+  // Replace the existing saveQuantity function with this:
+// Replace your saveQuantity function with this:
+// Replace your saveQuantity function with this:
+const saveQuantity = async (productId) => {
+  const newQuantity = parseInt(editValue);
+  if (isNaN(newQuantity) || newQuantity < 0) {
+    alert("Please enter a valid quantity");
+    return;
+  }
+
+  try {
+    const token = localStorage.getItem("access_token");
+    
+    // Find the product to check if it has variants
+    const product = products.find(p => p.id === productId);
+    
+    // If product has variants, update main stock and ALL variants
+    if (product?.variants && product.variants.length > 0) {
+      // Prepare payload for variants - update all variants with same stock
+      const variantsPayload = product.variants.map(variant => ({
+        variant_id: variant.id,
+        stock: newQuantity // Set all variants to the same stock value
+      }));
+
+      const payload = {
+        product_id: productId,
+        stock_quantity: newQuantity,
+        multi_variants: variantsPayload
+      };
+
+      console.log("Updating main product & all variants stock:", payload);
+
       const response = await fetch(
         "https://namami-infotech.com/Stepkaro/src/stock/update_stock.php",
         {
@@ -508,25 +634,171 @@ export default function SellerProductsPage() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            product_id: productId,
-            stock_quantity: newQuantity,
-          }),
-        },
+          body: JSON.stringify(payload),
+        }
       );
+      
       const result = await response.json();
       if (result.success) {
-        fetchProducts();
+        // Update local state
+        setProducts(prev => 
+          prev.map(p => 
+            p.id === productId 
+              ? {
+                  ...p,
+                  quantity: newQuantity,
+                  variants: p.variants.map(v => ({
+                    ...v,
+                    stock: newQuantity
+                  }))
+                }
+              : p
+          )
+        );
         setEditingQuantity(null);
         setShowSuccess(true);
         setTimeout(() => setShowSuccess(false), 2000);
       } else {
-        alert(result.message);
+        alert(result.message || "Failed to update stock");
       }
-    } catch (error) {
-      console.log(error);
+    } else {
+      // Simple product without variants - update only parent stock
+      const payload = {
+        product_id: productId,
+        stock_quantity: newQuantity
+      };
+
+      console.log("Updating product stock:", payload);
+
+      const response = await fetch(
+        "https://namami-infotech.com/Stepkaro/src/stock/update_stock.php",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+      
+      const result = await response.json();
+      if (result.success) {
+        setProducts(prev => 
+          prev.map(p => 
+            p.id === productId ? { ...p, quantity: newQuantity } : p
+          )
+        );
+        setEditingQuantity(null);
+        setShowSuccess(true);
+        setTimeout(() => setShowSuccess(false), 2000);
+      } else {
+        alert(result.message || "Failed to update stock");
+      }
     }
-  };
+  } catch (error) {
+    console.error("Error updating stock:", error);
+    alert("An error occurred while updating stock");
+  }
+};
+
+// New function to update individual variant stock
+// Keep ONLY this version (around line 380-390)
+// Replace your saveVariantQuantity function with this:
+const saveVariantQuantity = async (productId, variantId, newQuantity) => {
+  if (isNaN(newQuantity) || newQuantity < 0) {
+    alert("Please enter a valid quantity");
+    return;
+  }
+
+  try {
+    const token = localStorage.getItem("access_token");
+    
+    // Find the product
+    const product = products.find(p => p.id === productId);
+    
+    // Calculate total stock from all variants
+    const updatedVariants = product.variants.map(v => 
+      v.id === variantId ? { ...v, stock: newQuantity } : v
+    );
+    
+    // Calculate total stock (sum of all variants)
+    const totalStock = updatedVariants.reduce((sum, v) => sum + (v.stock || 0), 0);
+
+    // Prepare payload - update main stock with total AND update the specific variant
+    const payload = {
+      product_id: productId,
+      stock_quantity: totalStock, // Main stock = sum of all variants
+      multi_variants: [
+        {
+          variant_id: variantId,
+          stock: newQuantity
+        }
+      ]
+    };
+
+    console.log("Updating variant stock with payload:", payload);
+
+    const response = await fetch(
+      "https://namami-infotech.com/Stepkaro/src/stock/update_stock.php",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      }
+    );
+    
+    const result = await response.json();
+    if (result.success) {
+      // Update local state
+      setProducts(prev => 
+        prev.map(p => 
+          p.id === productId 
+            ? {
+                ...p,
+                quantity: totalStock, // Update main stock to sum of all variants
+                variants: p.variants.map(v => 
+                  v.id === variantId ? { ...v, stock: newQuantity } : v
+                )
+              }
+            : p
+        )
+      );
+      setEditingVariantId(null);
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 2000);
+    } else {
+      alert(result.message || "Failed to update variant stock");
+    }
+  } catch (error) {
+    console.error("Error updating variant stock:", error);
+    alert("An error occurred while updating variant stock");
+  }
+};
+
+const startEditVariantQuantity = (variantId, currentStock) => {
+  setEditingVariantId(variantId);
+  setEditVariantValue(currentStock.toString());
+};
+
+const cancelVariantEdit = () => {
+  setEditingVariantId(null);
+  setEditVariantValue("");
+};
+
+// const saveVariantQuantity = async (productId, variantId) => {
+//   const newQuantity = parseInt(editVariantValue);
+//   if (isNaN(newQuantity) || newQuantity < 0) {
+//     alert("Please enter a valid quantity");
+//     return;
+//   }
+//   await saveVariantQuantity(productId, variantId, newQuantity);
+// };
+
+// --------------------------------------------------new one
 
   const cancelEdit = () => {
     setEditingQuantity(null);
@@ -587,14 +859,14 @@ export default function SellerProductsPage() {
     setNewProduct({
       article_name: product.name || "",
       description: product.description || "",
-      selling_price: product.price || "",
+      selling_price: product.selling_price || product.price || "",
       price: product.price || "",
       brand_name: product.brand || "",
       category_name: product.category || "",
       gender: product.gender || "",
       color: product.color || "",
       material: product.material || "",
-      upper_material: product.upper_material || "",
+      upper_material: product.upperMaterial || "",
       packing_type: product.packingType || "",
       pairs_per_ctn: product.pairsPerCTN || "",
       origin: product.origin || "Made in India",
@@ -603,6 +875,46 @@ export default function SellerProductsPage() {
       image: product.image || "",
       min_size: extractedMin,
       max_size: extractedMax,
+      // min_size: product.min_size || "",
+      // max_size: product.max_size || "",
+      variants: (product.variants || []).map((v) => {
+        let minSz = "";
+        let maxSz = "";
+        const szStr = v.variant_size || v.size || "";
+        if (szStr.toLowerCase().includes("x")) {
+          const parts = szStr.toLowerCase().split("x");
+          if (parts.length === 2) {
+            minSz = parts[0].trim();
+            maxSz = parts[1].trim();
+          }
+        } else if (szStr.includes("-")) {
+          const parts = szStr.split("-");
+          if (parts.length === 2) {
+            minSz = parts[0].trim();
+            maxSz = parts[1].trim();
+          }
+        } else {
+          minSz = szStr;
+          maxSz = szStr;
+        }
+
+        return {
+          id: v.id,
+          variant_name: v.variant_name || "",
+          min_size: minSz,
+          max_size: maxSz,
+          // min_size: v.min_size || "",
+          // max_size: v.max_size || "",
+          price: v.price || "",
+          selling_price: v.selling_price || "",
+          stock: v.stock || "",
+          packing_type: v.packing_type || "",
+          pairs_per_ctn: v.pairs_per_ctn || "",
+          color: v.color || "",
+          image: v.image || null,
+          preview: v.image ? (v.image.startsWith("http") ? v.image : `https://namami-infotech.com/Stepkaro/${v.image}`) : "",
+        };
+      }),
     });
     setIsEditing(true);
     setShowAddModal(true);
@@ -664,7 +976,6 @@ export default function SellerProductsPage() {
   };
 
   // Add/Edit product
- // Add/Edit product
 const submitProduct = async (e) => {
   e.preventDefault();
   
@@ -695,42 +1006,65 @@ const submitProduct = async (e) => {
       formData.append("image", newProduct.image);
     }
 
-    // Prepare variants data for API
-    // The API expects 'multi_variants' array with variant data
-    const multiVariants = newProduct.variants.map((variant) => {
+    // Add multi_variants individually and also as JSON string to support both potential PHP backend formats
+    const multiVariants = (newProduct.variants || []).map((variant) => {
       const variantData = {
-        variant_name: variant.variant_name,
-        image: variant.image,
-        min_size: variant.min_size,
-        max_size: variant.max_size,
-        color: variant.color,
-        price: variant.price,
-        selling_price: variant.selling_price,
-        stock: variant.stock,
-        packing_type: variant.packing_type,
-        pairs_per_ctn: variant.pairs_per_ctn,
+        variant_name: variant.variant_name || "",
+        min_size: variant.min_size || "",
+        max_size: variant.max_size || "",
+        color: variant.color || "",
+        price: variant.price || "",
+        selling_price: variant.selling_price || "",
+        stock: variant.stock || "",
+        packing_type: variant.packing_type || newProduct.packing_type || "",
+        pairs_per_ctn: variant.pairs_per_ctn || newProduct.pairs_per_ctn || "",
         status: "active",
       };
 
-      // If editing, include variant_id
       if (isEditing && variant.id) {
         variantData.variant_id = variant.id;
       }
-
       return variantData;
     });
 
-    // Add multi_variants as JSON string
     formData.append("multi_variants", JSON.stringify(multiVariants));
 
-    // Determine URL based on edit mode
-    // let url = "https://namami-infotech.com/Stepkaro/src/product/vendor_add_product.php";
-    // if (isEditing && editProduct) {
-    //   formData.append("product_id", editProduct.id);
-    //   url = "https://namami-infotech.com/Stepkaro/src/product/update_product.php";
-    // }
+    // Append individual array items so files are properly parsed by PHP $_FILES and $_POST
+    if (newProduct.variants && newProduct.variants.length > 0) {
+      newProduct.variants.forEach((v, index) => {
+        formData.append(`multi_variants[${index}][variant_name]`, v.variant_name || "");
+        formData.append(`multi_variants[${index}][min_size]`, v.min_size || "");
+        formData.append(`multi_variants[${index}][max_size]`, v.max_size || "");
+        formData.append(`multi_variants[${index}][color]`, v.color || "");
+        formData.append(`multi_variants[${index}][price]`, v.price || "");
+        formData.append(`multi_variants[${index}][selling_price]`, v.selling_price || "");
+        formData.append(`multi_variants[${index}][stock]`, v.stock || "");
+        formData.append(
+          `multi_variants[${index}][packing_type]`,
+          v.packing_type || newProduct.packing_type || ""
+        );
+        formData.append(
+          `multi_variants[${index}][pairs_per_ctn]`,
+          v.pairs_per_ctn || newProduct.pairs_per_ctn || ""
+        );
+        formData.append(`multi_variants[${index}][status]`, "active");
+        if (isEditing && v.id) {
+          formData.append(`multi_variants[${index}][variant_id]`, v.id);
+        }
+        if (v.image && typeof v.image !== "string") {
+          formData.append(`multi_variants[${index}][image]`, v.image);
+        }
+      });
+    }
 
-   console.log("========== FormData ==========");
+    // Determine URL based on edit mode
+    let url = "https://namami-infotech.com/Stepkaro/src/product/vendor_add_product.php";
+    if (isEditing && editProduct) {
+      formData.append("product_id", editProduct.id);
+      url = "https://namami-infotech.com/Stepkaro/src/product/update_product.php";
+    }
+
+    console.log("========== FormData ==========");
     for (const [key, value] of formData.entries()) {
       if (value instanceof File) {
         console.log(`${key}:`, {
@@ -744,48 +1078,47 @@ const submitProduct = async (e) => {
     }
     console.log("==============================");
 
-    // const response = await fetch(url, {
-    //   method: "POST",
-    //   headers: {
-    //     Authorization: `Bearer ${token}`,
-    //   },
-    //   body: formData,
-    // });
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
 
-    // const result = await response.json();
+    const result = await response.json();
     
-    // if (result.success) {
-    //   setShowAddModal(false);
-    //   // Reset form
-    //   setNewProduct({
-    //     article_name: "",
-    //     description: "",
-    //     selling_price: "",
-    //     price: "",
-    //     brand_name: "",
-    //     category_name: "",
-    //     min_size: "",
-    //     max_size: "",
-    //     variants: [],
-    //     gender: "",
-    //     color: "",
-    //     material: "",
-    //     upper_material: "",
-    //     packing_type: "",
-    //     pairs_per_ctn: "",
-    //     origin: "Made in India",
-    //     stock_quantity: "",
-    //     status: "inactive",
-    //     image: null,
-    //   });
-    //   setPreviewUrl("");
-    //   // Refresh product list
-    //   fetchProducts();
-    //   setShowSuccess(true);
-    //   setTimeout(() => setShowSuccess(false), 2000);
-    // } else {
-    //   alert(result.message || "Failed to save product");
-    // }
+    if (result.success) {
+      setShowAddModal(false);
+      // Reset form
+      setNewProduct({
+        article_name: "",
+        description: "",
+        selling_price: "",
+        price: "",
+        brand_name: "",
+        category_name: "",
+        min_size: "",
+        max_size: "",
+        variants: [],
+        gender: "",
+        color: "",
+        material: "",
+        upper_material: "",
+        packing_type: "",
+        pairs_per_ctn: "",
+        origin: "Made in India",
+        stock_quantity: "",
+        status: "inactive",
+        image: null,
+      });
+      // Refresh product list
+      fetchProducts();
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 2000);
+    } else {
+      alert(result.message || "Failed to save product");
+    }
   } catch (error) {
     console.error("Error submitting product:", error);
     alert("An error occurred while saving the product. Please try again.");
@@ -1114,12 +1447,24 @@ const submitProduct = async (e) => {
                               ({product.variants?.length || 0} variants)
                             </span>
                           </div>
-                          <VariantsDetailTable
+                          {/* <VariantsDetailTable
                             variants={product.variants || []}
                             productId={product.id}
                             onToggleVariantStatus={toggleVariantStatus}
                             togglingVariantId={togglingVariantId}
-                          />
+                          /> */}
+                          <VariantsDetailTable
+  variants={product.variants || []}
+  productId={product.id}
+  onToggleVariantStatus={toggleVariantStatus}
+  togglingVariantId={togglingVariantId}
+  editingVariantId={editingVariantId}
+  editVariantValue={editVariantValue}
+  setEditVariantValue={setEditVariantValue}
+  startEditVariantQuantity={startEditVariantQuantity}
+  saveVariantQuantity={saveVariantQuantity}
+  cancelVariantEdit={cancelVariantEdit}
+/>
                         </div>
                       </td>
                     </tr>
