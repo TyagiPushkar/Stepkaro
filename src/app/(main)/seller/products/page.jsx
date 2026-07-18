@@ -597,6 +597,7 @@ const [editVariantValue, setEditVariantValue] = useState("");
   // Replace the existing saveQuantity function with this:
 // Replace your saveQuantity function with this:
 // Replace your saveQuantity function with this:
+// 1. UPDATE ONLY MAIN PRODUCT STOCK
 const saveQuantity = async (productId) => {
   const newQuantity = parseInt(editValue);
   if (isNaN(newQuantity) || newQuantity < 0) {
@@ -606,95 +607,40 @@ const saveQuantity = async (productId) => {
 
   try {
     const token = localStorage.getItem("access_token");
-    
-    // Find the product to check if it has variants
-    const product = products.find(p => p.id === productId);
-    
-    // If product has variants, update main stock and ALL variants
-    if (product?.variants && product.variants.length > 0) {
-      // Prepare payload for variants - update all variants with same stock
-      const variantsPayload = product.variants.map(variant => ({
-        variant_id: variant.id,
-        stock: newQuantity // Set all variants to the same stock value
-      }));
 
-      const payload = {
-        product_id: productId,
-        stock_quantity: newQuantity,
-        multi_variants: variantsPayload
-      };
+    // Purely independent payload - only updates main product
+    const payload = {
+      product_id: productId,
+      stock_quantity: newQuantity
+    };
 
-      console.log("Updating main product & all variants stock:", payload);
+    console.log("Updating main product stock only:", payload);
 
-      const response = await fetch(
-        "https://namami-infotech.com/Stepkaro/src/stock/update_stock.php",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(payload),
-        }
-      );
-      
-      const result = await response.json();
-      if (result.success) {
-        // Update local state
-        setProducts(prev => 
-          prev.map(p => 
-            p.id === productId 
-              ? {
-                  ...p,
-                  quantity: newQuantity,
-                  variants: p.variants.map(v => ({
-                    ...v,
-                    stock: newQuantity
-                  }))
-                }
-              : p
-          )
-        );
-        setEditingQuantity(null);
-        setShowSuccess(true);
-        setTimeout(() => setShowSuccess(false), 2000);
-      } else {
-        alert(result.message || "Failed to update stock");
+    const response = await fetch(
+      "https://namami-infotech.com/Stepkaro/src/stock/update_stock.php",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
       }
+    );
+    
+    const result = await response.json();
+    if (result.success) {
+      // Local state mein sirf product ki quantity badlegi, variants safe rahenge
+      setProducts(prev => 
+        prev.map(p => 
+          p.id === productId ? { ...p, quantity: newQuantity } : p
+        )
+      );
+      setEditingQuantity(null);
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 2000);
     } else {
-      // Simple product without variants - update only parent stock
-      const payload = {
-        product_id: productId,
-        stock_quantity: newQuantity
-      };
-
-      console.log("Updating product stock:", payload);
-
-      const response = await fetch(
-        "https://namami-infotech.com/Stepkaro/src/stock/update_stock.php",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(payload),
-        }
-      );
-      
-      const result = await response.json();
-      if (result.success) {
-        setProducts(prev => 
-          prev.map(p => 
-            p.id === productId ? { ...p, quantity: newQuantity } : p
-          )
-        );
-        setEditingQuantity(null);
-        setShowSuccess(true);
-        setTimeout(() => setShowSuccess(false), 2000);
-      } else {
-        alert(result.message || "Failed to update stock");
-      }
+      alert(result.message || "Failed to update stock");
     }
   } catch (error) {
     console.error("Error updating stock:", error);
@@ -702,9 +648,7 @@ const saveQuantity = async (productId) => {
   }
 };
 
-// New function to update individual variant stock
-// Keep ONLY this version (around line 380-390)
-// Replace your saveVariantQuantity function with this:
+// 2. UPDATE ONLY ONE SPECIFIC VARIANT STOCK
 const saveVariantQuantity = async (productId, variantId, newQuantity) => {
   if (isNaN(newQuantity) || newQuantity < 0) {
     alert("Please enter a valid quantity");
@@ -714,21 +658,9 @@ const saveVariantQuantity = async (productId, variantId, newQuantity) => {
   try {
     const token = localStorage.getItem("access_token");
     
-    // Find the product
-    const product = products.find(p => p.id === productId);
-    
-    // Calculate total stock from all variants
-    const updatedVariants = product.variants.map(v => 
-      v.id === variantId ? { ...v, stock: newQuantity } : v
-    );
-    
-    // Calculate total stock (sum of all variants)
-    const totalStock = updatedVariants.reduce((sum, v) => sum + (v.stock || 0), 0);
-
-    // Prepare payload - update main stock with total AND update the specific variant
+    // Targeted payload - updates ONLY this specific variant_id
     const payload = {
       product_id: productId,
-      stock_quantity: totalStock, // Main stock = sum of all variants
       multi_variants: [
         {
           variant_id: variantId,
@@ -737,7 +669,7 @@ const saveVariantQuantity = async (productId, variantId, newQuantity) => {
       ]
     };
 
-    console.log("Updating variant stock with payload:", payload);
+    console.log("Updating single variant stock with payload:", payload);
 
     const response = await fetch(
       "https://namami-infotech.com/Stepkaro/src/stock/update_stock.php",
@@ -745,7 +677,7 @@ const saveVariantQuantity = async (productId, variantId, newQuantity) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          "Authorization": `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
       }
@@ -753,13 +685,13 @@ const saveVariantQuantity = async (productId, variantId, newQuantity) => {
     
     const result = await response.json();
     if (result.success) {
-      // Update local state
+      // Local state mein sirf target variant ka stock badlega, main product unaffected rahega
       setProducts(prev => 
         prev.map(p => 
           p.id === productId 
             ? {
                 ...p,
-                quantity: totalStock, // Update main stock to sum of all variants
+                // product ki quantity jaisi thi waisi hi rahegi (p.quantity)
                 variants: p.variants.map(v => 
                   v.id === variantId ? { ...v, stock: newQuantity } : v
                 )
@@ -1454,17 +1386,17 @@ const submitProduct = async (e) => {
                             togglingVariantId={togglingVariantId}
                           /> */}
                           <VariantsDetailTable
-  variants={product.variants || []}
-  productId={product.id}
-  onToggleVariantStatus={toggleVariantStatus}
-  togglingVariantId={togglingVariantId}
-  editingVariantId={editingVariantId}
-  editVariantValue={editVariantValue}
-  setEditVariantValue={setEditVariantValue}
-  startEditVariantQuantity={startEditVariantQuantity}
-  saveVariantQuantity={saveVariantQuantity}
-  cancelVariantEdit={cancelVariantEdit}
-/>
+                          variants={product.variants || []}
+                          productId={product.id}
+                          onToggleVariantStatus={toggleVariantStatus}
+                          togglingVariantId={togglingVariantId}
+                          editingVariantId={editingVariantId}
+                          editVariantValue={editVariantValue}
+                          setEditVariantValue={setEditVariantValue}
+                          startEditVariantQuantity={startEditVariantQuantity}
+                          saveVariantQuantity={saveVariantQuantity}
+                          cancelVariantEdit={cancelVariantEdit}
+                        />
                         </div>
                       </td>
                     </tr>
