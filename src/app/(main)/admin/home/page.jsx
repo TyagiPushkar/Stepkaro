@@ -98,80 +98,127 @@ export default function HomePage() {
     fetchOrders();
   }, [token]);
 
-  useEffect(() => {
-  const fetchUsers = async () => {
-    try {
-      const res = await fetch(
-        "https://namami-infotech.com/Stepkaro/src/home/get_vendor_and_buyer.php"
-      );
+//   useEffect(() => {
+//   const fetchUsers = async () => {
+//     try {
+//       const res = await fetch(
+//         "https://namami-infotech.com/Stepkaro/src/home/get_vendor_and_buyer.php"
+//       );
 
-      const data = await res.json();
+//       const data = await res.json();
 
-      if (data.success) {
-        setUsers([
-          ...(data.data.buyers || []),
-          ...(data.data.vendors || []),
-        ]);
-      }
-    } catch (err) {
-      console.log(err);
-    }
-  };
+//       if (data.success) {
+//         setUsers([
+//           ...(data.data.buyers || []),
+//           ...(data.data.vendors || []),
+//         ]);
+//       }
+//     } catch (err) {
+//       console.log(err);
+//     }
+//   };
 
-  fetchUsers();
-}, []);
+//   fetchUsers();
+// }, []);
 
   // =========================
   // STATS FROM API
   // =========================
   const stats = [
-    {
-  title: "New Orders",
-  value: orders.filter(
-    (o) => (o.status || "").toLowerCase() === "new"
-  ).length,
-  icon: ShoppingCart,
-  bgColor: "bg-purple-100",
-  iconColor: "text-purple-600",
-},
-    {
-      title: "Active Products",
-      value: dashboard?.activeProducts || 0,
-      icon: Package,
-      bgColor: "bg-emerald-100",
-      iconColor: "text-emerald-600",
-    },
-   {
-  title: "New Users",
-  value: users.filter(
-    (u) => (u.status || "").toLowerCase() === "pending"
-  ).length,
-  icon: Building2,
-  bgColor: "bg-yellow-100",
-  iconColor: "text-yellow-600",
-},
-    {
-      title: "Total Revenue",
-      value: `₹${dashboard?.totalRevenue || 0}`,
-      icon: TrendingUp,
-      bgColor: "bg-blue-100",
-      iconColor: "text-blue-600",
-    },
-    {
-      title: "Admin Revenue",
-      value: `₹${dashboard?.adminRevenue || 0}`,
-      icon: Building2,
-      bgColor: "bg-purple-100",
-      iconColor: "text-purple-600",
-    },
-    {
-      title: "Pending Payments",
-      value: `₹${dashboard?.pendingPayments || 0}`,
-      icon: CreditCard,
-      bgColor: "bg-orange-100",
-      iconColor: "text-orange-600",
-    },
-  ];
+  {
+    title: "New Orders",
+    value: dashboard?.newOrders || 0,
+    icon: ShoppingCart,
+    bgColor: "bg-purple-100",
+    iconColor: "text-purple-600",
+  },
+  {
+    title: "Pending QR/BANK Orders",
+    value: dashboard?.pending_qrBankOrders || 0,
+    icon: ShoppingCart,
+    bgColor: "bg-purple-100",
+    iconColor: "text-purple-600",
+  },
+  {
+    title: "Active Products",
+    value: dashboard?.activeProducts || 0,
+    icon: Package,
+    bgColor: "bg-emerald-100",
+    iconColor: "text-emerald-600",
+  },
+  {
+    title: "Enquiry",
+    value: dashboard?.enquiryPendingCount || 0,
+    icon: Package,
+    bgColor: "bg-emerald-100",
+    iconColor: "text-emerald-600",
+  },
+  {
+    title: "Pending Buyer Request",
+    value: dashboard?.pendingBuyerRequest || 0,
+    icon: Building2,
+    bgColor: "bg-yellow-100",
+    iconColor: "text-yellow-600",
+  },
+  {
+    title: "Pending Sellers Request",
+    value: dashboard?.pendingSellersRequest || 0,
+    icon: Building2,
+    bgColor: "bg-yellow-100",
+    iconColor: "text-yellow-600",
+  },
+  {
+    title: "Pending Products Request",
+    value: dashboard?.pendingProductsRequest || 0,
+    icon: Building2,
+    bgColor: "bg-yellow-100",
+    iconColor: "text-yellow-600",
+  },
+  // {
+  //   title: "Total Revenue",
+  //   value: `₹${dashboard?.totalRevenue || 0}`,
+  //   icon: TrendingUp,
+  //   bgColor: "bg-blue-100",
+  //   iconColor: "text-blue-600",
+  // },
+  // {
+  //   title: "Admin Revenue",
+  //   value: `₹${dashboard?.adminRevenue || 0}`,
+  //   icon: Building2,
+  //   bgColor: "bg-purple-100",
+  //   iconColor: "text-purple-600",
+  // },
+  {
+    title: "Total Buyer",
+    value: dashboard?.totalBuyer || 0,
+    icon: Building2,
+    bgColor: "bg-yellow-100",
+    iconColor: "text-yellow-600",
+  },
+  {
+    title: "Total Sellers",
+    value: dashboard?.totalSellers || 0,
+    icon: Building2,
+    bgColor: "bg-yellow-100",
+    iconColor: "text-yellow-600",
+  },
+  // {
+  //   title: "Total Products",
+  //   value: users.filter(
+  //     (u) => (u.status || "").toLowerCase() === "pending"
+  //   ).length,
+  //   icon: Building2,
+  //   bgColor: "bg-yellow-100",
+  //   iconColor: "text-yellow-600",
+  // },
+  {
+    title: "Pending Payments",
+    value: `₹${dashboard?.pendingPayments || 0}`,
+    icon: CreditCard,
+    bgColor: "bg-orange-100",
+    iconColor: "text-orange-600",
+  },
+];
 
   const getStatusColor = (status) => {
     switch (status) {

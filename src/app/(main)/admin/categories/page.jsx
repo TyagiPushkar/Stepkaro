@@ -1,10 +1,10 @@
 // app/(main)/categories/page.jsx
 "use client";
 import { useState, useMemo, useEffect } from "react";
-import { 
-  Search, 
-  Plus, 
-  Edit, 
+import {
+  Search,
+  Plus,
+  Edit,
   Trash2,
   Package,
   Grid,
@@ -38,15 +38,16 @@ export default function CategoriesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
-  
+
   // Modal states
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
-  
+
   // Form states
   const [formData, setFormData] = useState({
     name: "",
+    sort_order: "",
     image: null,
     imagePreview: null
   });
@@ -57,15 +58,15 @@ export default function CategoriesPage() {
   // Filter categories
   const filteredCategories = useMemo(() => {
     let filtered = categories;
-    
+
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(cat => 
+      filtered = filtered.filter(cat =>
         cat.name.toLowerCase().includes(query) ||
         cat.id.toString().includes(query)
       );
     }
-    
+
     return filtered;
   }, [searchQuery, categories]);
 
@@ -131,6 +132,7 @@ export default function CategoriesPage() {
           },
           body: JSON.stringify({
             name: formData.name,
+            sort_order: formData.sort_order,
             image: formData.imagePreview || null,
             status: 1,
           }),
@@ -142,6 +144,7 @@ export default function CategoriesPage() {
         setShowAddModal(false);
         setFormData({
           name: "",
+          sort_order: "",
           image: null,
           imagePreview: null,
         });
@@ -176,6 +179,7 @@ export default function CategoriesPage() {
           },
           body: JSON.stringify({
             category_id: selectedCategory.id,
+            sort_order: formData.sort_order,
             name: formData.name,
             image: formData.imagePreview || null,
             status: selectedCategory.status || 1,
@@ -201,6 +205,7 @@ export default function CategoriesPage() {
     setSelectedCategory(category);
     setFormData({
       name: category.name,
+      sort_order: category.sort_order,
       image: null,
       imagePreview: category.image
     });
@@ -251,7 +256,7 @@ export default function CategoriesPage() {
       cat.sub,
       cat.createdAt
     ]);
-    
+
     const csvContent = [headers, ...csvData].map(row => row.join(",")).join("\n");
     const blob = new Blob([csvContent], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
@@ -294,16 +299,16 @@ export default function CategoriesPage() {
               className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
             />
           </div>
-          
-          <button 
+
+          <button
             onClick={() => setShowAddModal(true)}
             className="bg-gradient-to-r from-purple-600 to-orange-500 hover:shadow-lg text-white px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-all"
           >
             <Plus size={16} />
             Create New
           </button>
-          
-          <button 
+
+          <button
             onClick={handleExportCSV}
             className="bg-white hover:bg-gray-50 text-gray-600 px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-colors border border-gray-200 hover:border-purple-300"
           >
@@ -326,8 +331,8 @@ export default function CategoriesPage() {
             </div>
           </div>
         </div>
-        
-        <div className="bg-white border border-gray-200 rounded-xl p-4 hover:border-purple-300 transition-all">
+
+        {/* <div className="bg-white border border-gray-200 rounded-xl p-4 hover:border-purple-300 transition-all">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-100 rounded-lg">
               <Package size={20} className="text-blue-600" />
@@ -339,9 +344,9 @@ export default function CategoriesPage() {
               <p className="text-xs text-gray-500">Total Products</p>
             </div>
           </div>
-        </div>
-        
-        <div className="bg-white border border-gray-200 rounded-xl p-4 hover:border-purple-300 transition-all">
+        </div> */}
+
+        {/* <div className="bg-white border border-gray-200 rounded-xl p-4 hover:border-purple-300 transition-all">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-orange-100 rounded-lg">
               <Grid size={20} className="text-orange-600" />
@@ -353,7 +358,7 @@ export default function CategoriesPage() {
               <p className="text-xs text-gray-500">Sub Categories</p>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
 
       {/* Results Summary */}
@@ -365,7 +370,7 @@ export default function CategoriesPage() {
         </p>
         <div className="flex items-center gap-2">
           <span className="text-sm text-gray-500">Show:</span>
-          <select 
+          <select
             value={itemsPerPage}
             onChange={(e) => {
               setItemsPerPage(Number(e.target.value));
@@ -389,8 +394,8 @@ export default function CategoriesPage() {
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category Name</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Products</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Position</th>
+                {/* <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th> */}
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
@@ -401,7 +406,7 @@ export default function CategoriesPage() {
                     <td className="px-6 py-4">
                       <span className="text-sm text-gray-500">{category.id}</span>
                     </td>
-                    
+
                     <td className="px-6 py-4">
                       <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-orange-100 rounded-lg flex items-center justify-center border border-gray-200 overflow-hidden">
                         {category.image ? (
@@ -415,19 +420,19 @@ export default function CategoriesPage() {
                         )}
                       </div>
                     </td>
-                    
+
                     <td className="px-6 py-4">
                       <span className="text-sm font-medium text-gray-900">{category.name}</span>
                     </td>
-                    
+
                     <td className="px-6 py-4">
-                      <span className="text-sm text-gray-600">{category.products || 0}</span>
+                      <span className="text-sm text-gray-600">{category.sort_order || 0}</span>
                     </td>
-                    
-                    <td className="px-6 py-4">
-                      <span className="text-sm text-gray-500">{category.created_at || "—"}</span>
-                    </td>
-                    
+
+                    {/* <td className="px-6 py-4">
+                      <span className="text-sm text-gray-500">{category.status || "—"}</span>
+                    </td> */}
+
                     <td className="px-6 py-4">
                       <button
                         onClick={() => openEditModal(category)}
@@ -451,7 +456,7 @@ export default function CategoriesPage() {
             </tbody>
           </table>
         </div>
-        
+
         {/* Pagination */}
         {filteredCategories.length > 0 && totalPages > 1 && (
           <div className="px-6 py-4 border-t border-gray-200 flex justify-center gap-2">
@@ -463,21 +468,20 @@ export default function CategoriesPage() {
               <ChevronLeft size={16} />
               Previous
             </button>
-            
+
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
               <button
                 key={page}
                 onClick={() => goToPage(page)}
-                className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                  currentPage === page
-                    ? "bg-purple-600 text-white"
-                    : "bg-white border border-gray-200 hover:bg-gray-50 text-gray-600"
-                }`}
+                className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${currentPage === page
+                  ? "bg-purple-600 text-white"
+                  : "bg-white border border-gray-200 hover:bg-gray-50 text-gray-600"
+                  }`}
               >
                 {page}
               </button>
             ))}
-            
+
             <button
               onClick={() => goToPage(currentPage + 1)}
               disabled={currentPage === totalPages}
@@ -500,13 +504,37 @@ export default function CategoriesPage() {
             <input
               type="text"
               value={formData.name}
-              onChange={(e) => setFormData({...formData, name: e.target.value})}
-              className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  name: e.target.value.toUpperCase(),
+                })
+              }
+              className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 uppercase focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               placeholder="Enter category name"
               autoFocus
             />
           </div>
-          
+
+          <div>
+            <label className="text-sm font-medium text-gray-700 block mb-1">
+              Position
+            </label>
+            <input
+              type="number"
+              value={formData.sort_order}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  sort_order: e.target.value,
+                })
+              }
+              className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              placeholder="Enter position"
+              min="1"
+            />
+          </div>
+
           <div>
             <label className="text-sm font-medium text-gray-700 block mb-1">
               Category Image <span className="text-red-500">*</span>
@@ -521,7 +549,7 @@ export default function CategoriesPage() {
                   />
                   <button
                     type="button"
-                    onClick={() => setFormData({...formData, imagePreview: null})}
+                    onClick={() => setFormData({ ...formData, imagePreview: null })}
                     className="absolute -top-2 -right-2 p-1 bg-red-500 rounded-full text-white hover:bg-red-600 transition-colors"
                   >
                     <X size={12} />
@@ -541,7 +569,7 @@ export default function CategoriesPage() {
               )}
             </div>
           </div>
-          
+
           <button
             onClick={handleAddCategory}
             disabled={!formData.name.trim() || !formData.imagePreview}
@@ -562,11 +590,37 @@ export default function CategoriesPage() {
             <input
               type="text"
               value={formData.name}
-              onChange={(e) => setFormData({...formData, name: e.target.value})}
-              className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  name: e.target.value.toUpperCase(),
+                })
+              }
+              className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 uppercase focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              placeholder="Enter category name"
+              autoFocus
             />
           </div>
-          
+
+          <div>
+            <label className="text-sm font-medium text-gray-700 block mb-1">
+              Position
+            </label>
+            <input
+              type="number"
+              value={formData.sort_order}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  sort_order: e.target.value,
+                })
+              }
+              className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              placeholder="Enter position"
+              min="1"
+            />
+          </div>
+
           <div>
             <label className="text-sm font-medium text-gray-700 block mb-1">
               Category Image <span className="text-red-500">*</span>
@@ -581,7 +635,7 @@ export default function CategoriesPage() {
                   />
                   <button
                     type="button"
-                    onClick={() => setFormData({...formData, imagePreview: null})}
+                    onClick={() => setFormData({ ...formData, imagePreview: null })}
                     className="absolute -top-2 -right-2 p-1 bg-red-500 rounded-full text-white hover:bg-red-600 transition-colors"
                   >
                     <X size={12} />
@@ -601,7 +655,7 @@ export default function CategoriesPage() {
               )}
             </div>
           </div>
-          
+
           <button
             onClick={handleEditCategory}
             disabled={!formData.name.trim() || !formData.imagePreview}

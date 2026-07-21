@@ -170,10 +170,10 @@ function VariantsTable({ variants }) {
               const discount =
                 v.price && v.selling_price && Number(v.price) > Number(v.selling_price)
                   ? Math.round(
-                      ((Number(v.price) - Number(v.selling_price)) /
-                        Number(v.price)) *
-                        100,
-                    )
+                    ((Number(v.price) - Number(v.selling_price)) /
+                      Number(v.price)) *
+                    100,
+                  )
                   : null;
 
               return (
@@ -339,8 +339,8 @@ export default function ViewProduct({
   const discountPercent =
     p.price && p.selling_price && Number(p.price) > Number(p.selling_price)
       ? Math.round(
-          ((Number(p.price) - Number(p.selling_price)) / Number(p.price)) * 100,
-        )
+        ((Number(p.price) - Number(p.selling_price)) / Number(p.price)) * 100,
+      )
       : null;
 
   const commissionDisplay =
@@ -464,18 +464,20 @@ export default function ViewProduct({
             </div>
 
             {/* Right — Details */}
-            <div className="lg:col-span-3 space-y-5">
+            <div className="lg:col-span-3 space-y-2">
               {/* Description */}
-              {p.description ? (
-                <div className="rounded-2xl bg-white border border-slate-200 p-4 shadow-sm">
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400 mb-2">
-                    Description
-                  </p>
-                  <p className="text-sm text-slate-600 leading-relaxed">
-                    {p.description}
-                  </p>
-                </div>
-              ) : null}
+
+              <div className="rounded-2xl bg-white border border-slate-200 p-4 shadow-sm">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400 mb-2">
+                  Display Name
+                </p>
+                <p className="text-sm font-medium text-gray-900 cursor-pointer hover:text-purple-600 transition-colors uppercase">
+                  {p.article_name} | {p.variant} |{" "}
+                  {p.color} | {p.packing_type} |{" "}
+                  {p.category_name}
+                </p>
+              </div>
+
 
               {/* Vendor */}
               {showVendor && (
@@ -532,7 +534,7 @@ export default function ViewProduct({
                   </h3>
                 </div>
                 <div className="p-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
-                <DetailCard
+                  <DetailCard
                     icon={Palette}
                     label="size"
                     value={p.variant}
@@ -543,16 +545,6 @@ export default function ViewProduct({
                     value={p.color}
                   />
                   <DetailCard
-                    icon={Layers}
-                    label="Material"
-                    value={p.material}
-                  />
-                  <DetailCard
-                    icon={Layers}
-                    label="Upper Material"
-                    value={p.upper_material}
-                  />
-                  <DetailCard
                     icon={Package}
                     label="Packing Type"
                     value={p.packing_type}
@@ -561,6 +553,16 @@ export default function ViewProduct({
                     icon={Scale}
                     label="Pairs / CTN"
                     value={p.pairs_per_ctn}
+                  />
+                  <DetailCard
+                    icon={Layers}
+                    label="Upper Material"
+                    value={p.upper_material}
+                  />
+                  <DetailCard
+                    icon={Layers}
+                    label="Sole Material"
+                    value={p.material}
                   />
                   <DetailCard icon={Ship} label="Origin" value={p.origin} />
                   {!hasVariants && (p.variant || p.size) && (
