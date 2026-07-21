@@ -23,6 +23,8 @@ import {
   X,
   ThumbsUp,
   ThumbsDown,
+  Pencil,
+  Check,
 } from "lucide-react";
 import api from "@/app/utils/api";
 import ViewProduct from "@/app/components/shared/ViewProduct";
@@ -76,10 +78,19 @@ const Modal = ({ isOpen, onClose, title, children }) => {
 };
 
 const VariantsDetailTable = ({
+  product,
   variants,
   productId,
   onToggleVariantStatus,
   togglingVariantId,
+  editingVariantId,
+  setEditingVariantId,
+  editVariantSellingPrice,
+  setEditVariantSellingPrice,
+  editVariantStock,
+  setEditVariantStock,
+  onSaveVariantEdit,
+  onCancelVariantEdit,
 }) => {
   if (!variants?.length) {
     return <p className="text-sm text-gray-500 py-2">No variants available</p>;
@@ -89,6 +100,7 @@ const VariantsDetailTable = ({
     <div
       data-variants-panel="true"
       className="overflow-x-auto rounded-lg border border-blue-100 bg-blue-50/40"
+      onClick={(e) => e.stopPropagation()} // Panel level propagation stop
     >
       <table className="w-full min-w-[700px] text-sm">
         <thead className="bg-blue-100/60">
@@ -97,25 +109,16 @@ const VariantsDetailTable = ({
               Image
             </th>
             <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">
-              Size
+              Display Name
             </th>
             <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">
-              Color
+              SELLING PRICE
             </th>
             <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">
-              MRP
-            </th>
-            <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">
-              Selling
+              commission Per pair
             </th>
             <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">
               Stock
-            </th>
-            <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">
-              Packing
-            </th>
-            <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">
-              Pairs/Ctn
             </th>
             <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">
               Status
@@ -135,25 +138,143 @@ const VariantsDetailTable = ({
                   />
                 </div>
               </td>
-              <td className="px-3 py-2 text-gray-900">
-                {variant.variant_size || "-"}
+              <td className="px-3 py-2 text-gray-900 uppercase">
+                {product.article_name} | {variant.variant_size} |{" "}
+                {variant.color} | {variant.packing_type} |{" "}
+                {product.category_name}
               </td>
-              <td className="px-3 py-2 text-gray-900">
-                {variant.color || "-"}
-              </td>
-              <td className="px-3 py-2 text-gray-500 line-through">
-                ₹{variant.price || 0}
-              </td>
+
+              {/* SELLING PRICE */}
               <td className="px-3 py-2 font-medium text-emerald-600">
-                ₹{variant.selling_price || 0}
+                <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                  {editingVariantId === variant.id ? (
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="number"
+                        value={editVariantSellingPrice}
+                        onChange={(e) => setEditVariantSellingPrice(e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                        className="w-24 border rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        autoFocus
+                      />
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onSaveVariantEdit(productId, variant.id);
+                        }}
+                        className="p-1 bg-emerald-500 text-white rounded hover:bg-emerald-600"
+                        title="Save"
+                      >
+                        <Check size={14} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onCancelVariantEdit();
+                        }}
+                        className="p-1 bg-gray-400 text-white rounded hover:bg-gray-500"
+                        title="Cancel"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <span className="text-sm font-semibold text-gray-900">
+                        ₹{variant.selling_price || 0}
+                      </span>
+                      <button
+                        type="button"
+                        className="p-1 text-gray-500 hover:text-purple-600 rounded focus:outline-none"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingVariantId(variant.id);
+                          setEditVariantSellingPrice(variant.selling_price || "");
+                          setEditVariantStock(variant.stock || "");
+                        }}
+                      >
+                        <Pencil size={16} />
+                      </button>
+                    </>
+                  )}
+                </div>
               </td>
-              <td className="px-3 py-2 text-gray-900">{variant.stock ?? 0}</td>
+
+              {/* COMMISSION PER PAIR */}
+              <td className="px-3 py-2 font-medium text-emerald-600">
+                <div className="flex flex-col">
+                  <span className="text-sm font-semibold text-purple-600">
+                    {product.commission_type === "percentage"
+                      ? `₹${(
+                        (Number(variant.selling_price) *
+                          Number(product.commission)) /
+                        100
+                      ).toFixed(2)}`
+                      : `₹${Number(product.commission || 0).toFixed(2)}`}
+                  </span>
+                </div>
+              </td>
+
+              {/* STOCK */}
               <td className="px-3 py-2 text-gray-900">
-                {variant.packing_type || "-"}
+                <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                  {editingVariantId === variant.id ? (
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="number"
+                        value={editVariantStock}
+                        onChange={(e) => setEditVariantStock(e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                        className="w-24 border rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      />
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onSaveVariantEdit(productId, variant.id);
+                        }}
+                        className="p-1 bg-emerald-500 text-white rounded hover:bg-emerald-600"
+                        title="Save"
+                      >
+                        <Check size={14} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onCancelVariantEdit();
+                        }}
+                        className="p-1 bg-gray-400 text-white rounded hover:bg-gray-500"
+                        title="Cancel"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <span className="text-sm font-semibold text-gray-900">
+                        {variant.stock ?? 0}
+                      </span>
+                      <button
+                        type="button"
+                        className="p-1 text-gray-500 hover:text-purple-600 rounded focus:outline-none"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingVariantId(variant.id);
+                          setEditVariantSellingPrice(variant.selling_price || "");
+                          setEditVariantStock(variant.stock || "");
+                        }}
+                      >
+                        <Pencil size={16} />
+                      </button>
+                    </>
+                  )}
+                </div>
               </td>
-              <td className="px-3 py-2 text-gray-900">
-                {variant.pairs_per_ctn ?? "-"}
-              </td>
+
+              {/* STATUS TOGGLE */}
               <td className="px-3 py-2">
                 <button
                   type="button"
@@ -163,15 +284,13 @@ const VariantsDetailTable = ({
                     e.stopPropagation();
                     onToggleVariantStatus(productId, variant.id);
                   }}
-                  className={`relative w-10 h-5 rounded-full transition-colors cursor-pointer flex-shrink-0 disabled:opacity-60 ${
-                    variant.status === "active" ? "bg-green-500" : "bg-red-500"
-                  }`}
-                  aria-label={`Toggle variant status`}
+                  className={`relative w-10 h-5 rounded-full transition-colors cursor-pointer flex-shrink-0 disabled:opacity-60 ${variant.status === "active" ? "bg-green-500" : "bg-red-500"
+                    }`}
+                  aria-label="Toggle variant status"
                 >
                   <div
-                    className={`absolute w-4 h-4 bg-white rounded-full top-0.5 transition-all duration-300 shadow-sm ${
-                      variant.status === "active" ? "left-5" : "left-0.5"
-                    }`}
+                    className={`absolute w-4 h-4 bg-white rounded-full top-0.5 transition-all duration-300 shadow-sm ${variant.status === "active" ? "left-5" : "left-0.5"
+                      }`}
                   />
                 </button>
               </td>
@@ -204,6 +323,21 @@ export default function ProductsPage() {
   const [expandedVariantsProductId, setExpandedVariantsProductId] =
     useState(null);
   const [togglingVariantId, setTogglingVariantId] = useState(null);
+
+  //brand filter
+  const [brandFilter, setBrandFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
+
+  // editable
+  const [editingProductId, setEditingProductId] = useState(null);
+  const [editProductSellingPrice, setEditProductSellingPrice] = useState("");
+  const [editProductStock, setEditProductStock] = useState("");
+  const [editProductCommission, setEditProductCommission] = useState("");
+
+  // Editable states for variant
+  const [editingVariantId, setEditingVariantId] = useState(null);
+  const [editVariantSellingPrice, setEditVariantSellingPrice] = useState("");
+  const [editVariantStock, setEditVariantStock] = useState("");
 
   // best selling products
   const [showBestProductsModal, setShowBestProductsModal] = useState(false);
@@ -240,6 +374,7 @@ export default function ProductsPage() {
 
         if (response.data?.success) {
           setProducts(response.data.data || []);
+          console.log(response.data.data);
         } else {
           showToast(
             response.data?.message || "Failed to fetch products",
@@ -293,6 +428,8 @@ export default function ProductsPage() {
 
     setSelectedBestProducts(selected);
   }, [products]);
+
+  // extra started
 
   const filteredBestProducts = useMemo(() => {
     const search = bestProductSearch.toLowerCase();
@@ -405,11 +542,11 @@ export default function ProductsPage() {
             prev.map((product) =>
               product.id === productId
                 ? {
-                    ...product,
-                    status: action,
-                    commission: commissionValue || product.commission,
-                    commission_type: commissionType || product.commission_type,
-                  }
+                  ...product,
+                  status: action,
+                  commission: commissionValue || product.commission,
+                  commission_type: commissionType || product.commission_type,
+                }
                 : product,
             ),
           );
@@ -493,11 +630,11 @@ export default function ProductsPage() {
         prev.map((p) =>
           p.id === productId
             ? {
-                ...p,
-                variants: p.variants.map((v) =>
-                  v.id === variantId ? { ...v, status: newStatus } : v,
-                ),
-              }
+              ...p,
+              variants: p.variants.map((v) =>
+                v.id === variantId ? { ...v, status: newStatus } : v,
+              ),
+            }
             : p,
         ),
       );
@@ -531,11 +668,11 @@ export default function ProductsPage() {
           prev.map((p) =>
             p.id === productId
               ? {
-                  ...p,
-                  variants: p.variants.map((v) =>
-                    v.id === variantId ? { ...v, status: variant.status } : v,
-                  ),
-                }
+                ...p,
+                variants: p.variants.map((v) =>
+                  v.id === variantId ? { ...v, status: variant.status } : v,
+                ),
+              }
               : p,
           ),
         );
@@ -568,6 +705,233 @@ export default function ProductsPage() {
       setCommission(val);
     }
   }, []);
+
+  // ========== MAIN PRODUCT EDIT HANDLERS ==========
+  const startProductEdit = useCallback((product) => {
+    setEditingProductId(product.id);
+    setEditingVariantId(null); // Close any variant edit
+    setEditProductSellingPrice(product.selling_price || "");
+    setEditProductStock(product.stock_quantity || "");
+    setEditProductCommission(product.commission || "");
+  }, []);
+
+  const cancelProductEdit = useCallback(() => {
+    setEditingProductId(null);
+    setEditProductSellingPrice("");
+    setEditProductStock("");
+    setEditProductCommission("");
+  }, []);
+
+  const saveProductEdit = useCallback(
+    async (productId) => {
+      const product = products.find((p) => p.id === productId);
+      if (!product) return;
+
+      // Prepare data - only send fields that have changed
+      const updatedData = {
+        product_id: productId,
+      };
+
+      if (
+        editProductSellingPrice !== "" &&
+        editProductSellingPrice !== product.selling_price?.toString()
+      ) {
+        updatedData.selling_price = editProductSellingPrice;
+      }
+      if (
+        editProductStock !== "" &&
+        editProductStock !== product.stock_quantity?.toString()
+      ) {
+        updatedData.stock_quantity = editProductStock;
+      }
+      if (
+        editProductCommission !== "" &&
+        editProductCommission !== product.commission?.toString()
+      ) {
+        updatedData.commission = editProductCommission;
+      }
+
+      // If nothing changed, just cancel
+      if (Object.keys(updatedData).length === 1) {
+        cancelProductEdit();
+        return;
+      }
+
+      // Optimistic update
+      setProducts((prev) =>
+        prev.map((p) =>
+          p.id === productId
+            ? {
+              ...p,
+              selling_price: updatedData.selling_price || p.selling_price,
+              stock_quantity: updatedData.stock_quantity || p.stock_quantity,
+              commission: updatedData.commission || p.commission,
+            }
+            : p,
+        ),
+      );
+
+      try {
+        const formData = new FormData();
+        Object.entries(updatedData).forEach(([key, value]) => {
+          if (value !== undefined && value !== null && value !== "") {
+            formData.append(key, value);
+          }
+        });
+
+        const response = await api.post(
+          `${API_BASE}/product/admin_update_product_details.php`,
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "multipart/form-data",
+            },
+          },
+        );
+
+        if (!response.data?.success) {
+          throw new Error(response.data?.message || "Update failed");
+        }
+
+        showToast("Product updated successfully");
+        cancelProductEdit();
+      } catch (error) {
+        console.error("Update error:", error);
+        // Revert on error
+        setProducts((prev) =>
+          prev.map((p) => (p.id === productId ? product : p)),
+        );
+        showToast(error.message || "Failed to update product", "error");
+      }
+    },
+    [
+      products,
+      editProductSellingPrice,
+      editProductStock,
+      editProductCommission,
+      token,
+      showToast,
+      cancelProductEdit,
+    ],
+  );
+
+  // ========== VARIANT EDIT HANDLERS ==========
+  // const startVariantEdit = useCallback((variant) => {
+  //   setEditingVariantId(variant.id);
+  //   setEditingProductId(null); // Close any product edit
+  //   setEditVariantSellingPrice(variant.selling_price || "");
+  //   setEditVariantStock(variant.stock || "");
+  // }, []);
+
+  const cancelVariantEdit = useCallback(() => {
+    setEditingVariantId(null);
+    setEditVariantSellingPrice("");
+    setEditVariantStock("");
+  }, []);
+
+  const saveVariantEdit = useCallback(
+    async (productId, variantId) => {
+      const product = products.find((p) => p.id === productId);
+      const variant = product?.variants?.find((v) => v.id === variantId);
+      if (!variant) return;
+
+      // Check if values actually changed
+      const priceChanged =
+        editVariantSellingPrice !== "" &&
+        editVariantSellingPrice !== variant.selling_price?.toString();
+      const stockChanged =
+        editVariantStock !== "" &&
+        editVariantStock !== variant.stock?.toString();
+
+      if (!priceChanged && !stockChanged) {
+        cancelVariantEdit();
+        return;
+      }
+
+      // Prepare updated single variant payload according to PHP API schema
+      const updatedVariant = {
+        id: variantId,
+        variant_size: variant.variant_size || "",
+        color: variant.color || "",
+        selling_price: priceChanged ? editVariantSellingPrice : variant.selling_price,
+        stock: stockChanged ? editVariantStock : variant.stock,
+        status: variant.status || "active",
+        packing_type: variant.packing_type || "",
+        pairs_per_ctn: variant.pairs_per_ctn || 0,
+      };
+
+      // Optimistic UI update
+      setProducts((prev) =>
+        prev.map((p) =>
+          p.id === productId
+            ? {
+              ...p,
+              variants: p.variants.map((v) =>
+                v.id === variantId
+                  ? {
+                    ...v,
+                    selling_price: updatedVariant.selling_price,
+                    stock: updatedVariant.stock,
+                  }
+                  : v,
+              ),
+            }
+            : p,
+        ),
+      );
+
+      try {
+        const formData = new FormData();
+        formData.append("product_id", productId);
+
+        // PHP API requires multi_variants array/keys
+        formData.append("multi_variants[0][id]", updatedVariant.id);
+        formData.append("multi_variants[0][variant_size]", updatedVariant.variant_size);
+        formData.append("multi_variants[0][color]", updatedVariant.color);
+        formData.append("multi_variants[0][selling_price]", updatedVariant.selling_price);
+        formData.append("multi_variants[0][stock]", updatedVariant.stock);
+        formData.append("multi_variants[0][status]", updatedVariant.status);
+        formData.append("multi_variants[0][packing_type]", updatedVariant.packing_type);
+        formData.append("multi_variants[0][pairs_per_ctn]", updatedVariant.pairs_per_ctn);
+
+        const response = await api.post(
+          `${API_BASE}/product/admin_update_product_details.php`,
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "multipart/form-data",
+            },
+          },
+        );
+
+        if (!response.data?.success) {
+          throw new Error(response.data?.message || "Update failed");
+        }
+
+        showToast("Variant updated successfully");
+        cancelVariantEdit();
+      } catch (error) {
+        console.error("Update error:", error);
+        // Revert state on error
+        setProducts((prev) =>
+          prev.map((p) =>
+            p.id === productId ? { ...p, variants: product.variants } : p,
+          ),
+        );
+        showToast(error.message || "Failed to update variant", "error");
+      }
+    },
+    [
+      products,
+      editVariantSellingPrice,
+      editVariantStock,
+      token,
+      showToast,
+      cancelVariantEdit,
+    ],
+  );
 
   // Get stock badge
   const getStockBadge = useCallback((stock, qty) => {
@@ -656,6 +1020,25 @@ export default function ProductsPage() {
   ]);
 
   // Filter and search products
+
+  // Add these memos for unique brands and categories
+  const uniqueBrands = useMemo(() => {
+    const brands = new Set();
+    products.forEach((p) => {
+      if (p.brand_name) brands.add(p.brand_name);
+    });
+    return Array.from(brands).sort();
+  }, [products]);
+
+  const uniqueCategories = useMemo(() => {
+    const categories = new Set();
+    products.forEach((p) => {
+      if (p.category_name) categories.add(p.category_name);
+    });
+    return Array.from(categories).sort();
+  }, [products]);
+
+  // Update the filteredProducts useMemo to include brand and category filters
   const filteredProducts = useMemo(() => {
     let filtered = [...products];
 
@@ -682,6 +1065,16 @@ export default function ProductsPage() {
         break;
     }
 
+    // Apply brand filter
+    if (brandFilter) {
+      filtered = filtered.filter((p) => p.brand_name === brandFilter);
+    }
+
+    // Apply category filter
+    if (categoryFilter) {
+      filtered = filtered.filter((p) => p.category_name === categoryFilter);
+    }
+
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
       filtered = filtered.filter(
@@ -694,7 +1087,14 @@ export default function ProductsPage() {
     }
 
     return filtered;
-  }, [selectedFilter, searchQuery, products, isOutOfStock]);
+  }, [
+    selectedFilter,
+    searchQuery,
+    products,
+    isOutOfStock,
+    brandFilter,
+    categoryFilter,
+  ]);
 
   // Export to CSV - Defined AFTER filteredProducts
   const handleExportCSV = useCallback(() => {
@@ -813,13 +1213,12 @@ export default function ProductsPage() {
       {/* Toast Notification */}
       {toast && (
         <div
-          className={`fixed top-20 right-6 z-50 px-4 py-3 rounded-lg flex items-center gap-2 shadow-lg text-white ${
-            toast.type === "success"
-              ? "bg-emerald-500"
-              : toast.type === "error"
-                ? "bg-red-500"
-                : "bg-blue-500"
-          }`}
+          className={`fixed top-20 right-6 z-50 px-4 py-3 rounded-lg flex items-center gap-2 shadow-lg text-white ${toast.type === "success"
+            ? "bg-emerald-500"
+            : toast.type === "error"
+              ? "bg-red-500"
+              : "bg-blue-500"
+            }`}
         >
           {toast.type === "success" ? (
             <CheckCircle size={18} />
@@ -910,22 +1309,20 @@ export default function ProductsPage() {
             <button
               key={filter.value}
               onClick={() => handleFilterChange(filter.value)}
-              className={`px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-all duration-200 whitespace-nowrap border ${
-                isActive
-                  ? colorMap[filter.color] ||
-                    "bg-purple-600 text-white border-purple-600"
-                  : inactiveColorMap[filter.color] ||
-                    "bg-white text-gray-600 border-gray-200 hover:border-purple-300"
-              }`}
+              className={`px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-all duration-200 whitespace-nowrap border ${isActive
+                ? colorMap[filter.color] ||
+                "bg-purple-600 text-white border-purple-600"
+                : inactiveColorMap[filter.color] ||
+                "bg-white text-gray-600 border-gray-200 hover:border-purple-300"
+                }`}
             >
               <Icon size={16} />
               {filter.label}
               <span
-                className={`px-2 py-0.5 rounded-full text-xs ${
-                  isActive
-                    ? "bg-white/20 text-white"
-                    : "bg-gray-100 text-gray-600"
-                }`}
+                className={`px-2 py-0.5 rounded-full text-xs ${isActive
+                  ? "bg-white/20 text-white"
+                  : "bg-gray-100 text-gray-600"
+                  }`}
               >
                 {filter.count}
               </span>
@@ -955,6 +1352,48 @@ export default function ProductsPage() {
         >
           Add 50 Products
         </button>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-500">Brand:</span>
+            <select
+              value={brandFilter}
+              onChange={(e) => {
+                setBrandFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-600 focus:outline-none focus:ring-1 focus:ring-purple-500 min-w-[130px]"
+              aria-label="Filter by brand"
+            >
+              <option value="">All Brands</option>
+              {uniqueBrands.map((brand) => (
+                <option key={brand} value={brand}>
+                  {brand}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-500">Category:</span>
+            <select
+              value={categoryFilter}
+              onChange={(e) => {
+                setCategoryFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-600 focus:outline-none focus:ring-1 focus:ring-purple-500 min-w-[130px]"
+              aria-label="Filter by category"
+            >
+              <option value="">All Categories</option>
+              {uniqueCategories.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
         <div className="flex items-center gap-2">
           <span className="text-sm text-gray-500">Show:</span>
           <select
@@ -985,26 +1424,29 @@ export default function ProductsPage() {
                   S.No
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Product
+                  Display Name
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Brand
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Stock
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Owner
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Price
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Commission
+                  Commission Type
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Commission per pair
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Variants
                 </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Stock
+                </th>
+                {/* <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Owner
+                </th> */}
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
@@ -1051,13 +1493,24 @@ export default function ProductsPage() {
                             <div>
                               <p
                                 onClick={() => goToProductDetail(product.id)}
-                                className="text-sm font-medium text-gray-900 cursor-pointer hover:text-purple-600 transition-colors"
+                                className="text-sm font-medium text-gray-900 cursor-pointer hover:text-purple-600 transition-colors uppercase"
                               >
-                                {product.article_name}
-                              </p>
-                              <p className="text-xs text-gray-500 mt-0.5">
+                                {product.article_name} | {product.variant} |{" "}
+                                {product.color} | {product.packing_type} |{" "}
                                 {product.category_name}
                               </p>
+                              {/* <p className="text-xs text-gray-500 mt-0.5">
+                                {product.category_name}
+                              </p>
+                              <p className="text-xs text-gray-500 mt-0.5">
+                                {product.packing_type}
+                              </p>
+                              <p className="text-xs text-gray-500 mt-0.5">
+                                {product.color}
+                              </p>
+                              <p className="text-xs text-gray-500 mt-0.5">
+                                {product.variant}
+                              </p> */}
                             </div>
                           </div>
                         </td>
@@ -1068,31 +1521,70 @@ export default function ProductsPage() {
                           </span>
                         </td>
 
-                        <td className="px-4 py-3">
-                          <span
-                            className={`text-sm font-medium ${product.stock_quantity === 0 ? "text-red-600" : "text-gray-900"}`}
-                          >
-                            {product.stock_quantity}
-                          </span>
-                        </td>
-
-                        <td className="px-4 py-3">
+                        {/* <td className="px-4 py-3">
                           <span className="text-sm text-gray-900">
                             {product.owner_name}
                           </span>
-                        </td>
+                        </td> */}
 
-                        <td className="px-4 py-3">
-                          <div className="flex flex-col">
+                        {/* <td className="px-4 py-3"> */}
+                        {/* <div className="flex flex-col">
                             <span className="text-xs text-gray-400 line-through">
                               ₹{product.price || 0}
                             </span>
                             <span className="text-sm font-semibold text-emerald-600">
                               ₹{product.selling_price || 0}
                             </span>
+                          </div> */}
+                        {/* <td className="px-4 py-3"> */}
+
+                        {/* </td> */}
+                        {/* </td> */}
+                        {/* Price / Selling Price with Edit */}
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            {editingProductId === product.id ? (
+                              <div className="flex items-center gap-1">
+                                <input
+                                  type="number"
+                                  value={editProductSellingPrice}
+                                  onChange={(e) =>
+                                    setEditProductSellingPrice(e.target.value)
+                                  }
+                                  className="w-20 px-2 py-1 border border-violet-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-violet-500"
+                                  autoFocus
+                                  min="0"
+                                />
+                                <button
+                                  onClick={() => saveProductEdit(product.id)}
+                                  className="p-1 bg-emerald-500 text-white rounded hover:bg-emerald-600"
+                                  title="Save"
+                                >
+                                  <Check size={14} />
+                                </button>
+                                <button
+                                  onClick={cancelProductEdit}
+                                  className="p-1 bg-gray-400 text-white rounded hover:bg-gray-500"
+                                  title="Cancel"
+                                >
+                                  <X size={14} />
+                                </button>
+                              </div>
+                            ) : (
+                              <>
+                                <span className="text-sm font-semibold text-emerald-600">
+                                  ₹{product.selling_price || 0}
+                                </span>
+                                <Pencil
+                                  size={16}
+                                  className="cursor-pointer text-gray-500 hover:text-purple-600"
+                                  onClick={() => startProductEdit(product)}
+                                />
+                              </>
+                            )}
                           </div>
                         </td>
-
+                        {/* commission type */}
                         <td className="px-4 py-3">
                           <div className="flex flex-col">
                             <span className="text-sm font-semibold text-purple-600">
@@ -1107,7 +1599,33 @@ export default function ProductsPage() {
                             )}
                           </div>
                         </td>
+                        {/* comission per pair */}
+                        <td className="px-4 py-3">
+                          <div className="flex flex-col">
+                            <span className="text-sm font-semibold text-purple-600">
+                              {product.commission_type === "percentage"
+                                ? `₹${(
+                                  (Number(product.selling_price) *
+                                    Number(product.commission)) /
+                                  100
+                                ).toFixed(2)}`
+                                : `₹${Number(product.commission || 0).toFixed(2)}`}
+                            </span>
 
+                            {/* {product.commission_type === "percentage" && (
+                                    <span className="text-xs text-gray-500">
+                                      {product.commission}% of Selling Price
+                                    </span>
+                                  )}
+
+                                  {product.commission_type === "per_piece_rate" && (
+                                    <span className="text-xs text-gray-500">
+                                      Per piece rate
+                                    </span>
+                                  )} */}
+                          </div>
+                        </td>
+                        {/* vraints of that */}
                         <td className="px-4 py-3">
                           {variantCount > 0 ? (
                             <button
@@ -1116,11 +1634,10 @@ export default function ProductsPage() {
                               onClick={(e) =>
                                 toggleVariantsPanel(e, product.id)
                               }
-                              className={`text-sm font-semibold cursor-pointer hover:underline ${
-                                isVariantsExpanded
-                                  ? "text-blue-800"
-                                  : "text-blue-600"
-                              }`}
+                              className={`text-sm font-semibold cursor-pointer hover:underline ${isVariantsExpanded
+                                ? "text-blue-800"
+                                : "text-blue-600"
+                                }`}
                             >
                               {variantCount}{" "}
                               {variantCount === 1 ? "Variant" : "Variants"}
@@ -1131,6 +1648,63 @@ export default function ProductsPage() {
                             </span>
                           )}
                         </td>
+
+                        {/*  <td className="px-4 py-3"> */}
+                        {/* <span
+                            className={`text-sm font-medium ${product.stock_quantity === 0 ? "text-red-600" : "text-gray-900"}`}
+                          >
+                            {product.stock_quantity}
+                          </span> */}
+
+                        {/* </td> */}
+
+                        {/* Stock with Edit */}
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            {editingProductId === product.id ? (
+                              <div className="flex items-center gap-1">
+                                <input
+                                  type="number"
+                                  value={editProductStock}
+                                  onChange={(e) =>
+                                    setEditProductStock(e.target.value)
+                                  }
+                                  className="w-20 px-2 py-1 border border-violet-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-violet-500"
+                                  min="0"
+                                />
+                                <button
+                                  onClick={() => saveProductEdit(product.id)}
+                                  className="p-1 bg-emerald-500 text-white rounded hover:bg-emerald-600"
+                                  title="Save"
+                                >
+                                  <Check size={14} />
+                                </button>
+                                <button
+                                  onClick={cancelProductEdit}
+                                  className="p-1 bg-gray-400 text-white rounded hover:bg-gray-500"
+                                  title="Cancel"
+                                >
+                                  <X size={14} />
+                                </button>
+                              </div>
+                            ) : (
+                              <>
+                                <span
+                                  className={`text-sm font-medium ${product.stock_quantity === 0 ? "text-red-600" : "text-gray-900"}`}
+                                >
+                                  {product.stock_quantity}
+                                </span>
+                                <Pencil
+                                  size={16}
+                                  className="cursor-pointer text-gray-500 hover:text-purple-600"
+                                  onClick={() => startProductEdit(product)}
+                                />
+                              </>
+                            )}
+                          </div>
+                        </td>
+
+                        {/* status */}
 
                         <td className="px-4 py-3">
                           {product.status === "reject" ? (
@@ -1167,24 +1741,23 @@ export default function ProductsPage() {
                           ) : (
                             <button
                               onClick={() => toggleStatus(product.id)}
-                              className={`relative w-10 h-5 rounded-full transition-colors cursor-pointer flex-shrink-0 ${
-                                product.status === "active"
-                                  ? "bg-green-500"
-                                  : "bg-red-500"
-                              }`}
+                              className={`relative w-10 h-5 rounded-full transition-colors cursor-pointer flex-shrink-0 ${product.status === "active"
+                                ? "bg-green-500"
+                                : "bg-red-500"
+                                }`}
                               aria-label={`Toggle product status`}
                             >
                               <div
-                                className={`absolute w-4 h-4 bg-white rounded-full top-0.5 transition-all duration-300 shadow-sm ${
-                                  product.status === "active"
-                                    ? "left-5"
-                                    : "left-0.5"
-                                }`}
+                                className={`absolute w-4 h-4 bg-white rounded-full top-0.5 transition-all duration-300 shadow-sm ${product.status === "active"
+                                  ? "left-5"
+                                  : "left-0.5"
+                                  }`}
                               />
                             </button>
                           )}
                         </td>
 
+                        {/* acition on it */}
                         <td className="px-4 py-3">
                           <div className="flex flex-wrap gap-1">
                             <button
@@ -1225,10 +1798,19 @@ export default function ProductsPage() {
                                 </h5>
                               </div>
                               <VariantsDetailTable
+                                product={product}
                                 variants={product.variants}
                                 productId={product.id}
                                 onToggleVariantStatus={toggleVariantStatus}
                                 togglingVariantId={togglingVariantId}
+                                editingVariantId={editingVariantId}
+                                setEditingVariantId={setEditingVariantId}
+                                editVariantSellingPrice={editVariantSellingPrice}
+                                setEditVariantSellingPrice={setEditVariantSellingPrice}
+                                editVariantStock={editVariantStock}
+                                setEditVariantStock={setEditVariantStock}
+                                onSaveVariantEdit={saveVariantEdit}
+                                onCancelVariantEdit={cancelVariantEdit}
                               />
                             </div>
                           </td>
@@ -1340,11 +1922,10 @@ export default function ProductsPage() {
                             type="button"
                             data-variants-toggle
                             onClick={(e) => toggleVariantsPanel(e, product.id)}
-                            className={`ml-1 text-sm font-semibold cursor-pointer hover:underline ${
-                              isVariantsExpanded
-                                ? "text-blue-800"
-                                : "text-blue-600"
-                            }`}
+                            className={`ml-1 text-sm font-semibold cursor-pointer hover:underline ${isVariantsExpanded
+                              ? "text-blue-800"
+                              : "text-blue-600"
+                              }`}
                           >
                             {variantCount}
                           </button>
@@ -1381,19 +1962,17 @@ export default function ProductsPage() {
                         ) : (
                           <button
                             onClick={() => toggleStatus(product.id)}
-                            className={`relative w-10 h-5 rounded-full transition-colors cursor-pointer ml-1 ${
-                              product.status === "active"
-                                ? "bg-green-500"
-                                : "bg-red-500"
-                            }`}
+                            className={`relative w-10 h-5 rounded-full transition-colors cursor-pointer ml-1 ${product.status === "active"
+                              ? "bg-green-500"
+                              : "bg-red-500"
+                              }`}
                             aria-label={`Toggle product status`}
                           >
                             <div
-                              className={`absolute w-4 h-4 bg-white rounded-full top-0.5 transition-all duration-300 shadow-sm ${
-                                product.status === "active"
-                                  ? "left-5"
-                                  : "left-0.5"
-                              }`}
+                              className={`absolute w-4 h-4 bg-white rounded-full top-0.5 transition-all duration-300 shadow-sm ${product.status === "active"
+                                ? "left-5"
+                                : "left-0.5"
+                                }`}
                             />
                           </button>
                         )}
@@ -1413,10 +1992,17 @@ export default function ProductsPage() {
                           </h5>
                         </div>
                         <VariantsDetailTable
+                          product={product}
                           variants={product.variants}
                           productId={product.id}
                           onToggleVariantStatus={toggleVariantStatus}
                           togglingVariantId={togglingVariantId}
+                          editingVariantId={editingVariantId}
+                          setEditingVariantId={setEditingVariantId}
+                        // sellingPrice={sellingPrice}
+                        // setSellingPrice={setSellingPrice}
+                        // stockQuantity={stockQuantity}
+                        // setStockQuantity={setStockQuantity}
                         />
                       </div>
                     )}
@@ -1480,11 +2066,10 @@ export default function ProductsPage() {
               <button
                 key={page}
                 onClick={() => goToPage(page)}
-                className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                  currentPage === page
-                    ? "bg-purple-600 text-white"
-                    : "bg-white border border-gray-200 hover:bg-gray-50 text-gray-600"
-                }`}
+                className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${currentPage === page
+                  ? "bg-purple-600 text-white"
+                  : "bg-white border border-gray-200 hover:bg-gray-50 text-gray-600"
+                  }`}
               >
                 {page}
               </button>

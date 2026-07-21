@@ -51,6 +51,9 @@ export default function BannersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
 
+  // Tab filter state
+  const [activeTab, setActiveTab] = useState("all");
+
   // Modal states
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -62,18 +65,12 @@ export default function BannersPage() {
   const [brandSearch, setBrandSearch] = useState("");
   const [showBrandDropdown, setShowBrandDropdown] = useState(false);
   const dropdownRef = useRef(null);
+
   // Form states
-  // const [formData, setFormData] = useState({
-  //   title: "",
-  //   position: "HEADER",
-  //   link: "",
-  //   image: null,
-  //   imagePreview: null,
-  //   status: "active",
-  // });
   const [formData, setFormData] = useState({
     title: "",
-    position: "HEADER",
+    banner_type: "HEADER",
+    order: "",
     link: "",
     brand_id: "",
     image: null,
@@ -86,7 +83,7 @@ export default function BannersPage() {
   const [toast, setToast] = useState(null);
 
   // Position options
-  const positions = ["HEADER", "FOOTER"];
+  const banner_types = ["HEADER", "FOOTER"];
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
@@ -146,27 +143,41 @@ export default function BannersPage() {
     fetchBrands();
   }, []);
 
-  // Filter banners
+  // Filter banners by tab
+  const filteredByTab = useMemo(() => {
+    if (activeTab === "all") return banners;
+    return banners.filter((banner) => banner.banner_type === activeTab);
+  }, [banners, activeTab]);
+
+  // Filter banners by search
   const filteredBanners = useMemo(() => {
-    let filtered = banners;
+    let filtered = filteredByTab;
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
         (banner) =>
-          banner.name.toLowerCase().includes(query) ||
-          banner.position.toLowerCase().includes(query) ||
-          banner.id.toString().includes(query),
+          banner.name?.toLowerCase().includes(query) ||
+          banner.banner_type?.toLowerCase().includes(query) ||
+          banner.id?.toString().includes(query) ||
+          banner.brand_name?.toLowerCase().includes(query),
       );
     }
     return filtered;
-  }, [searchQuery, banners]);
+  }, [searchQuery, filteredByTab]);
+
+  // Tab counts
+  const tabCounts = useMemo(() => {
+    const all = banners.length;
+    const header = banners.filter((b) => b.banner_type === "HEADER").length;
+    const footer = banners.filter((b) => b.banner_type === "FOOTER").length;
+    return { all, header, footer };
+  }, [banners]);
 
   // Pagination
   const totalPages = Math.ceil(filteredBanners.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentBanners = filteredBanners.slice(startIndex, endIndex);
-  //brand drop dwon
 
   const goToPage = (page) => {
     setCurrentPage(Math.max(1, Math.min(page, totalPages)));
@@ -174,6 +185,11 @@ export default function BannersPage() {
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
     setCurrentPage(1);
   };
 
@@ -186,19 +202,16 @@ export default function BannersPage() {
       alert("Banner image is required");
       return;
     }
+
     const bannerPayload = {
       name: formData.title,
-      image: formData.imagePreview, // Base64 ya string path jo bhi yahan hai
-      banner_type: formData.position,
-      vendor_id: formData.brand_id,
-      link: formData.link,
+      image: formData.imagePreview,
+      banner_type: formData.banner_type,
+      vendor_id: formData.brand_id || "",
+      link: formData.link || "",
       status: formData.status === "active" ? 1 : 0,
-      sort_order: 0,
+      sort_order: formData.order || 0,
     };
-    console.log("==========================================");
-    console.log("📢 ALL FORM DATA SUBMISSION OBJECT:", formData);
-    console.log("📦 EXACT PAYLOAD BEING SENT TO API:", bannerPayload);
-    console.log("==========================================");
 
     try {
       const token = localStorage.getItem("access_token");
@@ -218,8 +231,10 @@ export default function BannersPage() {
         setShowAddModal(false);
         setFormData({
           title: "",
-          position: "HEADER",
+          banner_type: "HEADER",
+          order: "",
           link: "",
+          brand_id: "",
           image: null,
           imagePreview: null,
           status: "active",
@@ -259,8 +274,10 @@ export default function BannersPage() {
             banner_id: selectedBanner.id,
             name: formData.title,
             image: formData.imagePreview,
-            link: formData.link,
-            sort_order: 0,
+            banner_type: formData.banner_type || "",
+            link: formData.link || "",
+            vendor_id: formData.brand_id || "",
+            sort_order: formData.order || 0,
             status: formData.status === "active" ? 1 : 0,
           }),
         },
@@ -351,7 +368,6 @@ export default function BannersPage() {
 
   const filteredBrands = useMemo(() => {
     if (!brandSearch) return brands;
-
     return brands.filter((b) =>
       b.brand_name?.toLowerCase().includes(brandSearch.toLowerCase()),
     );
@@ -360,11 +376,13 @@ export default function BannersPage() {
   const openEditModal = (banner) => {
     setSelectedBanner(banner);
     setFormData({
-      title: banner.name,
-      position: banner.banner_type,
-      link: banner.link,
+      title: banner.name || "",
+      banner_type: banner.banner_type || "HEADER",
+      order: banner.sort_order || "",
+      link: banner.link || "",
+      brand_id: banner.vendor_id || "",
       image: null,
-      imagePreview: banner.image,
+      imagePreview: banner.image || "",
       status: Number(banner.status) === 1 ? "active" : "inactive",
     });
     setShowEditModal(true);
@@ -416,32 +434,30 @@ export default function BannersPage() {
       return;
     }
 
-    // Headers for CSV
     const headers = [
       "ID",
       "Title",
-      "Position",
+      "banner_type",
+      "Order",
       "Brand",
       "Status",
       "Created At",
     ];
 
-    // Map data to rows
     const rows = banners.map((banner) => [
       banner.id,
       banner.name,
-      banner.position,
-      banner.link || "",
+      banner.banner_type,
+      banner.sort_order || "",
+      banner.brand_name || "",
       Number(banner.status) === 1 ? "Active" : "Inactive",
       banner.createdAt || "",
     ]);
 
-    // Combine headers and rows
     const csvContent = [headers, ...rows]
       .map((row) => row.join(","))
       .join("\n");
 
-    // Create and download CSV file
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -465,7 +481,8 @@ export default function BannersPage() {
     const headers = [
       "ID",
       "Title",
-      "Position",
+      "banner_type",
+      "Order",
       "Brand",
       "Status",
       "Created At",
@@ -474,8 +491,9 @@ export default function BannersPage() {
     const rows = filteredBanners.map((banner) => [
       banner.id,
       banner.name,
-      banner.position,
-      banner.link || "",
+      banner.banner_type,
+      banner.sort_order || "",
+      banner.brand_name || "",
       Number(banner.status) === 1 ? "Active" : "Inactive",
       banner.createdAt || "",
     ]);
@@ -500,18 +518,12 @@ export default function BannersPage() {
   };
 
   // Get position badge color
-  const getPositionBadge = (position) => {
-    switch (position) {
+  const getPositionBadge = (banner_type) => {
+    switch (banner_type) {
       case "HEADER":
         return "bg-purple-100 text-purple-700";
-      case "SIDEBAR":
-        return "bg-blue-100 text-blue-700";
       case "FOOTER":
         return "bg-green-100 text-green-700";
-      case "POPUP":
-        return "bg-orange-100 text-orange-700";
-      case "MOBILE":
-        return "bg-pink-100 text-pink-700";
       default:
         return "bg-gray-100 text-gray-600";
     }
@@ -532,13 +544,12 @@ export default function BannersPage() {
     <div className="space-y-6">
       {toast && (
         <div
-          className={`fixed top-20 right-6 z-50 px-4 py-3 rounded-lg flex items-center gap-2 shadow-lg text-white ${
-            toast.type === "success"
-              ? "bg-emerald-500"
-              : toast.type === "error"
-                ? "bg-red-500"
-                : "bg-blue-500"
-          }`}
+          className={`fixed top-20 right-6 z-50 px-4 py-3 rounded-lg flex items-center gap-2 shadow-lg text-white ${toast.type === "success"
+            ? "bg-emerald-500"
+            : toast.type === "error"
+              ? "bg-red-500"
+              : "bg-blue-500"
+            }`}
         >
           {toast.type === "success" ? (
             <CheckCircle size={18} />
@@ -623,10 +634,50 @@ export default function BannersPage() {
         </div>
         <div className="bg-white border border-gray-200 rounded-xl p-4 hover:border-purple-300 transition-all">
           <p className="text-2xl font-bold text-purple-600">
-            {new Set(banners.map((b) => b.position)).size}
+            {new Set(banners.map((b) => b.banner_type)).size}
           </p>
           <p className="text-xs text-gray-500">Positions Used</p>
         </div>
+      </div>
+
+      {/* ========== TAB FILTERS ========== */}
+      <div className="flex flex-wrap gap-2 border-b border-gray-200 pb-2">
+        <button
+          onClick={() => handleTabChange("all")}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "all"
+            ? "bg-purple-600 text-white shadow-md"
+            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
+        >
+          All Banners
+          <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-white/20 text-white">
+            {tabCounts.all}
+          </span>
+        </button>
+        <button
+          onClick={() => handleTabChange("HEADER")}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "HEADER"
+            ? "bg-purple-600 text-white shadow-md"
+            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
+        >
+          Header
+          <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-white/20 text-white">
+            {tabCounts.header}
+          </span>
+        </button>
+        <button
+          onClick={() => handleTabChange("FOOTER")}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "FOOTER"
+            ? "bg-purple-600 text-white shadow-md"
+            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
+        >
+          Footer
+          <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-white/20 text-white">
+            {tabCounts.footer}
+          </span>
+        </button>
       </div>
 
       {/* Results Summary */}
@@ -698,29 +749,26 @@ export default function BannersPage() {
                       <h3 className="text-sm font-medium text-gray-900">
                         {banner.name}
                       </h3>
-                      <span
-                        className={`text-xs px-2 py-0.5 rounded-full ${getPositionBadge(banner.position)}`}
-                      >
-                        {banner.position}
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 text-xs font-medium">
+                        {banner.banner_type}
                       </span>
+                      {banner.sort_order && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 text-xs font-medium">
+                          Order: {banner.sort_order}
+                        </span>
+                      )}
                       <span
-                        className={`text-xs px-2 py-0.5 rounded-full ${
-                          Number(banner.status) === 1
-                            ? "bg-emerald-100 text-emerald-700"
-                            : "bg-red-100 text-red-700"
-                        }`}
+                        className={`text-xs px-2 py-0.5 rounded-full ${Number(banner.status) === 1
+                          ? "bg-emerald-100 text-emerald-700"
+                          : "bg-red-100 text-red-700"
+                          }`}
                       >
                         {Number(banner.status) === 1 ? "Active" : "Inactive"}
                       </span>
                     </div>
                     <div className="flex gap-4 mt-2 text-xs">
                       <span className="text-gray-500 truncate">
-                        Type: {banner.banner_type || "—"}
-                      </span>
-                    </div>
-                    <div className="flex gap-4 mt-2 text-xs">
-                      <span className="text-gray-500 truncate">
-                        Brand: {banner.link || "—"}
+                        Brand: {banner.brand_name || banner.link || "—"}
                       </span>
                     </div>
                   </div>
@@ -730,17 +778,15 @@ export default function BannersPage() {
                 <div className="flex items-center gap-3 flex-shrink-0">
                   <button
                     onClick={() => toggleStatus(banner)}
-                    className={`relative w-10 h-5 rounded-full transition-colors ${
-                      Number(banner.status) === 1
-                        ? "bg-emerald-500"
-                        : "bg-gray-300"
-                    }`}
+                    className={`relative w-10 h-5 rounded-full transition-colors ${Number(banner.status) === 1
+                      ? "bg-emerald-500"
+                      : "bg-gray-300"
+                      }`}
                     title={Number(banner.status) === 1 ? "Active" : "Inactive"}
                   >
                     <div
-                      className={`absolute w-4 h-4 bg-white rounded-full top-0.5 transition-all duration-300 shadow-sm ${
-                        Number(banner.status) === 1 ? "left-5" : "left-0.5"
-                      }`}
+                      className={`absolute w-4 h-4 bg-white rounded-full top-0.5 transition-all duration-300 shadow-sm ${Number(banner.status) === 1 ? "left-5" : "left-0.5"
+                        }`}
                     />
                   </button>
 
@@ -798,11 +844,10 @@ export default function BannersPage() {
             <button
               key={page}
               onClick={() => goToPage(page)}
-              className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                currentPage === page
-                  ? "bg-purple-600 text-white"
-                  : "bg-white border border-gray-200 hover:bg-gray-50 text-gray-600"
-              }`}
+              className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${currentPage === page
+                ? "bg-purple-600 text-white"
+                : "bg-white border border-gray-200 hover:bg-gray-50 text-gray-600"
+                }`}
             >
               {page}
             </button>
@@ -826,7 +871,7 @@ export default function BannersPage() {
         title="Add New Banner"
       >
         <div className="space-y-4">
-          {/* banner titile name */}
+          {/* Banner Title */}
           <div>
             <label className="text-sm font-medium text-gray-700 block mb-1">
               Banner Title <span className="text-red-500">*</span>
@@ -843,19 +888,19 @@ export default function BannersPage() {
             />
           </div>
 
-          {/* position and all of that */}
+          {/* Position */}
           <div>
             <label className="text-sm font-medium text-gray-700 block mb-1">
-              Position
+              Banner Type
             </label>
             <select
-              value={formData.position}
+              value={formData.banner_type}
               onChange={(e) =>
-                setFormData({ ...formData, position: e.target.value })
+                setFormData({ ...formData, banner_type: e.target.value })
               }
               className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             >
-              {positions.map((pos) => (
+              {banner_types.map((pos) => (
                 <option key={pos} value={pos}>
                   {pos}
                 </option>
@@ -863,13 +908,29 @@ export default function BannersPage() {
             </select>
           </div>
 
-          {/* brand sould be selected */}
+          {/* Order */}
+          <div>
+            <label className="text-sm font-medium text-gray-700 block mb-1">
+              Set Position Order
+            </label>
+            <input
+              type="number"
+              min="1"
+              value={formData.order}
+              onChange={(e) =>
+                setFormData({ ...formData, order: Number(e.target.value) })
+              }
+              placeholder="Enter position order"
+              className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            />
+          </div>
+
+          {/* Brand Dropdown */}
           <div className="relative" ref={dropdownRef}>
             <label className="text-sm font-medium text-gray-700 block mb-1">
               Brand Name
             </label>
 
-            {/* trigger */}
             <div
               className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg cursor-pointer flex justify-between items-center"
               onClick={() => setShowBrandDropdown((p) => !p)}
@@ -877,14 +938,11 @@ export default function BannersPage() {
               <span className="truncate">
                 {formData.link || "Select Brand"}
               </span>
-
               <span className="text-gray-400 text-xs">▼</span>
             </div>
 
-            {/* dropdown */}
             {showBrandDropdown && (
               <div className="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-xl max-h-72 overflow-hidden flex flex-col">
-                {/* search */}
                 <div className="p-2 border-b bg-gray-50 sticky top-0">
                   <input
                     type="text"
@@ -895,7 +953,6 @@ export default function BannersPage() {
                   />
                 </div>
 
-                {/* list */}
                 <div className="overflow-y-auto max-h-60">
                   {filteredBrands.length > 0 ? (
                     filteredBrands.map((brand) => (
@@ -925,7 +982,7 @@ export default function BannersPage() {
             )}
           </div>
 
-          {/* banner image would be there */}
+          {/* Banner Image */}
           <div>
             <label className="text-sm font-medium text-gray-700 block mb-1">
               Banner Image <span className="text-red-500">*</span>
@@ -965,7 +1022,7 @@ export default function BannersPage() {
             </div>
           </div>
 
-          {/* status would be there */}
+          {/* Status */}
           <div>
             <label className="text-sm font-medium text-gray-700 block mb-1">
               Status
@@ -998,6 +1055,7 @@ export default function BannersPage() {
         title="Edit Banner"
       >
         <div className="space-y-4">
+          {/* Banner Title */}
           <div>
             <label className="text-sm font-medium text-gray-700 block mb-1">
               Banner Title <span className="text-red-500">*</span>
@@ -1012,18 +1070,19 @@ export default function BannersPage() {
             />
           </div>
 
+          {/* Position */}
           <div>
             <label className="text-sm font-medium text-gray-700 block mb-1">
               Position
             </label>
             <select
-              value={formData.position}
+              value={formData.banner_type}
               onChange={(e) =>
-                setFormData({ ...formData, position: e.target.value })
+                setFormData({ ...formData, banner_type: e.target.value })
               }
               className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             >
-              {positions.map((pos) => (
+              {banner_types.map((pos) => (
                 <option key={pos} value={pos}>
                   {pos}
                 </option>
@@ -1031,20 +1090,81 @@ export default function BannersPage() {
             </select>
           </div>
 
+          {/* Order */}
           <div>
             <label className="text-sm font-medium text-gray-700 block mb-1">
-              Brand Name
+              Set Position Order
             </label>
             <input
-              type="text"
-              value={formData.link}
+              type="number"
+              min="1"
+              value={formData.order}
               onChange={(e) =>
-                setFormData({ ...formData, link: e.target.value })
+                setFormData({ ...formData, order: Number(e.target.value) })
               }
+              placeholder="Enter position order"
               className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
           </div>
 
+          {/* Brand Dropdown */}
+          <div className="relative" ref={dropdownRef}>
+            <label className="text-sm font-medium text-gray-700 block mb-1">
+              Brand Name
+            </label>
+
+            <div
+              className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg cursor-pointer flex justify-between items-center"
+              onClick={() => setShowBrandDropdown((p) => !p)}
+            >
+              <span className="truncate">
+                {formData.link || "Select Brand"}
+              </span>
+              <span className="text-gray-400 text-xs">▼</span>
+            </div>
+
+            {showBrandDropdown && (
+              <div className="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-xl max-h-72 overflow-hidden flex flex-col">
+                <div className="p-2 border-b bg-gray-50 sticky top-0">
+                  <input
+                    type="text"
+                    value={brandSearch}
+                    onChange={(e) => setBrandSearch(e.target.value)}
+                    placeholder="Search brand..."
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  />
+                </div>
+
+                <div className="overflow-y-auto max-h-60">
+                  {filteredBrands.length > 0 ? (
+                    filteredBrands.map((brand) => (
+                      <div
+                        key={brand.vendor_id}
+                        onClick={() => {
+                          setFormData({
+                            ...formData,
+                            link: brand.brand_name,
+                            brand_id: brand.vendor_id,
+                          });
+                          setShowBrandDropdown(false);
+                          setBrandSearch("");
+                        }}
+                        className="px-4 py-2 text-sm cursor-pointer hover:bg-purple-50 transition flex justify-between"
+                      >
+                        <span className="truncate">{brand.brand_name}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-4 text-sm text-gray-400 text-center">
+                      No brands found
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Banner Image */}
           <div>
             <label className="text-sm font-medium text-gray-700 block mb-1">
               Banner Image <span className="text-red-500">*</span>
@@ -1086,6 +1206,7 @@ export default function BannersPage() {
             </div>
           </div>
 
+          {/* Status */}
           <div>
             <label className="text-sm font-medium text-gray-700 block mb-1">
               Status
@@ -1166,8 +1287,13 @@ export default function BannersPage() {
                   Position: {selectedBanner.position}
                 </p>
                 <p className="text-gray-500">
-                  Brand : {selectedBanner.link || "—"}
+                  Brand: {selectedBanner.brand_name || selectedBanner.link || "—"}
                 </p>
+                {selectedBanner.sort_order && (
+                  <p className="text-gray-500">
+                    Order: {selectedBanner.sort_order}
+                  </p>
+                )}
               </div>
             </div>
             <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
@@ -1182,11 +1308,10 @@ export default function BannersPage() {
                 <div>
                   <p className="text-xs text-gray-500">Status</p>
                   <span
-                    className={`text-xs px-2 py-0.5 rounded-full ${
-                      Number(selectedBanner.status) === 1
-                        ? "bg-emerald-100 text-emerald-700"
-                        : "bg-red-100 text-red-700"
-                    }`}
+                    className={`text-xs px-2 py-0.5 rounded-full ${Number(selectedBanner.status) === 1
+                      ? "bg-emerald-100 text-emerald-700"
+                      : "bg-red-100 text-red-700"
+                      }`}
                   >
                     {Number(selectedBanner.status) === 1
                       ? "Active"

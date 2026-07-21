@@ -345,7 +345,7 @@ export default function OrdersPage() {
       "Customer Phone",
       "Vendor Name",
       "Vendor Phone",
-      "Article Name",
+      "Article ",
       "Payment Method",
       "Total Amount",
       "Order Date",
@@ -484,13 +484,12 @@ export default function OrdersPage() {
     <div className="space-y-6">
       {toast && (
         <div
-          className={`fixed top-20 right-6 z-50 px-4 py-3 rounded-lg flex items-center gap-2 shadow-lg text-white ${
-            toast.type === "success"
-              ? "bg-emerald-500"
-              : toast.type === "error"
-                ? "bg-red-500"
-                : "bg-blue-500"
-          }`}
+          className={`fixed top-20 right-6 z-50 px-4 py-3 rounded-lg flex items-center gap-2 shadow-lg text-white ${toast.type === "success"
+            ? "bg-emerald-500"
+            : toast.type === "error"
+              ? "bg-red-500"
+              : "bg-blue-500"
+            }`}
         >
           {toast.type === "success" ? (
             <CheckCircle size={18} />
@@ -572,22 +571,20 @@ export default function OrdersPage() {
             <button
               key={filter.value}
               onClick={() => handleFilterChange(filter.value)}
-              className={`px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-all duration-200 border ${
-                isActive
-                  ? colorMap[filter.color] ||
-                    "bg-purple-600 text-white border-purple-600"
-                  : inactiveColorMap[filter.color] ||
-                    "bg-white text-gray-600 border-gray-200 hover:border-purple-300"
-              }`}
+              className={`px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-all duration-200 border ${isActive
+                ? colorMap[filter.color] ||
+                "bg-purple-600 text-white border-purple-600"
+                : inactiveColorMap[filter.color] ||
+                "bg-white text-gray-600 border-gray-200 hover:border-purple-300"
+                }`}
             >
               <Icon size={16} />
               {filter.label}
               <span
-                className={`px-2 py-0.5 rounded-full text-xs ${
-                  isActive
-                    ? "bg-white/20 text-white"
-                    : "bg-gray-100 text-gray-600"
-                }`}
+                className={`px-2 py-0.5 rounded-full text-xs ${isActive
+                  ? "bg-white/20 text-white"
+                  : "bg-gray-100 text-gray-600"
+                  }`}
               >
                 {filter.count}
               </span>
@@ -635,13 +632,16 @@ export default function OrdersPage() {
                   Order ID
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Date
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Customer Info
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Vendor
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Article
+                  Total no. of CTN
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Payment
@@ -649,9 +649,7 @@ export default function OrdersPage() {
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Amount
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Date
-                </th>
+
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
@@ -709,10 +707,18 @@ export default function OrdersPage() {
                           </span>
                         </div>
                       </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-900">
+                          {orderDate ? orderDate.split("-").reverse().join("/") : ""}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-0.5">
+                          {orderTime}
+                        </div>
+                      </td>
 
                       <td className="px-6 py-4">
                         <div className="text-sm font-medium text-gray-900">
-                          {order.user_name || "Guest Customer"}
+                          {order.shop_name || "Guest Seller"}
                         </div>
                         <div className="text-xs text-gray-500 mt-0.5">
                           {order.user_phone || "N/A"}
@@ -721,7 +727,7 @@ export default function OrdersPage() {
 
                       <td className="px-6 py-4">
                         <div className="text-sm font-medium text-gray-900">
-                          {order.owner_name || "Guest Customer"}
+                          {order.brand_name || "Guest vendor"}
                         </div>
                         <div className="text-xs text-gray-500 mt-0.5">
                           {order.owner_phone || "N/A"}
@@ -749,12 +755,7 @@ export default function OrdersPage() {
                         </span>
                       </td>
 
-                      <td className="px-6 py-4">
-                        <div className="text-sm text-gray-900">{orderDate}</div>
-                        <div className="text-xs text-gray-500 mt-0.5">
-                          {orderTime}
-                        </div>
-                      </td>
+
 
                       <td className="px-6 py-4">
                         <span
@@ -903,11 +904,10 @@ export default function OrdersPage() {
                   <button
                     key={pageNum}
                     onClick={() => goToPage(pageNum)}
-                    className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                      currentPage === pageNum
-                        ? "bg-purple-600 text-white"
-                        : "bg-white border border-gray-200 hover:bg-gray-50 text-gray-600"
-                    }`}
+                    className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${currentPage === pageNum
+                      ? "bg-purple-600 text-white"
+                      : "bg-white border border-gray-200 hover:bg-gray-50 text-gray-600"
+                      }`}
                   >
                     {pageNum}
                   </button>
