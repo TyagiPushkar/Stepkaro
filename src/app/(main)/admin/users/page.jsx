@@ -353,13 +353,13 @@ export default function UsersPage() {
             prev.map((u) =>
               u.id === approvalUser.id && u.type === approvalUser.type
                 ? {
-                    ...u,
-                    status: "active",
-                    wallet_value:
-                      approvalUser.role === "buyer"
-                        ? approvalData.wallet_value
-                        : u.wallet_value,
-                  }
+                  ...u,
+                  status: "active",
+                  wallet_value:
+                    approvalUser.role === "buyer"
+                      ? approvalData.wallet_value
+                      : u.wallet_value,
+                }
                 : u,
             ),
           );
@@ -744,12 +744,12 @@ export default function UsersPage() {
           prev.map((u) =>
             u.id === selectedUser.id && u.type === selectedUser.type
               ? {
-                  ...u,
-                  wallet_value:
-                    currentRole === "buyer"
-                      ? selectedUser.wallet_value
-                      : u.wallet_value,
-                }
+                ...u,
+                wallet_value:
+                  currentRole === "buyer"
+                    ? selectedUser.wallet_value
+                    : u.wallet_value,
+              }
               : u,
           ),
         );
@@ -790,13 +790,12 @@ export default function UsersPage() {
     <div className="space-y-6">
       {toast && (
         <div
-          className={`fixed top-20 right-6 z-50 px-4 py-3 rounded-lg flex items-center gap-2 shadow-lg text-white ${
-            toast.type === "success"
-              ? "bg-emerald-500"
-              : toast.type === "error"
-                ? "bg-red-500"
-                : "bg-blue-500"
-          }`}
+          className={`fixed top-20 right-6 z-50 px-4 py-3 rounded-lg flex items-center gap-2 shadow-lg text-white ${toast.type === "success"
+            ? "bg-emerald-500"
+            : toast.type === "error"
+              ? "bg-red-500"
+              : "bg-blue-500"
+            }`}
         >
           {toast.type === "success" ? (
             <CheckCircle size={18} />
@@ -923,20 +922,18 @@ export default function UsersPage() {
             <button
               key={filter.value}
               onClick={() => handleFilterChange(filter.value)}
-              className={`px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-all duration-200 whitespace-nowrap border ${
-                isActive
-                  ? colorMap[filter.color] || "bg-purple-600 text-white"
-                  : inactiveColorMap[filter.color] ||
-                    "bg-white text-gray-600 border-gray-200 hover:border-purple-300"
-              }`}
+              className={`px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-all duration-200 whitespace-nowrap border ${isActive
+                ? colorMap[filter.color] || "bg-purple-600 text-white"
+                : inactiveColorMap[filter.color] ||
+                "bg-white text-gray-600 border-gray-200 hover:border-purple-300"
+                }`}
             >
               {filter.label}
               <span
-                className={`px-2 py-0.5 rounded-full text-xs ${
-                  isActive
-                    ? "bg-white/20 text-white"
-                    : "bg-gray-100 text-gray-600"
-                }`}
+                className={`px-2 py-0.5 rounded-full text-xs ${isActive
+                  ? "bg-white/20 text-white"
+                  : "bg-gray-100 text-gray-600"
+                  }`}
               >
                 {filter.count}
               </span>
@@ -985,20 +982,23 @@ export default function UsersPage() {
                   ID
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Name
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Email
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Shop Name
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Role
+                  Phone
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Address
+                  Aadhar No.
                 </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  State
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  District
+                </th>
+                {/* <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Address
+                </th> */}
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Wallets
                 </th>
@@ -1039,34 +1039,40 @@ export default function UsersPage() {
                         </div>
                         <div>
                           <p className="text-sm font-medium text-gray-900">
-                            {user.name}
+                            {user.shop_name}
                           </p>
-                          {user.business_name && (
+                          {/* {user.business_name && (
                             <p className="text-xs text-gray-500">
                               {user.business_name}
                             </p>
-                          )}
+                          )} */}
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <p className="text-sm text-gray-600">{user.email}</p>
+                      <p className="text-sm text-gray-600">{user.phone}</p>
                     </td>
                     <td className="px-6 py-4">
-                      <p className="text-sm text-gray-600">{user.shop_name}</p>
+                      <p className="text-sm text-gray-600">{user.document_number}</p>
                     </td>
                     <td className="px-6 py-4">
-                      <span
+                      {/* <span
                         className={`text-xs px-2 py-1 rounded-full ${getRoleBadge(user.role)}`}
                       >
                         {user.role === "seller" ? "Seller" : "Buyer"}
-                      </span>
+                      </span> */}
+                      <p className="text-sm text-gray-600">{user.state}</p>
                     </td>
                     <td className="px-6 py-4">
                       <p className="text-sm text-gray-500 max-w-xs truncate">
-                        {user.address || user.city || "—"}
+                        {user.district || user.city || "—"}
                       </p>
                     </td>
+                    {/* <td className="px-6 py-4">
+                      <p className="text-sm text-gray-500 max-w-xs truncate">
+                        {user.address || user.city || "—"}
+                      </p>
+                    </td> */}
 
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
@@ -1113,16 +1119,14 @@ export default function UsersPage() {
                                   : "active",
                               )
                             }
-                            className={`relative h-6 w-12 rounded-full transition ${
-                              user.status === "active"
-                                ? "bg-emerald-500"
-                                : "bg-gray-300"
-                            }`}
+                            className={`relative h-6 w-12 rounded-full transition ${user.status === "active"
+                              ? "bg-emerald-500"
+                              : "bg-gray-300"
+                              }`}
                           >
                             <span
-                              className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition ${
-                                user.status === "active" ? "left-6" : "left-0.5"
-                              }`}
+                              className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition ${user.status === "active" ? "left-6" : "left-0.5"
+                                }`}
                             />
                           </button>
                           <span
@@ -1189,11 +1193,10 @@ export default function UsersPage() {
               <button
                 key={page}
                 onClick={() => goToPage(page)}
-                className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                  currentPage === page
-                    ? "bg-purple-600 text-white"
-                    : "bg-white border border-gray-200 hover:bg-gray-50 text-gray-600"
-                }`}
+                className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${currentPage === page
+                  ? "bg-purple-600 text-white"
+                  : "bg-white border border-gray-200 hover:bg-gray-50 text-gray-600"
+                  }`}
               >
                 {page}
               </button>

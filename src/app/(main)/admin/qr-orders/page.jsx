@@ -38,8 +38,8 @@ export default function Qrbankpage() {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   //rejected orders
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
-const [rejectReason, setRejectReason] = useState("");
-const [rejectOrderId, setRejectOrderId] = useState(null);
+  const [rejectReason, setRejectReason] = useState("");
+  const [rejectOrderId, setRejectOrderId] = useState(null);
   const token = localStorage.getItem("access_token");
 
   const showToast = (message, type = "success") => {
@@ -223,7 +223,7 @@ const [rejectOrderId, setRejectOrderId] = useState(null);
     try {
       const response = await axios.put(
         "https://namami-infotech.com/Stepkaro/src/order/admin_update_order_status.php",
-        payload,  
+        payload,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -405,13 +405,12 @@ const [rejectOrderId, setRejectOrderId] = useState(null);
     <div className="space-y-6">
       {toast && (
         <div
-          className={`fixed top-20 right-6 z-50 px-4 py-3 rounded-lg flex items-center gap-2 shadow-lg text-white ${
-            toast.type === "success"
-              ? "bg-emerald-500"
-              : toast.type === "error"
-                ? "bg-red-500"
-                : "bg-blue-500"
-          }`}
+          className={`fixed top-20 right-6 z-50 px-4 py-3 rounded-lg flex items-center gap-2 shadow-lg text-white ${toast.type === "success"
+            ? "bg-emerald-500"
+            : toast.type === "error"
+              ? "bg-red-500"
+              : "bg-blue-500"
+            }`}
         >
           {toast.type === "success" ? (
             <CheckCircle size={18} />
@@ -493,22 +492,20 @@ const [rejectOrderId, setRejectOrderId] = useState(null);
             <button
               key={filter.value}
               onClick={() => handleFilterChange(filter.value)}
-              className={`px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-all duration-200 border ${
-                isActive
-                  ? colorMap[filter.color] ||
-                    "bg-purple-600 text-white border-purple-600"
-                  : inactiveColorMap[filter.color] ||
-                    "bg-white text-gray-600 border-gray-200 hover:border-purple-300"
-              }`}
+              className={`px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-all duration-200 border ${isActive
+                ? colorMap[filter.color] ||
+                "bg-purple-600 text-white border-purple-600"
+                : inactiveColorMap[filter.color] ||
+                "bg-white text-gray-600 border-gray-200 hover:border-purple-300"
+                }`}
             >
               <Icon size={16} />
               {filter.label}
               <span
-                className={`px-2 py-0.5 rounded-full text-xs ${
-                  isActive
-                    ? "bg-white/20 text-white"
-                    : "bg-gray-100 text-gray-600"
-                }`}
+                className={`px-2 py-0.5 rounded-full text-xs ${isActive
+                  ? "bg-white/20 text-white"
+                  : "bg-gray-100 text-gray-600"
+                  }`}
               >
                 {filter.count}
               </span>
@@ -556,13 +553,16 @@ const [rejectOrderId, setRejectOrderId] = useState(null);
                   Order ID
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Date
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Customer Info
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Vendor
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Article
+                  Total no. of CTN
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Payment Mode
@@ -573,9 +573,7 @@ const [rejectOrderId, setRejectOrderId] = useState(null);
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Amount
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Date
-                </th>
+
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
@@ -619,8 +617,17 @@ const [rejectOrderId, setRejectOrderId] = useState(null);
                       </td>
 
                       <td className="px-6 py-4">
+                        <div className="text-sm text-gray-900">
+                          {orderDate ? orderDate.split("-").reverse().join("/") : ""}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-0.5">
+                          {orderTime}
+                        </div>
+                      </td>
+
+                      <td className="px-6 py-4">
                         <div className="text-sm font-medium text-gray-900">
-                          {order.user_name || "Guest Customer"}
+                          {order.shop_name || "Guest Seller"}
                         </div>
                         <div className="text-xs text-gray-500 mt-0.5">
                           {order.user_phone || "N/A"}
@@ -629,7 +636,7 @@ const [rejectOrderId, setRejectOrderId] = useState(null);
 
                       <td className="px-6 py-4">
                         <div className="text-sm font-medium text-gray-900">
-                          {order.owner_name || "Guest Customer"}
+                          {order.brand_name || "Guest vendor"}
                         </div>
                         <div className="text-xs text-gray-500 mt-0.5">
                           {order.owner_phone || "N/A"}
@@ -638,7 +645,7 @@ const [rejectOrderId, setRejectOrderId] = useState(null);
 
                       <td className="px-6 py-4">
                         <span className="text-sm text-gray-600">
-                          {order.article_name || "N/A"}
+                          {order.total_quantity || "N/A"}
                         </span>
                       </td>
 
@@ -661,24 +668,24 @@ const [rejectOrderId, setRejectOrderId] = useState(null);
                       </td>
 
                       <td className="px-6 py-4">
-  {order.payment_ss ? (
-    <a
-      href={getImageUrl(order.payment_ss)}
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      <img
-        src={getImageUrl(order.payment_ss)}
-        alt="Payment Screenshot"
-        className="w-16 h-16 object-cover rounded border cursor-pointer hover:opacity-80"
-      />
-    </a>
-  ) : (
-    <span className="text-xs text-gray-500">
-      No Screenshot
-    </span>
-  )}
-</td>
+                        {order.payment_ss ? (
+                          <a
+                            href={getImageUrl(order.payment_ss)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <img
+                              src={getImageUrl(order.payment_ss)}
+                              alt="Payment Screenshot"
+                              className="w-16 h-16 object-cover rounded border cursor-pointer hover:opacity-80"
+                            />
+                          </a>
+                        ) : (
+                          <span className="text-xs text-gray-500">
+                            No Screenshot
+                          </span>
+                        )}
+                      </td>
 
                       <td className="px-6 py-4">
                         <span className="text-sm font-semibold text-gray-900">
@@ -687,13 +694,6 @@ const [rejectOrderId, setRejectOrderId] = useState(null);
                             "en-IN",
                           )}
                         </span>
-                      </td>
-
-                      <td className="px-6 py-4">
-                        <div className="text-sm text-gray-900">{orderDate}</div>
-                        <div className="text-xs text-gray-500 mt-0.5">
-                          {orderTime}
-                        </div>
                       </td>
 
                       <td className="px-6 py-4">
@@ -813,11 +813,10 @@ const [rejectOrderId, setRejectOrderId] = useState(null);
                   <button
                     key={pageNum}
                     onClick={() => goToPage(pageNum)}
-                    className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                      currentPage === pageNum
-                        ? "bg-purple-600 text-white"
-                        : "bg-white border border-gray-200 hover:bg-gray-50 text-gray-600"
-                    }`}
+                    className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${currentPage === pageNum
+                      ? "bg-purple-600 text-white"
+                      : "bg-white border border-gray-200 hover:bg-gray-50 text-gray-600"
+                      }`}
                   >
                     {pageNum}
                   </button>
@@ -846,61 +845,61 @@ const [rejectOrderId, setRejectOrderId] = useState(null);
         token={token || ""}
       />
       {rejectModalOpen && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-    <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
-      <h2 className="text-lg font-semibold text-gray-900">
-        Reject Order
-      </h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+            <h2 className="text-lg font-semibold text-gray-900">
+              Reject Order
+            </h2>
 
-      <p className="text-sm text-gray-500 mt-1">
-        Please enter the rejection reason.
-      </p>
+            <p className="text-sm text-gray-500 mt-1">
+              Please enter the rejection reason.
+            </p>
 
-      <textarea
-        value={rejectReason}
-        onChange={(e) => setRejectReason(e.target.value)}
-        placeholder="Enter rejection reason..."
-        rows={4}
-        className="w-full mt-4 border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-red-500"
-      />
+            <textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="Enter rejection reason..."
+              rows={4}
+              className="w-full mt-4 border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-red-500"
+            />
 
-      <div className="flex justify-end gap-3 mt-5">
-        <button
-          onClick={() => {
-            setRejectModalOpen(false);
-            setRejectReason("");
-            setRejectOrderId(null);
-          }}
-          className="px-4 py-2 border rounded-lg hover:bg-gray-100"
-        >
-          Cancel
-        </button>
+            <div className="flex justify-end gap-3 mt-5">
+              <button
+                onClick={() => {
+                  setRejectModalOpen(false);
+                  setRejectReason("");
+                  setRejectOrderId(null);
+                }}
+                className="px-4 py-2 border rounded-lg hover:bg-gray-100"
+              >
+                Cancel
+              </button>
 
-        <button
-          onClick={() => {
-            if (!rejectReason.trim()) {
-              showToast("Please enter rejection reason", "error");
-              return;
-            }
+              <button
+                onClick={() => {
+                  if (!rejectReason.trim()) {
+                    showToast("Please enter rejection reason", "error");
+                    return;
+                  }
 
-            handleUpdateOrderStatus(
-              rejectOrderId,
-              "rejected",
-              rejectReason
-            );
+                  handleUpdateOrderStatus(
+                    rejectOrderId,
+                    "rejected",
+                    rejectReason
+                  );
 
-            setRejectModalOpen(false);
-            setRejectReason("");
-            setRejectOrderId(null);
-          }}
-          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-        >
-          Confirm Reject
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+                  setRejectModalOpen(false);
+                  setRejectReason("");
+                  setRejectOrderId(null);
+                }}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+              >
+                Confirm Reject
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

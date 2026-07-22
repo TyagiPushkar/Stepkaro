@@ -342,9 +342,8 @@ export default function BuyerDetailsPage() {
       {/* Toast Notification */}
       {toast && (
         <div
-          className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-xl text-white shadow-lg ${
-            toast.type === "success" ? "bg-green-500" : "bg-red-500"
-          }`}
+          className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-xl text-white shadow-lg ${toast.type === "success" ? "bg-green-500" : "bg-red-500"
+            }`}
         >
           {toast.message}
         </div>
@@ -451,11 +450,10 @@ export default function BuyerDetailsPage() {
                   <button
                     key={tab.key}
                     onClick={() => setActiveTab(tab.key)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition ${
-                      activeTab === tab.key
-                        ? "bg-purple-600 text-white"
-                        : "text-gray-600 hover:bg-gray-100"
-                    }`}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition ${activeTab === tab.key
+                      ? "bg-purple-600 text-white"
+                      : "text-gray-600 hover:bg-gray-100"
+                      }`}
                   >
                     <Icon size={16} />
                     {tab.label}
@@ -475,9 +473,11 @@ export default function BuyerDetailsPage() {
                   Contact Information
                 </h3>
                 <div className="grid sm:grid-cols-2 gap-3">
-                  <InfoCard label="Full Name" value={buyer.name} />
-                  <InfoCard label="Email" value={buyer.email} />
+                  <InfoCard label="Shop Name" value={buyer.shop_name} />
                   <InfoCard label="Phone" value={buyer.phone} />
+                  <InfoCard label="Aadhar No" value={buyer.document_number} />
+                  <InfoCard label="State" value={buyer.state} />
+                  <InfoCard label="District" value={buyer.district} />
                   <InfoCard
                     label="Status"
                     value={
@@ -502,11 +502,11 @@ export default function BuyerDetailsPage() {
                   <p className="mt-2 text-sm text-gray-900">
                     {buyer.address || "No address provided"}
                   </p>
-                  {(buyer.state || buyer.district) && (
+                  {/* {(buyer.state || buyer.district) && (
                     <p className="mt-1 text-sm text-gray-500">
                       {[buyer.district, buyer.state].filter(Boolean).join(", ")}
                     </p>
-                  )}
+                  )} */}
                 </div>
               )}
 
@@ -515,10 +515,10 @@ export default function BuyerDetailsPage() {
                 {buyer.shop_name && (
                   <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
                     <p className="text-xs text-gray-500 flex items-center gap-1">
-                      <Store size={14} className="text-purple-600" /> Shop Name
+                      <Mail size={14} className="text-purple-600" /> Email
                     </p>
                     <p className="mt-2 text-sm text-gray-900">
-                      {buyer.shop_name}
+                      {buyer.email}
                     </p>
                   </div>
                 )}
@@ -527,7 +527,7 @@ export default function BuyerDetailsPage() {
                   <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
                     <p className="text-xs text-gray-500 flex items-center gap-1">
                       <MapPin size={14} className="text-purple-600" /> Delivery
-                      Location
+                      Delivery Location
                     </p>
                     <p className="mt-2 text-sm text-gray-900">
                       {buyer.delivery_location}
@@ -545,7 +545,7 @@ export default function BuyerDetailsPage() {
                   <div className="mt-3 grid sm:grid-cols-2 gap-3">
                     {buyer.logistic_partner_name && (
                       <div>
-                        <p className="text-xs text-gray-400">Partner</p>
+                        <p className="text-xs text-gray-400">Transport Partner</p>
                         <p className="text-sm text-gray-900">
                           {buyer.logistic_partner_name}
                         </p>
@@ -553,7 +553,7 @@ export default function BuyerDetailsPage() {
                     )}
                     {buyer.logistic_contact_no && (
                       <div>
-                        <p className="text-xs text-gray-400">Contact</p>
+                        <p className="text-xs text-gray-400">Transport Contact</p>
                         <p className="text-sm text-gray-900">
                           {buyer.logistic_contact_no}
                         </p>
@@ -819,11 +819,10 @@ export default function BuyerDetailsPage() {
                             <td className="px-4 py-3">
                               <div className="flex items-center gap-2">
                                 <div
-                                  className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                                    entry.type === "credit"
-                                      ? "bg-green-100"
-                                      : "bg-red-100"
-                                  }`}
+                                  className={`w-8 h-8 rounded-full flex items-center justify-center ${entry.type === "credit"
+                                    ? "bg-green-100"
+                                    : "bg-red-100"
+                                    }`}
                                 >
                                   {entry.type === "credit" ? (
                                     <svg
@@ -856,11 +855,10 @@ export default function BuyerDetailsPage() {
                                   )}
                                 </div>
                                 <span
-                                  className={`text-sm font-medium ${
-                                    entry.type === "credit"
-                                      ? "text-green-700"
-                                      : "text-red-700"
-                                  }`}
+                                  className={`text-sm font-medium ${entry.type === "credit"
+                                    ? "text-green-700"
+                                    : "text-red-700"
+                                    }`}
                                 >
                                   {entry.type === "credit"
                                     ? "Credited"
@@ -870,11 +868,10 @@ export default function BuyerDetailsPage() {
                             </td>
                             <td className="px-4 py-3">
                               <span
-                                className={`font-semibold ${
-                                  entry.type === "credit"
-                                    ? "text-green-600"
-                                    : "text-red-600"
-                                }`}
+                                className={`font-semibold ${entry.type === "credit"
+                                  ? "text-green-600"
+                                  : "text-red-600"
+                                  }`}
                               >
                                 {entry.type === "credit" ? "+" : "-"}
                                 {formatCurrency(entry.amount)}

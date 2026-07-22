@@ -736,7 +736,7 @@ export default function OrdersPage() {
 
                       <td className="px-6 py-4">
                         <span className="text-sm text-gray-600">
-                          {order.article_name || "N/A"}
+                          {order.total_quantity || "N/A"}
                         </span>
                       </td>
 

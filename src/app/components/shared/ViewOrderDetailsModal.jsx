@@ -19,6 +19,7 @@ import {
   Loader2,
   CreditCard,
   ExternalLink,
+  LocateIcon,
 } from "lucide-react";
 
 const API_BASE = "https://namami-infotech.com/Stepkaro/src";
@@ -270,8 +271,8 @@ export default function ViewOrderDetailsModal({
                 cls: "text-slate-900 font-extrabold",
               },
               {
-                label: "Items",
-                val: `${items?.length || 0} Batches`,
+                label: "Total no. of ctn",
+                val: `${order?.total_quantity || 0} ctn`,
                 cls: "text-slate-700 font-semibold",
               },
               {
@@ -329,7 +330,7 @@ export default function ViewOrderDetailsModal({
               {items?.map((item) => {
                 const isExpanded = expandedItems[item.item_id];
                 const product = item.product;
-                const imageUrl = getImageUrl(product?.image);
+                const imageUrl = getImageUrl(item?.image);
 
                 return (
                   <div
@@ -345,7 +346,7 @@ export default function ViewOrderDetailsModal({
                         {imageUrl ? (
                           <img
                             src={imageUrl}
-                            alt={product?.article_name}
+                            alt={item?.article_name}
                             className="w-full h-full object-cover"
                             onError={(e) => {
                               e.target.src =
@@ -360,19 +361,21 @@ export default function ViewOrderDetailsModal({
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-bold text-slate-800 truncate">
-                          {product?.article_name || "Unbranded Item Line"}
+                        <p className="text-xs font-bold text-slate-800 truncate uppercase">
+                          {[item?.article_name, item?.variant, item?.color, item?.packing_type, item?.category_name]
+                            .filter(Boolean)
+                            .join(" | ")}
                         </p>
                         <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-500">
                           <span>
-                            Pool Qty:{" "}
+                            Qty:{" "}
                             <span className="font-bold text-slate-700">
                               {item.quantity}
                             </span>
                           </span>
                           <span className="text-slate-300">|</span>
                           <span>
-                            Unit:{" "}
+                            Price:{" "}
                             <span className="font-medium">
                               {formatCurrency(item.price)}
                             </span>
@@ -397,51 +400,51 @@ export default function ViewOrderDetailsModal({
                     {isExpanded && (
                       <div className="border-t border-slate-100 px-3 py-2 bg-slate-50/60 grid grid-cols-2 sm:grid-cols-4 gap-y-2 gap-x-4 text-[11px]">
                         <div>
-                          <span className="text-slate-400">Variant Class:</span>{" "}
+                          <span className="text-slate-400">Size</span>{" "}
                           <span className="font-mono font-bold text-slate-700 block">
-                            {product?.variant || "—"}
+                            {item?.variant || "—"}
                           </span>
                         </div>
-                        <div>
+                        {/* <div>
                           <span className="text-slate-400">
-                            Base Retail MRP:
+                            MRP:
                           </span>{" "}
                           <span className="font-semibold text-slate-700 block">
                             {formatCurrency(product?.price)}
                           </span>
-                        </div>
+                        </div> */}
                         <div>
                           <span className="text-slate-400">
-                            SaaS Deal Price:
+                            Selling Price:
                           </span>{" "}
                           <span className="font-bold text-emerald-600 block">
-                            {formatCurrency(product?.selling_price)}
+                            {formatCurrency(item?.price)}
                           </span>
                         </div>
                         <div>
                           <span className="text-slate-400">
-                            Warehouse Stocks:
+                            Color:
                           </span>{" "}
                           <span className="font-semibold text-slate-700 block">
-                            {product?.stock_quantity || "0"} Pcs
+                            {item?.color || "—"}
                           </span>
                         </div>
                         <div>
                           <span className="text-slate-400">
-                            Margin Cut Rate:
+                            pairs er Ctn:
                           </span>{" "}
                           <span className="font-bold text-indigo-600 block">
-                            {product?.commission || 0}%
+                            {item?.pairs_per_ctn || 0}
                           </span>
                         </div>
-                        <div>
+                        {/* <div>
                           <span className="text-slate-400">
                             Platform Status:
                           </span>{" "}
                           <span className="font-medium text-slate-600 block uppercase text-[10px]">
                             {product?.status || "—"}
                           </span>
-                        </div>
+                        </div> */}
                       </div>
                     )}
                   </div>
@@ -454,14 +457,21 @@ export default function ViewOrderDetailsModal({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <SectionCard title="Buyer Details" icon={User}>
               <div className="space-y-1.5">
-                <InfoRow icon={User} label="Name ID" value={buyer?.name} />
-                <InfoRow icon={Phone} label="Phone Line" value={buyer?.phone} />
-                <InfoRow icon={Mail} label="Secure Mail" value={buyer?.email} />
+                <InfoRow icon={User} label="Shop Name" value={buyer?.shop_name} />
+                <InfoRow icon={User} label="Aadhar No." value={buyer?.document_number} />
+                <InfoRow icon={Phone} label="Phone No." value={buyer?.phone} />
+                <InfoRow icon={User} label="District" value={buyer?.district} />
                 <InfoRow
                   icon={MapPin}
-                  label="Destination Address"
+                  label="Address"
                   value={buyer?.address}
                 />
+                <InfoRow icon={User} label="Delivery Location" value={buyer?.delivery_location} />
+                <InfoRow icon={User} label="Transport Name" value={buyer?.logistic_partner_name} />
+                <InfoRow icon={User} label="Transport Phone No." value={buyer?.logistic_contact_no} />
+                {/* <InfoRow icon={User} label="Name ID" value={buyer?.name} /> */}
+                {/* <InfoRow icon={User} label="Name ID" value={buyer?.name} /> */}
+                {/* <InfoRow icon={Mail} label="Secure Mail" value={buyer?.email} /> */}
               </div>
             </SectionCard>
 
@@ -469,23 +479,33 @@ export default function ViewOrderDetailsModal({
               <div className="space-y-1.5">
                 <InfoRow
                   icon={Building2}
-                  label="Registered Entity"
+                  label="Brand Name"
+                  value={vendor?.brand_name}
+                />
+                <InfoRow
+                  icon={Building2}
+                  label="Business Name"
                   value={vendor?.business_name}
                 />
                 <InfoRow
-                  icon={User}
-                  label="Merchant Name"
-                  value={vendor?.owner_name}
-                />
-                <InfoRow
                   icon={Phone}
-                  label="Acquisition Contact"
+                  label="Phone No."
                   value={vendor?.phone}
                 />
                 <InfoRow
+                  icon={LocateIcon}
+                  label="Address"
+                  value={vendor?.address}
+                />
+                <InfoRow
                   icon={Mail}
-                  label="Corporate Email"
+                  label="Email"
                   value={vendor?.email}
+                />
+                <InfoRow
+                  icon={Mail}
+                  label="Gst NO."
+                  value={vendor?.gst_number}
                 />
               </div>
             </SectionCard>
