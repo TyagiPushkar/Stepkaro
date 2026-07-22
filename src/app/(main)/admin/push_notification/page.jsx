@@ -25,28 +25,6 @@ import {
 } from "lucide-react";
 import axios from "axios";
 
-// Firebase imports
-// import { initializeApp } from "firebase/app";
-// import { getMessaging, getToken, onMessage } from "firebase/messaging";
-
-// Firebase config - Replace with your config
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID",
-  measurementId: "YOUR_MEASUREMENT_ID",
-};
-
-// Initialize Firebase
-// const app = initializeApp(firebaseConfig);
-// const messaging = getMessaging(app);
-
-// VAPID Key - Replace with your VAPID key
-const VAPID_KEY = "YOUR_VAPID_PUBLIC_KEY";
-
 export default function NotificationPage() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -205,8 +183,8 @@ export default function NotificationPage() {
         user_type: formData.userType || null,
         deep_link: formData.deepLink || null,
         priority: formData.priority,
-        scheduled_at: formData.scheduledDate && formData.scheduledTime 
-          ? `${formData.scheduledDate} ${formData.scheduledTime}` 
+        scheduled_at: formData.scheduledDate && formData.scheduledTime
+          ? `${formData.scheduledDate} ${formData.scheduledTime}`
           : null,
       };
 
@@ -349,12 +327,12 @@ export default function NotificationPage() {
 
   // Filter notifications
   const filteredNotifications = notifications.filter(notif => {
-    const matchesSearch = 
+    const matchesSearch =
       notif.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       notif.body?.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesFilter = 
-      selectedFilter === "all" || 
+
+    const matchesFilter =
+      selectedFilter === "all" ||
       notif.status === selectedFilter ||
       notif.target_audience === selectedFilter;
 
@@ -418,13 +396,12 @@ export default function NotificationPage() {
       {/* Toast Notification */}
       {toast && (
         <div
-          className={`fixed top-20 right-6 z-50 px-4 py-3 rounded-lg flex items-center gap-2 shadow-lg text-white ${
-            toast.type === "success"
+          className={`fixed top-20 right-6 z-50 px-4 py-3 rounded-lg flex items-center gap-2 shadow-lg text-white ${toast.type === "success"
               ? "bg-emerald-500"
               : toast.type === "error"
-              ? "bg-red-500"
-              : "bg-blue-500"
-          }`}
+                ? "bg-red-500"
+                : "bg-blue-500"
+            }`}
         >
           {toast.type === "success" ? (
             <CheckCircle size={18} />
@@ -713,11 +690,10 @@ export default function NotificationPage() {
                   <button
                     key={pageNum}
                     onClick={() => goToPage(pageNum)}
-                    className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                      currentPage === pageNum
+                    className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${currentPage === pageNum
                         ? "bg-purple-600 text-white"
                         : "bg-white border border-gray-200 hover:bg-gray-50 text-gray-600"
-                    }`}
+                      }`}
                   >
                     {pageNum}
                   </button>
@@ -997,7 +973,7 @@ export default function NotificationPage() {
                   className="w-full h-48 object-cover rounded-lg"
                 />
               )}
-              
+
               <div>
                 <label className="text-xs font-medium text-gray-500 uppercase">Title</label>
                 <p className="text-gray-900 font-medium">{selectedNotification.title}</p>
