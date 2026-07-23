@@ -606,9 +606,9 @@ export default function VendorDetailsPage() {
       formData.append(
         "minimum_order_value",
         editData.wallet_value ||
-          editData.minimum_card_value ||
-          vendor.wallet_value ||
-          "",
+        editData.minimum_card_value ||
+        vendor.wallet_value ||
+        "",
       );
 
       // 4. File Input Checks
@@ -651,18 +651,18 @@ export default function VendorDetailsPage() {
         setVendor((current) =>
           current
             ? {
-                ...current,
-                ...editData,
-                owner_name:
-                  editData.name || editData.owner_name || current.owner_name,
-                business_name: editData.business_name || current.business_name,
-                brand_name: editData.brand_name || current.brand_name,
-                email: editData.email || current.email,
-                phone: editData.phone || current.phone,
-                status: editData.status || current.status,
-                gst_image: result.gst_image,
-                tmc_image: result.tmc_image,
-              }
+              ...current,
+              ...editData,
+              owner_name:
+                editData.name || editData.owner_name || current.owner_name,
+              business_name: editData.business_name || current.business_name,
+              brand_name: editData.brand_name || current.brand_name,
+              email: editData.email || current.email,
+              phone: editData.phone || current.phone,
+              status: editData.status || current.status,
+              gst_image: result.gst_image,
+              tmc_image: result.tmc_image,
+            }
             : current,
         );
 
@@ -777,11 +777,10 @@ export default function VendorDetailsPage() {
         {/* Toast Notification */}
         {toast && (
           <div
-            className={`fixed bottom-4 right-4 z-50 rounded-xl px-4 py-3 text-sm font-medium shadow-lg ${
-              toast.type === "error"
-                ? "bg-rose-600 text-white"
-                : "bg-emerald-600 text-white"
-            }`}
+            className={`fixed bottom-4 right-4 z-50 rounded-xl px-4 py-3 text-sm font-medium shadow-lg ${toast.type === "error"
+              ? "bg-rose-600 text-white"
+              : "bg-emerald-600 text-white"
+              }`}
           >
             {toast.message}
           </div>
@@ -869,11 +868,10 @@ export default function VendorDetailsPage() {
                   key={tab.id}
                   type="button"
                   onClick={() => setActiveTab(tab.id)}
-                  className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition ${
-                    active
-                      ? "bg-violet-600 text-white"
-                      : "text-slate-600 hover:bg-slate-100"
-                  }`}
+                  className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition ${active
+                    ? "bg-violet-600 text-white"
+                    : "text-slate-600 hover:bg-slate-100"
+                    }`}
                 >
                   <Icon className="h-4 w-4" />
                   {tab.label}
@@ -889,18 +887,35 @@ export default function VendorDetailsPage() {
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-sm font-semibold text-violet-700">
-                    Business overview
+                    {/* Business overview */}
+                    Brand Name
                   </p>
                   <h2 className="mt-1 text-xl font-semibold text-slate-900">
-                    {vendor.business_name || vendor.name}
+                    {/* {vendor.business_name || vendor.name} */}
+                    {vendor.brand_name}
                   </h2>
                 </div>
-                <div className="rounded-2xl bg-slate-100 p-3 text-2xl">
+                {/* <div className="rounded-2xl bg-slate-100 p-3 text-2xl">
                   {vendor.avatar}
-                </div>
+                </div> */}
               </div>
 
               <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                <div className="rounded-2xl bg-slate-50 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                    Business Name
+                  </p>
+                  <div className="mt-3 space-y-2 text-sm text-slate-600">
+                    <div className="flex items-center gap-2">
+                      {/* < className="h-4 w-4 text-violet-600" />{" "} */}
+                      {vendor.business_name || "—"}
+                    </div>
+                    {/* <div className="flex items-center gap-2">
+                      <Phone className="h-4 w-4 text-violet-600" />{" "}
+                      {vendor. || "—"}
+                    </div> */}
+                  </div>
+                </div>
                 <div className="rounded-2xl bg-slate-50 p-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
                     Contact
@@ -1501,30 +1516,27 @@ export default function VendorDetailsPage() {
                 {filteredCoupons.map((coupon) => (
                   <div
                     key={coupon.id}
-                    className={`bg-white rounded-2xl border transition-all p-5 shadow-sm hover:shadow-md relative overflow-hidden flex flex-col justify-between ${
-                      coupon.status === 0
-                        ? "border-slate-200 opacity-75"
-                        : "border-violet-100"
-                    }`}
+                    className={`bg-white rounded-2xl border transition-all p-5 shadow-sm hover:shadow-md relative overflow-hidden flex flex-col justify-between ${coupon.status === 0
+                      ? "border-slate-200 opacity-75"
+                      : "border-violet-100"
+                      }`}
                   >
                     {/* Decorative Side Tag Ribbon */}
                     <div
-                      className={`absolute top-0 left-0 w-1.5 h-full ${
-                        coupon.coupon_type === "code"
-                          ? "bg-violet-500"
-                          : "bg-amber-500"
-                      }`}
+                      className={`absolute top-0 left-0 w-1.5 h-full ${coupon.coupon_type === "code"
+                        ? "bg-violet-500"
+                        : "bg-amber-500"
+                        }`}
                     />
 
                     <div>
                       <div className="flex justify-between items-start gap-2 mb-3">
                         <div>
                           <span
-                            className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${
-                              coupon.coupon_type === "code"
-                                ? "bg-violet-50 text-violet-700"
-                                : "bg-amber-50 text-amber-700"
-                            }`}
+                            className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${coupon.coupon_type === "code"
+                              ? "bg-violet-50 text-violet-700"
+                              : "bg-amber-50 text-amber-700"
+                              }`}
                           >
                             {coupon.coupon_type === "code" ? (
                               <Tag className="h-3 w-3" />
@@ -1549,11 +1561,10 @@ export default function VendorDetailsPage() {
                         {/* Status Toggle */}
                         <button
                           onClick={() => handleToggleCouponStatus(coupon.id)}
-                          className={`text-2xl transition focus:outline-none ${
-                            coupon.status === 1
-                              ? "text-emerald-500"
-                              : "text-slate-300"
-                          }`}
+                          className={`text-2xl transition focus:outline-none ${coupon.status === 1
+                            ? "text-emerald-500"
+                            : "text-slate-300"
+                            }`}
                           title={
                             coupon.status === 1 ? "Deactivate" : "Activate"
                           }
@@ -1684,11 +1695,10 @@ export default function VendorDetailsPage() {
                         coupon_type: "code",
                       })
                     }
-                    className={`py-2 text-sm font-medium rounded-lg transition ${
-                      couponFormData.coupon_type === "code"
-                        ? "bg-white text-violet-600 shadow-sm"
-                        : "text-slate-600 hover:text-slate-900 disabled:opacity-50"
-                    }`}
+                    className={`py-2 text-sm font-medium rounded-lg transition ${couponFormData.coupon_type === "code"
+                      ? "bg-white text-violet-600 shadow-sm"
+                      : "text-slate-600 hover:text-slate-900 disabled:opacity-50"
+                      }`}
                   >
                     Promo Code Entry
                   </button>
@@ -1701,11 +1711,10 @@ export default function VendorDetailsPage() {
                         coupon_type: "order_value",
                       })
                     }
-                    className={`py-2 text-sm font-medium rounded-lg transition ${
-                      couponFormData.coupon_type === "order_value"
-                        ? "bg-white text-amber-600 shadow-sm"
-                        : "text-slate-600 hover:text-slate-900 disabled:opacity-50"
-                    }`}
+                    className={`py-2 text-sm font-medium rounded-lg transition ${couponFormData.coupon_type === "order_value"
+                      ? "bg-white text-amber-600 shadow-sm"
+                      : "text-slate-600 hover:text-slate-900 disabled:opacity-50"
+                      }`}
                   >
                     Order Value Automatic
                   </button>
@@ -1828,7 +1837,7 @@ export default function VendorDetailsPage() {
                       value={1} // Piche se kuch bhi aaye, hamesha 1 dikhega
                       readOnly // Isse user isko edit nahi kar payega
                       className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none text-slate-500 cursor-not-allowed"
-                      // bg-slate-50 aur cursor-not-allowed se ye visually bhi disabled/readonly lagega
+                    // bg-slate-50 aur cursor-not-allowed se ye visually bhi disabled/readonly lagega
                     />
                   </div>
                 )}

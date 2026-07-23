@@ -52,6 +52,9 @@ const Modal = ({ isOpen, onClose, title, children, maxWidth = "max-w-md" }) => {
   );
 };
 
+const VENDOR_UPDATE_API =
+  "https://namami-infotech.com/Stepkaro/src/vender/update_vendor_details.php";
+
 export default function SellerPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -78,6 +81,14 @@ export default function SellerPage() {
     minimum_order_value: "",
     settlement_days: "",
   });
+
+  // SellerPage component ke andar, existing states ke sath ye add karo
+  const [settlementData, setSettlementData] = useState({
+    minimum_order_value: "",
+    settlement_days: "",
+  });
+  const [settlementSaving, setSettlementSaving] = useState(false);
+  const [editingSettlementId, setEditingSettlementId] = useState(null);
 
   const [approvalUser, setApprovalUser] = useState(null);
 
@@ -321,7 +332,7 @@ export default function SellerPage() {
       if (currentRole === "vendor") {
         payload.settlement_days =
           approvalData.settlement_days !== "" &&
-          approvalData.settlement_days !== undefined
+            approvalData.settlement_days !== undefined
             ? Number(approvalData.settlement_days)
             : "";
       }
@@ -354,17 +365,17 @@ export default function SellerPage() {
             prev.map((u) =>
               u.id === approvalUser.id && u.type === approvalUser.type
                 ? {
-                    ...u,
-                    status: "active",
-                    wallet_value:
-                      approvalUser.role === "buyer"
-                        ? approvalData.wallet_value
-                        : u.wallet_value,
-                    settlement_days:
-                      approvalUser.role === "vendor"
-                        ? approvalData.settlement_days
-                        : u.settlement_days,
-                  }
+                  ...u,
+                  status: "active",
+                  wallet_value:
+                    approvalUser.role === "buyer"
+                      ? approvalData.wallet_value
+                      : u.wallet_value,
+                  settlement_days:
+                    approvalUser.role === "vendor"
+                      ? approvalData.settlement_days
+                      : u.settlement_days,
+                }
                 : u,
             ),
           );
@@ -727,6 +738,51 @@ export default function SellerPage() {
     }
   };
 
+  //card update..............
+  // Settlement aur Minimum Card Value update karne ke liye alag function
+  // Settlement aur Minimum Card Value update karne ke liye alag function
+  const handleSettlementAndCardUpdate = async (user) => {
+    setSettlementSaving(true);
+    const token = localStorage.getItem("access_token");
+
+    try {
+      const formData = new FormData();
+      formData.append("id", user.id);
+      formData.append("due_days", settlementData.settlement_days || user.settlement_date || "");
+      formData.append("minimum_order_value", settlementData.minimum_order_value || user.minimum_value || "");
+
+      const response = await axios.post(
+        `${VENDOR_UPDATE_API}?id=${user.id}`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (response.data.success) {
+        setUsers((prev) =>
+          prev.map((u) =>
+            u.id === user.id
+              ? {
+                ...u,
+                minimum_value: settlementData.minimum_order_value || u.minimum_value,
+                settlement_date: settlementData.settlement_days || u.settlement_date,
+              }
+              : u
+          )
+        );
+        showToast("Settlement & card settings updated!", "success");
+        setEditingSettlementId(null);
+      }
+    } catch (error) {
+      showToast("Failed to update settings", "error");
+    } finally {
+      setSettlementSaving(false);
+    }
+  };
+
   // Stats summary
   const requested = users.filter((u) => u.status === "pending").length;
   const totalSellers = users.filter((u) => u.role === "seller").length;
@@ -748,13 +804,12 @@ export default function SellerPage() {
     <div className="space-y-6">
       {toast && (
         <div
-          className={`fixed top-20 right-6 z-50 px-4 py-3 rounded-lg flex items-center gap-2 shadow-lg text-white ${
-            toast.type === "success"
-              ? "bg-emerald-500"
-              : toast.type === "error"
-                ? "bg-red-500"
-                : "bg-blue-500"
-          }`}
+          className={`fixed top-20 right-6 z-50 px-4 py-3 rounded-lg flex items-center gap-2 shadow-lg text-white ${toast.type === "success"
+            ? "bg-emerald-500"
+            : toast.type === "error"
+              ? "bg-red-500"
+              : "bg-blue-500"
+            }`}
         >
           {toast.type === "success" ? (
             <CheckCircle size={18} />
@@ -881,20 +936,18 @@ export default function SellerPage() {
             <button
               key={filter.value}
               onClick={() => handleFilterChange(filter.value)}
-              className={`px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-all duration-200 whitespace-nowrap border ${
-                isActive
-                  ? colorMap[filter.color] || "bg-purple-600 text-white"
-                  : inactiveColorMap[filter.color] ||
-                    "bg-white text-gray-600 border-gray-200 hover:border-purple-300"
-              }`}
+              className={`px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-all duration-200 whitespace-nowrap border ${isActive
+                ? colorMap[filter.color] || "bg-purple-600 text-white"
+                : inactiveColorMap[filter.color] ||
+                "bg-white text-gray-600 border-gray-200 hover:border-purple-300"
+                }`}
             >
               {filter.label}
               <span
-                className={`px-2 py-0.5 rounded-full text-xs ${
-                  isActive
-                    ? "bg-white/20 text-white"
-                    : "bg-gray-100 text-gray-600"
-                }`}
+                className={`px-2 py-0.5 rounded-full text-xs ${isActive
+                  ? "bg-white/20 text-white"
+                  : "bg-gray-100 text-gray-600"
+                  }`}
               >
                 {filter.count}
               </span>
@@ -942,27 +995,30 @@ export default function SellerPage() {
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   ID
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                {/* <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Name
-                </th>
+                </th> */}
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Brand
+                  Brand Name
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Brand Ranking
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Email
+                  Phone
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Minimum Value
+                  Business Name
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Minimum Order Value
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Settlement Days
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                {/* <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Address
-                </th>
+                </th> */}
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
@@ -982,7 +1038,7 @@ export default function SellerPage() {
                       <span className="text-sm text-gray-500">#{user.id}</span>
                     </td>
 
-                    <td className="px-6 py-4">
+                    {/* <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 bg-gradient-to-br from-purple-100 to-orange-100 rounded-full flex items-center justify-center text-base border border-gray-200">
                           {user.avatar}
@@ -998,7 +1054,7 @@ export default function SellerPage() {
                           )}
                         </div>
                       </div>
-                    </td>
+                    </td> */}
 
                     <td className="px-6 py-4">
                       <p className="text-sm text-gray-600">{user.brand}</p>
@@ -1052,31 +1108,109 @@ export default function SellerPage() {
                       </div>
                     </td>
 
-                    <td className="px-6 py-4">
+                    {/* <td className="px-6 py-4">
                       <p className="text-sm text-gray-600">{user.email}</p>
+                    </td> */}
+
+                    <td className="px-6 py-4">
+                      <p className="text-sm text-gray-600">{user.phone}</p>
                     </td>
 
                     <td className="px-6 py-4">
-                      <span
-                        className={`text-xs px-2 py-1 rounded-full ${getRoleBadge(user.role)}`}
-                      >
-                        {/* {user.role === "seller" ? "Seller" : "Buyer"} */}
-                        {user.minimum_value}
-                      </span>
+                      <p className="text-sm text-gray-600">{user.business_name}</p>
                     </td>
 
+                    {/* Minimum Order Value - Editable */}
                     <td className="px-6 py-4">
-                      <span className={`text-xs px-2 py-1 rounded-full`}>
-                        {/* {user.role === "seller" ? "Seller" : "Buyer"} */}
-                        {user.settlement_date || "—"} DAYS
-                      </span>
+                      {editingSettlementId === user.id ? (
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            value={settlementData.minimum_order_value}
+                            onChange={(e) =>
+                              setSettlementData({
+                                ...settlementData,
+                                minimum_order_value: e.target.value,
+                              })
+                            }
+                            className="w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            placeholder="Value"
+                          />
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-600">
+                          {user.minimum_value || "—"}
+                        </span>
+                      )}
                     </td>
 
+                    {/* Settlement Days - Editable */}
                     <td className="px-6 py-4">
+                      {editingSettlementId === user.id ? (
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            value={settlementData.settlement_days}
+                            onChange={(e) =>
+                              setSettlementData({
+                                ...settlementData,
+                                settlement_days: e.target.value,
+                              })
+                            }
+                            className="w-16 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            placeholder="Days"
+                          />
+                          <button
+                            onClick={() => handleSettlementAndCardUpdate(user)}
+                            disabled={settlementSaving}
+                            className="p-1 text-emerald-600 hover:bg-emerald-50 rounded transition-colors disabled:opacity-50"
+                            title="Save"
+                          >
+                            <CheckCircle size={16} />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setEditingSettlementId(null);
+                              setSettlementData({
+                                minimum_order_value: "",
+                                settlement_days: "",
+                              });
+                            }}
+                            className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
+                            title="Cancel"
+                          >
+                            <XCircle size={16} />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-gray-600">
+                            {user.settlement_date || "—"} DAYS
+                          </span>
+                          {user.role === "seller" && (
+                            <button
+                              onClick={() => {
+                                setEditingSettlementId(user.id);
+                                setSettlementData({
+                                  minimum_order_value: user.minimum_value?.toString() || "",
+                                  settlement_days: user.settlement_date?.toString() || "",
+                                });
+                              }}
+                              className="p-1 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded transition-colors"
+                              title="Edit settlement"
+                            >
+                              <Pencil size={14} />
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </td>
+
+                    {/* <td className="px-6 py-4">
                       <div className="w-50 whitespace-pre-wrap break-words text-sm text-gray-500">
                         {user.address || user.city || "—"}
                       </div>
-                    </td>
+                    </td> */}
 
                     <td className="px-6 py-4">
                       {user.status === "pending" ? (
@@ -1105,16 +1239,14 @@ export default function SellerPage() {
                                   : "active",
                               )
                             }
-                            className={`relative h-6 w-12 rounded-full transition ${
-                              user.status === "active"
-                                ? "bg-emerald-500"
-                                : "bg-gray-300"
-                            }`}
+                            className={`relative h-6 w-12 rounded-full transition ${user.status === "active"
+                              ? "bg-emerald-500"
+                              : "bg-gray-300"
+                              }`}
                           >
                             <span
-                              className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition ${
-                                user.status === "active" ? "left-6" : "left-0.5"
-                              }`}
+                              className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition ${user.status === "active" ? "left-6" : "left-0.5"
+                                }`}
                             />
                           </button>
                           <span
@@ -1182,11 +1314,10 @@ export default function SellerPage() {
               <button
                 key={page}
                 onClick={() => goToPage(page)}
-                className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                  currentPage === page
-                    ? "bg-purple-600 text-white"
-                    : "bg-white border border-gray-200 hover:bg-gray-50 text-gray-600"
-                }`}
+                className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${currentPage === page
+                  ? "bg-purple-600 text-white"
+                  : "bg-white border border-gray-200 hover:bg-gray-50 text-gray-600"
+                  }`}
               >
                 {page}
               </button>
@@ -1801,30 +1932,30 @@ export default function SellerPage() {
                 </div>
                 {(selectedUser.logistic_partner_name ||
                   selectedUser.logistic_contact_no) && (
-                  <div className="border-t border-gray-200 pt-3 mt-2">
-                    <p className="text-xs text-gray-500 flex items-center gap-1">
-                      <Truck size={14} /> Logistic Details
-                    </p>
-                    <div className="grid grid-cols-2 gap-3 mt-2">
-                      {selectedUser.logistic_partner_name && (
-                        <div>
-                          <p className="text-xs text-gray-500">Partner</p>
-                          <p className="text-sm text-gray-900">
-                            {selectedUser.logistic_partner_name}
-                          </p>
-                        </div>
-                      )}
-                      {selectedUser.logistic_contact_no && (
-                        <div>
-                          <p className="text-xs text-gray-500">Contact</p>
-                          <p className="text-sm text-gray-900">
-                            {selectedUser.logistic_contact_no}
-                          </p>
-                        </div>
-                      )}
+                    <div className="border-t border-gray-200 pt-3 mt-2">
+                      <p className="text-xs text-gray-500 flex items-center gap-1">
+                        <Truck size={14} /> Logistic Details
+                      </p>
+                      <div className="grid grid-cols-2 gap-3 mt-2">
+                        {selectedUser.logistic_partner_name && (
+                          <div>
+                            <p className="text-xs text-gray-500">Partner</p>
+                            <p className="text-sm text-gray-900">
+                              {selectedUser.logistic_partner_name}
+                            </p>
+                          </div>
+                        )}
+                        {selectedUser.logistic_contact_no && (
+                          <div>
+                            <p className="text-xs text-gray-500">Contact</p>
+                            <p className="text-sm text-gray-900">
+                              {selectedUser.logistic_contact_no}
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
               </div>
             )}
 

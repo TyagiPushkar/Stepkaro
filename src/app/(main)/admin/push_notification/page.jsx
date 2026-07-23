@@ -76,6 +76,7 @@ export default function NotificationPage() {
       );
 
       if (response.data.success) {
+        console.log(response.data.data);
         setNotifications(response.data.data || []);
       } else {
         throw new Error(response.data.message || "Failed to fetch notifications");
@@ -115,47 +116,6 @@ export default function NotificationPage() {
     }
   };
 
-  // Request permission and get FCM token
-  // const requestPermissionAndGetToken = async () => {
-  //   try {
-  //     const permission = await Notification.requestPermission();
-  //     if (permission === "granted") {
-  //       const token = await getToken(messaging, { vapidKey: VAPID_KEY });
-  //       console.log("FCM Token:", token);
-  //       // Save token to server
-  //       await saveTokenToServer(token);
-  //       return token;
-  //     } else {
-  //       showToast("Notification permission denied", "error");
-  //       return null;
-  //     }
-  //   } catch (error) {
-  //     console.error("Error getting FCM token:", error);
-  //     return null;
-  //   }
-  // };
-
-
-  // Save token to server
-  // const saveTokenToServer = async (fcmToken) => {
-  //   try {
-  //     const response = await axios.post(
-  //       "https://namami-infotech.com/Stepkaro/src/notification/save_fcm_token.php",
-  //       { fcm_token: fcmToken },
-  //       {
-  //         headers: {
-  //           Authorization: `Bearer ${token}`,
-  //           "Content-Type": "application/json",
-  //         },
-  //       }
-  //     );
-  //     return response.data.success;
-  //   } catch (error) {
-  //     console.error("Error saving FCM token:", error);
-  //     return false;
-  //   }
-  // };
-
   // Send notification
   const sendNotification = async (e) => {
     e.preventDefault();
@@ -183,14 +143,15 @@ export default function NotificationPage() {
         user_type: formData.userType || null,
         deep_link: formData.deepLink || null,
         priority: formData.priority,
-        scheduled_at: formData.scheduledDate && formData.scheduledTime
-          ? `${formData.scheduledDate} ${formData.scheduledTime}`
-          : null,
+        scheduled_at:
+          formData.scheduledDate && formData.scheduledTime
+            ? `${formData.scheduledDate} ${formData.scheduledTime}`
+            : null,
       };
 
       // Create FormData for file upload
       const formDataToSend = new FormData();
-      Object.keys(payload).forEach(key => {
+      Object.keys(payload).forEach((key) => {
         if (payload[key] !== null && payload[key] !== undefined) {
           formDataToSend.append(key, payload[key]);
         }
@@ -202,7 +163,7 @@ export default function NotificationPage() {
       }
 
       const response = await axios.post(
-        "https://namami-infotech.com/Stepkaro/src/notification/send_notification.php",
+        `https://namami-infotech.com/Stepkaro/src/notification/create_notification.php`, // Use API_BASE constant
         formDataToSend,
         {
           headers: {
@@ -212,17 +173,27 @@ export default function NotificationPage() {
         }
       );
 
-      if (response.data.success) {
+      // FIX 1: Access data through response.data
+      if (response.data && (response.data.success || response.data.status === "success")) {
         showToast("Notification sent successfully!");
-        setShowSendModal(false);
         resetForm();
-        fetchNotifications();
+        setShowSendModal(false);
+        if (typeof fetchNotifications === "function") {
+          fetchNotifications();
+        }
       } else {
-        throw new Error(response.data.message || "Failed to send notification");
+        throw new Error(response.data?.message || "Failed to send notification");
       }
     } catch (error) {
       console.error("Error sending notification:", error);
-      showToast(error.message || "Failed to send notification", "error");
+
+      // FIX 2: Safely extract error message from API response
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to send notification";
+
+      showToast(errorMessage, "error");
     } finally {
       setSending(false);
     }
@@ -348,11 +319,11 @@ export default function NotificationPage() {
     setCurrentPage(Math.max(1, Math.min(page, totalPages)));
   };
 
-  // useEffect(() => {
-  //   fetchNotifications();
-  //   // Request permission on load
-  //   requestPermissionAndGetToken();
-  // }, []);
+  useEffect(() => {
+    fetchNotifications();
+    // Request permission on load
+    // requestPermissionAndGetToken();
+  }, []);
 
   // Listen for foreground messages
   // useEffect(() => {
@@ -362,9 +333,9 @@ export default function NotificationPage() {
   //     // You can show a custom notification here
   //   });
 
-  //   return () => {
-  //     unsubscribe();
-  //   };
+  // return () => {
+  //   unsubscribe();
+  // };
   // }, []);
 
   // Get status badge
@@ -397,10 +368,10 @@ export default function NotificationPage() {
       {toast && (
         <div
           className={`fixed top-20 right-6 z-50 px-4 py-3 rounded-lg flex items-center gap-2 shadow-lg text-white ${toast.type === "success"
-              ? "bg-emerald-500"
-              : toast.type === "error"
-                ? "bg-red-500"
-                : "bg-blue-500"
+            ? "bg-emerald-500"
+            : toast.type === "error"
+              ? "bg-red-500"
+              : "bg-blue-500"
             }`}
         >
           {toast.type === "success" ? (
@@ -515,6 +486,12 @@ export default function NotificationPage() {
           <table className="w-full min-w-[800px]">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
+                {/* <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Serial No.
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Title
+                </th> */}
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Notification
                 </th>
@@ -525,7 +502,7 @@ export default function NotificationPage() {
                   Status
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Stats
+                  Scheduled Time
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Sent At
@@ -585,7 +562,7 @@ export default function NotificationPage() {
                         </span>
                       </td>
 
-                      <td className="px-6 py-4">
+                      {/* <td className="px-6 py-4">
                         <div className="space-y-1 text-xs">
                           <div className="flex items-center gap-1">
                             <Users size={12} className="text-gray-400" />
@@ -600,6 +577,12 @@ export default function NotificationPage() {
                             <span className="text-gray-600">Read: {notification.read_count || 0}</span>
                           </div>
                         </div>
+                      </td> */}
+
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-600">
+                          {formatDate(notification.scheduled_at)}
+                        </div>
                       </td>
 
                       <td className="px-6 py-4">
@@ -610,7 +593,7 @@ export default function NotificationPage() {
 
                       <td className="px-6 py-4">
                         <div className="flex gap-2">
-                          <button
+                          {/* <button
                             onClick={() => {
                               setSelectedNotification(notification);
                               setShowDetailsModal(true);
@@ -619,7 +602,7 @@ export default function NotificationPage() {
                             title="View Details"
                           >
                             <Eye size={16} />
-                          </button>
+                          </button> */}
                           {notification.status === "failed" && (
                             <button
                               onClick={() => resendNotification(notification.id)}
@@ -661,9 +644,9 @@ export default function NotificationPage() {
           <div className="px-6 py-4 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-4">
             <p className="text-sm text-gray-500">
               Showing <span className="text-gray-900">{startIndex + 1}</span> to{" "}
-              <span className="text-gray-900">
+              {/* <span className="text-gray-900">
                 {Math.min(endIndex, filteredNotifications.length)}
-              </span>{" "}
+              </span>{" "} */}
               of <span className="text-gray-900">{filteredNotifications.length}</span>{" "}
               notifications
             </p>
@@ -691,8 +674,8 @@ export default function NotificationPage() {
                     key={pageNum}
                     onClick={() => goToPage(pageNum)}
                     className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${currentPage === pageNum
-                        ? "bg-purple-600 text-white"
-                        : "bg-white border border-gray-200 hover:bg-gray-50 text-gray-600"
+                      ? "bg-purple-600 text-white"
+                      : "bg-white border border-gray-200 hover:bg-gray-50 text-gray-600"
                       }`}
                   >
                     {pageNum}
@@ -825,9 +808,9 @@ export default function NotificationPage() {
                     required
                   >
                     <option value="all">All Users</option>
+                    <option value="customers">Buyer</option>
                     <option value="vendors">Vendors</option>
-                    <option value="customers">Customers</option>
-                    <option value="specific_user">Specific User</option>
+                    {/* <option value="specific_user">Specific User</option> */}
                   </select>
                 </div>
 
@@ -847,7 +830,7 @@ export default function NotificationPage() {
                   </div>
                 )}
 
-                {(formData.targetAudience === "vendors" || formData.targetAudience === "customers") && (
+                {/* {(formData.targetAudience === "vendors" || formData.targetAudience === "customers") && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       User Type
@@ -862,11 +845,11 @@ export default function NotificationPage() {
                       <option value="new">New</option>
                     </select>
                   </div>
-                )}
+                )} */}
               </div>
 
               {/* Deep Link */}
-              <div>
+              {/* <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Deep Link (Optional)
                 </label>
@@ -877,7 +860,7 @@ export default function NotificationPage() {
                   placeholder="https://stepkaro.com/..."
                   className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 />
-              </div>
+              </div> */}
 
               {/* Schedule and Priority */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -901,7 +884,7 @@ export default function NotificationPage() {
                   </div>
                 </div>
 
-                <div>
+                {/* <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Priority
                   </label>
@@ -913,7 +896,7 @@ export default function NotificationPage() {
                     <option value="normal">Normal</option>
                     <option value="high">High</option>
                   </select>
-                </div>
+                </div> */}
               </div>
 
               {/* Actions */}

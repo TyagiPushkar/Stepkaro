@@ -98,127 +98,128 @@ export default function HomePage() {
     fetchOrders();
   }, [token]);
 
-//   useEffect(() => {
-//   const fetchUsers = async () => {
-//     try {
-//       const res = await fetch(
-//         "https://namami-infotech.com/Stepkaro/src/home/get_vendor_and_buyer.php"
-//       );
+  //   useEffect(() => {
+  //   const fetchUsers = async () => {
+  //     try {
+  //       const res = await fetch(
+  //         "https://namami-infotech.com/Stepkaro/src/home/get_vendor_and_buyer.php"
+  //       );
 
-//       const data = await res.json();
+  //       const data = await res.json();
 
-//       if (data.success) {
-//         setUsers([
-//           ...(data.data.buyers || []),
-//           ...(data.data.vendors || []),
-//         ]);
-//       }
-//     } catch (err) {
-//       console.log(err);
-//     }
-//   };
+  //       if (data.success) {
+  //         setUsers([
+  //           ...(data.data.buyers || []),
+  //           ...(data.data.vendors || []),
+  //         ]);
+  //       }
+  //     } catch (err) {
+  //       console.log(err);
+  //     }
+  //   };
 
-//   fetchUsers();
-// }, []);
+  //   fetchUsers();
+  // }, []);
 
   // =========================
   // STATS FROM API
   // =========================
   const stats = [
-  {
-    title: "New Orders",
-    value: dashboard?.newOrders || 0,
-    icon: ShoppingCart,
-    bgColor: "bg-purple-100",
-    iconColor: "text-purple-600",
-  },
-  {
-    title: "Pending QR/BANK Orders",
-    value: dashboard?.pending_qrBankOrders || 0,
-    icon: ShoppingCart,
-    bgColor: "bg-purple-100",
-    iconColor: "text-purple-600",
-  },
-  {
-    title: "Active Products",
-    value: dashboard?.activeProducts || 0,
-    icon: Package,
-    bgColor: "bg-emerald-100",
-    iconColor: "text-emerald-600",
-  },
-  {
-    title: "Enquiry",
-    value: dashboard?.enquiryPendingCount || 0,
-    icon: Package,
-    bgColor: "bg-emerald-100",
-    iconColor: "text-emerald-600",
-  },
-  {
-    title: "Pending Buyer Request",
-    value: dashboard?.pendingBuyerRequest || 0,
-    icon: Building2,
-    bgColor: "bg-yellow-100",
-    iconColor: "text-yellow-600",
-  },
-  {
-    title: "Pending Sellers Request",
-    value: dashboard?.pendingSellersRequest || 0,
-    icon: Building2,
-    bgColor: "bg-yellow-100",
-    iconColor: "text-yellow-600",
-  },
-  {
-    title: "Pending Products Request",
-    value: dashboard?.pendingProductsRequest || 0,
-    icon: Building2,
-    bgColor: "bg-yellow-100",
-    iconColor: "text-yellow-600",
-  },
-  // {
-  //   title: "Total Revenue",
-  //   value: `₹${dashboard?.totalRevenue || 0}`,
-  //   icon: TrendingUp,
-  //   bgColor: "bg-blue-100",
-  //   iconColor: "text-blue-600",
-  // },
-  // {
-  //   title: "Admin Revenue",
-  //   value: `₹${dashboard?.adminRevenue || 0}`,
-  //   icon: Building2,
-  //   bgColor: "bg-purple-100",
-  //   iconColor: "text-purple-600",
-  // },
-  {
-    title: "Total Buyer",
-    value: dashboard?.totalBuyer || 0,
-    icon: Building2,
-    bgColor: "bg-yellow-100",
-    iconColor: "text-yellow-600",
-  },
-  {
-    title: "Total Sellers",
-    value: dashboard?.totalSellers || 0,
-    icon: Building2,
-    bgColor: "bg-yellow-100",
-    iconColor: "text-yellow-600",
-  },
-  // {
-  //   title: "Total Products",
-  //   value: users.filter(
-  //     (u) => (u.status || "").toLowerCase() === "pending"
-  //   ).length,
-  //   icon: Building2,
-  //   bgColor: "bg-yellow-100",
-  //   iconColor: "text-yellow-600",
-  // },
-  {
-    title: "Pending Payments",
-    value: `₹${dashboard?.pendingPayments || 0}`,
-    icon: CreditCard,
-    bgColor: "bg-orange-100",
-    iconColor: "text-orange-600",
-  },
-];
+    {
+      title: "Total Revenue",
+      value: `₹${dashboard?.totalRevenue || 0}`,
+      icon: TrendingUp,
+      bgColor: "bg-blue-100",
+      iconColor: "text-blue-600",
+    },
+    {
+      title: "New Orders",
+      value: dashboard?.newOrders || 0,
+      icon: ShoppingCart,
+      bgColor: "bg-purple-100",
+      iconColor: "text-purple-600",
+    },
+    {
+      title: "Pending QR/BANK Orders",
+      value: dashboard?.pending_qrBankOrders || 0,
+      icon: ShoppingCart,
+      bgColor: "bg-purple-100",
+      iconColor: "text-purple-600",
+    },
+    {
+      title: "Active Products",
+      value: dashboard?.activeProducts || 0,
+      icon: Package,
+      bgColor: "bg-emerald-100",
+      iconColor: "text-emerald-600",
+    },
+    {
+      title: "Enquiry",
+      value: dashboard?.enquiryPendingCount || 0,
+      icon: Package,
+      bgColor: "bg-emerald-100",
+      iconColor: "text-emerald-600",
+    },
+    {
+      title: "Pending Buyer Request",
+      value: dashboard?.pendingBuyerRequest || 0,
+      icon: Building2,
+      bgColor: "bg-yellow-100",
+      iconColor: "text-yellow-600",
+    },
+    {
+      title: "Pending Sellers Request",
+      value: dashboard?.pendingSellersRequest || 0,
+      icon: Building2,
+      bgColor: "bg-yellow-100",
+      iconColor: "text-yellow-600",
+    },
+    {
+      title: "Pending Products Request",
+      value: dashboard?.pendingProductsRequest || 0,
+      icon: Building2,
+      bgColor: "bg-yellow-100",
+      iconColor: "text-yellow-600",
+    },
+
+    // {
+    //   title: "Admin Revenue",
+    //   value: `₹${dashboard?.adminRevenue || 0}`,
+    //   icon: Building2,
+    //   bgColor: "bg-purple-100",
+    //   iconColor: "text-purple-600",
+    // },
+    {
+      title: "Total Buyer",
+      value: dashboard?.totalBuyer || 0,
+      icon: Building2,
+      bgColor: "bg-yellow-100",
+      iconColor: "text-yellow-600",
+    },
+    {
+      title: "Total Sellers",
+      value: dashboard?.totalSellers || 0,
+      icon: Building2,
+      bgColor: "bg-yellow-100",
+      iconColor: "text-yellow-600",
+    },
+    // {
+    //   title: "Total Products",
+    //   value: users.filter(
+    //     (u) => (u.status || "").toLowerCase() === "pending"
+    //   ).length,
+    //   icon: Building2,
+    //   bgColor: "bg-yellow-100",
+    //   iconColor: "text-yellow-600",
+    // },
+    {
+      title: "Pending Payments",
+      value: `₹${dashboard?.pendingPayments || 0}`,
+      icon: CreditCard,
+      bgColor: "bg-orange-100",
+      iconColor: "text-orange-600",
+    },
+  ];
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -356,45 +357,45 @@ export default function HomePage() {
 
               <tbody className="divide-y divide-gray-100">
                 {[...orders]
-  .sort((a, b) => {
-    if (
-      (a.status || "").toLowerCase() === "new" &&
-      (b.status || "").toLowerCase() !== "new"
-    )
-      return -1;
+                  .sort((a, b) => {
+                    if (
+                      (a.status || "").toLowerCase() === "new" &&
+                      (b.status || "").toLowerCase() !== "new"
+                    )
+                      return -1;
 
-    if (
-      (a.status || "").toLowerCase() !== "new" &&
-      (b.status || "").toLowerCase() === "new"
-    )
-      return 1;
+                    if (
+                      (a.status || "").toLowerCase() !== "new" &&
+                      (b.status || "").toLowerCase() === "new"
+                    )
+                      return 1;
 
-    return 0;
-  }).slice(0, 5).map((order) => (
-                  <tr key={order.order_id} className="hover:bg-gray-50 transition-colors">
-                    <td className="p-3 text-sm font-medium text-gray-900">
-                      #{order.order_id}
-                    </td>
-                    <td className="p-3 text-sm text-gray-600">
-                      {order.customer || order.user_name || "Guest"}
-                    </td>
-                    <td className="p-3 text-sm text-gray-600">
-                      {order.customer || order.owner_name || "Guest"}
-                    </td>
-                    <td className="p-3 text-sm font-medium text-gray-900">
-                      ₹{order.amount || order.total_amount || 0}
-                    </td>
-                    <td className="p-3">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                          order.status
-                        )}`}
-                      >
-                        {order.status || "Pending"}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
+                    return 0;
+                  }).slice(0, 5).map((order) => (
+                    <tr key={order.order_id} className="hover:bg-gray-50 transition-colors">
+                      <td className="p-3 text-sm font-medium text-gray-900">
+                        #{order.order_id}
+                      </td>
+                      <td className="p-3 text-sm text-gray-600">
+                        {order.customer || order.user_name || "Guest"}
+                      </td>
+                      <td className="p-3 text-sm text-gray-600">
+                        {order.customer || order.owner_name || "Guest"}
+                      </td>
+                      <td className="p-3 text-sm font-medium text-gray-900">
+                        ₹{order.amount || order.total_amount || 0}
+                      </td>
+                      <td className="p-3">
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                            order.status
+                          )}`}
+                        >
+                          {order.status || "Pending"}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </div>

@@ -1585,17 +1585,48 @@ export default function ProductsPage() {
                           </div>
                         </td>
                         {/* commission type */}
+                        {/* Commission per pair - Editable */}
                         <td className="px-4 py-3">
-                          <div className="flex flex-col">
-                            <span className="text-sm font-semibold text-purple-600">
-                              {product.commission_type === "percentage"
-                                ? `${product.commission || 0}%`
-                                : `₹${product.commission || 0}`}
-                            </span>
-                            {product.commission_type === "per_piece_rate" && (
-                              <span className="text-xs text-gray-500">
-                                Per piece rate
-                              </span>
+                          <div className="flex items-center gap-2">
+                            {editingProductId === product.id ? (
+                              <div className="flex items-center gap-1">
+                                <input
+                                  type="number"
+                                  value={editProductCommission}
+                                  onChange={(e) => setEditProductCommission(e.target.value)}
+                                  className="w-20 px-2 py-1 border border-violet-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-violet-500"
+                                  autoFocus
+                                  min="0"
+                                  step="0.01"
+                                />
+                                <button
+                                  onClick={() => saveProductEdit(product.id)}
+                                  className="p-1 bg-emerald-500 text-white rounded hover:bg-emerald-600"
+                                  title="Save"
+                                >
+                                  <Check size={14} />
+                                </button>
+                                <button
+                                  onClick={cancelProductEdit}
+                                  className="p-1 bg-gray-400 text-white rounded hover:bg-gray-500"
+                                  title="Cancel"
+                                >
+                                  <X size={14} />
+                                </button>
+                              </div>
+                            ) : (
+                              <>
+                                <span className="text-sm font-semibold text-purple-600">
+                                  {product.commission_type === "percentage"
+                                    ? `${product.commission || 0}%`
+                                    : `₹${product.commission || 0}`}
+                                </span>
+                                <Pencil
+                                  size={16}
+                                  className="cursor-pointer text-gray-500 hover:text-purple-600"
+                                  onClick={() => startProductEdit(product)}
+                                />
+                              </>
                             )}
                           </div>
                         </td>
