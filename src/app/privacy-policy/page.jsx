@@ -17,7 +17,7 @@ export default function PrivacyPolicyPage() {
                     </Link>
                     <div>
                         <h1 className="text-xl font-bold text-gray-900">Privacy Policy</h1>
-                        <p className="text-sm text-gray-500">Stepkaro Seller App</p>
+                        {/* <p className="text-sm text-gray-500">Stepkaro Seller App</p> */}
                     </div>
                 </div>
             </div>
@@ -26,12 +26,12 @@ export default function PrivacyPolicyPage() {
             <div className="max-w-4xl mx-auto px-4 py-8">
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                     {/* Effective Date */}
-                    <div className="bg-purple-50 border-b border-purple-100 px-6 py-4 flex items-center gap-3">
+                    {/* <div className="bg-purple-50 border-b border-purple-100 px-6 py-4 flex items-center gap-3">
                         <Calendar className="h-5 w-5 text-purple-600" />
                         <span className="text-sm text-gray-700">
                             <span className="font-semibold">Effective Date:</span> 24-07-2026
                         </span>
-                    </div>
+                    </div> */}
 
                     <div className="p-6 space-y-8">
                         {/* Overview */}
