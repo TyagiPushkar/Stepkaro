@@ -45,6 +45,7 @@ export default function HomePage() {
             <a href="#" className="hover:text-orange-500 transition">About</a>
             <a href="#" className="hover:text-orange-500 transition">Vendors</a>
             <a href="#" className="hover:text-orange-500 transition">Contact</a>
+            <a href="/privacy-policy" className="hover:text-orange-500 transition">Privacy Policy</a>
           </nav>
 
           <div className="flex gap-3">
@@ -54,7 +55,7 @@ export default function HomePage() {
             >
               Login
             </button>
-          
+
           </div>
         </div>
       </header>
@@ -63,16 +64,16 @@ export default function HomePage() {
       <section className="relative overflow-hidden bg-gradient-to-br from-purple-50 via-white to-orange-50">
         <div className="max-w-7xl mx-auto px-6 py-20 lg:py-28">
           <div className="text-center max-w-4xl mx-auto">
-           
-<div className="mt-8">
-  <h1 className="text-5xl md:text-7xl font-bold text-gray-900 leading-tight">
-    Step<span className="text-purple-600">Karo</span>
-  </h1>
-  <p className="text-xl md:text-2xl text-gray-700 mt-4 max-w-2xl mx-auto">
-    helps footwear wholesalers discover manufacturers directly
-  </p>
-</div>  
-           
+
+            <div className="mt-8">
+              <h1 className="text-5xl md:text-7xl font-bold text-gray-900 leading-tight">
+                Step<span className="text-purple-600">Karo</span>
+              </h1>
+              <p className="text-xl md:text-2xl text-gray-700 mt-4 max-w-2xl mx-auto">
+                helps footwear wholesalers discover manufacturers directly
+              </p>
+            </div>
+
 
             <p className="max-w-3xl mx-auto mt-6 text-lg text-gray-500 leading-relaxed">
               Access factory prices, view live stock and place orders anytime – without middlemen.
@@ -124,7 +125,7 @@ export default function HomePage() {
               <p className="flex items-center gap-2 text-orange-600 font-medium">✓ No hidden margins</p>
               <p className="flex items-center gap-2 text-orange-600 font-medium">✓ All designs, rates & live stock in one app</p>
               <p className="flex items-center gap-2 text-orange-600 font-medium">✓ No need to wait for photos / rates</p>
-               <p className="flex items-center gap-2 text-orange-600 font-medium  ">✓ App-only offers for wholesalers</p>
+              <p className="flex items-center gap-2 text-orange-600 font-medium  ">✓ App-only offers for wholesalers</p>
             </div>
             <div className="space-y-3 text-gray-700">
               <p className="flex items-center gap-2 text-orange-600 font-medium">✓ 24/7 ordering – anytime, anywhere</p>
@@ -132,7 +133,7 @@ export default function HomePage() {
               <p className="flex items-center gap-2 text-orange-600 font-medium">✓ Transparent pricing always</p>
               <p className="flex items-center gap-2 text-orange-600 font-medium">✓ Faster dispatch & reliable delivery</p>
               <p className="flex items-center gap-2 text-orange-600 font-medium ">✓ Better margins, more profit</p>
-             
+
             </div>
           </div>
 
@@ -289,13 +290,13 @@ export default function HomePage() {
           <div className="mt-8 flex flex-wrap justify-center gap-4">
             <button className="px-8 py-3 rounded-xl bg-black text-white font-semibold hover:bg-gray-900 transition flex items-center gap-2">
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M17.523 12.095c.02 1.813 1.592 2.415 1.61 2.424-.013.043-.252.862-.83 1.707-.5.732-.998 1.462-1.8 1.477-.786.015-1.038-.466-1.936-.466-.898 0-1.179.452-1.923.481-.804.03-1.416-.793-1.92-1.523-1.045-1.525-1.845-4.31-.772-6.191.532-.937 1.484-1.53 2.517-1.545.785-.015 1.527.528 2.007.528.48 0 1.38-.652 2.326-.556.396.016 1.507.16 2.22 1.2-.058.036-1.326.774-1.312 2.31zm-2.825-5.869c.434-.526.726-1.257.646-1.985-.625.025-1.382.417-1.831.942-.403.466-.755 1.212-.66 1.927.698.054 1.411-.355 1.845-.884z"/>
+                <path d="M17.523 12.095c.02 1.813 1.592 2.415 1.61 2.424-.013.043-.252.862-.83 1.707-.5.732-.998 1.462-1.8 1.477-.786.015-1.038-.466-1.936-.466-.898 0-1.179.452-1.923.481-.804.03-1.416-.793-1.92-1.523-1.045-1.525-1.845-4.31-.772-6.191.532-.937 1.484-1.53 2.517-1.545.785-.015 1.527.528 2.007.528.48 0 1.38-.652 2.326-.556.396.016 1.507.16 2.22 1.2-.058.036-1.326.774-1.312 2.31zm-2.825-5.869c.434-.526.726-1.257.646-1.985-.625.025-1.382.417-1.831.942-.403.466-.755 1.212-.66 1.927.698.054 1.411-.355 1.845-.884z" />
               </svg>
               GET IT ON Google Play
             </button>
             <button className="px-8 py-3 rounded-xl bg-black text-white font-semibold hover:bg-gray-900 transition flex items-center gap-2">
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.86 3.29.86.78 0 2.26-1.06 3.81-.9.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.02.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.86 3.29.86.78 0 2.26-1.06 3.81-.9.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.02.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
               </svg>
               Download on the App Store
             </button>
@@ -317,11 +318,10 @@ export default function HomePage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-6 py-3 text-sm font-medium rounded-t-lg transition ${
-                  activeTab === tab.id
-                    ? "bg-white text-orange-600 border-b-2 border-orange-500"
-                    : "text-gray-500 hover:text-orange-500"
-                }`}
+                className={`px-6 py-3 text-sm font-medium rounded-t-lg transition ${activeTab === tab.id
+                  ? "bg-white text-orange-600 border-b-2 border-orange-500"
+                  : "text-gray-500 hover:text-orange-500"
+                  }`}
               >
                 {tab.label}
               </button>
@@ -340,7 +340,7 @@ export default function HomePage() {
                   <p><strong className="text-orange-600">Email:</strong> support@stepkaro.com</p>
                   <p><strong className="text-orange-600">Website:</strong> <a href="https://www.stepkaro.in" target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:underline">www.stepkaro.in</a></p>
                   <p><strong className="text-orange-600">Phone:</strong>+91 92170 56915</p>
-                   <p><strong className="text-orange-600">Business Hours:</strong> Monday to Friday, 10:00 AM – 6:00 PM</p>
+                  <p><strong className="text-orange-600">Business Hours:</strong> Monday to Friday, 10:00 AM – 6:00 PM</p>
                 </div>
                 <div className="mt-6 p-4 bg-orange-50 rounded-xl">
                   <p className="text-gray-700">

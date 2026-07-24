@@ -47,6 +47,7 @@ const Modal = ({ isOpen, onClose, title, children, maxWidth = "max-w-4xl" }) => 
 export default function EnquiriesPage() {
   const [enquiries, setEnquiries] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [updatingId, setUpdatingId] = useState(null);
   const [error, setError] = useState(null);
   const [toast, setToast] = useState(null);
 
@@ -56,6 +57,12 @@ export default function EnquiriesPage() {
 
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedEnquiry, setSelectedEnquiry] = useState(null);
+
+  //filter of date..................
+  // Existing states ke saath ye add karein
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [filteredCount, setFilteredCount] = useState(0);
 
   const token = typeof window !== "undefined" ? localStorage.getItem("access_token") || "" : "";
 
@@ -82,6 +89,7 @@ export default function EnquiriesPage() {
       const result = await response.json();
 
       if (result.success) {
+        console.log(result.data)
         setEnquiries(result.data || []);
       } else {
         setError(result.message || "Failed to fetch enquiries");
@@ -100,15 +108,20 @@ export default function EnquiriesPage() {
   }, [token]);
 
   // Filter enquiries
+  // Filter enquiries with date range
   const filteredEnquiries = useMemo(() => {
     let filtered = enquiries;
 
+    // Search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
         (e) =>
           e.name?.toLowerCase().includes(query) ||
           e.mobile?.includes(query) ||
+          e.buyer_shop_name?.toLowerCase().includes(query) ||
+          e.vendor_brand_name?.toLowerCase().includes(query) ||
+          e.vendor_phone?.includes(query) ||
           e.business_name?.toLowerCase().includes(query) ||
           e.city?.toLowerCase().includes(query) ||
           e.message?.toLowerCase().includes(query) ||
@@ -116,8 +129,44 @@ export default function EnquiriesPage() {
       );
     }
 
+    // Date Range Filter - ADD THIS
+    if (fromDate && toDate) {
+      const from = new Date(fromDate);
+      const to = new Date(toDate);
+      to.setHours(23, 59, 59, 999); // End of day
+
+      filtered = filtered.filter((e) => {
+        if (!e.created_at) return false;
+        const createdDate = new Date(e.created_at);
+        return createdDate >= from && createdDate <= to;
+      });
+    } else if (fromDate) {
+      const from = new Date(fromDate);
+      filtered = filtered.filter((e) => {
+        if (!e.created_at) return false;
+        const createdDate = new Date(e.created_at);
+        return createdDate >= from;
+      });
+    } else if (toDate) {
+      const to = new Date(toDate);
+      to.setHours(23, 59, 59, 999);
+      filtered = filtered.filter((e) => {
+        if (!e.created_at) return false;
+        const createdDate = new Date(e.created_at);
+        return createdDate <= to;
+      });
+    }
+
     return filtered;
-  }, [searchQuery, enquiries]);
+  }, [searchQuery, enquiries, fromDate, toDate]); // <- Add dependencies
+
+  // Clear all filters
+  const clearFilters = () => {
+    setSearchQuery("");
+    setFromDate("");
+    setToDate("");
+    setCurrentPage(1);
+  };
 
   // Pagination
   const totalPages = Math.ceil(filteredEnquiries.length / itemsPerPage);
@@ -139,6 +188,46 @@ export default function EnquiriesPage() {
     setShowViewModal(true);
   };
 
+  // Handle Status Change Query
+  const handleStatusUpdate = async (enquiryId, newStatus) => {
+    try {
+      setUpdatingId(enquiryId);
+
+      const response = await fetch(
+        "https://namami-infotech.com/Stepkaro/src/enquiry/update_enquiry_status.php",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id: enquiryId,
+            status: newStatus,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Update local state to immediately reflect the change
+        setEnquiries((prev) =>
+          prev.map((item) =>
+            item.id === enquiryId ? { ...item, status: newStatus } : item
+          )
+        );
+        showToast(`Status updated to "${newStatus}" successfully!`);
+      } else {
+        showToast(result.message || "Failed to update status", "error");
+      }
+    } catch (err) {
+      showToast(err.message || "Error updating status", "error");
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
   // Export to CSV
   const handleExportCSV = () => {
     if (enquiries.length === 0) {
@@ -150,24 +239,28 @@ export default function EnquiriesPage() {
 
     const headers = [
       "ID",
-      "Product",
-      "Name",
+      "Display Name",
+      "Shop Name",
+      "Brand Name",
       "Mobile",
-      "City",
-      "Business Name",
+      "State",
+      "District",
       "Message",
-      "Created At"
+      "Created At",
+      "Status"
     ];
 
     const rows = exportData.map((e) => [
       e.id || "",
-      e.article_name || "",
-      e.name || "",
+      `${e.article_name} | ${e.variant} | ${e.color} | ${e.packing_type} | ${e.category_name}`,
+      e.buyer_shop_name || "",
+      e.vendor_brand_name || "",
       e.mobile || "",
-      e.city || "",
-      e.business_name || "",
+      e.buyer_state || "",
+      e.buyer_district || "",
       e.message || "",
-      e.created_at || ""
+      e.created_at || "",
+      e.status || "",
     ]);
 
     const csvContent = [headers, ...rows]
@@ -243,13 +336,12 @@ export default function EnquiriesPage() {
     <div className="space-y-6">
       {toast && (
         <div
-          className={`fixed top-20 right-6 z-50 px-4 py-3 rounded-lg flex items-center gap-2 shadow-lg text-white ${
-            toast.type === "success"
-              ? "bg-emerald-500"
-              : toast.type === "error"
+          className={`fixed top-20 right-6 z-50 px-4 py-3 rounded-lg flex items-center gap-2 shadow-lg text-white ${toast.type === "success"
+            ? "bg-emerald-500"
+            : toast.type === "error"
               ? "bg-red-500"
               : "bg-blue-500"
-          }`}
+            }`}
         >
           {toast.type === "success" ? (
             <CheckCircle size={18} />
@@ -271,6 +363,7 @@ export default function EnquiriesPage() {
 
         {/* Action Buttons */}
         <div className="flex flex-wrap gap-3">
+
           <div className="relative flex-1 lg:w-64">
             <Search
               className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
@@ -284,6 +377,7 @@ export default function EnquiriesPage() {
               className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
             />
           </div>
+
 
           <button
             onClick={handleExportCSV}
@@ -322,7 +416,8 @@ export default function EnquiriesPage() {
       </div>
 
       {/* Results Summary */}
-      <div className="flex justify-between items-center">
+      {/* Results Summary - Updated with better date filter */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <p className="text-sm text-gray-500">
           Showing{" "}
           <span className="text-gray-900">
@@ -332,22 +427,73 @@ export default function EnquiriesPage() {
           <span className="text-gray-900">
             {Math.min(endIndex, filteredEnquiries.length)}
           </span>{" "}
-          of <span className="text-gray-900">{filteredEnquiries.length}</span> enquiries
+          of <span className="text-gray-900 font-medium">{filteredEnquiries.length}</span> enquiries
+          {(fromDate || toDate) && (
+            <span className="text-xs text-purple-600 ml-2 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">
+              📅 Filtered
+            </span>
+          )}
         </p>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-500">Show:</span>
-          <select
-            value={itemsPerPage}
-            onChange={(e) => {
-              setItemsPerPage(Number(e.target.value));
-              setCurrentPage(1);
-            }}
-            className="bg-white border border-gray-200 rounded-lg px-2 py-1 text-sm text-gray-600 focus:outline-none focus:ring-1 focus:ring-purple-500"
-          >
-            <option value={10}>10</option>
-            <option value={25}>25</option>
-            <option value={50}>50</option>
-          </select>
+
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Date Filter - Simple Horizontal Layout */}
+          <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-200">
+            <Calendar size={16} className="text-purple-600" />
+
+            <div className="flex items-center gap-1">
+              <label className="text-xs text-gray-500 font-medium">From:</label>
+              <input
+                type="date"
+                value={fromDate}
+                onChange={(e) => {
+                  setFromDate(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-36 px-2 py-1 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              />
+            </div>
+
+            <span className="text-gray-400">→</span>
+
+            <div className="flex items-center gap-1">
+              <label className="text-xs text-gray-500 font-medium">To:</label>
+              <input
+                type="date"
+                value={toDate}
+                onChange={(e) => {
+                  setToDate(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-36 px-2 py-1 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              />
+            </div>
+
+            {(fromDate || toDate) && (
+              <button
+                onClick={clearFilters}
+                className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                title="Clear date filter"
+              >
+                <X size={16} />
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-500">Show:</span>
+            <select
+              value={itemsPerPage}
+              onChange={(e) => {
+                setItemsPerPage(Number(e.target.value));
+                setCurrentPage(1);
+              }}
+              className="bg-white border border-gray-200 rounded-lg px-2 py-1.5 text-sm text-gray-600 focus:outline-none focus:ring-1 focus:ring-purple-500"
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -361,17 +507,26 @@ export default function EnquiriesPage() {
                   ID
                 </th>
                 <th className="px-4 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Product
+                  Display Name
                 </th>
                 <th className="px-4 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Customer
+                  Shop Name
                 </th>
                 <th className="px-4 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  City
+                  State
+                </th>
+                <th className="px-4 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  District
+                </th>
+                <th className="px-4 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Vendor
                 </th>
                 <th className="px-4 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Message
                 </th>
+                {/* <th className="px-4 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th> */}
                 <th className="px-4 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Created
                 </th>
@@ -411,11 +566,14 @@ export default function EnquiriesPage() {
                         </div>
                         <div>
                           <p className="text-sm font-medium text-gray-900">
-                            {enquiry.article_name || "—"}
+                            {/* {enquiry.article_name || "—"} */}
+                            {enquiry.article_name} | {enquiry.variant} |{" "}
+                            {enquiry.color} | {enquiry.packing_type} |{" "}
+                            {enquiry.category_name}
                           </p>
-                          <p className="text-xs text-gray-500">
+                          {/* <p className="text-xs text-gray-500">
                             ₹{enquiry.selling_price || enquiry.price || 0}
-                          </p>
+                          </p> */}
                         </div>
                       </div>
                     </td>
@@ -423,7 +581,7 @@ export default function EnquiriesPage() {
                     <td className="px-4 py-4">
                       <div className="flex flex-col">
                         <span className="text-sm font-medium text-gray-900">
-                          {enquiry.name || "—"}
+                          {enquiry.buyer_shop_name || "—"}
                         </span>
                         <span className="text-xs text-gray-500">
                           {enquiry.mobile || "—"}
@@ -433,19 +591,42 @@ export default function EnquiriesPage() {
 
                     <td className="px-4 py-4">
                       <span className="text-sm text-gray-600">
-                        {enquiry.city || "—"}
+                        {enquiry.buyer_state || "—"}
                       </span>
+                    </td>
+
+                    <td className="px-4 py-4">
+                      <span className="text-sm text-gray-600">
+                        {enquiry.buyer_district || "—"}
+                      </span>
+                    </td>
+
+                    <td className="px-4 py-4">
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium text-gray-900">
+                          {enquiry.vendor_brand_name || "—"}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {enquiry.vendor_phone || "—"}
+                        </span>
+                      </div>
                     </td>
 
                     <td className="px-4 py-4">
                       <span className="text-sm text-gray-600 max-w-xs truncate block">
                         {enquiry.message ? (
-                          enquiry.message.length > 30 
-                            ? enquiry.message.substring(0, 30) + "..." 
+                          enquiry.message.length > 30
+                            ? enquiry.message.substring(0, 30) + "..."
                             : enquiry.message
                         ) : "—"}
                       </span>
                     </td>
+
+                    {/* <td className="px-4 py-4">
+                      <span className="text-sm text-gray-500">
+                        {enquiry.status}
+                      </span>
+                    </td> */}
 
                     <td className="px-4 py-4">
                       <span className="text-sm text-gray-500">
@@ -454,14 +635,31 @@ export default function EnquiriesPage() {
                     </td>
 
                     <td className="px-4 py-4">
-                      <button
-                        onClick={() => openViewModal(enquiry)}
-                        className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors flex items-center gap-1"
-                        title="View Details"
-                      >
-                        <Eye size={16} />
-                        <span className="text-xs font-medium">View</span>
-                      </button>
+                      <div className="flex items-center gap-2">
+                        {updatingId === enquiry.id ? (
+                          <Loader2 size={18} className="animate-spin text-purple-600" />
+                        ) : (
+                          <select
+                            value={enquiry.status || "new"}
+                            onChange={(e) => handleStatusUpdate(enquiry.id, e.target.value)}
+                            className="bg-white border border-gray-300 hover:border-purple-500 rounded-lg text-xs py-1.5 px-2 font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500/20 cursor-pointer transition-all"
+                          >
+                            <option value="new">new</option>
+                            <option value="open">open</option>
+                            <option value="inprogress">inprogress</option>
+                            <option value="resolved">resolved</option>
+                            <option value="closed">closed</option>
+                          </select>
+                        )}
+                        {/* <button
+                          onClick={() => openViewModal(enquiry)}
+                          className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors flex items-center gap-1"
+                          title="View Details"
+                        >
+                          <Eye size={16} />
+                          <span className="text-xs font-medium">View</span>
+                        </button> */}
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -509,11 +707,10 @@ export default function EnquiriesPage() {
                   <button
                     key={pageNum}
                     onClick={() => goToPage(pageNum)}
-                    className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                      currentPage === pageNum
-                        ? "bg-purple-600 text-white"
-                        : "bg-white border border-gray-200 hover:bg-gray-50 text-gray-600"
-                    }`}
+                    className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${currentPage === pageNum
+                      ? "bg-purple-600 text-white"
+                      : "bg-white border border-gray-200 hover:bg-gray-50 text-gray-600"
+                      }`}
                   >
                     {pageNum}
                   </button>
