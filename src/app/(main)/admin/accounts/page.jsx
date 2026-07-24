@@ -60,9 +60,10 @@ export default function AdminAccountsPage() {
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [payForm, setPayForm] = useState({
     status: "paid",
+    payment_date: "",  // ← Always empty string, never undefined
+    reject_reason: "",
     utr_no: "",
   });
-
   const token = useMemo(
     () =>
       typeof window !== "undefined"
@@ -242,7 +243,9 @@ export default function AdminAccountsPage() {
   const openPayModal = (payment) => {
     setSelectedPayment(payment);
     setPayForm({
-      status: payment.payment_status === "paid" ? "paid" : "paid",
+      status: payment.payment_status === "paid" ? "paid" : "pending",
+      payment_date: "",  // ✅ Always empty string, never undefined
+      reject_reason: "",
       utr_no: payment.utr_no || "",
     });
     setShowPayModal(true);
@@ -257,7 +260,9 @@ export default function AdminAccountsPage() {
       const payload = {
         payment_id: selectedPayment.id,
         status: payForm.status,
+        payment_date: payForm.payment_date,
         utr_no: payForm.status === "paid" ? payForm.utr_no : "",
+        reject_reason: payForm.status === "rejected" ? payForm.reject_reason : "",
       };
 
       const response = await axios.post(
@@ -278,8 +283,8 @@ export default function AdminAccountsPage() {
                 ...item,
                 payment_status: payForm.status,
                 utr_no: payForm.status === "paid" ? payForm.utr_no : "",
-                payment_date:
-                  payForm.status === "paid" ? new Date().toISOString() : null,
+                payment_date: payForm.payment_date,
+                reject_reason: payForm.status === "rejected" ? payForm.reject_reason : "",
               }
               : item,
           ),
@@ -628,6 +633,13 @@ export default function AdminAccountsPage() {
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   utr no
                 </th>
+                {payments.some((p) => p.payment_status === "rejected") && (
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Reject Reason
+                  </th>
+                )}
+
+
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
@@ -695,11 +707,19 @@ export default function AdminAccountsPage() {
                       </td>
 
                       <td className="px-6 py-4 text-sm text-gray-500">
-                        {payment.payment_date || "—"}
+                        {payment.payment_date
+                          ? new Date(payment.payment_date).toLocaleDateString("en-GB")
+                          : "—"}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-500">
                         {payment.utr_no || "—"}
                       </td>
+                      {/* ✅ Fixed: Show reject reason only if present */}
+                      {payments.some((p) => p.payment_status === "rejected") && (
+                        <td className="px-6 py-4 text-sm text-gray-500">
+                          {payment.reject_reason || "—"}
+                        </td>
+                      )}
                       <td className="px-6 py-4">
                         <span
                           className={`text-xs px-2 py-1 rounded-full ${badge.color}`}
@@ -842,6 +862,31 @@ export default function AdminAccountsPage() {
                 </select>
               </div>
 
+              <div>
+                {payForm.status === "paid" && (
+                  <label className="text-sm text-gray-600 block mb-1">
+                    Payment Date <span className="text-red-500">*</span>
+                  </label>
+                )}
+                {payForm.status === "rejected" && (
+                  <label className="text-sm text-gray-600 block mb-1">
+                    Rejected Date <span className="text-red-500">*</span>
+                  </label>
+                )}
+                <input
+                  type="date"
+                  value={payForm.payment_date}
+                  onChange={(e) =>
+                    setPayForm({ ...payForm, payment_date: e.target.value })
+                  }
+                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+                {!payForm.payment_date && (
+                  <p className="mt-1 text-xs text-amber-600">
+                    Payment date is required
+                  </p>
+                )}
+              </div>
               {payForm.status === "paid" && (
                 <div>
                   <label className="text-sm text-gray-600 block mb-1">
@@ -864,6 +909,29 @@ export default function AdminAccountsPage() {
                   )}
                 </div>
               )}
+
+              {payForm.status === "rejected" && (
+                <div>
+                  <label className="text-sm text-gray-600 block mb-1">
+                    Reject Reason <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={payForm.reject_reason}
+                    onChange={(e) =>
+                      setPayForm({ ...payForm, reject_reason: e.target.value })
+                    }
+                    className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    placeholder="Enter reject reason"
+                  />
+                  {!payForm.reject_reason && (
+                    <p className="mt-1 text-xs text-amber-600">
+                      Reject reason is required for rejected status
+                    </p>
+                  )}
+                </div>
+              )}
+
 
               <div className="flex gap-3 pt-2">
                 <button
