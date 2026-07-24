@@ -593,13 +593,13 @@ export default function BannersPage() {
             Add Banner
           </button>
 
-          <button
+          {/* <button
             onClick={handleExportCSV}
             className="bg-purple-50 hover:bg-purple-100 text-purple-600 px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-colors border border-purple-200"
           >
             <Download size={16} />
             Export All
-          </button>
+          </button> */}
 
           {filteredBanners.length < banners.length &&
             filteredBanners.length > 0 && (

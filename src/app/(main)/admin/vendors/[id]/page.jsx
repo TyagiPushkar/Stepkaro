@@ -149,8 +149,6 @@ export default function VendorDetailsPage() {
   const [toast, setToast] = useState(null);
   const [editData, setEditData] = useState({});
   const [saving, setSaving] = useState(false);
-  const [walletHistory, setWalletHistory] = useState([]);
-  const [walletLoading, setWalletLoading] = useState(false);
   const [orderHistory, setOrderHistory] = useState([]);
   const [orderLoading, setOrderLoading] = useState(false);
   const [bankDetails, setBankDetails] = useState(null);
@@ -716,8 +714,9 @@ export default function VendorDetailsPage() {
         tone: "from-violet-500 to-fuchsia-500",
       },
       {
-        label: "Orders",
-        value: orderHistory.length,
+        label: "TotalOrders",
+        // value: orderHistory.length,
+        value: vendor?.no_of_order_recived,
         icon: ClipboardList,
         tone: "from-sky-500 to-cyan-500",
       },
@@ -734,7 +733,7 @@ export default function VendorDetailsPage() {
   const tabs = [
     { id: "overview", label: "Overview", icon: Store },
     { id: "edit", label: "Edit", icon: User },
-    { id: "orders", label: "Orders", icon: ClipboardList },
+    // { id: "orders", label: "Orders", icon: ClipboardList },
     { id: "coupons", label: "Coupons", icon: Tag },
     {
       id: "Restricted Districts",

@@ -1097,6 +1097,95 @@ export default function ProductsPage() {
   ]);
 
   // Export to CSV - Defined AFTER filteredProducts
+  // const handleExportCSV = useCallback(() => {
+  //   if (products.length === 0) {
+  //     showToast("No products to export", "error");
+  //     return;
+  //   }
+
+  //   // Use filteredProducts if available, otherwise use all products
+  //   const exportData =
+  //     filteredProducts.length > 0 ? filteredProducts : products;
+
+  //   const headers = [
+  //     "ID",
+  //     "Brand",
+  //     "Category",
+  //     "Gender",
+  //     "Article Name",
+  //     // "Display Name",
+  //     "size",
+  //     "color",
+  //     "pair Per Ctn",
+  //     "packing_type",
+  //     "MRP",
+  //     "Selling Price",
+  //     "Commission Type",
+  //     "Commission Value",
+  //     "Commission Per Pair",
+  //     "Quantity",
+  //     "Status",
+  //     "Sole",
+  //     "Upper",
+  //     // "created_at",
+  //     "Origin",
+  //     // "Owner Name",
+  //     // "Business Name",
+  //     // "Price (Original)",
+  //     // "Selling Price",
+  //     // "Commission (%)",
+  //     // "Orders",
+  //     // "Returns",
+  //     // "Revenue",
+  //     // "Stock Status",
+  //     // "Variant",
+  //     // "Color",
+  //     // "Size",
+  //     // "Material",     
+  //     // "Origin",
+  //     // "Created At",
+  //   ];
+
+  //   const rows = exportData.map((p) => [
+  //     p.id || "",
+  //     p.brand_name || "",
+  //     // `${p.article_name} | ${p.variant} | ${p.color} | ${p.packing_type} | ${p.category_name}`,
+  //     p.category_name || "",
+  //     p.gender || "",
+  //     p.article_name || "",
+  //     p.variant || "",
+  //     p.color || "",
+  //     p.pairs_per_ctn || "",
+  //     p.packing_type || "",
+  //     p.price || 0,
+  //     p.selling_price || 0,
+  //     p.commission_type || "",
+  //     p.commission || "",
+  //     p.commission_per_pair || "",
+  //     p.stock_quantity || 0,
+  //     p.status || "",
+  //     p.material || "",
+  //     p.upper_material || "",
+  //     // p.created_at || "",
+  //     p.origin || "",
+  //   ]);
+
+  //   const csvContent = [headers, ...rows]
+  //     .map((row) => row.join(","))
+  //     .join("\n");
+
+  //   const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  //   const url = URL.createObjectURL(blob);
+  //   const link = document.createElement("a");
+  //   link.href = url;
+  //   link.download = `products_${new Date().toISOString().split("T")[0]}.csv`;
+  //   document.body.appendChild(link);
+  //   link.click();
+  //   document.body.removeChild(link);
+  //   URL.revokeObjectURL(url);
+
+  //   showToast(`Exported ${exportData.length} products successfully`);
+  // }, [products, filteredProducts, showToast]);
   const handleExportCSV = useCallback(() => {
     if (products.length === 0) {
       showToast("No products to export", "error");
@@ -1109,59 +1198,95 @@ export default function ProductsPage() {
 
     const headers = [
       "ID",
-      "Product Name",
-      "Category",
       "Brand",
-      "Owner Name",
-      "Business Name",
-      "Quantity",
-      "Price (Original)",
-      "Selling Price",
-      "Commission (%)",
-      "Orders",
-      "Returns",
-      "Revenue",
-      "Status",
-      "Stock Status",
-      "Variant",
-      "Color",
-      "Size",
-      "Material",
+      "Category",
       "Gender",
+      "Article Name",
+      "size",
+      "color",
+      "pair Per Ctn",
+      "packing_type",
+      "MRP",
+      "Selling Price",
+      "Commission Type",
+      "Commission Value",
+      "Commission Per Pair",
+      "Quantity",
+      "Status",
+      "Sole",
+      "Upper",
       "Origin",
-      "Created At",
     ];
 
-    const rows = exportData.map((p) => [
-      p.id || "",
-      p.article_name || "",
-      p.category_name || "",
-      p.brand_name || "",
-      p.owner_name || "",
-      p.business_name || "",
-      p.stock_quantity || 0,
-      p.price || 0,
-      p.selling_price || 0,
-      p.commission || "0",
-      p.orders || 0,
-      p.returns || 0,
-      p.revenue || 0,
-      p.status || "",
-      p.stock || "in_stock",
-      p.variant || "",
-      p.color || "",
-      p.size || "",
-      p.material || "",
-      p.gender || "",
-      p.origin || "",
-      p.created_at || "",
-    ]);
+    const rows = [];
 
-    const csvContent = [headers, ...rows]
-      .map((row) => row.join(","))
-      .join("\n");
+    exportData.forEach((p) => {
+      // 1. Parent / Main Product Row
+      rows.push([
+        p.id || "",
+        p.brand_name || "",
+        p.category_name || "",
+        p.gender || "",
+        p.article_name || "",
+        p.variant || "", // Main Size
+        p.color || "",
+        p.pairs_per_ctn || "",
+        p.packing_type || "",
+        p.price || 0,
+        p.selling_price || 0,
+        p.commission_type || "",
+        p.commission || "",
+        p.commission_per_pair || "",
+        p.stock_quantity || 0,
+        p.status || "",
+        p.material || "",
+        p.upper_material || "",
+        p.origin || "",
+      ]);
 
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      // 2. Variants Rows (if variants array exists and has items)
+      if (Array.isArray(p.variants) && p.variants.length > 0) {
+        p.variants.forEach((v) => {
+          rows.push([
+            "", // ID khali rahega
+            "", // Brand Name empty
+            "", // Category empty
+            "", // Gender empty
+            "", // Article Name empty
+            v.variant_size || v.size || "", // Variant Size
+            v.color || "",                  // Variant Color
+            v.pairs_per_ctn || "",          // Variant Pair Per Ctn
+            v.packing_type || "",           // Variant Packing Type
+            v.price || 0,                   // Variant MRP
+            v.selling_price || 0,           // Variant Selling Price
+            p.commission_type || "",        // Inherit Parent Commission Type
+            p.commission || "",             // Inherit Parent Commission
+            p.commission_per_pair || "",    // Inherit Parent Commission Per Pair
+            v.stock || v.stock_quantity || 0, // Variant Stock
+            v.status || p.status || "",     // Variant Status
+            "", // Sole / Material empty
+            "", // Upper Material empty
+            "", // Origin empty
+          ]);
+        });
+      }
+    });
+
+    // Helper function to handle commas and special characters in CSV
+    const formatCSVCell = (cell) => {
+      if (cell === null || cell === undefined) return '""';
+      const cellString = String(cell);
+      return `"${cellString.replace(/"/g, '""')}"`;
+    };
+
+    // Build CSV string
+    const csvContent = [
+      headers.map(formatCSVCell).join(","),
+      ...rows.map((row) => row.map(formatCSVCell).join(","))
+    ].join("\n");
+
+    // UTF-8 BOM (\uFEFF) for proper Excel formatting
+    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;

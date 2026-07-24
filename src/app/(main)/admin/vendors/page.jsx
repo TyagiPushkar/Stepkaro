@@ -137,6 +137,7 @@ export default function SellerPage() {
       const result = await response.json();
 
       if (result.success) {
+        console.log(result.data.vendors);
         // buyers
         const buyers = result.data.buyers.map((buyer) => ({
           id: buyer.id,
@@ -180,14 +181,20 @@ export default function SellerPage() {
           createdAt: vendor.created_at,
           type: "vendor",
           business_name: vendor.business_name,
+          owner_name: vendor.owner_name,
           gst_number: vendor.gst_number,
           pan_number: vendor.pan_number,
+          bank_name: vendor.bank_name,
+          bank_account_number: vendor.bank_account_number,
+          bank_ifsc_code: vendor.bank_ifsc_code,
           city: vendor.city,
           state: vendor.state,
+          restricted_district: vendor.restricted_district,
           country: vendor.country,
           pincode: vendor.pincode,
           wallet_value: vendor.wallet_value || "",
           rawData: vendor,
+          no_of_order_recived: vendor.no_of_order_recived,
         }));
 
         setUsers([...buyers, ...vendors]);
@@ -648,29 +655,63 @@ export default function SellerPage() {
   const handleExportCSV = () => {
     const headers = [
       "ID",
-      "Name",
-      "Email",
+      "Brand Name",
+      "Business Name",
+      "Owner Name",
       "Phone",
-      "Role",
+      "GST Number",
+      "PAN Number",
+      "Email",
+      "State",
+      "Restricted District",
       "Address",
+      "Minimum Order Value",
+      "Settlement Days",
+      "Bank Name",
+      "Bank Account Number",
+      "Bank IFSC Code",
+      // "Branch Name",
       "Status",
       "Joined Date",
+      "No Of Order Recived"
     ];
     const csvData = users.map((user) => [
       user.id,
-      user.name,
-      user.email,
+      user.brand,
+      user.business_name,
+      user.owner_name,
       user.phone,
-      user.role,
+      user.gst_number,
+      user.pan_number,
+      user.email,
+      user.state,
+      user.restricted_district,
       user.address,
+      user.minimum_value,
+      user.settlement_date,
+      user.bank_name,
+      user.bank_account_number,
+      user.bank_ifsc_code,
+      // user.branch_name,
       user.status,
       user.createdAt,
+      user.no_of_order_recived,
     ]);
 
-    const csvContent = [headers, ...csvData]
-      .map((row) => row.join(","))
-      .join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv" });
+    const formatCSVCell = (cell) => {
+      if (cell === null || cell === undefined) return '""';
+      const cellString = String(cell);
+      // Double quotes ko double-quote ("") se escape karte hain aur pore cell ko quotes mein lapet te hain
+      return `"${cellString.replace(/"/g, '""')}"`;
+    };
+
+    const csvContent = [
+      headers.map(formatCSVCell).join(","),
+      ...csvData.map((row) => row.map(formatCSVCell).join(","))
+    ].join("\n");
+
+    // UTF-8 BOM (\uFEFF) add karne se Excel mein special characters aur formatting proper aati hai
+    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;

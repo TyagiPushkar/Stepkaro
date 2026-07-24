@@ -308,13 +308,13 @@ export default function CategoriesPage() {
             Create New
           </button>
 
-          <button
+          {/* <button
             onClick={handleExportCSV}
             className="bg-white hover:bg-gray-50 text-gray-600 px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-colors border border-gray-200 hover:border-purple-300"
           >
             <Download size={16} />
             Export CSV
-          </button>
+          </button> */}
         </div>
       </div>
 

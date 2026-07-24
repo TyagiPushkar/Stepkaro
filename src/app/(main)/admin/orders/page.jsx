@@ -341,15 +341,16 @@ export default function OrdersPage() {
 
     const headers = [
       "Order ID",
-      "Customer Name",
-      "Customer Phone",
-      "Vendor Name",
-      "Vendor Phone",
-      "Article ",
+      // "Order Date",
+      "Order Time",
+      "Shop Name",
+      "Shop Phone",
+      "Brand Name",
+      "Brand Phone",
+      // "Article ",
+      "Total Per Ctn",
       "Payment Method",
       "Total Amount",
-      "Order Date",
-      "Order Time",
       "Status",
     ];
 
@@ -364,15 +365,16 @@ export default function OrdersPage() {
 
       return [
         order.order_id || "",
-        order.user_name || "Guest Customer",
+        // orderTime,
+        orderDate,
+        order.shop_name || "Guest Customer",
         order.user_phone || "N/A",
-        order.owner_name || "N/A",
+        order.brand_name || "N/A",
         order.owner_phone || "N/A",
-        order.article_name || "N/A",
+        // order.article_name || "N/A",
+        order.total_quantity || "N/A",
         order.payment_method || "COD",
         parseFloat(order.total_amount || 0).toLocaleString("en-IN"),
-        orderDate,
-        orderTime,
         order.status || "Pending",
       ];
     });

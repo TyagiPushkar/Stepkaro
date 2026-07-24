@@ -121,6 +121,7 @@ export default function UsersPage() {
       const result = await response.json();
 
       if (result.success) {
+        console.log(result.data);
         // buyers
         const buyers = result.data.buyers.map((buyer) => ({
           id: buyer.id,
@@ -145,6 +146,8 @@ export default function UsersPage() {
           state: buyer.state,
           district: buyer.district,
           delivery_location: buyer.delivery_location,
+          logistic_partner_name: buyer.logistic_partner_name,
+          logistic_contact_no: buyer.logistic_contact_no,
           wallet_value: buyer.wallet_value,
           buyer_id: buyer.buyer_id,
           document_number: buyer.document_number,
@@ -152,6 +155,7 @@ export default function UsersPage() {
             ? `https://namami-infotech.com/Stepkaro/${buyer.document_image}`
             : "",
           wallet_value: buyer.wallet_value || "",
+          order_count: buyer.order_count || 0,
         }));
 
         // vendors
@@ -586,23 +590,37 @@ export default function UsersPage() {
   const handleExportCSV = () => {
     const headers = [
       "ID",
-      "Name",
-      "Email",
-      "Phone",
-      "Role",
-      "Address",
+      "Shop Name",
+      "Phone No.",
       "Status",
+      "Aadhar No.",
+      "Email",
+      "State",
+      "District",
+      "Address",
+      "Delivery Location",
+      "Logistic Partner Name",
+      "Logistic Contact No.",
+      "Wallet Balance",
       "Joined Date",
+      "No. Of Order",
     ];
     const csvData = users.map((user) => [
       user.id,
-      user.name,
-      user.email,
+      user.shop_name,
       user.phone,
-      user.role,
-      user.address,
       user.status,
+      user.document_number,
+      user.email,
+      user.state,
+      user.district,
+      user.address,
+      user.delivery_location,
+      user.logistic_partner_name,
+      user.logistic_contact_no,
+      user.wallet_value,
       user.createdAt,
+      user.order_count,
     ]);
 
     const csvContent = [headers, ...csvData]

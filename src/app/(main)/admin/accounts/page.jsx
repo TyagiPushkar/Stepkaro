@@ -101,6 +101,7 @@ export default function AdminAccountsPage() {
       const data = await response.json();
 
       if (data.success) {
+        console.log(data.data);
         setPayments(data.data || []);
       } else {
         throw new Error(data.message || "Failed to fetch payments");
@@ -274,12 +275,12 @@ export default function AdminAccountsPage() {
           prev.map((item) =>
             item.id === selectedPayment.id
               ? {
-                  ...item,
-                  payment_status: payForm.status,
-                  utr_no: payForm.status === "paid" ? payForm.utr_no : "",
-                  payment_date:
-                    payForm.status === "paid" ? new Date().toISOString() : null,
-                }
+                ...item,
+                payment_status: payForm.status,
+                utr_no: payForm.status === "paid" ? payForm.utr_no : "",
+                payment_date:
+                  payForm.status === "paid" ? new Date().toISOString() : null,
+              }
               : item,
           ),
         );
@@ -316,15 +317,15 @@ export default function AdminAccountsPage() {
           prev.map((item) =>
             item.id === payment.id
               ? {
-                  ...item,
-                  payment_status: newStatus,
-                  utr_no:
-                    newStatus === "paid"
-                      ? payment.utr_no || "TXN" + Date.now()
-                      : "",
-                  payment_date:
-                    newStatus === "paid" ? new Date().toISOString() : null,
-                }
+                ...item,
+                payment_status: newStatus,
+                utr_no:
+                  newStatus === "paid"
+                    ? payment.utr_no || "TXN" + Date.now()
+                    : "",
+                payment_date:
+                  newStatus === "paid" ? new Date().toISOString() : null,
+              }
               : item,
           ),
         );
@@ -343,29 +344,36 @@ export default function AdminAccountsPage() {
     const headers = [
       "Payment ID",
       "Order ID",
-      "Vendor ID",
+      "Order Date",
+      "Recevied in WR Date",
+      "Due Date",
+      "Brand Name",
+      "Business Name",
       "Total Amount",
       "Commission",
       "Payout Amount",
-      "Payment Status",
-      "Due Date",
       "Payment Date",
       "UTR No",
-      "Created At",
+      "Payment Status",
+      // "Status of Payment",
+      // "Created At",
     ];
 
     const rows = filteredPayments.map((p) => [
       p.id || "",
       p.order_id || "",
-      p.vendor_id || "",
+      p.order_date || "",
+      p.created_at || "",
+      p.due_date || "",
+      p.brand_name || "",
+      p.business_name || "",
       p.total_amount || 0,
       p.commission_amount || 0,
       p.payout_amount || 0,
-      p.payment_status || "",
-      p.due_date || "",
       p.payment_date || "",
       p.utr_no || "",
-      p.created_at || "",
+      p.payment_status || "",
+      // p.status || "",
     ]);
 
     const csvContent = [headers, ...rows]
@@ -420,13 +428,12 @@ export default function AdminAccountsPage() {
     <div className="space-y-6">
       {toast && (
         <div
-          className={`fixed top-20 right-6 z-50 px-4 py-3 rounded-lg flex items-center gap-2 shadow-lg backdrop-blur-sm text-white ${
-            toast.type === "success"
-              ? "bg-emerald-500"
-              : toast.type === "info"
-                ? "bg-blue-500"
-                : "bg-red-500"
-          }`}
+          className={`fixed top-20 right-6 z-50 px-4 py-3 rounded-lg flex items-center gap-2 shadow-lg backdrop-blur-sm text-white ${toast.type === "success"
+            ? "bg-emerald-500"
+            : toast.type === "info"
+              ? "bg-blue-500"
+              : "bg-red-500"
+            }`}
         >
           {toast.type === "success" ? (
             <CheckCircle size={18} />
@@ -548,19 +555,17 @@ export default function AdminAccountsPage() {
                 setStatusFilter(filter.value);
                 setCurrentPage(1);
               }}
-              className={`px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-all ${
-                isActive
-                  ? "bg-purple-600 text-white shadow-md"
-                  : "bg-white text-gray-600 border border-gray-200 hover:border-purple-300 hover:text-purple-600"
-              }`}
+              className={`px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-all ${isActive
+                ? "bg-purple-600 text-white shadow-md"
+                : "bg-white text-gray-600 border border-gray-200 hover:border-purple-300 hover:text-purple-600"
+                }`}
             >
               {filter.label}
               <span
-                className={`px-2 py-0.5 rounded-full text-xs ${
-                  isActive
-                    ? "bg-purple-500/30 text-white"
-                    : "bg-gray-100 text-gray-600"
-                }`}
+                className={`px-2 py-0.5 rounded-full text-xs ${isActive
+                  ? "bg-purple-500/30 text-white"
+                  : "bg-gray-100 text-gray-600"
+                  }`}
               >
                 {filter.count}
               </span>
@@ -591,8 +596,23 @@ export default function AdminAccountsPage() {
                   Order ID
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Vendor ID
+                  Order Date
                 </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Recevied in WR Date
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Due Date
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Brand Name
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Business Name
+                </th>
+                {/* <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Vendor ID
+                </th> */}
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Total Amount
                 </th>
@@ -600,10 +620,7 @@ export default function AdminAccountsPage() {
                   Commission
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Payout
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Due Date
+                  Amount Payout
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Payment Date
@@ -634,7 +651,30 @@ export default function AdminAccountsPage() {
                       <td className="px-6 py-4 text-sm text-gray-600">
                         #{payment.order_id}
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        {payment.order_date
+                          ? new Date(payment.order_date).toLocaleDateString("en-GB")
+                          : "—"}
+                      </td>
+
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        {payment.created_at
+                          ? new Date(payment.created_at).toLocaleDateString("en-GB")
+                          : "—"}
+                      </td>
+
+                      <td className="px-6 py-4 text-sm text-gray-500">
+                        {payment.due_date
+                          ? new Date(payment.due_date).toLocaleDateString("en-GB")
+                          : "—"}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500">
+                        {payment.brand_name || "—"}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500">
+                        {payment.business_name || "—"}
+                      </td>
+                      {/* <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
                           <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center">
                             <Building2 size={14} className="text-purple-600" />
@@ -643,7 +683,7 @@ export default function AdminAccountsPage() {
                             #{payment.vendor_id}
                           </span>
                         </div>
-                      </td>
+                      </td> */}
                       <td className="px-6 py-4 text-sm text-gray-900">
                         {formatCurrency(payment.total_amount)}
                       </td>
@@ -653,9 +693,7 @@ export default function AdminAccountsPage() {
                       <td className="px-6 py-4 text-sm font-semibold text-purple-600">
                         {formatCurrency(payment.payout_amount)}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-500">
-                        {payment.due_date || "—"}
-                      </td>
+
                       <td className="px-6 py-4 text-sm text-gray-500">
                         {payment.payment_date || "—"}
                       </td>
