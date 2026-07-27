@@ -25,6 +25,8 @@ import {
   Cross,
   CrossIcon,
   Crosshair,
+  BookAIcon,
+  Book,
 } from "lucide-react";
 
 import { useEffect, useState } from "react";
@@ -39,9 +41,14 @@ const adminNavItems = [
   { name: "Category", href: "/admin/categories", icon: Tag },
   { name: "Orders", href: "/admin/orders", icon: ShoppingCart },
   { name: "QR/BANK Orders", href: "/admin/qr-orders", icon: ShoppingCart },
-  { name: "Notifications", href: "/admin/push_notification", icon: MessageSquare },
+  {
+    name: "Notifications",
+    href: "/admin/push_notification",
+    icon: MessageSquare,
+  },
   { name: "Users", href: "/admin/users", icon: Users },
   { name: "Sellers", href: "/admin/vendors", icon: Store },
+  { name: "Report", href: "/admin/report", icon: Book },
   // { name: "Coupons", href: "/admin/coupons", icon: Ticket },
   { name: "Enquiry", href: "/admin/enquiry", icon: MessageSquare },
   // { name: "Collections", href: "/admin/collections", icon: Layers },
@@ -58,7 +65,11 @@ const sellerNavItems = [
   { name: "My Products", href: "/seller/products", icon: Package },
   { name: "My Orders", href: "/seller/orders", icon: ShoppingCart },
   { name: "My Coupons", href: "/seller/coupons", icon: Tag },
-  { name: "Restricted Districts", href: "/seller/restricted-districts", icon: Crosshair},
+  {
+    name: "Restricted Districts",
+    href: "/seller/restricted-districts",
+    icon: Crosshair,
+  },
   { name: "Payments", href: "/seller/payments", icon: IndianRupee },
   { name: "Account", href: "/seller/account", icon: User },
   // { name: "Logout", href: "/seller/logout", icon: IndianRupee },

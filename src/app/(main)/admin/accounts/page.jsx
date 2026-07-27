@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import axios from "axios";
+import CommissionReport from "../../../components/acc_comp/commsion_report";
 import {
   Wallet,
   IndianRupee,
@@ -60,7 +61,7 @@ export default function AdminAccountsPage() {
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [payForm, setPayForm] = useState({
     status: "paid",
-    payment_date: "",  // ← Always empty string, never undefined
+    payment_date: "", // ← Always empty string, never undefined
     reject_reason: "",
     utr_no: "",
   });
@@ -116,7 +117,7 @@ export default function AdminAccountsPage() {
   }, [headers]);
 
   useEffect(() => {
-    fetchPayments();
+    void fetchPayments();
   }, [fetchPayments]);
 
   // Calculate summary stats
@@ -244,7 +245,7 @@ export default function AdminAccountsPage() {
     setSelectedPayment(payment);
     setPayForm({
       status: payment.payment_status === "paid" ? "paid" : "pending",
-      payment_date: "",  // ✅ Always empty string, never undefined
+      payment_date: "", // ✅ Always empty string, never undefined
       reject_reason: "",
       utr_no: payment.utr_no || "",
     });
@@ -262,7 +263,8 @@ export default function AdminAccountsPage() {
         status: payForm.status,
         payment_date: payForm.payment_date,
         utr_no: payForm.status === "paid" ? payForm.utr_no : "",
-        reject_reason: payForm.status === "rejected" ? payForm.reject_reason : "",
+        reject_reason:
+          payForm.status === "rejected" ? payForm.reject_reason : "",
       };
 
       const response = await axios.post(
@@ -280,12 +282,13 @@ export default function AdminAccountsPage() {
           prev.map((item) =>
             item.id === selectedPayment.id
               ? {
-                ...item,
-                payment_status: payForm.status,
-                utr_no: payForm.status === "paid" ? payForm.utr_no : "",
-                payment_date: payForm.payment_date,
-                reject_reason: payForm.status === "rejected" ? payForm.reject_reason : "",
-              }
+                  ...item,
+                  payment_status: payForm.status,
+                  utr_no: payForm.status === "paid" ? payForm.utr_no : "",
+                  payment_date: payForm.payment_date,
+                  reject_reason:
+                    payForm.status === "rejected" ? payForm.reject_reason : "",
+                }
               : item,
           ),
         );
@@ -322,15 +325,15 @@ export default function AdminAccountsPage() {
           prev.map((item) =>
             item.id === payment.id
               ? {
-                ...item,
-                payment_status: newStatus,
-                utr_no:
-                  newStatus === "paid"
-                    ? payment.utr_no || "TXN" + Date.now()
-                    : "",
-                payment_date:
-                  newStatus === "paid" ? new Date().toISOString() : null,
-              }
+                  ...item,
+                  payment_status: newStatus,
+                  utr_no:
+                    newStatus === "paid"
+                      ? payment.utr_no || "TXN" + Date.now()
+                      : "",
+                  payment_date:
+                    newStatus === "paid" ? new Date().toISOString() : null,
+                }
               : item,
           ),
         );
@@ -433,12 +436,13 @@ export default function AdminAccountsPage() {
     <div className="space-y-6">
       {toast && (
         <div
-          className={`fixed top-20 right-6 z-50 px-4 py-3 rounded-lg flex items-center gap-2 shadow-lg backdrop-blur-sm text-white ${toast.type === "success"
-            ? "bg-emerald-500"
-            : toast.type === "info"
-              ? "bg-blue-500"
-              : "bg-red-500"
-            }`}
+          className={`fixed top-20 right-6 z-50 px-4 py-3 rounded-lg flex items-center gap-2 shadow-lg backdrop-blur-sm text-white ${
+            toast.type === "success"
+              ? "bg-emerald-500"
+              : toast.type === "info"
+                ? "bg-blue-500"
+                : "bg-red-500"
+          }`}
         >
           {toast.type === "success" ? (
             <CheckCircle size={18} />
@@ -560,17 +564,19 @@ export default function AdminAccountsPage() {
                 setStatusFilter(filter.value);
                 setCurrentPage(1);
               }}
-              className={`px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-all ${isActive
-                ? "bg-purple-600 text-white shadow-md"
-                : "bg-white text-gray-600 border border-gray-200 hover:border-purple-300 hover:text-purple-600"
-                }`}
+              className={`px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-all ${
+                isActive
+                  ? "bg-purple-600 text-white shadow-md"
+                  : "bg-white text-gray-600 border border-gray-200 hover:border-purple-300 hover:text-purple-600"
+              }`}
             >
               {filter.label}
               <span
-                className={`px-2 py-0.5 rounded-full text-xs ${isActive
-                  ? "bg-purple-500/30 text-white"
-                  : "bg-gray-100 text-gray-600"
-                  }`}
+                className={`px-2 py-0.5 rounded-full text-xs ${
+                  isActive
+                    ? "bg-purple-500/30 text-white"
+                    : "bg-gray-100 text-gray-600"
+                }`}
               >
                 {filter.count}
               </span>
@@ -639,7 +645,6 @@ export default function AdminAccountsPage() {
                   </th>
                 )}
 
-
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
@@ -665,19 +670,25 @@ export default function AdminAccountsPage() {
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
                         {payment.order_date
-                          ? new Date(payment.order_date).toLocaleDateString("en-GB")
+                          ? new Date(payment.order_date).toLocaleDateString(
+                              "en-GB",
+                            )
                           : "—"}
                       </td>
 
                       <td className="px-6 py-4 text-sm text-gray-600">
                         {payment.created_at
-                          ? new Date(payment.created_at).toLocaleDateString("en-GB")
+                          ? new Date(payment.created_at).toLocaleDateString(
+                              "en-GB",
+                            )
                           : "—"}
                       </td>
 
                       <td className="px-6 py-4 text-sm text-gray-500">
                         {payment.due_date
-                          ? new Date(payment.due_date).toLocaleDateString("en-GB")
+                          ? new Date(payment.due_date).toLocaleDateString(
+                              "en-GB",
+                            )
                           : "—"}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-500">
@@ -708,14 +719,18 @@ export default function AdminAccountsPage() {
 
                       <td className="px-6 py-4 text-sm text-gray-500">
                         {payment.payment_date
-                          ? new Date(payment.payment_date).toLocaleDateString("en-GB")
+                          ? new Date(payment.payment_date).toLocaleDateString(
+                              "en-GB",
+                            )
                           : "—"}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-500">
                         {payment.utr_no || "—"}
                       </td>
                       {/* ✅ Fixed: Show reject reason only if present */}
-                      {payments.some((p) => p.payment_status === "rejected") && (
+                      {payments.some(
+                        (p) => p.payment_status === "rejected",
+                      ) && (
                         <td className="px-6 py-4 text-sm text-gray-500">
                           {payment.reject_reason || "—"}
                         </td>
@@ -813,6 +828,25 @@ export default function AdminAccountsPage() {
           </div>
         )}
       </div>
+
+      {/* Commission Report Tab */}
+      {/* <div className="mt-6"> */}
+        {/* <div className="border-b border-gray-200">
+          <nav className="flex gap-1" aria-label="Tabs">
+            <button className="px-4 py-2 text-sm font-medium border-b-2 border-purple-600 text-purple-600">
+              Payment Records
+            </button>
+            <button className="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700">
+              Commission Report
+            </button>
+          </nav>
+        </div> */}
+
+        {/* Show Commission Report */}
+        {/* <div className="mt-4">
+          <CommissionReport />
+        </div> */}
+      {/* </div> */}
 
       {/* Payment Modal */}
       {showPayModal && selectedPayment && (
@@ -931,7 +965,6 @@ export default function AdminAccountsPage() {
                   )}
                 </div>
               )}
-
 
               <div className="flex gap-3 pt-2">
                 <button

@@ -72,14 +72,16 @@ export default function NotificationPage() {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       if (response.data.success) {
         console.log(response.data.data);
         setNotifications(response.data.data || []);
       } else {
-        throw new Error(response.data.message || "Failed to fetch notifications");
+        throw new Error(
+          response.data.message || "Failed to fetch notifications",
+        );
       }
     } catch (error) {
       console.error("Error fetching notifications:", error);
@@ -143,10 +145,11 @@ export default function NotificationPage() {
         user_type: formData.userType || null,
         deep_link: formData.deepLink || null,
         priority: formData.priority,
-        scheduled_at:
-          formData.scheduledDate && formData.scheduledTime
-            ? `${formData.scheduledDate} ${formData.scheduledTime}`
-            : null,
+        // scheduled_at:
+        //   formData.scheduledDate && formData.scheduledTime
+        //     ? `${formData.scheduledDate} ${formData.scheduledTime}`
+        //     : null,
+        scheduled_at: formData.scheduledDate ? formData.scheduledDate : null,
       };
 
       // Create FormData for file upload
@@ -161,6 +164,10 @@ export default function NotificationPage() {
       if (formData.image) {
         formDataToSend.append("image", formData.image);
       }
+      // Console log FormData
+      for (let [key, value] of formDataToSend.entries()) {
+        console.log(key, value);
+      }
 
       const response = await axios.post(
         `https://namami-infotech.com/Stepkaro/src/notification/create_notification.php`, // Use API_BASE constant
@@ -170,11 +177,14 @@ export default function NotificationPage() {
             Authorization: `Bearer ${token}`,
             "Content-Type": "multipart/form-data",
           },
-        }
+        },
       );
 
       // FIX 1: Access data through response.data
-      if (response.data && (response.data.success || response.data.status === "success")) {
+      if (
+        response.data &&
+        (response.data.success || response.data.status === "success")
+      ) {
         showToast("Notification sent successfully!");
         resetForm();
         setShowSendModal(false);
@@ -182,7 +192,9 @@ export default function NotificationPage() {
           fetchNotifications();
         }
       } else {
-        throw new Error(response.data?.message || "Failed to send notification");
+        throw new Error(
+          response.data?.message || "Failed to send notification",
+        );
       }
     } catch (error) {
       console.error("Error sending notification:", error);
@@ -201,7 +213,8 @@ export default function NotificationPage() {
 
   // Delete notification
   const deleteNotification = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this notification?")) return;
+    if (!window.confirm("Are you sure you want to delete this notification?"))
+      return;
 
     try {
       const response = await axios.delete(
@@ -211,14 +224,16 @@ export default function NotificationPage() {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       if (response.data.success) {
         showToast("Notification deleted successfully");
         fetchNotifications();
       } else {
-        throw new Error(response.data.message || "Failed to delete notification");
+        throw new Error(
+          response.data.message || "Failed to delete notification",
+        );
       }
     } catch (error) {
       console.error("Error deleting notification:", error);
@@ -237,14 +252,16 @@ export default function NotificationPage() {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       if (response.data.success) {
         showToast("Notification resent successfully");
         fetchNotifications();
       } else {
-        throw new Error(response.data.message || "Failed to resend notification");
+        throw new Error(
+          response.data.message || "Failed to resend notification",
+        );
       }
     } catch (error) {
       console.error("Error resending notification:", error);
@@ -297,7 +314,7 @@ export default function NotificationPage() {
   };
 
   // Filter notifications
-  const filteredNotifications = notifications.filter(notif => {
+  const filteredNotifications = notifications.filter((notif) => {
     const matchesSearch =
       notif.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       notif.body?.toLowerCase().includes(searchQuery.toLowerCase());
@@ -313,7 +330,10 @@ export default function NotificationPage() {
   // Pagination
   const totalPages = Math.ceil(filteredNotifications.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentNotifications = filteredNotifications.slice(startIndex, startIndex + itemsPerPage);
+  const currentNotifications = filteredNotifications.slice(
+    startIndex,
+    startIndex + itemsPerPage,
+  );
 
   const goToPage = (page) => {
     setCurrentPage(Math.max(1, Math.min(page, totalPages)));
@@ -346,19 +366,24 @@ export default function NotificationPage() {
       failed: { label: "Failed", color: "bg-red-100 text-red-700" },
       draft: { label: "Draft", color: "bg-gray-100 text-gray-700" },
     };
-    return badges[status] || { label: status || "Unknown", color: "bg-gray-100 text-gray-600" };
+    return (
+      badges[status] || {
+        label: status || "Unknown",
+        color: "bg-gray-100 text-gray-600",
+      }
+    );
   };
 
   // Format date
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
     const date = new Date(dateString);
-    return date.toLocaleString('en-IN', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+    return date.toLocaleString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -367,12 +392,13 @@ export default function NotificationPage() {
       {/* Toast Notification */}
       {toast && (
         <div
-          className={`fixed top-20 right-6 z-50 px-4 py-3 rounded-lg flex items-center gap-2 shadow-lg text-white ${toast.type === "success"
-            ? "bg-emerald-500"
-            : toast.type === "error"
-              ? "bg-red-500"
-              : "bg-blue-500"
-            }`}
+          className={`fixed top-20 right-6 z-50 px-4 py-3 rounded-lg flex items-center gap-2 shadow-lg text-white ${
+            toast.type === "success"
+              ? "bg-emerald-500"
+              : toast.type === "error"
+                ? "bg-red-500"
+                : "bg-blue-500"
+          }`}
         >
           {toast.type === "success" ? (
             <CheckCircle size={18} />
@@ -463,19 +489,19 @@ export default function NotificationPage() {
         <div className="bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl p-4 text-white">
           <p className="text-xs opacity-90">Sent</p>
           <p className="text-2xl font-bold">
-            {notifications.filter(n => n.status === "sent").length}
+            {notifications.filter((n) => n.status === "sent").length}
           </p>
         </div>
         <div className="bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl p-4 text-white">
           <p className="text-xs opacity-90">Scheduled</p>
           <p className="text-2xl font-bold">
-            {notifications.filter(n => n.status === "scheduled").length}
+            {notifications.filter((n) => n.status === "scheduled").length}
           </p>
         </div>
         <div className="bg-gradient-to-r from-red-500 to-rose-500 rounded-xl p-4 text-white">
           <p className="text-xs opacity-90">Failed</p>
           <p className="text-2xl font-bold">
-            {notifications.filter(n => n.status === "failed").length}
+            {notifications.filter((n) => n.status === "failed").length}
           </p>
         </div>
       </div>
@@ -502,7 +528,7 @@ export default function NotificationPage() {
                   Status
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Scheduled Time
+                  Scheduled Date
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Sent At
@@ -524,7 +550,10 @@ export default function NotificationPage() {
                 currentNotifications.map((notification) => {
                   const statusBadge = getStatusBadge(notification.status);
                   return (
-                    <tr key={notification.id} className="hover:bg-gray-50 transition-colors">
+                    <tr
+                      key={notification.id}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           {notification.image && (
@@ -557,7 +586,9 @@ export default function NotificationPage() {
                       </td>
 
                       <td className="px-6 py-4">
-                        <span className={`text-xs px-2 py-1 rounded-full ${statusBadge.color}`}>
+                        <span
+                          className={`text-xs px-2 py-1 rounded-full ${statusBadge.color}`}
+                        >
                           {statusBadge.label}
                         </span>
                       </td>
@@ -581,7 +612,7 @@ export default function NotificationPage() {
 
                       <td className="px-6 py-4">
                         <div className="text-sm text-gray-600">
-                          {formatDate(notification.scheduled_at)}
+                          {notification.scheduled_at}
                         </div>
                       </td>
 
@@ -605,7 +636,9 @@ export default function NotificationPage() {
                           </button> */}
                           {notification.status === "failed" && (
                             <button
-                              onClick={() => resendNotification(notification.id)}
+                              onClick={() =>
+                                resendNotification(notification.id)
+                              }
                               className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                               title="Resend"
                             >
@@ -647,7 +680,10 @@ export default function NotificationPage() {
               {/* <span className="text-gray-900">
                 {Math.min(endIndex, filteredNotifications.length)}
               </span>{" "} */}
-              of <span className="text-gray-900">{filteredNotifications.length}</span>{" "}
+              of{" "}
+              <span className="text-gray-900">
+                {filteredNotifications.length}
+              </span>{" "}
               notifications
             </p>
 
@@ -673,10 +709,11 @@ export default function NotificationPage() {
                   <button
                     key={pageNum}
                     onClick={() => goToPage(pageNum)}
-                    className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${currentPage === pageNum
-                      ? "bg-purple-600 text-white"
-                      : "bg-white border border-gray-200 hover:bg-gray-50 text-gray-600"
-                      }`}
+                    className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                      currentPage === pageNum
+                        ? "bg-purple-600 text-white"
+                        : "bg-white border border-gray-200 hover:bg-gray-50 text-gray-600"
+                    }`}
                   >
                     {pageNum}
                   </button>
@@ -725,7 +762,9 @@ export default function NotificationPage() {
                 <input
                   type="text"
                   value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, title: e.target.value })
+                  }
                   placeholder="Enter notification title"
                   className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   required
@@ -743,7 +782,9 @@ export default function NotificationPage() {
                 </label>
                 <textarea
                   value={formData.body}
-                  onChange={(e) => setFormData({ ...formData, body: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, body: e.target.value })
+                  }
                   placeholder="Enter notification message"
                   rows="4"
                   className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
@@ -803,7 +844,12 @@ export default function NotificationPage() {
                   </label>
                   <select
                     value={formData.targetAudience}
-                    onChange={(e) => setFormData({ ...formData, targetAudience: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        targetAudience: e.target.value,
+                      })
+                    }
                     className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     required
                   >
@@ -822,7 +868,9 @@ export default function NotificationPage() {
                     <input
                       type="text"
                       value={formData.userId}
-                      onChange={(e) => setFormData({ ...formData, userId: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, userId: e.target.value })
+                      }
                       placeholder="Enter user ID"
                       className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                       required={formData.targetAudience === "specific_user"}
@@ -872,15 +920,20 @@ export default function NotificationPage() {
                     <input
                       type="date"
                       value={formData.scheduledDate}
-                      onChange={(e) => setFormData({ ...formData, scheduledDate: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          scheduledDate: e.target.value,
+                        })
+                      }
                       className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     />
-                    <input
+                    {/* <input
                       type="time"
                       value={formData.scheduledTime}
                       onChange={(e) => setFormData({ ...formData, scheduledTime: e.target.value })}
                       className="w-32 px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    />
+                    /> */}
                   </div>
                 </div>
 
@@ -939,7 +992,9 @@ export default function NotificationPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
             <div className="border-b border-gray-200 px-6 py-4 flex justify-between items-center">
-              <h2 className="text-lg font-bold text-gray-900">Notification Details</h2>
+              <h2 className="text-lg font-bold text-gray-900">
+                Notification Details
+              </h2>
               <button
                 onClick={() => setShowDetailsModal(false)}
                 className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
@@ -958,44 +1013,70 @@ export default function NotificationPage() {
               )}
 
               <div>
-                <label className="text-xs font-medium text-gray-500 uppercase">Title</label>
-                <p className="text-gray-900 font-medium">{selectedNotification.title}</p>
+                <label className="text-xs font-medium text-gray-500 uppercase">
+                  Title
+                </label>
+                <p className="text-gray-900 font-medium">
+                  {selectedNotification.title}
+                </p>
               </div>
 
               <div>
-                <label className="text-xs font-medium text-gray-500 uppercase">Message</label>
+                <label className="text-xs font-medium text-gray-500 uppercase">
+                  Message
+                </label>
                 <p className="text-gray-700">{selectedNotification.body}</p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-medium text-gray-500 uppercase">Target</label>
-                  <p className="text-gray-900">{selectedNotification.target_audience || "All"}</p>
+                  <label className="text-xs font-medium text-gray-500 uppercase">
+                    Target
+                  </label>
+                  <p className="text-gray-900">
+                    {selectedNotification.target_audience || "All"}
+                  </p>
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-gray-500 uppercase">Status</label>
-                  <p className="text-gray-900">{selectedNotification.status || "Unknown"}</p>
+                  <label className="text-xs font-medium text-gray-500 uppercase">
+                    Status
+                  </label>
+                  <p className="text-gray-900">
+                    {selectedNotification.status || "Unknown"}
+                  </p>
                 </div>
               </div>
 
               <div>
-                <label className="text-xs font-medium text-gray-500 uppercase">Sent At</label>
-                <p className="text-gray-900">{formatDate(selectedNotification.sent_at)}</p>
+                <label className="text-xs font-medium text-gray-500 uppercase">
+                  Sent At
+                </label>
+                <p className="text-gray-900">
+                  {formatDate(selectedNotification.sent_at)}
+                </p>
               </div>
 
               <div className="bg-gray-50 rounded-lg p-4">
-                <label className="text-xs font-medium text-gray-500 uppercase block mb-2">Statistics</label>
+                <label className="text-xs font-medium text-gray-500 uppercase block mb-2">
+                  Statistics
+                </label>
                 <div className="grid grid-cols-3 gap-4 text-center">
                   <div>
-                    <p className="text-2xl font-bold text-gray-900">{selectedNotification.sent_count || 0}</p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {selectedNotification.sent_count || 0}
+                    </p>
                     <p className="text-xs text-gray-500">Sent</p>
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-emerald-600">{selectedNotification.delivered_count || 0}</p>
+                    <p className="text-2xl font-bold text-emerald-600">
+                      {selectedNotification.delivered_count || 0}
+                    </p>
                     <p className="text-xs text-gray-500">Delivered</p>
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-blue-600">{selectedNotification.read_count || 0}</p>
+                    <p className="text-2xl font-bold text-blue-600">
+                      {selectedNotification.read_count || 0}
+                    </p>
                     <p className="text-xs text-gray-500">Read</p>
                   </div>
                 </div>
