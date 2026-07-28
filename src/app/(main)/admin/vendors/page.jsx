@@ -922,7 +922,7 @@ export default function SellerPage() {
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-xl p-4 hover:border-purple-300 transition-all">
+        {/* <div className="bg-white border border-gray-200 rounded-xl p-4 hover:border-purple-300 transition-all">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-green-100 rounded-lg">
               <User size={20} className="text-green-600" />
@@ -932,7 +932,7 @@ export default function SellerPage() {
               <p className="text-xs text-gray-500">Buyers</p>
             </div>
           </div>
-        </div>
+        </div> */}
 
         <div className="bg-white border border-gray-200 rounded-xl p-4 hover:border-purple-300 transition-all">
           <div className="flex items-center gap-3">

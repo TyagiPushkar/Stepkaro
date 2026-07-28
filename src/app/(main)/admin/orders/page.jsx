@@ -18,7 +18,7 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import ViewOrderDetailsModal from "@/app/components/shared/ViewOrderDetailsModal";
 
-//pdf logic 
+//pdf logic
 function getDisplayName(item) {
   return (
     [
@@ -37,8 +37,7 @@ function getCommissionType(item) {
   const type =
     item?.commission_type || item?.product?.commission_type || "percentage";
 
-  const value =
-    item?.commission || item?.product?.commission || 0;
+  const value = item?.commission || item?.product?.commission || 0;
 
   if (type === "per_piece_rate" || type === "per pairs rate") {
     return `Per Pair Rate: RS. ${value}`;
@@ -76,13 +75,16 @@ function buildOrderPdf({ order, buyer, vendor, items }) {
   doc.setFont("helvetica", "bold");
   doc.setFontSize(16);
   doc.setTextColor(30, 41, 59); // Slate dark
-  doc.text("STEPKARO TECHNOLOGIES PRIVATE LIMITED", pageWidth / 2, y, { align: "center" });
+  doc.text("STEPKARO TECHNOLOGIES PRIVATE LIMITED", pageWidth / 2, y, {
+    align: "center",
+  });
   y += 5;
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8.5);
   doc.setTextColor(100);
-  const companyAddress = "KH NO. 680, Ground Floor, Duliya Colony, Alipur, North West Delhi - 110036";
+  const companyAddress =
+    "KH NO. 680, Ground Floor, Duliya Colony, Alipur, North West Delhi - 110036";
   doc.text(companyAddress, pageWidth / 2, y, { align: "center" });
   y += 7;
 
@@ -214,7 +216,8 @@ function buildOrderPdf({ order, buyer, vendor, items }) {
   y += 3;
 
   const productBody = (items || []).map((item, index) => {
-    const commissionOnPair = typeof getCommissionOnPair === "function" ? getCommissionOnPair(item) : 0;
+    const commissionOnPair =
+      typeof getCommissionOnPair === "function" ? getCommissionOnPair(item) : 0;
     const price = Number(item?.price || 0);
     const pairsPerCtn = Number(item?.pairs_per_ctn || 0);
     const quantity = Number(item?.quantity || 0);
@@ -222,8 +225,12 @@ function buildOrderPdf({ order, buyer, vendor, items }) {
     const settlementPerPair = price - Number(commissionOnPair || 0);
     const settlementAmount = pairsPerCtn * settlementPerPair * quantity;
 
-    const displayName = typeof getDisplayName === "function" ? getDisplayName(item) : (item?.name || "—");
-    const commissionType = typeof getCommissionType === "function" ? getCommissionType(item) : "—";
+    const displayName =
+      typeof getDisplayName === "function"
+        ? getDisplayName(item)
+        : item?.name || "—";
+    const commissionType =
+      typeof getCommissionType === "function" ? getCommissionType(item) : "—";
 
     return [
       String(index + 1),
@@ -231,7 +238,7 @@ function buildOrderPdf({ order, buyer, vendor, items }) {
       String(quantity),
       String(pairsPerCtn),
       String(price),
-      String(item?.total_price ?? (price * pairsPerCtn * quantity)),
+      String(item?.total_price ?? price * pairsPerCtn * quantity),
       commissionType,
       String(commissionOnPair ?? 0),
       String(settlementPerPair.toFixed(2)),
@@ -277,16 +284,16 @@ function buildOrderPdf({ order, buyer, vendor, items }) {
     },
     // Total printable area width = 190mm
     columnStyles: {
-      0: { cellWidth: 8, halign: "center" },   // S.No
-      1: { cellWidth: 42 },                   // Display Name
-      2: { cellWidth: 12, halign: "center" },  // Qty in Ctn
-      3: { cellWidth: 12, halign: "center" },  // Pairs in Ctn
-      4: { cellWidth: 16, halign: "right" },   // Price
-      5: { cellWidth: 20, halign: "right" },   // Total Amount
-      6: { cellWidth: 20, halign: "center" },  // Comm Type
-      7: { cellWidth: 18, halign: "right" },   // Comm/Pair
-      8: { cellWidth: 20, halign: "right" },   // Settl/Pair
-      9: { cellWidth: 22, halign: "right" },   // Settl Amt
+      0: { cellWidth: 8, halign: "center" }, // S.No
+      1: { cellWidth: 42 }, // Display Name
+      2: { cellWidth: 12, halign: "center" }, // Qty in Ctn
+      3: { cellWidth: 12, halign: "center" }, // Pairs in Ctn
+      4: { cellWidth: 16, halign: "right" }, // Price
+      5: { cellWidth: 20, halign: "right" }, // Total Amount
+      6: { cellWidth: 20, halign: "center" }, // Comm Type
+      7: { cellWidth: 18, halign: "right" }, // Comm/Pair
+      8: { cellWidth: 20, halign: "right" }, // Settl/Pair
+      9: { cellWidth: 22, halign: "right" }, // Settl Amt
     },
     didDrawPage: (data) => {
       const pageCount = doc.internal.getNumberOfPages();
@@ -296,26 +303,26 @@ function buildOrderPdf({ order, buyer, vendor, items }) {
         `Page ${data.pageNumber} of ${pageCount}`,
         pageWidth / 2,
         doc.internal.pageSize.getHeight() - 6,
-        { align: "center" }
+        { align: "center" },
       );
     },
   });
 
   // --- Grand Total Footer ---
   const totalsY = doc.lastAutoTable.finalY + 8; // thoda gap badhaya
-doc.setFont("helvetica", "bold");
-doc.setFontSize(10);
-doc.setTextColor(30, 41, 59); // Dark slate blue color for professional look
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.setTextColor(30, 41, 59); // Dark slate blue color for professional look
 
-// Exact Right Side Alignment
-const rightMarginPos = pageWidth - margin;
+  // Exact Right Side Alignment
+  const rightMarginPos = pageWidth - margin;
 
-// doc.text(
-//   `Grand Total: ₹${String(order?.total_amount ?? 0)}`,
-//   rightMarginPos,
-//   totalsY,
-//   { align: "right" }
-// );
+  // doc.text(
+  //   `Grand Total: ₹${String(order?.total_amount ?? 0)}`,
+  //   rightMarginPos,
+  //   totalsY,
+  //   { align: "right" }
+  // );
 
   doc.save(`Order_${order?.id || "details"}.pdf`);
 }
@@ -349,7 +356,6 @@ export default function OrdersPage() {
 
   const [rejectReason, setRejectReason] = useState("");
   const [transportFile, setTransportFile] = useState(null);
-  
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
@@ -778,72 +784,72 @@ export default function OrdersPage() {
 
   //download the invoice api
   // ========== DOWNLOAD INVOICE FUNCTION ==========
-const handleDownloadInvoice = async (orderId) => {
-  try {
-    setLoading(true);
-    
-    const response = await fetch(
-      `https://namami-infotech.com/Stepkaro/src/order/admin_get_details_order.php?order_id=${orderId}`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token ? `Bearer ${token}` : "",
+  const handleDownloadInvoice = async (orderId) => {
+    try {
+      setLoading(true);
+
+      const response = await fetch(
+        `https://namami-infotech.com/Stepkaro/src/order/admin_get_details_order.php?order_id=${orderId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token ? `Bearer ${token}` : "",
+          },
         },
+      );
+
+      const result = await response.json();
+      // console.log("Order Details for Invoice:", result);
+
+      if (result.success && result.data) {
+        // Extract order details from API response
+        const data = result.data;
+
+        buildOrderPdf({
+          order: {
+            id: data.order.id,
+            status: data.order.status,
+            created_at: data.order.created_at,
+            payment_method: data.order.payment_method,
+            total_quantity: data.order.total_quantity,
+            total_amount: data.order.total_amount,
+          },
+
+          buyer: {
+            shop_name: data.buyer.shop_name,
+            document_number: data.buyer.document_number,
+            phone: data.buyer.phone,
+            district: data.buyer.district,
+            address: data.buyer.address,
+            delivery_location: data.buyer.delivery_location,
+            logistic_partner_name: data.buyer.logistic_partner_name,
+            logistic_contact_no: data.buyer.logistic_contact_no,
+          },
+
+          vendor: {
+            brand_name: data.vendor.brand_name,
+            business_name: data.vendor.business_name,
+            phone: data.vendor.phone,
+            address: data.vendor.address,
+            email: data.vendor.email,
+            gst_number: data.vendor.gst_number,
+          },
+
+          items: data.items,
+        });
+
+        showToast("Invoice downloaded successfully!");
+      } else {
+        showToast(result.message || "Failed to fetch order details", "error");
       }
-    );
-
-    const result = await response.json();
-    // console.log("Order Details for Invoice:", result);
-
-    if (result.success && result.data) {
-      // Extract order details from API response
-      const data = result.data;
-
-buildOrderPdf({
-  order: {
-    id: data.order.id,
-    status: data.order.status,
-    created_at: data.order.created_at,
-    payment_method: data.order.payment_method,
-    total_quantity: data.order.total_quantity,
-    total_amount: data.order.total_amount,
-  },
-
-  buyer: {
-    shop_name: data.buyer.shop_name,
-    document_number: data.buyer.document_number,
-    phone: data.buyer.phone,
-    district: data.buyer.district,
-    address: data.buyer.address,
-    delivery_location: data.buyer.delivery_location,
-    logistic_partner_name: data.buyer.logistic_partner_name,
-    logistic_contact_no: data.buyer.logistic_contact_no,
-  },
-
-  vendor: {
-    brand_name: data.vendor.brand_name,
-    business_name: data.vendor.business_name,
-    phone: data.vendor.phone,
-    address: data.vendor.address,
-    email: data.vendor.email,
-    gst_number: data.vendor.gst_number,
-  },
-
-  items: data.items,
-});
-      
-      showToast("Invoice downloaded successfully!");
-    } else {
-      showToast(result.message || "Failed to fetch order details", "error");
+    } catch (error) {
+      console.error("Error downloading invoice:", error);
+      showToast("Failed to download invoice", "error");
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error("Error downloading invoice:", error);
-    showToast("Failed to download invoice", "error");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   if (loading) {
     return (
@@ -861,10 +867,10 @@ buildOrderPdf({
       {toast && (
         <div
           className={`fixed top-20 right-6 z-50 px-4 py-3 rounded-lg flex items-center gap-2 shadow-lg text-white ${toast.type === "success"
-            ? "bg-emerald-500"
-            : toast.type === "error"
-              ? "bg-red-500"
-              : "bg-blue-500"
+              ? "bg-emerald-500"
+              : toast.type === "error"
+                ? "bg-red-500"
+                : "bg-blue-500"
             }`}
         >
           {toast.type === "success" ? (
@@ -948,18 +954,18 @@ buildOrderPdf({
               key={filter.value}
               onClick={() => handleFilterChange(filter.value)}
               className={`px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-all duration-200 border ${isActive
-                ? colorMap[filter.color] ||
-                "bg-purple-600 text-white border-purple-600"
-                : inactiveColorMap[filter.color] ||
-                "bg-white text-gray-600 border-gray-200 hover:border-purple-300"
+                  ? colorMap[filter.color] ||
+                  "bg-purple-600 text-white border-purple-600"
+                  : inactiveColorMap[filter.color] ||
+                  "bg-white text-gray-600 border-gray-200 hover:border-purple-300"
                 }`}
             >
               <Icon size={16} />
               {filter.label}
               <span
                 className={`px-2 py-0.5 rounded-full text-xs ${isActive
-                  ? "bg-white/20 text-white"
-                  : "bg-gray-100 text-gray-600"
+                    ? "bg-white/20 text-white"
+                    : "bg-gray-100 text-gray-600"
                   }`}
               >
                 {filter.count}
@@ -1088,7 +1094,9 @@ buildOrderPdf({
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm text-gray-900">
-                          {orderDate ? orderDate.split("-").reverse().join("/") : ""}
+                          {orderDate
+                            ? orderDate.split("-").reverse().join("/")
+                            : ""}
                         </div>
                         <div className="text-xs text-gray-500 mt-0.5">
                           {orderTime}
@@ -1134,8 +1142,6 @@ buildOrderPdf({
                         </span>
                       </td>
 
-
-
                       <td className="px-6 py-4">
                         <span
                           className={`text-xs px-2 py-1 rounded-full ${statusBadge.color}`}
@@ -1145,14 +1151,14 @@ buildOrderPdf({
                       </td>
 
                       <td className="px-6 py-4">
-                         {/* ✅ NEW: Download/Invoice Button */}
-    <button
-      onClick={() => handleDownloadInvoice(order.order_id)}
-      className="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
-      title="Download Invoice"
-    >
-      <Download size={16} />
-    </button>
+                        {/* ✅ NEW: Download/Invoice Button */}
+                        <button
+                          onClick={() => handleDownloadInvoice(order.order_id)}
+                          className="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                          title="Download Invoice"
+                        >
+                          <Download size={16} />
+                        </button>
                       </td>
 
                       {/* extra kaam */}
@@ -1295,8 +1301,8 @@ buildOrderPdf({
                     key={pageNum}
                     onClick={() => goToPage(pageNum)}
                     className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${currentPage === pageNum
-                      ? "bg-purple-600 text-white"
-                      : "bg-white border border-gray-200 hover:bg-gray-50 text-gray-600"
+                        ? "bg-purple-600 text-white"
+                        : "bg-white border border-gray-200 hover:bg-gray-50 text-gray-600"
                       }`}
                   >
                     {pageNum}
