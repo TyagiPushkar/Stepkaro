@@ -899,7 +899,7 @@ export default function AdminAddProductModal({ isOpen, onClose }) {
                           </div>
                           <div className="text-xs text-gray-400 flex items-center gap-3 mt-1">
                             <span className="flex items-center gap-1">
-                              <User size={11} /> {v.owner_name || "N/A"}
+                              <User size={11} /> {v.business_name || "N/A"}
                             </span>
                             <span className="flex items-center gap-1">
                               <Phone size={11} /> {v.phone || "N/A"}

@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import { useRouter } from "next/navigation";
 
 const API_BASE = "https://namami-infotech.com/Stepkaro/src";
 const BASE_URL_IMAGE = "https://namami-infotech.com/Stepkaro/";
@@ -78,30 +79,47 @@ function getImageUrl(image) {
 }
 
 function formatCurrency(amount) {
-  return `₹${Number(amount || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
+  return `RS .${Number(amount || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
 }
 
 function getDisplayName(item) {
-  return [item?.article_name, item?.variant, item?.color, item?.packing_type, item?.category_name]
-    .filter(Boolean)
-    .join(" | ") || "—";
+  return (
+    [
+      item?.article_name,
+      item?.variant,
+      item?.color,
+      item?.packing_type,
+      item?.category_name,
+    ]
+      .filter(Boolean)
+      .join(" | ") || "—"
+  );
 }
 
 function getCommissionType(item) {
   const type =
-    item?.commission_type ||
-    item?.product?.commission_type ||
-    "percentage";
-  if (type === "per_piece_rate" || type === "per pairs rate") return "Per Pair Rate";
-  if (type === "percentage") return "Percentage";
-  return type;
+    item?.commission_type || item?.product?.commission_type || "percentage";
+
+  const value =
+    item?.commission || item?.product?.commission || 0;
+
+  if (type === "per_piece_rate" || type === "per pairs rate") {
+    return `Per Pair Rate: RS. ${value}`;
+  }
+
+  if (type === "percentage") {
+    return `Percentage: ${value}%`;
+  }
+
+  return `${type}: ${value}`;
 }
 
 function getCommissionOnPair(item) {
   if (item?.commission_per_pair != null && item?.commission_per_pair !== "") {
     return Number(item.commission_per_pair);
   }
-  const type = item?.commission_type || item?.product?.commission_type || "percentage";
+  const type =
+    item?.commission_type || item?.product?.commission_type || "percentage";
   const commission = Number(item?.commission ?? item?.product?.commission ?? 0);
   const price = Number(item?.price || 0);
   if (type === "percentage") {
@@ -111,40 +129,69 @@ function getCommissionOnPair(item) {
 }
 
 function buildOrderPdf({ order, buyer, vendor, items }) {
-  const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+  // Configured for Standard A4 Portrait (210mm x 297mm)
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const pageWidth = doc.internal.pageSize.getWidth();
-  const margin = 12;
+  const margin = 10;
   let y = 12;
 
-  // Header
+  // --- Company Header ---
   doc.setFont("helvetica", "bold");
   doc.setFontSize(16);
-  doc.text("Order Details", margin, y);
-  doc.setFontSize(10);
+  doc.setTextColor(30, 41, 59); // Slate dark
+  doc.text("STEPKARO TECHNOLOGIES PRIVATE LIMITED", pageWidth / 2, y, { align: "center" });
+  y += 5;
+
   doc.setFont("helvetica", "normal");
-  doc.text(`Order #${order?.id || "—"}`, pageWidth - margin, y, { align: "right" });
+  doc.setFontSize(8.5);
+  doc.setTextColor(100);
+  const companyAddress = "KH NO. 680, Ground Floor, Duliya Colony, Alipur, North West Delhi - 110036";
+  doc.text(companyAddress, pageWidth / 2, y, { align: "center" });
+  y += 7;
+
+  // Divider Line
+  doc.setDrawColor(220);
+  doc.setLineWidth(0.5);
+  doc.line(margin, y, pageWidth - margin, y);
   y += 6;
 
+  // --- Order Metadata Header ---
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(13);
+  doc.setTextColor(0);
+  doc.text("Order Details", margin, y);
+
   doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+  doc.text(`Order #${order?.id || "—"}`, pageWidth - margin, y, {
+    align: "right",
+  });
+  y += 5;
+
+  doc.setFontSize(8);
   doc.setTextColor(80);
   const meta = [
     `Status: ${order?.status || "—"}`,
     `Date: ${order?.created_at || "—"}`,
     `Payment: ${order?.payment_method || "COD"}`,
     `Total Qty: ${order?.total_quantity || 0} ctn`,
-    `Total Amount: ${order?.total_amount}`,
+    // `Total Amount: ₹${order?.total_amount || 0}`,
   ].join("  |  ");
   doc.text(meta, margin, y);
+  y += 4; // Agli line ke liye vertical gap
+
+  // Line 2: Total Amount (bold font aur clear visibility ke saath)
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(30, 41, 59);
+  doc.text(`Total Amount: RS. ${order?.total_amount || 0}`, margin, y);
+
   doc.setTextColor(0);
+  doc.setFont("helvetica", "normal");
   y += 6;
 
-  doc.setDrawColor(200);
-  doc.line(margin, y, pageWidth - margin, y);
-  y += 6;
-
-  // Buyer (left) + Seller (right)
-  const colGap = 6;
-  const colWidth = (pageWidth - margin * 2 - colGap) / 2;
+  // --- Buyer & Seller Side-by-Side Tables ---
+  const colGap = 4;
+  const colWidth = (pageWidth - margin * 2 - colGap) / 2; // ~93mm per table
   const leftX = margin;
   const rightX = margin + colWidth + colGap;
 
@@ -168,6 +215,7 @@ function buildOrderPdf({ order, buyer, vendor, items }) {
     ["GST No.", vendor?.gst_number || "—"],
   ];
 
+  // Buyer Table
   autoTable(doc, {
     startY: y,
     margin: { left: leftX, right: pageWidth - (leftX + colWidth) },
@@ -175,21 +223,26 @@ function buildOrderPdf({ order, buyer, vendor, items }) {
     head: [["Buyer Details", ""]],
     body: buyerRows,
     theme: "grid",
-    styles: { fontSize: 8, cellPadding: 2, valign: "middle" },
+    styles: { fontSize: 7.5, cellPadding: 1.5, valign: "middle" },
     headStyles: {
       fillColor: [79, 70, 229],
       textColor: 255,
       fontStyle: "bold",
-      fontSize: 9,
+      fontSize: 8,
     },
     columnStyles: {
-      0: { fontStyle: "bold", cellWidth: colWidth * 0.38, textColor: [100, 100, 100] },
+      0: {
+        fontStyle: "bold",
+        cellWidth: colWidth * 0.38,
+        textColor: [90, 90, 90],
+      },
       1: { cellWidth: colWidth * 0.62 },
     },
   });
 
   const buyerEndY = doc.lastAutoTable.finalY;
 
+  // Seller Table
   autoTable(doc, {
     startY: y,
     margin: { left: rightX, right: margin },
@@ -197,87 +250,106 @@ function buildOrderPdf({ order, buyer, vendor, items }) {
     head: [["Seller Details", ""]],
     body: sellerRows,
     theme: "grid",
-    styles: { fontSize: 8, cellPadding: 2, valign: "middle" },
+    styles: { fontSize: 7.5, cellPadding: 1.5, valign: "middle" },
     headStyles: {
       fillColor: [15, 118, 110],
       textColor: 255,
       fontStyle: "bold",
-      fontSize: 9,
+      fontSize: 8,
     },
     columnStyles: {
-      0: { fontStyle: "bold", cellWidth: colWidth * 0.38, textColor: [100, 100, 100] },
+      0: {
+        fontStyle: "bold",
+        cellWidth: colWidth * 0.38,
+        textColor: [90, 90, 90],
+      },
       1: { cellWidth: colWidth * 0.62 },
     },
   });
 
-  y = Math.max(buyerEndY, doc.lastAutoTable.finalY) + 8;
+  y = Math.max(buyerEndY, doc.lastAutoTable.finalY) + 6;
 
-  // Product details table
+  // --- Product Details Table ---
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
+  doc.setFontSize(10);
   doc.setTextColor(0);
   doc.text(`Product Details (${items?.length || 0})`, margin, y);
   y += 3;
 
   const productBody = (items || []).map((item, index) => {
-    const commissionOnPair = getCommissionOnPair(item);
+    const commissionOnPair = typeof getCommissionOnPair === "function" ? getCommissionOnPair(item) : 0;
+    const price = Number(item?.price || 0);
+    const pairsPerCtn = Number(item?.pairs_per_ctn || 0);
+    const quantity = Number(item?.quantity || 0);
+
+    const settlementPerPair = price - Number(commissionOnPair || 0);
+    const settlementAmount = pairsPerCtn * settlementPerPair * quantity;
+
+    const displayName = typeof getDisplayName === "function" ? getDisplayName(item) : (item?.name || "—");
+    const commissionType = typeof getCommissionType === "function" ? getCommissionType(item) : "—";
+
     return [
       String(index + 1),
-      getDisplayName(item),
-      String(item?.quantity ?? 0),
-      String(item?.pairs_per_ctn ?? 0),
-      String(item?.price ?? 0),
-      String(item?.total_price ?? 0),
-      getCommissionType(item),
+      displayName,
+      String(quantity),
+      String(pairsPerCtn),
+      String(price),
+      String(item?.total_price ?? (price * pairsPerCtn * quantity)),
+      commissionType,
       String(commissionOnPair ?? 0),
-      item?.commission != null && item?.commission !== ""
-        ? getCommissionType(item) === "Percentage"
-          ? `${item.commission}%`
-          : formatCurrency(item.commission)
-        : item?.product?.commission != null
-          ? getCommissionType(item) === "Percentage"
-            ? `${item.product.commission}%`
-            : formatCurrency(item.product.commission)
-          : "—",
+      String(settlementPerPair.toFixed(2)),
+      String(settlementAmount.toFixed(2)),
     ];
   });
 
   autoTable(doc, {
     startY: y,
     margin: { left: margin, right: margin },
-    head: [[
-      "S.No",
-      "Display Name",
-      "Qty in Ctn",
-      "Pairs in Ctn",
-      "Price",
-      "Total Amount",
-      "Commission Type",
-      "Commission on Pair",
-      "Commission",
-    ]],
+    tableWidth: pageWidth - margin * 2, // Total printable width = 190mm
+    head: [
+      [
+        "S.N",
+        "Display Name",
+        "Qty\n(Ctn)",
+        "Pairs\n/Ctn",
+        "Price\n/App",
+        "Total\nAmt",
+        "Comm.\nType",
+        "Comm.\n/Pair",
+        "Settl.\n/Pair",
+        "Settl.\nAmt",
+      ],
+    ],
     body: productBody.length
       ? productBody
-      : [["—", "No products found", "—", "—", "—", "—", "—", "—", "—"]],
+      : [["—", "No products found", "—", "—", "—", "—", "—", "—", "—", "—"]],
     theme: "grid",
-    styles: { fontSize: 7.5, cellPadding: 2, valign: "middle", overflow: "linebreak" },
+    styles: {
+      fontSize: 7,
+      cellPadding: 1.5,
+      valign: "middle",
+      overflow: "linebreak",
+    },
     headStyles: {
       fillColor: [30, 41, 59],
       textColor: 255,
       fontStyle: "bold",
-      fontSize: 7.5,
+      fontSize: 7,
       halign: "center",
+      valign: "middle",
     },
+    // Total printable area width = 190mm
     columnStyles: {
-      0: { cellWidth: 12, halign: "center" },
-      1: { cellWidth: 70 },
-      2: { cellWidth: 18, halign: "center" },
-      3: { cellWidth: 20, halign: "center" },
-      4: { cellWidth: 22, halign: "right" },
-      5: { cellWidth: 24, halign: "right" },
-      6: { cellWidth: 28, halign: "center" },
-      7: { cellWidth: 28, halign: "right" },
-      8: { cellWidth: 22, halign: "center" },
+      0: { cellWidth: 8, halign: "center" },   // S.No
+      1: { cellWidth: 42 },                   // Display Name
+      2: { cellWidth: 12, halign: "center" },  // Qty in Ctn
+      3: { cellWidth: 12, halign: "center" },  // Pairs in Ctn
+      4: { cellWidth: 16, halign: "right" },   // Price
+      5: { cellWidth: 20, halign: "right" },   // Total Amount
+      6: { cellWidth: 20, halign: "center" },  // Comm Type
+      7: { cellWidth: 18, halign: "right" },   // Comm/Pair
+      8: { cellWidth: 20, halign: "right" },   // Settl/Pair
+      9: { cellWidth: 22, halign: "right" },   // Settl Amt
     },
     didDrawPage: (data) => {
       const pageCount = doc.internal.getNumberOfPages();
@@ -287,22 +359,26 @@ function buildOrderPdf({ order, buyer, vendor, items }) {
         `Page ${data.pageNumber} of ${pageCount}`,
         pageWidth / 2,
         doc.internal.pageSize.getHeight() - 6,
-        { align: "center" },
+        { align: "center" }
       );
     },
   });
 
-  // Totals footer
-  const totalsY = doc.lastAutoTable.finalY + 6;
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(9);
-  doc.setTextColor(0);
-  doc.text(
-    `Grand Total: ${String(order?.total_amount ?? 0)}   |   Total Cartons: ${order?.total_quantity || 0}`,
-    pageWidth - margin,
-    totalsY,
-    { align: "right" },
-  );
+  // --- Grand Total Footer ---
+  const totalsY = doc.lastAutoTable.finalY + 8; // thoda gap badhaya
+doc.setFont("helvetica", "bold");
+doc.setFontSize(10);
+doc.setTextColor(30, 41, 59); // Dark slate blue color for professional look
+
+// Exact Right Side Alignment
+const rightMarginPos = pageWidth - margin;
+
+// doc.text(
+//   `Grand Total: ₹${String(order?.total_amount ?? 0)}`,
+//   rightMarginPos,
+//   totalsY,
+//   { align: "right" }
+// );
 
   doc.save(`Order_${order?.id || "details"}.pdf`);
 }
@@ -352,6 +428,7 @@ export default function ViewOrderDetailsModal({
   const [orderData, setOrderData] = useState(null);
   const [expandedItems, setExpandedItems] = useState({});
   const [downloading, setDownloading] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     if (!isOpen || !orderId) {
@@ -600,7 +677,13 @@ export default function ViewOrderDetailsModal({
 
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-bold text-slate-800 truncate uppercase">
-                          {[item?.article_name, item?.variant, item?.color, item?.packing_type, item?.category_name]
+                          {[
+                            item?.article_name,
+                            item?.variant,
+                            item?.color,
+                            item?.packing_type,
+                            item?.category_name,
+                          ]
                             .filter(Boolean)
                             .join(" | ")}
                         </p>
@@ -627,7 +710,7 @@ export default function ViewOrderDetailsModal({
                           </span>
                           <span className="text-slate-300">|</span>
                           <span className="text-emerald-600 font-bold">
-                            Sum: {formatCurrency(item.total_price)}
+                            Total: {formatCurrency(item.total_price)}
                           </span>
                         </div>
                       </div>
@@ -659,25 +742,19 @@ export default function ViewOrderDetailsModal({
                           </span>
                         </div> */}
                         <div>
-                          <span className="text-slate-400">
-                            Selling Price:
-                          </span>{" "}
+                          <span className="text-slate-400">Selling Price:</span>{" "}
                           <span className="font-bold text-emerald-600 block">
                             {formatCurrency(item?.price)}
                           </span>
                         </div>
                         <div>
-                          <span className="text-slate-400">
-                            Color:
-                          </span>{" "}
+                          <span className="text-slate-400">Color:</span>{" "}
                           <span className="font-semibold text-slate-700 block">
                             {item?.color || "—"}
                           </span>
                         </div>
                         <div>
-                          <span className="text-slate-400">
-                            pairs er Ctn:
-                          </span>{" "}
+                          <span className="text-slate-400">pairs er Ctn:</span>{" "}
                           <span className="font-bold text-indigo-600 block">
                             {item?.pairs_per_ctn || 0}
                           </span>
@@ -700,60 +777,93 @@ export default function ViewOrderDetailsModal({
 
           {/* Customer & Vendor Directory Matrices */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <SectionCard title="Buyer Details" icon={User}>
-              <div className="space-y-1.5">
-                <InfoRow icon={User} label="Shop Name" value={buyer?.shop_name} />
-                <InfoRow icon={User} label="Aadhar No." value={buyer?.document_number} />
-                <InfoRow icon={Phone} label="Phone No." value={buyer?.phone} />
-                <InfoRow icon={User} label="District" value={buyer?.district} />
-                <InfoRow
-                  icon={MapPin}
-                  label="Address"
-                  value={buyer?.address}
-                />
-                <InfoRow icon={User} label="Delivery Location" value={buyer?.delivery_location} />
-                <InfoRow icon={User} label="Transport Name" value={buyer?.logistic_partner_name} />
-                <InfoRow icon={User} label="Transport Phone No." value={buyer?.logistic_contact_no} />
-                {/* <InfoRow icon={User} label="Name ID" value={buyer?.name} /> */}
-                {/* <InfoRow icon={User} label="Name ID" value={buyer?.name} /> */}
-                {/* <InfoRow icon={Mail} label="Secure Mail" value={buyer?.email} /> */}
-              </div>
-            </SectionCard>
-
-            <SectionCard title="Vendor Details" icon={Building2}>
-              <div className="space-y-1.5">
-                <InfoRow
-                  icon={Building2}
-                  label="Brand Name"
-                  value={vendor?.brand_name}
-                />
-                <InfoRow
-                  icon={Building2}
-                  label="Business Name"
-                  value={vendor?.business_name}
-                />
-                <InfoRow
-                  icon={Phone}
-                  label="Phone No."
-                  value={vendor?.phone}
-                />
-                <InfoRow
-                  icon={LocateIcon}
-                  label="Address"
-                  value={vendor?.address}
-                />
-                <InfoRow
-                  icon={Mail}
-                  label="Email"
-                  value={vendor?.email}
-                />
-                <InfoRow
-                  icon={Mail}
-                  label="Gst NO."
-                  value={vendor?.gst_number}
-                />
-              </div>
-            </SectionCard>
+            <div
+              onClick={() => router.push(`/admin/users/${buyer?.id}`)}
+              className="cursor-pointer"
+            >
+              <SectionCard title="Buyer Details" icon={User}>
+                <div className="space-y-1.5">
+                  <InfoRow
+                    icon={User}
+                    label="Shop Name"
+                    value={buyer?.shop_name}
+                  />
+                  <InfoRow
+                    icon={User}
+                    label="Aadhar No."
+                    value={buyer?.document_number}
+                  />
+                  <InfoRow
+                    icon={Phone}
+                    label="Phone No."
+                    value={buyer?.phone}
+                  />
+                  <InfoRow
+                    icon={User}
+                    label="District"
+                    value={buyer?.district}
+                  />
+                  <InfoRow
+                    icon={MapPin}
+                    label="Address"
+                    value={buyer?.address}
+                  />
+                  <InfoRow
+                    icon={User}
+                    label="Delivery Location"
+                    value={buyer?.delivery_location}
+                  />
+                  <InfoRow
+                    icon={User}
+                    label="Transport Name"
+                    value={buyer?.logistic_partner_name}
+                  />
+                  <InfoRow
+                    icon={User}
+                    label="Transport Phone No."
+                    value={buyer?.logistic_contact_no}
+                  />
+                  {/* <InfoRow icon={User} label="Name ID" value={buyer?.name} /> */}
+                  {/* <InfoRow icon={User} label="Name ID" value={buyer?.name} /> */}
+                  {/* <InfoRow icon={Mail} label="Secure Mail" value={buyer?.email} /> */}
+                </div>
+              </SectionCard>
+            </div>
+            <div
+              onClick={() => router.push(`/admin/vendors/${vendor?.id}`)}
+              className="cursor-pointer"
+            >
+              <SectionCard title="Vendor Details" icon={Building2}>
+                <div className="space-y-1.5">
+                  <InfoRow
+                    icon={Building2}
+                    label="Brand Name"
+                    value={vendor?.brand_name}
+                  />
+                  <InfoRow
+                    icon={Building2}
+                    label="Business Name"
+                    value={vendor?.business_name}
+                  />
+                  <InfoRow
+                    icon={Phone}
+                    label="Phone No."
+                    value={vendor?.phone}
+                  />
+                  <InfoRow
+                    icon={LocateIcon}
+                    label="Address"
+                    value={vendor?.address}
+                  />
+                  <InfoRow icon={Mail} label="Email" value={vendor?.email} />
+                  <InfoRow
+                    icon={Mail}
+                    label="Gst NO."
+                    value={vendor?.gst_number}
+                  />
+                </div>
+              </SectionCard>
+            </div>
           </div>
 
           {/* Lower Financial & Payment Receipt Split Section */}
@@ -835,7 +945,7 @@ export default function ViewOrderDetailsModal({
 
         {/* Global Action Footer */}
         <div className="shrink-0 px-4 py-2.5 bg-white border-t border-slate-200/60 flex justify-end gap-2">
-          {/* <button
+          <button
             onClick={handleDownloadPdf}
             disabled={downloading}
             className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold transition-all bg-indigo-600 hover:bg-indigo-700 text-white border border-indigo-700 disabled:opacity-60"
@@ -846,7 +956,7 @@ export default function ViewOrderDetailsModal({
               <Download size={13} />
             )}
             {downloading ? "Preparing PDF..." : "Download PDF"}
-          </button> */}
+          </button>
           <button
             onClick={onClose}
             className="px-4 py-1.5 rounded-lg text-xs font-bold transition-all bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200"

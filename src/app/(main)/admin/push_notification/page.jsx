@@ -473,7 +473,7 @@ export default function NotificationPage() {
           <option value="sent">Sent</option>
           <option value="scheduled">Scheduled</option>
           <option value="failed">Failed</option>
-          <option value="draft">Draft</option>
+          {/* <option value="draft">Draft</option> */}
           <option value="all">All Users</option>
           <option value="vendors">Vendors</option>
           <option value="customers">Buyer</option>

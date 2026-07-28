@@ -32,7 +32,7 @@ export default function Qrbankpage() {
   const [error, setError] = useState(null);
   const [toast, setToast] = useState(null);
 
-  const [selectedFilter, setSelectedFilter] = useState("all");
+  const [selectedFilter, setSelectedFilter] = useState("pending");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -83,20 +83,20 @@ export default function Qrbankpage() {
   // Dynamic filter tab calculation based on live data
   const filters = useMemo(() => {
     return [
-      {
-        label: "All Orders",
-        value: "all",
-        count: orders.length,
-        icon: Package,
-        color: "purple",
-      },
       // {
-      //   label: "Pending Orders",
-      //   value: "pending",
-      //   count: orders.filter((o) => o.status === "pending").length,
-      //   icon: Loader2,
-      //   color: "orange",
+      //   label: "All Orders",
+      //   value: "all",
+      //   count: orders.length,
+      //   icon: Package,
+      //   color: "purple",
       // },
+      {
+        label: "Pending Orders",
+        value: "pending",
+        count: orders.filter((o) => o.status === "pending").length,
+        icon: Loader2,
+        color: "orange",
+      },
       // {
       //   label: "Payment Verified",
       //   value: "accepted",
@@ -104,13 +104,13 @@ export default function Qrbankpage() {
       //   icon: CheckCircle,
       //   color: "green",
       // },
-      // {
-      //   label: "Payment Rejected",
-      //   value: "rejected",
-      //   count: orders.filter((o) => o.payment_status === "Rejected").length,
-      //   icon: XCircle,
-      //   color: "red",
-      // },
+      {
+        label: "Rejected",
+        value: "rejected",
+        count: orders.filter((o) => o.status === "rejected").length,
+        icon: XCircle,
+        color: "red",
+      },
     ];
   }, [orders]);
 
@@ -590,6 +590,16 @@ export default function Qrbankpage() {
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
+                {selectedFilter === "rejected" && (
+                  <>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Reject Reason
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Rejected By
+                    </th>
+                  </>
+                )}
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
@@ -717,6 +727,23 @@ export default function Qrbankpage() {
                         </span>
                       </td>
 
+                      {/* extra kaam */}
+                      {selectedFilter === "rejected" && (
+                        <>
+                          <td className="px-6 py-4">
+                            <div className="max-w-xs text-sm text-gray-700 whitespace-pre-wrap break-words">
+                              {order.reject_reason || order.rejectReason || "-"}
+                            </div>
+                          </td>
+
+                          <td className="px-6 py-4">
+                            <div className="text-sm text-gray-700">
+                              {order.reject_by || order.rejected_by || "-"}
+                            </div>
+                          </td>
+                        </>
+                      )}
+
                       <td className="px-6 py-4">
                         <div className="flex gap-2">
                           {order.status === "pending" ? (
@@ -810,6 +837,7 @@ export default function Qrbankpage() {
                 disabled={currentPage === 1}
                 className="px-3 py-1.5 text-sm bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
               >
+
                 <ChevronLeft size={16} />
                 Previous
               </button>

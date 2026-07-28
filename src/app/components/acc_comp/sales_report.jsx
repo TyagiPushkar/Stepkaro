@@ -35,6 +35,11 @@ export default function SalesReport({
   const [endDate, setEndDate] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const tableRef = useRef(null);
+  const [statusFilter, setStatusFilter] = useState("all");
+
+  const statusOptions = useMemo(() => {
+    return [...new Set(orders.map((o) => o.status).filter(Boolean))];
+  }, [orders]);
 
   // Filter orders
   const filteredOrders = useMemo(() => {
@@ -64,8 +69,11 @@ export default function SalesReport({
           order.display_name?.toLowerCase().includes(q),
       );
     }
+    if (statusFilter !== "all") {
+      list = list.filter((order) => order.status === statusFilter);
+    }
     return list;
-  }, [orders, searchQuery, startDate, endDate]);
+  }, [orders, searchQuery, startDate, endDate, statusFilter]);
 
   // Calculate summary
   const summary = useMemo(() => {
@@ -110,6 +118,7 @@ export default function SalesReport({
     setStartDate("");
     setEndDate("");
     setSearchQuery("");
+    setStatusFilter("all");
     setCurrentPage(1);
   };
 
@@ -239,7 +248,7 @@ export default function SalesReport({
 
   // Check if filters are active
   const isFilterActive = () => {
-    return startDate || endDate || searchQuery;
+    return startDate || endDate || searchQuery || statusFilter !== "all";
   };
 
   if (loading) {
@@ -317,6 +326,24 @@ export default function SalesReport({
         </div>
 
         <div className="flex flex-wrap gap-2">
+          <div className="w-full md:w-48">
+            <select
+              value={statusFilter}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
+            >
+              <option value="all">All Status</option>
+
+              {statusOptions.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </select>
+          </div>
           {/* Filter Toggle Button */}
           <button
             onClick={() => setShowFilters(!showFilters)}
