@@ -99,8 +99,10 @@ function DetailCard({ icon: Icon, label, value, accent = "violet" }) {
 
 function StatCard({ label, value, sub, color }) {
   const colors = {
-    emerald: "from-emerald-500/10 to-emerald-600/5 border-emerald-200 text-emerald-700",
-    purple: "from-purple-500/10 to-purple-600/5 border-purple-200 text-purple-700",
+    emerald:
+      "from-emerald-500/10 to-emerald-600/5 border-emerald-200 text-emerald-700",
+    purple:
+      "from-purple-500/10 to-purple-600/5 border-purple-200 text-purple-700",
     blue: "from-blue-500/10 to-blue-600/5 border-blue-200 text-blue-700",
     amber: "from-amber-500/10 to-amber-600/5 border-amber-200 text-amber-700",
   };
@@ -142,7 +144,6 @@ function VariantsTable({ variants }) {
               </th>
               <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
                 Color
-
               </th>
               <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
                 MRP
@@ -168,33 +169,36 @@ function VariantsTable({ variants }) {
             {variants.map((v) => {
               const variantImg = normalizeImageUrl(v.image);
               const discount =
-                v.price && v.selling_price && Number(v.price) > Number(v.selling_price)
+                v.price &&
+                v.selling_price &&
+                Number(v.price) > Number(v.selling_price)
                   ? Math.round(
-                    ((Number(v.price) - Number(v.selling_price)) /
-                      Number(v.price)) *
-                    100,
-                  )
+                      ((Number(v.price) - Number(v.selling_price)) /
+                        Number(v.price)) *
+                        100,
+                    )
                   : null;
 
               return (
-                <tr key={v.id} className="hover:bg-blue-50/40 transition-colors">
+                <tr
+                  key={v.id}
+                  className="hover:bg-blue-50/40 transition-colors"
+                >
                   <td className="px-4 py-3">
-                    <div className="w-10 h-10 rounded-lg border border-slate-200 overflow-hidden bg-slate-50">
-                      {variantImg ? (
+                    <div className="group relative w-10 h-10 rounded-lg overflow-hidden cursor-zoom-in">
+                      <img
+                        src={variantImg}
+                        alt={v.variant_size || "Variant"}
+                        className="w-full h-full object-cover"
+                      />
+
+                      <div className="hidden group-hover:block fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[99999] pointer-events-none">
                         <img
                           src={variantImg}
-                          alt={v.variant_size || "Variant"}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.target.src =
-                              "https://placehold.co/80x80/f1f5f9/94a3b8?text=Img";
-                          }}
+                          alt="Variant"
+                          className="w-[700px] max-h-[85vh] object-contain drop-shadow-2xl rounded-xl"
                         />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Package size={14} className="text-slate-300" />
-                        </div>
-                      )}
+                      </div>
                     </div>
                   </td>
                   <td className="px-4 py-3 font-medium text-slate-800">
@@ -315,7 +319,9 @@ export default function ViewProduct({
           <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
             <Package size={32} className="text-red-400" />
           </div>
-          <h2 className="text-lg font-bold text-slate-800">Product Not Found</h2>
+          <h2 className="text-lg font-bold text-slate-800">
+            Product Not Found
+          </h2>
           <p className="text-sm text-slate-500 mt-2">
             {error || "Product details are not available."}
           </p>
@@ -339,8 +345,8 @@ export default function ViewProduct({
   const discountPercent =
     p.price && p.selling_price && Number(p.price) > Number(p.selling_price)
       ? Math.round(
-        ((Number(p.price) - Number(p.selling_price)) / Number(p.price)) * 100,
-      )
+          ((Number(p.price) - Number(p.selling_price)) / Number(p.price)) * 100,
+        )
       : null;
 
   const commissionDisplay =
@@ -394,7 +400,7 @@ export default function ViewProduct({
           <div className="grid lg:grid-cols-5 gap-5">
             {/* Left — Image & pricing */}
             <div className="lg:col-span-2 space-y-4">
-              <div className="rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-sm">
+              {/* <div className="rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-sm">
                 <img
                   src={imageUrl}
                   alt={p.article_name}
@@ -404,6 +410,23 @@ export default function ViewProduct({
                       "https://placehold.co/600x600/f8fafc/94a3b8?text=No+Image";
                   }}
                 />
+              </div> */}
+              <div className="group relative">
+                <div className="rounded-2xl overflow-hidden">
+                  <img
+                    src={imageUrl}
+                    alt={p.article_name}
+                    className="w-full aspect-square object-cover cursor-zoom-in"
+                  />
+                </div>
+
+                <div className="hidden group-hover:block fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[99999] pointer-events-none">
+                  <img
+                    src={imageUrl}
+                    alt={p.article_name}
+                    className="w-[700px] max-h-[85vh] object-contain drop-shadow-2xl rounded-xl"
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -436,7 +459,8 @@ export default function ViewProduct({
                     {discountPercent}% OFF
                   </span>
                   <span className="text-xs text-red-400 ml-2">
-                    Save {formatPrice(Number(p.price) - Number(p.selling_price))}
+                    Save{" "}
+                    {formatPrice(Number(p.price) - Number(p.selling_price))}
                   </span>
                 </div>
               )}
@@ -472,12 +496,10 @@ export default function ViewProduct({
                   Display Name
                 </p>
                 <p className="text-sm font-medium text-gray-900 cursor-pointer hover:text-purple-600 transition-colors uppercase">
-                  {p.article_name} | {p.variant} |{" "}
-                  {p.color} | {p.packing_type} |{" "}
-                  {p.category_name}
+                  {p.article_name} | {p.variant} | {p.color} | {p.packing_type}{" "}
+                  | {p.category_name}
                 </p>
               </div>
-
 
               {/* Vendor */}
               {showVendor && (
@@ -489,6 +511,12 @@ export default function ViewProduct({
                     </h3>
                   </div>
                   <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <DetailCard
+                      icon={Building2}
+                      label="Brand Name"
+                      value={p.brand_name}
+                      accent="violet"
+                    />
                     <DetailCard
                       icon={Building2}
                       label="Business"
@@ -513,14 +541,14 @@ export default function ViewProduct({
                       value={p.email}
                       accent="blue"
                     />
-                    <div className="sm:col-span-2">
-                      <DetailCard
-                        icon={Tag}
-                        label="GST Number"
-                        value={p.gst_number}
-                        accent="amber"
-                      />
-                    </div>
+                    {/* <div className="sm:col-span-2"> */}
+                    <DetailCard
+                      icon={Tag}
+                      label="GST Number"
+                      value={p.gst_number}
+                      accent="amber"
+                    />
+                    {/* </div> */}
                   </div>
                 </div>
               )}
@@ -534,16 +562,8 @@ export default function ViewProduct({
                   </h3>
                 </div>
                 <div className="p-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  <DetailCard
-                    icon={Palette}
-                    label="size"
-                    value={p.variant}
-                  />
-                  <DetailCard
-                    icon={Palette}
-                    label="Color"
-                    value={p.color}
-                  />
+                  <DetailCard icon={Palette} label="size" value={p.variant} />
+                  <DetailCard icon={Palette} label="Color" value={p.color} />
                   <DetailCard
                     icon={Package}
                     label="Packing Type"
@@ -553,6 +573,11 @@ export default function ViewProduct({
                     icon={Scale}
                     label="Pairs / CTN"
                     value={p.pairs_per_ctn}
+                  />
+                  <DetailCard
+                    icon={Palette}
+                    label="Category"
+                    value={p.category_name}
                   />
                   <DetailCard
                     icon={Layers}
