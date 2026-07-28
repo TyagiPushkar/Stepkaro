@@ -139,20 +139,33 @@ const VariantsDetailTable = ({
                 </div>
               </td>
               <td className="px-3 py-2 text-gray-900 uppercase">
-                {product.article_name} | {variant.variant_size} |{" "}
-                {variant.color} | {variant.packing_type} |{" "}
-                {product.category_name}
+                <div className="flex flex-col gap-1">
+                  <span className="text-sm font-medium">
+                    {product.article_name} | {variant.variant_size} |{" "}
+                    {variant.color} | {variant.packing_type} |{" "}
+                    {product.category_name}
+                  </span>
+
+                  <span className="inline-flex w-fit items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-gray-700 normal-case">
+                    Pairs/CTN: {variant.pairs_per_ctn || "—"}
+                  </span>
+                </div>
               </td>
 
               {/* SELLING PRICE */}
               <td className="px-3 py-2 font-medium text-emerald-600">
-                <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                <div
+                  className="flex items-center gap-2"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   {editingVariantId === variant.id ? (
                     <div className="flex items-center gap-1">
                       <input
                         type="number"
                         value={editVariantSellingPrice}
-                        onChange={(e) => setEditVariantSellingPrice(e.target.value)}
+                        onChange={(e) =>
+                          setEditVariantSellingPrice(e.target.value)
+                        }
                         onClick={(e) => e.stopPropagation()}
                         className="w-24 border rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                         autoFocus
@@ -191,7 +204,9 @@ const VariantsDetailTable = ({
                         onClick={(e) => {
                           e.stopPropagation();
                           setEditingVariantId(variant.id);
-                          setEditVariantSellingPrice(variant.selling_price || "");
+                          setEditVariantSellingPrice(
+                            variant.selling_price || "",
+                          );
                           setEditVariantStock(variant.stock || "");
                         }}
                       >
@@ -208,10 +223,10 @@ const VariantsDetailTable = ({
                   <span className="text-sm font-semibold text-purple-600">
                     {product.commission_type === "percentage"
                       ? `₹${(
-                        (Number(variant.selling_price) *
-                          Number(product.commission)) /
-                        100
-                      ).toFixed(2)}`
+                          (Number(variant.selling_price) *
+                            Number(product.commission)) /
+                          100
+                        ).toFixed(2)}`
                       : `₹${Number(product.commission || 0).toFixed(2)}`}
                   </span>
                 </div>
@@ -219,7 +234,10 @@ const VariantsDetailTable = ({
 
               {/* STOCK */}
               <td className="px-3 py-2 text-gray-900">
-                <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                <div
+                  className="flex items-center gap-2"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   {editingVariantId === variant.id ? (
                     <div className="flex items-center gap-1">
                       <input
@@ -263,7 +281,9 @@ const VariantsDetailTable = ({
                         onClick={(e) => {
                           e.stopPropagation();
                           setEditingVariantId(variant.id);
-                          setEditVariantSellingPrice(variant.selling_price || "");
+                          setEditVariantSellingPrice(
+                            variant.selling_price || "",
+                          );
                           setEditVariantStock(variant.stock || "");
                         }}
                       >
@@ -284,13 +304,15 @@ const VariantsDetailTable = ({
                     e.stopPropagation();
                     onToggleVariantStatus(productId, variant.id);
                   }}
-                  className={`relative w-10 h-5 rounded-full transition-colors cursor-pointer flex-shrink-0 disabled:opacity-60 ${variant.status === "active" ? "bg-green-500" : "bg-red-500"
-                    }`}
+                  className={`relative w-10 h-5 rounded-full transition-colors cursor-pointer flex-shrink-0 disabled:opacity-60 ${
+                    variant.status === "active" ? "bg-green-500" : "bg-red-500"
+                  }`}
                   aria-label="Toggle variant status"
                 >
                   <div
-                    className={`absolute w-4 h-4 bg-white rounded-full top-0.5 transition-all duration-300 shadow-sm ${variant.status === "active" ? "left-5" : "left-0.5"
-                      }`}
+                    className={`absolute w-4 h-4 bg-white rounded-full top-0.5 transition-all duration-300 shadow-sm ${
+                      variant.status === "active" ? "left-5" : "left-0.5"
+                    }`}
                   />
                 </button>
               </td>
@@ -542,11 +564,11 @@ export default function ProductsPage() {
             prev.map((product) =>
               product.id === productId
                 ? {
-                  ...product,
-                  status: action,
-                  commission: commissionValue || product.commission,
-                  commission_type: commissionType || product.commission_type,
-                }
+                    ...product,
+                    status: action,
+                    commission: commissionValue || product.commission,
+                    commission_type: commissionType || product.commission_type,
+                  }
                 : product,
             ),
           );
@@ -630,11 +652,11 @@ export default function ProductsPage() {
         prev.map((p) =>
           p.id === productId
             ? {
-              ...p,
-              variants: p.variants.map((v) =>
-                v.id === variantId ? { ...v, status: newStatus } : v,
-              ),
-            }
+                ...p,
+                variants: p.variants.map((v) =>
+                  v.id === variantId ? { ...v, status: newStatus } : v,
+                ),
+              }
             : p,
         ),
       );
@@ -668,11 +690,11 @@ export default function ProductsPage() {
           prev.map((p) =>
             p.id === productId
               ? {
-                ...p,
-                variants: p.variants.map((v) =>
-                  v.id === variantId ? { ...v, status: variant.status } : v,
-                ),
-              }
+                  ...p,
+                  variants: p.variants.map((v) =>
+                    v.id === variantId ? { ...v, status: variant.status } : v,
+                  ),
+                }
               : p,
           ),
         );
@@ -762,11 +784,11 @@ export default function ProductsPage() {
         prev.map((p) =>
           p.id === productId
             ? {
-              ...p,
-              selling_price: updatedData.selling_price || p.selling_price,
-              stock_quantity: updatedData.stock_quantity || p.stock_quantity,
-              commission: updatedData.commission || p.commission,
-            }
+                ...p,
+                selling_price: updatedData.selling_price || p.selling_price,
+                stock_quantity: updatedData.stock_quantity || p.stock_quantity,
+                commission: updatedData.commission || p.commission,
+              }
             : p,
         ),
       );
@@ -854,7 +876,9 @@ export default function ProductsPage() {
         id: variantId,
         variant_size: variant.variant_size || "",
         color: variant.color || "",
-        selling_price: priceChanged ? editVariantSellingPrice : variant.selling_price,
+        selling_price: priceChanged
+          ? editVariantSellingPrice
+          : variant.selling_price,
         stock: stockChanged ? editVariantStock : variant.stock,
         status: variant.status || "active",
         packing_type: variant.packing_type || "",
@@ -866,17 +890,17 @@ export default function ProductsPage() {
         prev.map((p) =>
           p.id === productId
             ? {
-              ...p,
-              variants: p.variants.map((v) =>
-                v.id === variantId
-                  ? {
-                    ...v,
-                    selling_price: updatedVariant.selling_price,
-                    stock: updatedVariant.stock,
-                  }
-                  : v,
-              ),
-            }
+                ...p,
+                variants: p.variants.map((v) =>
+                  v.id === variantId
+                    ? {
+                        ...v,
+                        selling_price: updatedVariant.selling_price,
+                        stock: updatedVariant.stock,
+                      }
+                    : v,
+                ),
+              }
             : p,
         ),
       );
@@ -887,13 +911,25 @@ export default function ProductsPage() {
 
         // PHP API requires multi_variants array/keys
         formData.append("multi_variants[0][id]", updatedVariant.id);
-        formData.append("multi_variants[0][variant_size]", updatedVariant.variant_size);
+        formData.append(
+          "multi_variants[0][variant_size]",
+          updatedVariant.variant_size,
+        );
         formData.append("multi_variants[0][color]", updatedVariant.color);
-        formData.append("multi_variants[0][selling_price]", updatedVariant.selling_price);
+        formData.append(
+          "multi_variants[0][selling_price]",
+          updatedVariant.selling_price,
+        );
         formData.append("multi_variants[0][stock]", updatedVariant.stock);
         formData.append("multi_variants[0][status]", updatedVariant.status);
-        formData.append("multi_variants[0][packing_type]", updatedVariant.packing_type);
-        formData.append("multi_variants[0][pairs_per_ctn]", updatedVariant.pairs_per_ctn);
+        formData.append(
+          "multi_variants[0][packing_type]",
+          updatedVariant.packing_type,
+        );
+        formData.append(
+          "multi_variants[0][pairs_per_ctn]",
+          updatedVariant.pairs_per_ctn,
+        );
 
         const response = await api.post(
           `${API_BASE}/product/admin_update_product_details.php`,
@@ -1164,16 +1200,16 @@ export default function ProductsPage() {
             "", // Gender empty
             "", // Article Name empty
             v.variant_size || v.size || "", // Variant Size
-            v.color || "",                  // Variant Color
-            v.pairs_per_ctn || "",          // Variant Pair Per Ctn
-            v.packing_type || "",           // Variant Packing Type
-            v.price || 0,                   // Variant MRP
-            v.selling_price || 0,           // Variant Selling Price
-            p.commission_type || "",        // Inherit Parent Commission Type
-            p.commission || "",             // Inherit Parent Commission
-            p.commission_per_pair || "",    // Inherit Parent Commission Per Pair
+            v.color || "", // Variant Color
+            v.pairs_per_ctn || "", // Variant Pair Per Ctn
+            v.packing_type || "", // Variant Packing Type
+            v.price || 0, // Variant MRP
+            v.selling_price || 0, // Variant Selling Price
+            p.commission_type || "", // Inherit Parent Commission Type
+            p.commission || "", // Inherit Parent Commission
+            p.commission_per_pair || "", // Inherit Parent Commission Per Pair
             v.stock || v.stock_quantity || 0, // Variant Stock
-            v.status || p.status || "",     // Variant Status
+            v.status || p.status || "", // Variant Status
             "", // Sole / Material empty
             "", // Upper Material empty
             "", // Origin empty
@@ -1192,11 +1228,13 @@ export default function ProductsPage() {
     // Build CSV string
     const csvContent = [
       headers.map(formatCSVCell).join(","),
-      ...rows.map((row) => row.map(formatCSVCell).join(","))
+      ...rows.map((row) => row.map(formatCSVCell).join(",")),
     ].join("\n");
 
     // UTF-8 BOM (\uFEFF) for proper Excel formatting
-    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+    const blob = new Blob(["\uFEFF" + csvContent], {
+      type: "text/csv;charset=utf-8;",
+    });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
@@ -1248,12 +1286,13 @@ export default function ProductsPage() {
       {/* Toast Notification */}
       {toast && (
         <div
-          className={`fixed top-20 right-6 z-50 px-4 py-3 rounded-lg flex items-center gap-2 shadow-lg text-white ${toast.type === "success"
-            ? "bg-emerald-500"
-            : toast.type === "error"
-              ? "bg-red-500"
-              : "bg-blue-500"
-            }`}
+          className={`fixed top-20 right-6 z-50 px-4 py-3 rounded-lg flex items-center gap-2 shadow-lg text-white ${
+            toast.type === "success"
+              ? "bg-emerald-500"
+              : toast.type === "error"
+                ? "bg-red-500"
+                : "bg-blue-500"
+          }`}
         >
           {toast.type === "success" ? (
             <CheckCircle size={18} />
@@ -1344,20 +1383,22 @@ export default function ProductsPage() {
             <button
               key={filter.value}
               onClick={() => handleFilterChange(filter.value)}
-              className={`px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-all duration-200 whitespace-nowrap border ${isActive
-                ? colorMap[filter.color] ||
-                "bg-purple-600 text-white border-purple-600"
-                : inactiveColorMap[filter.color] ||
-                "bg-white text-gray-600 border-gray-200 hover:border-purple-300"
-                }`}
+              className={`px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-all duration-200 whitespace-nowrap border ${
+                isActive
+                  ? colorMap[filter.color] ||
+                    "bg-purple-600 text-white border-purple-600"
+                  : inactiveColorMap[filter.color] ||
+                    "bg-white text-gray-600 border-gray-200 hover:border-purple-300"
+              }`}
             >
               <Icon size={16} />
               {filter.label}
               <span
-                className={`px-2 py-0.5 rounded-full text-xs ${isActive
-                  ? "bg-white/20 text-white"
-                  : "bg-gray-100 text-gray-600"
-                  }`}
+                className={`px-2 py-0.5 rounded-full text-xs ${
+                  isActive
+                    ? "bg-white/20 text-white"
+                    : "bg-gray-100 text-gray-600"
+                }`}
               >
                 {filter.count}
               </span>
@@ -1534,6 +1575,12 @@ export default function ProductsPage() {
                                 {product.color} | {product.packing_type} |{" "}
                                 {product.category_name}
                               </p>
+                              <span className="text-xs text-gray-500">
+                                Pairs/CTN:{" "}
+                                <span className="font-medium text-gray-700">
+                                  {product.pairs_per_ctn || "—"}
+                                </span>
+                              </span>
                               {/* <p className="text-xs text-gray-500 mt-0.5">
                                 {product.category_name}
                               </p>
@@ -1628,7 +1675,9 @@ export default function ProductsPage() {
                                 <input
                                   type="number"
                                   value={editProductCommission}
-                                  onChange={(e) => setEditProductCommission(e.target.value)}
+                                  onChange={(e) =>
+                                    setEditProductCommission(e.target.value)
+                                  }
                                   className="w-20 px-2 py-1 border border-violet-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-violet-500"
                                   autoFocus
                                   min="0"
@@ -1671,10 +1720,10 @@ export default function ProductsPage() {
                             <span className="text-sm font-semibold text-purple-600">
                               {product.commission_type === "percentage"
                                 ? `₹${(
-                                  (Number(product.selling_price) *
-                                    Number(product.commission)) /
-                                  100
-                                ).toFixed(2)}`
+                                    (Number(product.selling_price) *
+                                      Number(product.commission)) /
+                                    100
+                                  ).toFixed(2)}`
                                 : `₹${Number(product.commission || 0).toFixed(2)}`}
                             </span>
 
@@ -1700,10 +1749,11 @@ export default function ProductsPage() {
                               onClick={(e) =>
                                 toggleVariantsPanel(e, product.id)
                               }
-                              className={`text-sm font-semibold cursor-pointer hover:underline ${isVariantsExpanded
-                                ? "text-blue-800"
-                                : "text-blue-600"
-                                }`}
+                              className={`text-sm font-semibold cursor-pointer hover:underline ${
+                                isVariantsExpanded
+                                  ? "text-blue-800"
+                                  : "text-blue-600"
+                              }`}
                             >
                               {variantCount}{" "}
                               {variantCount === 1 ? "Variant" : "Variants"}
@@ -1807,17 +1857,19 @@ export default function ProductsPage() {
                           ) : (
                             <button
                               onClick={() => toggleStatus(product.id)}
-                              className={`relative w-10 h-5 rounded-full transition-colors cursor-pointer flex-shrink-0 ${product.status === "active"
-                                ? "bg-green-500"
-                                : "bg-red-500"
-                                }`}
+                              className={`relative w-10 h-5 rounded-full transition-colors cursor-pointer flex-shrink-0 ${
+                                product.status === "active"
+                                  ? "bg-green-500"
+                                  : "bg-red-500"
+                              }`}
                               aria-label={`Toggle product status`}
                             >
                               <div
-                                className={`absolute w-4 h-4 bg-white rounded-full top-0.5 transition-all duration-300 shadow-sm ${product.status === "active"
-                                  ? "left-5"
-                                  : "left-0.5"
-                                  }`}
+                                className={`absolute w-4 h-4 bg-white rounded-full top-0.5 transition-all duration-300 shadow-sm ${
+                                  product.status === "active"
+                                    ? "left-5"
+                                    : "left-0.5"
+                                }`}
                               />
                             </button>
                           )}
@@ -1871,8 +1923,12 @@ export default function ProductsPage() {
                                 togglingVariantId={togglingVariantId}
                                 editingVariantId={editingVariantId}
                                 setEditingVariantId={setEditingVariantId}
-                                editVariantSellingPrice={editVariantSellingPrice}
-                                setEditVariantSellingPrice={setEditVariantSellingPrice}
+                                editVariantSellingPrice={
+                                  editVariantSellingPrice
+                                }
+                                setEditVariantSellingPrice={
+                                  setEditVariantSellingPrice
+                                }
                                 editVariantStock={editVariantStock}
                                 setEditVariantStock={setEditVariantStock}
                                 onSaveVariantEdit={saveVariantEdit}
@@ -1988,10 +2044,11 @@ export default function ProductsPage() {
                             type="button"
                             data-variants-toggle
                             onClick={(e) => toggleVariantsPanel(e, product.id)}
-                            className={`ml-1 text-sm font-semibold cursor-pointer hover:underline ${isVariantsExpanded
-                              ? "text-blue-800"
-                              : "text-blue-600"
-                              }`}
+                            className={`ml-1 text-sm font-semibold cursor-pointer hover:underline ${
+                              isVariantsExpanded
+                                ? "text-blue-800"
+                                : "text-blue-600"
+                            }`}
                           >
                             {variantCount}
                           </button>
@@ -2028,17 +2085,19 @@ export default function ProductsPage() {
                         ) : (
                           <button
                             onClick={() => toggleStatus(product.id)}
-                            className={`relative w-10 h-5 rounded-full transition-colors cursor-pointer ml-1 ${product.status === "active"
-                              ? "bg-green-500"
-                              : "bg-red-500"
-                              }`}
+                            className={`relative w-10 h-5 rounded-full transition-colors cursor-pointer ml-1 ${
+                              product.status === "active"
+                                ? "bg-green-500"
+                                : "bg-red-500"
+                            }`}
                             aria-label={`Toggle product status`}
                           >
                             <div
-                              className={`absolute w-4 h-4 bg-white rounded-full top-0.5 transition-all duration-300 shadow-sm ${product.status === "active"
-                                ? "left-5"
-                                : "left-0.5"
-                                }`}
+                              className={`absolute w-4 h-4 bg-white rounded-full top-0.5 transition-all duration-300 shadow-sm ${
+                                product.status === "active"
+                                  ? "left-5"
+                                  : "left-0.5"
+                              }`}
                             />
                           </button>
                         )}
@@ -2065,10 +2124,10 @@ export default function ProductsPage() {
                           togglingVariantId={togglingVariantId}
                           editingVariantId={editingVariantId}
                           setEditingVariantId={setEditingVariantId}
-                        // sellingPrice={sellingPrice}
-                        // setSellingPrice={setSellingPrice}
-                        // stockQuantity={stockQuantity}
-                        // setStockQuantity={setStockQuantity}
+                          // sellingPrice={sellingPrice}
+                          // setSellingPrice={setSellingPrice}
+                          // stockQuantity={stockQuantity}
+                          // setStockQuantity={setStockQuantity}
                         />
                       </div>
                     )}
@@ -2132,10 +2191,11 @@ export default function ProductsPage() {
               <button
                 key={page}
                 onClick={() => goToPage(page)}
-                className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${currentPage === page
-                  ? "bg-purple-600 text-white"
-                  : "bg-white border border-gray-200 hover:bg-gray-50 text-gray-600"
-                  }`}
+                className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                  currentPage === page
+                    ? "bg-purple-600 text-white"
+                    : "bg-white border border-gray-200 hover:bg-gray-50 text-gray-600"
+                }`}
               >
                 {page}
               </button>

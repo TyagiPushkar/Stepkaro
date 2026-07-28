@@ -223,6 +223,7 @@ export default function ProductDetailPage() {
 
   const [vendorInfo, setVendorInfo] = useState({
     business_name: "",
+    brand_name: "",
     owner_name: "",
     phone: "",
     gst_number: "",
@@ -369,6 +370,7 @@ export default function ProductDetailPage() {
 
         setVendorInfo({
           business_name: product.business_name || "",
+          brand_name: product.brand_name || "",
           owner_name: product.owner_name || "",
           phone: product.phone || "",
           gst_number: product.gst_number || "",
@@ -674,7 +676,7 @@ export default function ProductDetailPage() {
                   <Store size={12} />
                   Vendor
                 </div>
-                <p className="font-medium text-gray-900 text-sm">{vendorInfo.business_name || "—"}</p>
+                <p className="font-medium text-gray-900 text-sm">{vendorInfo.brand_name || "—"}</p>
                 <p className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-2">
                   <span className="inline-flex items-center gap-0.5"><User size={9} />{vendorInfo.owner_name || "N/A"}</span>
                   <span className="inline-flex items-center gap-0.5"><Phone size={9} />{vendorInfo.phone || "N/A"}</span>

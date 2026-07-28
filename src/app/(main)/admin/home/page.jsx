@@ -125,13 +125,7 @@ export default function HomePage() {
   // STATS FROM API
   // =========================
   const stats = [
-    {
-      title: "Total Revenue",
-      value: `₹${dashboard?.totalRevenue || 0}`,
-      icon: TrendingUp,
-      bgColor: "bg-blue-100",
-      iconColor: "text-blue-600",
-    },
+   
     {
       title: "New Orders",
       value: dashboard?.newOrders || 0,
@@ -218,6 +212,13 @@ export default function HomePage() {
       icon: CreditCard,
       bgColor: "bg-orange-100",
       iconColor: "text-orange-600",
+    },
+    {
+      title: "Total Revenue",
+      value: `₹${dashboard?.totalRevenue || 0}`,
+      icon: TrendingUp,
+      bgColor: "bg-blue-100",
+      iconColor: "text-blue-600",
     },
   ];
 

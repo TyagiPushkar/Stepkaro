@@ -5,8 +5,8 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  Truck,
   Download,
+  Truck,
   Search,
   Eye,
   ChevronLeft,
@@ -14,7 +14,311 @@ import {
   Loader2,
 } from "lucide-react";
 import axios from "axios";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 import ViewOrderDetailsModal from "@/app/components/shared/ViewOrderDetailsModal";
+
+//pdf logic 
+function getDisplayName(item) {
+  return (
+    [
+      item?.article_name,
+      item?.variant,
+      item?.color,
+      item?.packing_type,
+      item?.category_name,
+    ]
+      .filter(Boolean)
+      .join(" | ") || "—"
+  );
+}
+
+function getCommissionType(item) {
+  const type =
+    item?.commission_type || item?.product?.commission_type || "percentage";
+
+  const value =
+    item?.commission || item?.product?.commission || 0;
+
+  if (type === "per_piece_rate" || type === "per pairs rate") {
+    return `Per Pair Rate: RS. ${value}`;
+  }
+
+  if (type === "percentage") {
+    return `Percentage: ${value}%`;
+  }
+
+  return `${type}: ${value}`;
+}
+
+function getCommissionOnPair(item) {
+  if (item?.commission_per_pair != null && item?.commission_per_pair !== "") {
+    return Number(item.commission_per_pair);
+  }
+  const type =
+    item?.commission_type || item?.product?.commission_type || "percentage";
+  const commission = Number(item?.commission ?? item?.product?.commission ?? 0);
+  const price = Number(item?.price || 0);
+  if (type === "percentage") {
+    return (price * commission) / 100;
+  }
+  return commission;
+}
+
+function buildOrderPdf({ order, buyer, vendor, items }) {
+  // Configured for Standard A4 Portrait (210mm x 297mm)
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const margin = 10;
+  let y = 12;
+
+  // --- Company Header ---
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(16);
+  doc.setTextColor(30, 41, 59); // Slate dark
+  doc.text("STEPKARO TECHNOLOGIES PRIVATE LIMITED", pageWidth / 2, y, { align: "center" });
+  y += 5;
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8.5);
+  doc.setTextColor(100);
+  const companyAddress = "KH NO. 680, Ground Floor, Duliya Colony, Alipur, North West Delhi - 110036";
+  doc.text(companyAddress, pageWidth / 2, y, { align: "center" });
+  y += 7;
+
+  // Divider Line
+  doc.setDrawColor(220);
+  doc.setLineWidth(0.5);
+  doc.line(margin, y, pageWidth - margin, y);
+  y += 6;
+
+  // --- Order Metadata Header ---
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(13);
+  doc.setTextColor(0);
+  doc.text("Order Details", margin, y);
+
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+  doc.text(`Order #${order?.id || "—"}`, pageWidth - margin, y, {
+    align: "right",
+  });
+  y += 5;
+
+  doc.setFontSize(8);
+  doc.setTextColor(80);
+  const meta = [
+    `Status: ${order?.status || "—"}`,
+    `Date: ${order?.created_at || "—"}`,
+    `Payment: ${order?.payment_method || "COD"}`,
+    `Total Qty: ${order?.total_quantity || 0} ctn`,
+    // `Total Amount: ₹${order?.total_amount || 0}`,
+  ].join("  |  ");
+  doc.text(meta, margin, y);
+  y += 4; // Agli line ke liye vertical gap
+
+  // Line 2: Total Amount (bold font aur clear visibility ke saath)
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(30, 41, 59);
+  doc.text(`Total Amount: RS. ${order?.total_amount || 0}`, margin, y);
+
+  doc.setTextColor(0);
+  doc.setFont("helvetica", "normal");
+  y += 6;
+
+  // --- Buyer & Seller Side-by-Side Tables ---
+  const colGap = 4;
+  const colWidth = (pageWidth - margin * 2 - colGap) / 2; // ~93mm per table
+  const leftX = margin;
+  const rightX = margin + colWidth + colGap;
+
+  const buyerRows = [
+    ["Shop Name", buyer?.shop_name || "—"],
+    ["Aadhar No.", buyer?.document_number || "—"],
+    ["Phone No.", buyer?.phone || "—"],
+    ["District", buyer?.district || "—"],
+    ["Address", buyer?.address || "—"],
+    ["Delivery Location", buyer?.delivery_location || "—"],
+    ["Transport Name", buyer?.logistic_partner_name || "—"],
+    ["Transport Phone", buyer?.logistic_contact_no || "—"],
+  ];
+
+  const sellerRows = [
+    ["Brand Name", vendor?.brand_name || "—"],
+    ["Business Name", vendor?.business_name || "—"],
+    ["Phone No.", vendor?.phone || "—"],
+    ["Address", vendor?.address || "—"],
+    ["Email", vendor?.email || "—"],
+    ["GST No.", vendor?.gst_number || "—"],
+  ];
+
+  // Buyer Table
+  autoTable(doc, {
+    startY: y,
+    margin: { left: leftX, right: pageWidth - (leftX + colWidth) },
+    tableWidth: colWidth,
+    head: [["Buyer Details", ""]],
+    body: buyerRows,
+    theme: "grid",
+    styles: { fontSize: 7.5, cellPadding: 1.5, valign: "middle" },
+    headStyles: {
+      fillColor: [79, 70, 229],
+      textColor: 255,
+      fontStyle: "bold",
+      fontSize: 8,
+    },
+    columnStyles: {
+      0: {
+        fontStyle: "bold",
+        cellWidth: colWidth * 0.38,
+        textColor: [90, 90, 90],
+      },
+      1: { cellWidth: colWidth * 0.62 },
+    },
+  });
+
+  const buyerEndY = doc.lastAutoTable.finalY;
+
+  // Seller Table
+  autoTable(doc, {
+    startY: y,
+    margin: { left: rightX, right: margin },
+    tableWidth: colWidth,
+    head: [["Seller Details", ""]],
+    body: sellerRows,
+    theme: "grid",
+    styles: { fontSize: 7.5, cellPadding: 1.5, valign: "middle" },
+    headStyles: {
+      fillColor: [15, 118, 110],
+      textColor: 255,
+      fontStyle: "bold",
+      fontSize: 8,
+    },
+    columnStyles: {
+      0: {
+        fontStyle: "bold",
+        cellWidth: colWidth * 0.38,
+        textColor: [90, 90, 90],
+      },
+      1: { cellWidth: colWidth * 0.62 },
+    },
+  });
+
+  y = Math.max(buyerEndY, doc.lastAutoTable.finalY) + 6;
+
+  // --- Product Details Table ---
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.setTextColor(0);
+  doc.text(`Product Details (${items?.length || 0})`, margin, y);
+  y += 3;
+
+  const productBody = (items || []).map((item, index) => {
+    const commissionOnPair = typeof getCommissionOnPair === "function" ? getCommissionOnPair(item) : 0;
+    const price = Number(item?.price || 0);
+    const pairsPerCtn = Number(item?.pairs_per_ctn || 0);
+    const quantity = Number(item?.quantity || 0);
+
+    const settlementPerPair = price - Number(commissionOnPair || 0);
+    const settlementAmount = pairsPerCtn * settlementPerPair * quantity;
+
+    const displayName = typeof getDisplayName === "function" ? getDisplayName(item) : (item?.name || "—");
+    const commissionType = typeof getCommissionType === "function" ? getCommissionType(item) : "—";
+
+    return [
+      String(index + 1),
+      displayName,
+      String(quantity),
+      String(pairsPerCtn),
+      String(price),
+      String(item?.total_price ?? (price * pairsPerCtn * quantity)),
+      commissionType,
+      String(commissionOnPair ?? 0),
+      String(settlementPerPair.toFixed(2)),
+      String(settlementAmount.toFixed(2)),
+    ];
+  });
+
+  autoTable(doc, {
+    startY: y,
+    margin: { left: margin, right: margin },
+    tableWidth: pageWidth - margin * 2, // Total printable width = 190mm
+    head: [
+      [
+        "S.N",
+        "Display Name",
+        "Qty\n(Ctn)",
+        "Pairs\n/Ctn",
+        "Price\n/App",
+        "Total\nAmt",
+        "Comm.\nType",
+        "Comm.\n/Pair",
+        "Settl.\n/Pair",
+        "Settl.\nAmt",
+      ],
+    ],
+    body: productBody.length
+      ? productBody
+      : [["—", "No products found", "—", "—", "—", "—", "—", "—", "—", "—"]],
+    theme: "grid",
+    styles: {
+      fontSize: 7,
+      cellPadding: 1.5,
+      valign: "middle",
+      overflow: "linebreak",
+    },
+    headStyles: {
+      fillColor: [30, 41, 59],
+      textColor: 255,
+      fontStyle: "bold",
+      fontSize: 7,
+      halign: "center",
+      valign: "middle",
+    },
+    // Total printable area width = 190mm
+    columnStyles: {
+      0: { cellWidth: 8, halign: "center" },   // S.No
+      1: { cellWidth: 42 },                   // Display Name
+      2: { cellWidth: 12, halign: "center" },  // Qty in Ctn
+      3: { cellWidth: 12, halign: "center" },  // Pairs in Ctn
+      4: { cellWidth: 16, halign: "right" },   // Price
+      5: { cellWidth: 20, halign: "right" },   // Total Amount
+      6: { cellWidth: 20, halign: "center" },  // Comm Type
+      7: { cellWidth: 18, halign: "right" },   // Comm/Pair
+      8: { cellWidth: 20, halign: "right" },   // Settl/Pair
+      9: { cellWidth: 22, halign: "right" },   // Settl Amt
+    },
+    didDrawPage: (data) => {
+      const pageCount = doc.internal.getNumberOfPages();
+      doc.setFontSize(8);
+      doc.setTextColor(120);
+      doc.text(
+        `Page ${data.pageNumber} of ${pageCount}`,
+        pageWidth / 2,
+        doc.internal.pageSize.getHeight() - 6,
+        { align: "center" }
+      );
+    },
+  });
+
+  // --- Grand Total Footer ---
+  const totalsY = doc.lastAutoTable.finalY + 8; // thoda gap badhaya
+doc.setFont("helvetica", "bold");
+doc.setFontSize(10);
+doc.setTextColor(30, 41, 59); // Dark slate blue color for professional look
+
+// Exact Right Side Alignment
+const rightMarginPos = pageWidth - margin;
+
+// doc.text(
+//   `Grand Total: ₹${String(order?.total_amount ?? 0)}`,
+//   rightMarginPos,
+//   totalsY,
+//   { align: "right" }
+// );
+
+  doc.save(`Order_${order?.id || "details"}.pdf`);
+}
 
 const allowedStatuses = [
   "accepted",
@@ -45,6 +349,7 @@ export default function OrdersPage() {
 
   const [rejectReason, setRejectReason] = useState("");
   const [transportFile, setTransportFile] = useState(null);
+  
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
@@ -471,6 +776,75 @@ export default function OrdersPage() {
     setViewModalOpen(true);
   };
 
+  //download the invoice api
+  // ========== DOWNLOAD INVOICE FUNCTION ==========
+const handleDownloadInvoice = async (orderId) => {
+  try {
+    setLoading(true);
+    
+    const response = await fetch(
+      `https://namami-infotech.com/Stepkaro/src/order/admin_get_details_order.php?order_id=${orderId}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
+        },
+      }
+    );
+
+    const result = await response.json();
+    // console.log("Order Details for Invoice:", result);
+
+    if (result.success && result.data) {
+      // Extract order details from API response
+      const data = result.data;
+
+buildOrderPdf({
+  order: {
+    id: data.order.id,
+    status: data.order.status,
+    created_at: data.order.created_at,
+    payment_method: data.order.payment_method,
+    total_quantity: data.order.total_quantity,
+    total_amount: data.order.total_amount,
+  },
+
+  buyer: {
+    shop_name: data.buyer.shop_name,
+    document_number: data.buyer.document_number,
+    phone: data.buyer.phone,
+    district: data.buyer.district,
+    address: data.buyer.address,
+    delivery_location: data.buyer.delivery_location,
+    logistic_partner_name: data.buyer.logistic_partner_name,
+    logistic_contact_no: data.buyer.logistic_contact_no,
+  },
+
+  vendor: {
+    brand_name: data.vendor.brand_name,
+    business_name: data.vendor.business_name,
+    phone: data.vendor.phone,
+    address: data.vendor.address,
+    email: data.vendor.email,
+    gst_number: data.vendor.gst_number,
+  },
+
+  items: data.items,
+});
+      
+      showToast("Invoice downloaded successfully!");
+    } else {
+      showToast(result.message || "Failed to fetch order details", "error");
+    }
+  } catch (error) {
+    console.error("Error downloading invoice:", error);
+    showToast("Failed to download invoice", "error");
+  } finally {
+    setLoading(false);
+  }
+};
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -655,6 +1029,9 @@ export default function OrdersPage() {
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Invoice
+                </th>
                 {selectedFilter === "rejected" && (
                   <>
                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -765,6 +1142,17 @@ export default function OrdersPage() {
                         >
                           {statusBadge.label}
                         </span>
+                      </td>
+
+                      <td className="px-6 py-4">
+                         {/* ✅ NEW: Download/Invoice Button */}
+    <button
+      onClick={() => handleDownloadInvoice(order.order_id)}
+      className="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+      title="Download Invoice"
+    >
+      <Download size={16} />
+    </button>
                       </td>
 
                       {/* extra kaam */}

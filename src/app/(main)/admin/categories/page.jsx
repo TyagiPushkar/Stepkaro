@@ -142,6 +142,7 @@ export default function CategoriesPage() {
       const result = await response.json();
       if (result.success) {
         setShowAddModal(false);
+        setSelectedCategory(null);
         setFormData({
           name: "",
           sort_order: "",
@@ -581,7 +582,18 @@ export default function CategoriesPage() {
       </Modal>
 
       {/* Edit Category Modal */}
-      <Modal isOpen={showEditModal} onClose={() => setShowEditModal(false)} title="Edit Category">
+      <Modal isOpen={showEditModal} 
+      onClose={() => {
+        setShowEditModal(false);
+        setSelectedCategory(null);
+        setFormData({
+          name: "",
+          sort_order: "",
+          image: null,
+          imagePreview: null,
+        });
+      }}
+       title="Edit Category">
         <div className="space-y-4">
           <div>
             <label className="text-sm font-medium text-gray-700 block mb-1">

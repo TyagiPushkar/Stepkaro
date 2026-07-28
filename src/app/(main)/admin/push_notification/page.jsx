@@ -473,10 +473,10 @@ export default function NotificationPage() {
           <option value="sent">Sent</option>
           <option value="scheduled">Scheduled</option>
           <option value="failed">Failed</option>
-          <option value="draft">Draft</option>
+          {/* <option value="draft">Draft</option> */}
           <option value="all">All Users</option>
           <option value="vendors">Vendors</option>
-          <option value="customers">Customers</option>
+          <option value="customers">Buyer</option>
         </select>
       </div>
 
@@ -533,9 +533,9 @@ export default function NotificationPage() {
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Sent At
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                {/* <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
-                </th>
+                </th> */}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -576,11 +576,16 @@ export default function NotificationPage() {
 
                       <td className="px-6 py-4">
                         <span className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full">
-                          {notification.target_audience || "All"}
+                          {notification.target_audience === "customers"
+                            ? "Buyer"
+                            : notification.target_audience || "All"}
                         </span>
+
                         {notification.user_type && (
                           <span className="text-xs px-2 py-1 bg-purple-100 text-purple-600 rounded-full ml-1">
-                            {notification.user_type}
+                            {notification.user_type === "customers"
+                              ? "Buyer"
+                              : notification.user_type}
                           </span>
                         )}
                       </td>
@@ -612,7 +617,9 @@ export default function NotificationPage() {
 
                       <td className="px-6 py-4">
                         <div className="text-sm text-gray-600">
-                          {notification.scheduled_at}
+                          {notification.scheduled_at
+                            ? notification.scheduled_at
+                            : "-"}
                         </div>
                       </td>
 
@@ -622,9 +629,9 @@ export default function NotificationPage() {
                         </div>
                       </td>
 
-                      <td className="px-6 py-4">
-                        <div className="flex gap-2">
-                          {/* <button
+                      {/* <td className="px-6 py-4">
+                        <div className="flex gap-2"> */}
+                      {/* <button
                             onClick={() => {
                               setSelectedNotification(notification);
                               setShowDetailsModal(true);
@@ -634,7 +641,7 @@ export default function NotificationPage() {
                           >
                             <Eye size={16} />
                           </button> */}
-                          {notification.status === "failed" && (
+                      {/* {notification.status === "failed" && (
                             <button
                               onClick={() =>
                                 resendNotification(notification.id)
@@ -644,16 +651,16 @@ export default function NotificationPage() {
                             >
                               <RefreshCw size={16} />
                             </button>
-                          )}
-                          <button
+                          )} */}
+                      {/* <button
                             onClick={() => deleteNotification(notification.id)}
                             className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                             title="Delete"
                           >
                             <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </td>
+                          </button> */}
+                      {/* </div>
+                      </td> */}
                     </tr>
                   );
                 })

@@ -33,6 +33,7 @@ export default function CommissionReport({
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("all");
 
   // Group orders by order_id - NO SORTING, preserve original order
   const groupedOrders = useMemo(() => {
@@ -54,6 +55,8 @@ export default function CommissionReport({
           brand_name: item.brand_name,
           business_name: item.business_name,
           shop_name: item.shop_name,
+          payment_method:
+            item.payment_method || item.order?.payment_method || "COD",
           status: item.status,
           total_amount: item.total_amount,
           vendor_amount: item.vendor_amount,
@@ -105,6 +108,14 @@ export default function CommissionReport({
     return result;
   }, [orders]);
 
+  const statusOptions = useMemo(() => {
+    const statuses = [
+      ...new Set(groupedOrders.map((o) => o.status).filter(Boolean)),
+    ];
+
+    return statuses;
+  }, [groupedOrders]);
+
   // Filter orders
   const filteredOrders = useMemo(() => {
     let list = groupedOrders;
@@ -132,8 +143,11 @@ export default function CommissionReport({
           order.shop_name?.toLowerCase().includes(q),
       );
     }
+    if (statusFilter !== "all") {
+      list = list.filter((order) => order.status === statusFilter);
+    }
     return list;
-  }, [groupedOrders, searchQuery, startDate, endDate]);
+  }, [groupedOrders, searchQuery, startDate, endDate, statusFilter]);
 
   // Calculate overall totals
   const overallTotals = useMemo(() => {
@@ -171,250 +185,260 @@ export default function CommissionReport({
     setStartDate("");
     setEndDate("");
     setSearchQuery("");
+    setStatusFilter("all");
     setCurrentPage(1);
   };
 
   const isFilterActive = () => {
-    return startDate || endDate || searchQuery;
+    return startDate || endDate || searchQuery || statusFilter !== "all";
   };
 
   // Export to Excel
- // Export to Excel - With UI calculations
-const handleExportExcel = () => {
-  const headers = [
-    "S.No",
-    "Order ID",
-    "Display Name",
-    "CTN Qty",
-    "Pairs/CTN",
-    "Price/Pair",
-    "Commission Type",
-    "Commission Per pair",
-    "Settlement Per Pair",
-    "Total Commission",
-    "Net Payable",
-    "Total Amount",
-  ];
+  // Export to Excel - With UI calculations
+  const handleExportExcel = () => {
+    const headers = [
+      "S.No",
+      "Order ID",
+      "Buyer Name",
+      "Brand Name",
+      "Payment Mode",
+      "Display Name",
+      "CTN Qty",
+      "Pairs/CTN",
+      "Price/Pair",
+      "Commission Type",
+      "Commission Per Pair",
+      "Settlement Per Pair",
+      "Total Commission",
+      "Net Payable",
+      "Total Amount",
+    ];
 
-  const rows = [];
-  let serialNo = 1;
-  
-  filteredOrders.forEach((order) => {
-    order.items.forEach((item) => {
-      // Same calculations as UI
-      const qty = Number(item.quantity || 0);
-      const pairsPerCtn = Number(item.pairs_per_ctn || 0);
-      const price = Number(item.price || 0);
-      const commission = Number(item.commission || 0);
-      
-      const totalPairs = qty * pairsPerCtn;
-      const totalPrice = totalPairs * price;
-      
-      // Commission Type display
-      let commissionTypeDisplay = "";
-      if (item.commission_type === "per_piece_rate") {
-        commissionTypeDisplay = `Per Piece (${commission})`;
-      } else if (item.commission_type === "percentage") {
-        commissionTypeDisplay = `Percentage (${commission}%)`;
-      } else {
-        commissionTypeDisplay = "—";
-      }
-      
-      // Commission Per Pair (UI calculation)
-      let commissionPerPair = 0;
-      if (item.commission_type === "per_piece_rate") {
-        commissionPerPair = commission;
-      } else if (item.commission_type === "percentage") {
-        commissionPerPair = (price * commission) / 100;
-      }
-      
-      // Settlement Per Pair (UI calculation)
-      const settlementPerPair = price - commissionPerPair;
-      
-      // Total Commission (UI calculation)
-      let totalCommission = 0;
-      if (item.commission_type === "per_piece_rate") {
-        totalCommission = totalPairs * commission;
-      } else if (item.commission_type === "percentage") {
-        totalCommission = (totalPrice * commission) / 100;
-      }
-      
-      // Net Payable (UI calculation)
-      const netPayable = totalPrice - totalCommission;
-      
-      // Display Name
-      const displayName = [
-        item.article_name,
-        item.variant,
-        item.color,
-        item.packing_type,
-      ]
-        .filter(Boolean)
-        .join(" | ");
+    const rows = [];
+    let serialNo = 1;
 
-      rows.push([
-        serialNo++,
-        `#${order.order_id || ""}`,
-        displayName || "—",
-        qty,
-        pairsPerCtn,
-        price,
-        commissionTypeDisplay,
-        commissionPerPair,
-        settlementPerPair,
-        totalCommission,
-        netPayable,
-        totalPrice,
-      ]);
+    filteredOrders.forEach((order) => {
+      order.items.forEach((item) => {
+        // Same calculations as UI
+        const qty = Number(item.quantity || 0);
+        const pairsPerCtn = Number(item.pairs_per_ctn || 0);
+        const price = Number(item.price || 0);
+        const commission = Number(item.commission || 0);
+
+        const totalPairs = qty * pairsPerCtn;
+        const totalPrice = totalPairs * price;
+
+        // Commission Type display
+        let commissionTypeDisplay = "";
+        if (item.commission_type === "per_piece_rate") {
+          commissionTypeDisplay = `Per Piece (${commission})`;
+        } else if (item.commission_type === "percentage") {
+          commissionTypeDisplay = `Percentage (${commission}%)`;
+        } else {
+          commissionTypeDisplay = "—";
+        }
+
+        // Commission Per Pair (UI calculation)
+        let commissionPerPair = 0;
+        if (item.commission_type === "per_piece_rate") {
+          commissionPerPair = commission;
+        } else if (item.commission_type === "percentage") {
+          commissionPerPair = (price * commission) / 100;
+        }
+
+        // Settlement Per Pair (UI calculation)
+        const settlementPerPair = price - commissionPerPair;
+
+        // Total Commission (UI calculation)
+        let totalCommission = 0;
+        if (item.commission_type === "per_piece_rate") {
+          totalCommission = totalPairs * commission;
+        } else if (item.commission_type === "percentage") {
+          totalCommission = (totalPrice * commission) / 100;
+        }
+
+        // Net Payable (UI calculation)
+        const netPayable = totalPrice - totalCommission;
+
+        // Display Name
+        const displayName = [
+          item.article_name,
+          item.variant,
+          item.color,
+          item.packing_type,
+        ]
+          .filter(Boolean)
+          .join(" | ");
+
+        rows.push([
+          serialNo++,
+          `#${order.order_id || ""}`,
+          order.shop_name || "—",
+          order.brand_name || "—",
+          order.payment_method || "COD",
+          displayName || "—",
+          qty,
+          pairsPerCtn,
+          price,
+          commissionTypeDisplay,
+          commissionPerPair,
+          settlementPerPair,
+          totalCommission,
+          netPayable,
+          totalPrice,
+        ]);
+      });
     });
-  });
 
-  const wsData = [headers, ...rows];
-  const ws = XLSX.utils.aoa_to_sheet(wsData);
+    const wsData = [headers, ...rows];
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
 
-  // Set column widths
-  ws["!cols"] = [
-    { wch: 6 },   // S.No
-    { wch: 12 },  // Order ID
-    { wch: 45 },  // Display Name
-    { wch: 10 },  // CTN Qty
-    { wch: 12 },  // Pairs/CTN
-    { wch: 14 },  // Price/Pair
-    { wch: 20 },  // Commission Type
-    { wch: 18 },  // Commission Per pair
-    { wch: 18 },  // Settlement Per Pair
-    { wch: 18 },  // Total Commission
-    { wch: 18 },  // Net Payable
-    { wch: 18 },  // Total Amount
-  ];
+    // Set column widths
+    ws["!cols"] = [
+      { wch: 6 }, // S.No
+      { wch: 12 }, // Order ID
+      { wch: 25 }, // Buyer
+      { wch: 20 }, // Brand
+      { wch: 15 }, // Payment
+      { wch: 45 }, // Display Name
+      { wch: 10 }, // CTN
+      { wch: 10 }, // Pair/CTN
+      { wch: 12 }, // Price
+      { wch: 22 }, // Commission Type
+      { wch: 18 }, // Commission/Pair
+      { wch: 18 }, // Settlement
+      { wch: 18 }, // Total Commission
+      { wch: 18 }, // Net Payable
+      { wch: 18 }, // Total Amount
+    ];
 
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Commission Report");
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Commission Report");
 
-  // Summary Sheet
-  const summaryData = [
-    ["Commission Report Summary"],
-    [""],
-    ["Metric", "Value"],
-    ["Total Orders", overallTotals.total_orders],
-    ["Total Revenue", formatCurrency(overallTotals.total_amount)],
-    ["Total Commission", formatCurrency(overallTotals.total_commission)],
-    ["Total Payout", formatCurrency(overallTotals.total_payout)],
-    ["Total CTN", overallTotals.total_ctn],
-    ["Total Pairs", overallTotals.total_pairs],
-    ["Total Records", filteredOrders.length],
-  ];
-  const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
-  XLSX.utils.book_append_sheet(wb, wsSummary, "Summary");
+    // Summary Sheet
+    const summaryData = [
+      ["Commission Report Summary"],
+      [""],
+      ["Metric", "Value"],
+      ["Total Orders", overallTotals.total_orders],
+      ["Total Revenue", formatCurrency(overallTotals.total_amount)],
+      ["Total Commission", formatCurrency(overallTotals.total_commission)],
+      ["Total Payout", formatCurrency(overallTotals.total_payout)],
+      ["Total CTN", overallTotals.total_ctn],
+      ["Total Pairs", overallTotals.total_pairs],
+      ["Total Records", filteredOrders.length],
+    ];
+    const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+    XLSX.utils.book_append_sheet(wb, wsSummary, "Summary");
 
-  XLSX.writeFile(
-    wb,
-    `commission_report_${new Date().toISOString().split("T")[0]}.xlsx`,
-  );
-};
+    XLSX.writeFile(
+      wb,
+      `commission_report_${new Date().toISOString().split("T")[0]}.xlsx`,
+    );
+  };
 
   // Export CSV
   // Export CSV - With UI calculations
-const handleExportCSV = () => {
-  const headers = [
-    "Order ID",
-    "Display Name",
-    "CTN Qty",
-    "Pairs/CTN",
-    "Price/Pair",
-    "Commission Type",
-    "Commission Per pair",
-    "Settlement Per Pair",
-    "Total Commission",
-    "Net Payable",
-    "Total Amount",
-  ];
+  const handleExportCSV = () => {
+    const headers = [
+      "Order ID",
+      "Display Name",
+      "CTN Qty",
+      "Pairs/CTN",
+      "Price/Pair",
+      "Commission Type",
+      "Commission Per pair",
+      "Settlement Per Pair",
+      "Total Commission",
+      "Net Payable",
+      "Total Amount",
+    ];
 
-  const rows = [];
-  
-  filteredOrders.forEach((order) => {
-    order.items.forEach((item) => {
-      // Same calculations as UI
-      const qty = Number(item.quantity || 0);
-      const pairsPerCtn = Number(item.pairs_per_ctn || 0);
-      const price = Number(item.price || 0);
-      const commission = Number(item.commission || 0);
-      
-      const totalPairs = qty * pairsPerCtn;
-      const totalPrice = totalPairs * price;
-      
-      // Commission Type display
-      let commissionTypeDisplay = "";
-      if (item.commission_type === "per_piece_rate") {
-        commissionTypeDisplay = `Per Piece (${commission})`;
-      } else if (item.commission_type === "percentage") {
-        commissionTypeDisplay = `Percentage (${commission}%)`;
-      } else {
-        commissionTypeDisplay = "—";
-      }
-      
-      // Commission Per Pair (UI calculation)
-      let commissionPerPair = 0;
-      if (item.commission_type === "per_piece_rate") {
-        commissionPerPair = commission;
-      } else if (item.commission_type === "percentage") {
-        commissionPerPair = (price * commission) / 100;
-      }
-      
-      // Settlement Per Pair (UI calculation)
-      const settlementPerPair = price - commissionPerPair;
-      
-      // Total Commission (UI calculation)
-      let totalCommission = 0;
-      if (item.commission_type === "per_piece_rate") {
-        totalCommission = totalPairs * commission;
-      } else if (item.commission_type === "percentage") {
-        totalCommission = (totalPrice * commission) / 100;
-      }
-      
-      // Net Payable (UI calculation)
-      const netPayable = totalPrice - totalCommission;
-      
-      // Display Name
-      const displayName = [
-        item.article_name,
-        item.variant,
-        item.color,
-        item.packing_type,
-      ]
-        .filter(Boolean)
-        .join(" | ");
+    const rows = [];
 
-      rows.push([
-        `#${order.order_id || ""}`,
-        displayName || "—",
-        qty,
-        pairsPerCtn,
-        price,
-        commissionTypeDisplay,
-        commissionPerPair,
-        settlementPerPair,
-        totalCommission,
-        netPayable,
-        totalPrice,
-      ]);
+    filteredOrders.forEach((order) => {
+      order.items.forEach((item) => {
+        // Same calculations as UI
+        const qty = Number(item.quantity || 0);
+        const pairsPerCtn = Number(item.pairs_per_ctn || 0);
+        const price = Number(item.price || 0);
+        const commission = Number(item.commission || 0);
+
+        const totalPairs = qty * pairsPerCtn;
+        const totalPrice = totalPairs * price;
+
+        // Commission Type display
+        let commissionTypeDisplay = "";
+        if (item.commission_type === "per_piece_rate") {
+          commissionTypeDisplay = `Per Piece (${commission})`;
+        } else if (item.commission_type === "percentage") {
+          commissionTypeDisplay = `Percentage (${commission}%)`;
+        } else {
+          commissionTypeDisplay = "—";
+        }
+
+        // Commission Per Pair (UI calculation)
+        let commissionPerPair = 0;
+        if (item.commission_type === "per_piece_rate") {
+          commissionPerPair = commission;
+        } else if (item.commission_type === "percentage") {
+          commissionPerPair = (price * commission) / 100;
+        }
+
+        // Settlement Per Pair (UI calculation)
+        const settlementPerPair = price - commissionPerPair;
+
+        // Total Commission (UI calculation)
+        let totalCommission = 0;
+        if (item.commission_type === "per_piece_rate") {
+          totalCommission = totalPairs * commission;
+        } else if (item.commission_type === "percentage") {
+          totalCommission = (totalPrice * commission) / 100;
+        }
+
+        // Net Payable (UI calculation)
+        const netPayable = totalPrice - totalCommission;
+
+        // Display Name
+        const displayName = [
+          item.article_name,
+          item.variant,
+          item.color,
+          item.packing_type,
+        ]
+          .filter(Boolean)
+          .join(" | ");
+
+        rows.push([
+          `#${order.order_id || ""}`,
+          displayName || "—",
+          qty,
+          pairsPerCtn,
+          price,
+          commissionTypeDisplay,
+          commissionPerPair,
+          settlementPerPair,
+          totalCommission,
+          netPayable,
+          totalPrice,
+        ]);
+      });
     });
-  });
 
-  const csvContent = [headers, ...rows]
-    .map((row) => row.join(","))
-    .join("\n");
-    
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `commission_report_${new Date().toISOString().split("T")[0]}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-};
+    const csvContent = [headers, ...rows]
+      .map((row) => row.join(","))
+      .join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `commission_report_${new Date().toISOString().split("T")[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   // Print Report
   const handlePrint = () => {
@@ -500,6 +524,24 @@ const handleExportCSV = () => {
         </div>
 
         <div className="flex flex-wrap gap-2">
+          <div className="w-full md:w-48">
+            <select
+              value={statusFilter}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
+            >
+              <option value="all">All Status</option>
+
+              {statusOptions.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </select>
+          </div>
           <button
             onClick={() => setShowFilters(!showFilters)}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border transition-all ${
@@ -683,6 +725,15 @@ const handleExportCSV = () => {
                           S.No
                         </th>
                         <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                          Buyer Name
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                          Brand Name
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                          Payment Mode
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200">
                           Display Name
                         </th>
                         <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200">
@@ -740,6 +791,15 @@ const handleExportCSV = () => {
                               {idx + 1}
                             </td>
                             <td className="px-4 py-3 text-sm text-gray-900 border-r border-gray-100 max-w-xs truncate">
+                              {order.shop_name || "—"}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-900 border-r border-gray-100 max-w-xs truncate">
+                              {order.brand_name || "—"}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-900 border-r border-gray-100 max-w-xs truncate">
+                              {order.payment_method || "—"}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-900 border-r border-gray-100 max-w-xs truncate">
                               {displayName || "—"}
                             </td>
                             <td className="px-4 py-3 text-sm text-center text-gray-600 border-r border-gray-100">
@@ -764,7 +824,7 @@ const handleExportCSV = () => {
                             </td>
                             <td className="px-4 py-3 text-sm font-medium text-fuchsia-600 border-r border-gray-100">
                               {(() => {
-                                const qty = Number(item.quantity || 0);
+                                const qty = 1;
                                 const price = Number(item.price || 0);
                                 const commission = Number(item.commission || 0);
 
@@ -780,7 +840,7 @@ const handleExportCSV = () => {
                             </td>
                             <td className="px-4 py-3 text-sm text-gray-600 border-r border-gray-100">
                               {(() => {
-                                const qty = Number(item.quantity || 0);
+                                const qty = 1;
                                 const price = Number(item.price || 0);
                                 const commission = Number(item.commission || 0);
 
@@ -878,25 +938,48 @@ const handleExportCSV = () => {
                     </tbody>
                     <tfoot className="bg-purple-50 border-t-2 border-purple-300">
                       <tr>
+                        {/* S.No, Buyer, Brand, Payment, Display Name */}
                         <td
-                          colSpan="8"
-                          className="px-4 py-3 text-sm font-bold text-gray-700 text-right"
+                          colSpan={5}
+                          className="px-4 py-3 text-sm font-bold text-right text-gray-700"
                         >
                           Order Total:
                         </td>
+
+                        {/* CTN Qty */}
+                        <td className="px-4 py-3 text-sm font-bold text-center text-blue-600">
+                          {order.totals.total_ctn}
+                        </td>
+
+                        {/* Pairs/CTN */}
+                        <td className="px-4 py-3"></td>
+
+                        {/* Price/Pair */}
+                        <td className="px-4 py-3"></td>
+
+                        {/* Commission Type */}
+                        <td className="px-4 py-3"></td>
+
+                        {/* Commission Per Pair */}
+                        <td className="px-4 py-3"></td>
+
+                        {/* Settlement Per Pair */}
+                        <td className="px-4 py-3"></td>
+
+                        {/* Total Commission */}
                         <td className="px-4 py-3 text-sm font-bold text-emerald-600">
                           {formatCurrency(order.admin_commission)}
                         </td>
+
+                        {/* Net Payable */}
                         <td className="px-4 py-3 text-sm font-bold text-fuchsia-600">
-                          {/* {formatCurrency(order.totals.commission_amount)} */}
                           {formatCurrency(order.vendor_amount)}
                         </td>
+
+                        {/* Total Amount */}
                         <td className="px-4 py-3 text-sm font-bold text-purple-600">
                           {formatCurrency(order.total_amount)}
                         </td>
-                        {/* <td className="px-4 py-3 text-sm text-gray-500">
-                          {order.items.length} items
-                        </td> */}
                       </tr>
                     </tfoot>
                   </table>
