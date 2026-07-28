@@ -179,164 +179,242 @@ export default function CommissionReport({
   };
 
   // Export to Excel
-  const handleExportExcel = () => {
-    const headers = [
-      "S.No",
-      "Order ID",
-      "Order Date",
-      "Shop Name",
-      "Brand Name",
-      "Display Name",
-      "CTN Qty",
-      "Pairs/CTN",
-      "Total Pairs",
-      "Price/Pair",
-      "Total Amount",
-      "Commission",
-      "Net Payable",
-      "Status",
-    ];
+ // Export to Excel - With UI calculations
+const handleExportExcel = () => {
+  const headers = [
+    "S.No",
+    "Order ID",
+    "Display Name",
+    "CTN Qty",
+    "Pairs/CTN",
+    "Price/Pair",
+    "Commission Type",
+    "Commission Per pair",
+    "Settlement Per Pair",
+    "Total Commission",
+    "Net Payable",
+    "Total Amount",
+  ];
 
-    const rows = [];
-    filteredOrders.forEach((order) => {
-      order.items.forEach((item, idx) => {
-        const displayName = [
-          item.article_name,
-          item.variant,
-          item.color,
-          item.packing_type,
-        ]
-          .filter(Boolean)
-          .join(" | ");
+  const rows = [];
+  let serialNo = 1;
+  
+  filteredOrders.forEach((order) => {
+    order.items.forEach((item) => {
+      // Same calculations as UI
+      const qty = Number(item.quantity || 0);
+      const pairsPerCtn = Number(item.pairs_per_ctn || 0);
+      const price = Number(item.price || 0);
+      const commission = Number(item.commission || 0);
+      
+      const totalPairs = qty * pairsPerCtn;
+      const totalPrice = totalPairs * price;
+      
+      // Commission Type display
+      let commissionTypeDisplay = "";
+      if (item.commission_type === "per_piece_rate") {
+        commissionTypeDisplay = `Per Piece (${commission})`;
+      } else if (item.commission_type === "percentage") {
+        commissionTypeDisplay = `Percentage (${commission}%)`;
+      } else {
+        commissionTypeDisplay = "—";
+      }
+      
+      // Commission Per Pair (UI calculation)
+      let commissionPerPair = 0;
+      if (item.commission_type === "per_piece_rate") {
+        commissionPerPair = commission;
+      } else if (item.commission_type === "percentage") {
+        commissionPerPair = (price * commission) / 100;
+      }
+      
+      // Settlement Per Pair (UI calculation)
+      const settlementPerPair = price - commissionPerPair;
+      
+      // Total Commission (UI calculation)
+      let totalCommission = 0;
+      if (item.commission_type === "per_piece_rate") {
+        totalCommission = totalPairs * commission;
+      } else if (item.commission_type === "percentage") {
+        totalCommission = (totalPrice * commission) / 100;
+      }
+      
+      // Net Payable (UI calculation)
+      const netPayable = totalPrice - totalCommission;
+      
+      // Display Name
+      const displayName = [
+        item.article_name,
+        item.variant,
+        item.color,
+        item.packing_type,
+      ]
+        .filter(Boolean)
+        .join(" | ");
 
-        rows.push([
-          idx + 1,
-          order.order_id || "",
-          order.created_at
-            ? new Date(order.created_at).toLocaleDateString("en-GB")
-            : "",
-          order.shop_name || order.business_name || "",
-          order.brand_name || "",
-          displayName || "—",
-          item.quantity || 0,
-          item.pairs_per_ctn || 0,
-          parseInt(item.quantity || 0) * parseInt(item.pairs_per_ctn || 0),
-          Number(item.price || 0),
-          Number(item.total_price || 0),
-          Number(order.admin_commission || 0),
-          Number(order.vendor_amount || 0),
-          order.status || "Pending",
-        ]);
-      });
+      rows.push([
+        serialNo++,
+        `#${order.order_id || ""}`,
+        displayName || "—",
+        qty,
+        pairsPerCtn,
+        price,
+        commissionTypeDisplay,
+        commissionPerPair,
+        settlementPerPair,
+        totalCommission,
+        netPayable,
+        totalPrice,
+      ]);
     });
+  });
 
-    const wsData = [headers, ...rows];
-    const ws = XLSX.utils.aoa_to_sheet(wsData);
+  const wsData = [headers, ...rows];
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
 
-    ws["!cols"] = [
-      { wch: 6 },
-      { wch: 12 },
-      { wch: 15 },
-      { wch: 20 },
-      { wch: 20 },
-      { wch: 40 },
-      { wch: 10 },
-      { wch: 12 },
-      { wch: 12 },
-      { wch: 14 },
-      { wch: 16 },
-      { wch: 16 },
-      { wch: 16 },
-      { wch: 16 },
-    ];
+  // Set column widths
+  ws["!cols"] = [
+    { wch: 6 },   // S.No
+    { wch: 12 },  // Order ID
+    { wch: 45 },  // Display Name
+    { wch: 10 },  // CTN Qty
+    { wch: 12 },  // Pairs/CTN
+    { wch: 14 },  // Price/Pair
+    { wch: 20 },  // Commission Type
+    { wch: 18 },  // Commission Per pair
+    { wch: 18 },  // Settlement Per Pair
+    { wch: 18 },  // Total Commission
+    { wch: 18 },  // Net Payable
+    { wch: 18 },  // Total Amount
+  ];
 
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Commission Report");
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Commission Report");
 
-    const summaryData = [
-      ["Commission Report Summary"],
-      [""],
-      ["Metric", "Value"],
-      ["Total Orders", overallTotals.total_orders],
-      ["Total Revenue", overallTotals.total_amount],
-      ["Total Commission", overallTotals.total_commission],
-      ["Total Payout", overallTotals.total_payout],
-      ["Total CTN", overallTotals.total_ctn],
-      ["Total Pairs", overallTotals.total_pairs],
-      ["Total Records", filteredOrders.length],
-    ];
-    const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
-    XLSX.utils.book_append_sheet(wb, wsSummary, "Summary");
+  // Summary Sheet
+  const summaryData = [
+    ["Commission Report Summary"],
+    [""],
+    ["Metric", "Value"],
+    ["Total Orders", overallTotals.total_orders],
+    ["Total Revenue", formatCurrency(overallTotals.total_amount)],
+    ["Total Commission", formatCurrency(overallTotals.total_commission)],
+    ["Total Payout", formatCurrency(overallTotals.total_payout)],
+    ["Total CTN", overallTotals.total_ctn],
+    ["Total Pairs", overallTotals.total_pairs],
+    ["Total Records", filteredOrders.length],
+  ];
+  const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+  XLSX.utils.book_append_sheet(wb, wsSummary, "Summary");
 
-    XLSX.writeFile(
-      wb,
-      `commission_report_${new Date().toISOString().split("T")[0]}.xlsx`,
-    );
-  };
+  XLSX.writeFile(
+    wb,
+    `commission_report_${new Date().toISOString().split("T")[0]}.xlsx`,
+  );
+};
 
   // Export CSV
-  const handleExportCSV = () => {
-    const headers = [
-      "Order ID",
-      "Order Date",
-      "Shop Name",
-      "Brand Name",
-      "Display Name",
-      "CTN Qty",
-      "Pairs/CTN",
-      "Total Pairs",
-      "Price/Pair",
-      "Total Amount",
-      "Commission",
-      "Net Payable",
-      "Status",
-    ];
+  // Export CSV - With UI calculations
+const handleExportCSV = () => {
+  const headers = [
+    "Order ID",
+    "Display Name",
+    "CTN Qty",
+    "Pairs/CTN",
+    "Price/Pair",
+    "Commission Type",
+    "Commission Per pair",
+    "Settlement Per Pair",
+    "Total Commission",
+    "Net Payable",
+    "Total Amount",
+  ];
 
-    const rows = [];
-    filteredOrders.forEach((order) => {
-      order.items.forEach((item) => {
-        const displayName = [
-          item.article_name,
-          item.variant,
-          item.color,
-          item.packing_type,
-        ]
-          .filter(Boolean)
-          .join(" | ");
+  const rows = [];
+  
+  filteredOrders.forEach((order) => {
+    order.items.forEach((item) => {
+      // Same calculations as UI
+      const qty = Number(item.quantity || 0);
+      const pairsPerCtn = Number(item.pairs_per_ctn || 0);
+      const price = Number(item.price || 0);
+      const commission = Number(item.commission || 0);
+      
+      const totalPairs = qty * pairsPerCtn;
+      const totalPrice = totalPairs * price;
+      
+      // Commission Type display
+      let commissionTypeDisplay = "";
+      if (item.commission_type === "per_piece_rate") {
+        commissionTypeDisplay = `Per Piece (${commission})`;
+      } else if (item.commission_type === "percentage") {
+        commissionTypeDisplay = `Percentage (${commission}%)`;
+      } else {
+        commissionTypeDisplay = "—";
+      }
+      
+      // Commission Per Pair (UI calculation)
+      let commissionPerPair = 0;
+      if (item.commission_type === "per_piece_rate") {
+        commissionPerPair = commission;
+      } else if (item.commission_type === "percentage") {
+        commissionPerPair = (price * commission) / 100;
+      }
+      
+      // Settlement Per Pair (UI calculation)
+      const settlementPerPair = price - commissionPerPair;
+      
+      // Total Commission (UI calculation)
+      let totalCommission = 0;
+      if (item.commission_type === "per_piece_rate") {
+        totalCommission = totalPairs * commission;
+      } else if (item.commission_type === "percentage") {
+        totalCommission = (totalPrice * commission) / 100;
+      }
+      
+      // Net Payable (UI calculation)
+      const netPayable = totalPrice - totalCommission;
+      
+      // Display Name
+      const displayName = [
+        item.article_name,
+        item.variant,
+        item.color,
+        item.packing_type,
+      ]
+        .filter(Boolean)
+        .join(" | ");
 
-        rows.push([
-          order.order_id || "",
-          order.created_at
-            ? new Date(order.created_at).toLocaleDateString("en-GB")
-            : "",
-          order.shop_name || order.business_name || "",
-          order.brand_name || "",
-          displayName || "—",
-          item.quantity || 0,
-          item.pairs_per_ctn || 0,
-          parseInt(item.quantity || 0) * parseInt(item.pairs_per_ctn || 0),
-          item.price || 0,
-          item.total_price || 0,
-          order.admin_commission || 0,
-          order.vendor_amount || 0,
-          order.status || "Pending",
-        ]);
-      });
+      rows.push([
+        `#${order.order_id || ""}`,
+        displayName || "—",
+        qty,
+        pairsPerCtn,
+        price,
+        commissionTypeDisplay,
+        commissionPerPair,
+        settlementPerPair,
+        totalCommission,
+        netPayable,
+        totalPrice,
+      ]);
     });
+  });
 
-    const csvContent = [headers, ...rows]
-      .map((row) => row.join(","))
-      .join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `commission_report_${new Date().toISOString().split("T")[0]}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
+  const csvContent = [headers, ...rows]
+    .map((row) => row.join(","))
+    .join("\n");
+    
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `commission_report_${new Date().toISOString().split("T")[0]}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
 
   // Print Report
   const handlePrint = () => {
@@ -388,18 +466,18 @@ export default function CommissionReport({
           </p>
           <p className="text-xs text-gray-500">Total CTN</p>
         </div> */}
-        <div className="bg-white border border-gray-200 rounded-xl p-4 text-center hover:shadow-md transition-shadow">
+        {/* <div className="bg-white border border-gray-200 rounded-xl p-4 text-center hover:shadow-md transition-shadow">
           <p className="text-2xl font-bold text-fuchsia-600">
             {formatCurrency(overallTotals.total_commission)}
           </p>
           <p className="text-xs text-gray-500">Total Commission</p>
-        </div>
-        <div className="bg-white border border-gray-200 rounded-xl p-4 text-center hover:shadow-md transition-shadow">
+        </div> */}
+        {/* <div className="bg-white border border-gray-200 rounded-xl p-4 text-center hover:shadow-md transition-shadow">
           <p className="text-2xl font-bold text-purple-600">
             {formatCurrency(overallTotals.total_payout)}
           </p>
           <p className="text-xs text-gray-500">Total Payout</p>
-        </div>
+        </div> */}
       </div>
 
       {/* Search and Export Bar */}
@@ -445,20 +523,14 @@ export default function CommissionReport({
               <FileSpreadsheet size={18} />
               <span className="hidden sm:inline">Excel</span>
             </button>
-            <button
+            {/* <button
               onClick={handleExportCSV}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-blue-200 bg-blue-50 text-blue-600 hover:bg-blue-100 transition-all"
             >
               <FileDown size={18} />
               <span className="hidden sm:inline">CSV</span>
-            </button>
-            <button
-              onClick={handlePrint}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 transition-all"
-            >
-              <Printer size={18} />
-              <span className="hidden sm:inline">Print</span>
-            </button>
+            </button> */}
+            {/*   */}
           </div>
         </div>
       </div>
@@ -596,7 +668,7 @@ export default function CommissionReport({
                         {order.status || "Pending"}
                       </span>
                       <span className="text-sm font-bold text-purple-600">
-                        {formatCurrency(order.totals.payout_amount)}
+                        {formatCurrency(order.total_amount)}
                       </span>
                     </div>
                   </div>
@@ -619,9 +691,9 @@ export default function CommissionReport({
                         <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200">
                           Pairs/CTN
                         </th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                        {/* <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200">
                           Total Pairs
-                        </th>
+                        </th> */}
                         <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200">
                           Price/Pair
                         </th>
@@ -635,7 +707,7 @@ export default function CommissionReport({
                           Settlement Per Pair
                         </th>
                         <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200">
-                          Total Com
+                          Total Commission
                         </th>
                         <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200">
                           Net Payable
@@ -676,10 +748,10 @@ export default function CommissionReport({
                             <td className="px-4 py-3 text-sm text-center text-gray-600 border-r border-gray-100">
                               {item.pairs_per_ctn || 0}
                             </td>
-                            <td className="px-4 py-3 text-sm font-medium text-blue-600 text-center border-r border-gray-100">
+                            {/* <td className="px-4 py-3 text-sm font-medium text-blue-600 text-center border-r border-gray-100">
                               {parseInt(item.quantity || 0) *
                                 parseInt(item.pairs_per_ctn || 0)}
-                            </td>
+                            </td> */}
                             <td className="px-4 py-3 text-sm text-gray-600 border-r border-gray-100">
                               {formatCurrency(item.price)}
                             </td>
@@ -728,13 +800,63 @@ export default function CommissionReport({
                               })()}
                             </td>
                             <td className="px-4 py-3 text-sm font-semibold text-purple-600 border-r border-gray-100">
-                              {formatCurrency(order.vendor_amount)}
+                              {(() => {
+                                const qty = Number(item.quantity || 0);
+                                const pairsPerCtn = Number(
+                                  item.pairs_per_ctn || 0,
+                                );
+                                const price = Number(item.price || 0);
+                                const commission = Number(item.commission || 0);
+
+                                const totalPairs = qty * pairsPerCtn;
+
+                                const netTotalCommission =
+                                  item.commission_type === "per_piece_rate"
+                                    ? totalPairs * commission
+                                    : item.commission_type === "percentage"
+                                      ? (totalPairs * price * commission) / 100
+                                      : 0;
+
+                                return formatCurrency(netTotalCommission);
+                              })()}
                             </td>
                             <td className="px-4 py-3 text-sm font-semibold text-purple-600 border-r border-gray-100">
-                              {formatCurrency(order.vendor_amount)}
+                              {(() => {
+                                const qty = Number(item.quantity || 0);
+                                const pairsPerCtn = Number(
+                                  item.pairs_per_ctn || 0,
+                                );
+                                const price = Number(item.price || 0);
+                                const commission = Number(item.commission || 0);
+
+                                const totalPairs = qty * pairsPerCtn;
+                                const totalPrice = totalPairs * price;
+
+                                const adminCommission =
+                                  item.commission_type === "per_piece_rate"
+                                    ? totalPairs * commission
+                                    : item.commission_type === "percentage"
+                                      ? (totalPrice * commission) / 100
+                                      : 0;
+
+                                const vendorAmount =
+                                  totalPrice - adminCommission;
+
+                                return formatCurrency(vendorAmount);
+                              })()}
                             </td>
                             <td className="px-4 py-3 text-sm font-semibold text-emerald-600 border-r border-gray-100">
-                              {formatCurrency(item.total_price)}
+                              {(() => {
+                                const qty = Number(item.quantity || 0);
+                                const pairsPerCtn = Number(
+                                  item.pairs_per_ctn || 0,
+                                );
+                                const price = Number(item.price || 0);
+
+                                const totalPrice = qty * pairsPerCtn * price;
+
+                                return formatCurrency(totalPrice);
+                              })()}
                             </td>
                             {/* <td className="px-4 py-3">
                               <span
@@ -763,14 +885,14 @@ export default function CommissionReport({
                           Order Total:
                         </td>
                         <td className="px-4 py-3 text-sm font-bold text-emerald-600">
-                          {/* {formatCurrency(order.totals.total_amount)} */}
+                          {formatCurrency(order.admin_commission)}
                         </td>
                         <td className="px-4 py-3 text-sm font-bold text-fuchsia-600">
                           {/* {formatCurrency(order.totals.commission_amount)} */}
-                          {formatCurrency(order.admin_commission)}
+                          {formatCurrency(order.vendor_amount)}
                         </td>
                         <td className="px-4 py-3 text-sm font-bold text-purple-600">
-                          {formatCurrency(order.totals.payout_amount)}
+                          {formatCurrency(order.total_amount)}
                         </td>
                         {/* <td className="px-4 py-3 text-sm text-gray-500">
                           {order.items.length} items

@@ -374,7 +374,7 @@ export default function ProductsPage() {
 
         if (response.data?.success) {
           setProducts(response.data.data || []);
-          console.log(response.data.data);
+          // console.log(response.data.data);
         } else {
           showToast(
             response.data?.message || "Failed to fetch products",
@@ -1096,96 +1096,6 @@ export default function ProductsPage() {
     categoryFilter,
   ]);
 
-  // Export to CSV - Defined AFTER filteredProducts
-  // const handleExportCSV = useCallback(() => {
-  //   if (products.length === 0) {
-  //     showToast("No products to export", "error");
-  //     return;
-  //   }
-
-  //   // Use filteredProducts if available, otherwise use all products
-  //   const exportData =
-  //     filteredProducts.length > 0 ? filteredProducts : products;
-
-  //   const headers = [
-  //     "ID",
-  //     "Brand",
-  //     "Category",
-  //     "Gender",
-  //     "Article Name",
-  //     // "Display Name",
-  //     "size",
-  //     "color",
-  //     "pair Per Ctn",
-  //     "packing_type",
-  //     "MRP",
-  //     "Selling Price",
-  //     "Commission Type",
-  //     "Commission Value",
-  //     "Commission Per Pair",
-  //     "Quantity",
-  //     "Status",
-  //     "Sole",
-  //     "Upper",
-  //     // "created_at",
-  //     "Origin",
-  //     // "Owner Name",
-  //     // "Business Name",
-  //     // "Price (Original)",
-  //     // "Selling Price",
-  //     // "Commission (%)",
-  //     // "Orders",
-  //     // "Returns",
-  //     // "Revenue",
-  //     // "Stock Status",
-  //     // "Variant",
-  //     // "Color",
-  //     // "Size",
-  //     // "Material",     
-  //     // "Origin",
-  //     // "Created At",
-  //   ];
-
-  //   const rows = exportData.map((p) => [
-  //     p.id || "",
-  //     p.brand_name || "",
-  //     // `${p.article_name} | ${p.variant} | ${p.color} | ${p.packing_type} | ${p.category_name}`,
-  //     p.category_name || "",
-  //     p.gender || "",
-  //     p.article_name || "",
-  //     p.variant || "",
-  //     p.color || "",
-  //     p.pairs_per_ctn || "",
-  //     p.packing_type || "",
-  //     p.price || 0,
-  //     p.selling_price || 0,
-  //     p.commission_type || "",
-  //     p.commission || "",
-  //     p.commission_per_pair || "",
-  //     p.stock_quantity || 0,
-  //     p.status || "",
-  //     p.material || "",
-  //     p.upper_material || "",
-  //     // p.created_at || "",
-  //     p.origin || "",
-  //   ]);
-
-  //   const csvContent = [headers, ...rows]
-  //     .map((row) => row.join(","))
-  //     .join("\n");
-
-  //   const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-  //   const url = URL.createObjectURL(blob);
-  //   const link = document.createElement("a");
-  //   link.href = url;
-  //   link.download = `products_${new Date().toISOString().split("T")[0]}.csv`;
-  //   document.body.appendChild(link);
-  //   link.click();
-  //   document.body.removeChild(link);
-  //   URL.revokeObjectURL(url);
-
-  //   showToast(`Exported ${exportData.length} products successfully`);
-  // }, [products, filteredProducts, showToast]);
   const handleExportCSV = useCallback(() => {
     if (products.length === 0) {
       showToast("No products to export", "error");

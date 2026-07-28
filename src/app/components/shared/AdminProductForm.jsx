@@ -423,6 +423,7 @@ export default function AdminAddProductModal({ isOpen, onClose }) {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
+      console.log("vendor ", data.data);
       if (data.success && data.data) setVendors(data.data);
     } catch (error) {
       console.log("Vendor fetch error:", error);
@@ -490,7 +491,8 @@ export default function AdminAddProductModal({ isOpen, onClose }) {
       (v) =>
         v.business_name?.toLowerCase().includes(vendorSearch.toLowerCase()) ||
         v.owner_name?.toLowerCase().includes(vendorSearch.toLowerCase()) ||
-        v.phone?.includes(vendorSearch),
+        v.phone?.includes(vendorSearch) ||
+        v.brand_name?.toLowerCase().includes(vendorSearch.toLowerCase()),
     );
   }, [vendors, vendorSearch]);
 
@@ -852,7 +854,7 @@ export default function AdminAddProductModal({ isOpen, onClose }) {
                         form.vendor_id ? "text-gray-900" : "text-gray-400"
                       }
                     >
-                      {selectedVendor?.business_name || "Select vendor..."}
+                      {selectedVendor?.brand_name || "Select vendor..."}
                     </span>
                   </div>
                   <ChevronDown
@@ -893,7 +895,7 @@ export default function AdminAddProductModal({ isOpen, onClose }) {
                           }`}
                         >
                           <div className="font-medium flex items-center gap-2">
-                            <Store size={14} /> {v.business_name}
+                            <Store size={14} /> {v.brand_name}
                           </div>
                           <div className="text-xs text-gray-400 flex items-center gap-3 mt-1">
                             <span className="flex items-center gap-1">

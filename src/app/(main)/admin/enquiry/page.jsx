@@ -27,14 +27,25 @@ import {
   Building2,
 } from "lucide-react";
 
-const Modal = ({ isOpen, onClose, title, children, maxWidth = "max-w-4xl" }) => {
+const Modal = ({
+  isOpen,
+  onClose,
+  title,
+  children,
+  maxWidth = "max-w-4xl",
+}) => {
   if (!isOpen) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className={`bg-white rounded-xl border border-gray-200 w-full ${maxWidth} max-h-[90vh] overflow-y-auto shadow-2xl`}>
+      <div
+        className={`bg-white rounded-xl border border-gray-200 w-full ${maxWidth} max-h-[90vh] overflow-y-auto shadow-2xl`}
+      >
         <div className="flex justify-between items-center p-4 border-b border-gray-200 sticky top-0 bg-white z-10">
           <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
-          <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-600 transition-colors">
+          <button
+            onClick={onClose}
+            className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+          >
             <X size={20} />
           </button>
         </div>
@@ -63,8 +74,12 @@ export default function EnquiriesPage() {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [filteredCount, setFilteredCount] = useState(0);
+  const [statusFilter, setStatusFilter] = useState("all");
 
-  const token = typeof window !== "undefined" ? localStorage.getItem("access_token") || "" : "";
+  const token =
+    typeof window !== "undefined"
+      ? localStorage.getItem("access_token") || ""
+      : "";
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
@@ -83,13 +98,13 @@ export default function EnquiriesPage() {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       const result = await response.json();
 
       if (result.success) {
-        console.log(result.data)
+        console.log(result.data);
         setEnquiries(result.data || []);
       } else {
         setError(result.message || "Failed to fetch enquiries");
@@ -125,7 +140,7 @@ export default function EnquiriesPage() {
           e.business_name?.toLowerCase().includes(query) ||
           e.city?.toLowerCase().includes(query) ||
           e.message?.toLowerCase().includes(query) ||
-          e.article_name?.toLowerCase().includes(query)
+          e.article_name?.toLowerCase().includes(query),
       );
     }
 
@@ -156,15 +171,19 @@ export default function EnquiriesPage() {
         return createdDate <= to;
       });
     }
+    if (statusFilter !== "all") {
+      filtered = filtered.filter((e) => (e.status || "new") === statusFilter);
+    }
 
     return filtered;
-  }, [searchQuery, enquiries, fromDate, toDate]); // <- Add dependencies
+  }, [searchQuery, enquiries, fromDate, toDate, statusFilter]); // <- Add dependencies
 
   // Clear all filters
   const clearFilters = () => {
     setSearchQuery("");
     setFromDate("");
     setToDate("");
+    setStatusFilter("all");
     setCurrentPage(1);
   };
 
@@ -205,7 +224,7 @@ export default function EnquiriesPage() {
             id: enquiryId,
             status: newStatus,
           }),
-        }
+        },
       );
 
       const result = await response.json();
@@ -214,8 +233,8 @@ export default function EnquiriesPage() {
         // Update local state to immediately reflect the change
         setEnquiries((prev) =>
           prev.map((item) =>
-            item.id === enquiryId ? { ...item, status: newStatus } : item
-          )
+            item.id === enquiryId ? { ...item, status: newStatus } : item,
+          ),
         );
         showToast(`Status updated to "${newStatus}" successfully!`);
       } else {
@@ -235,7 +254,8 @@ export default function EnquiriesPage() {
       return;
     }
 
-    const exportData = filteredEnquiries.length > 0 ? filteredEnquiries : enquiries;
+    const exportData =
+      filteredEnquiries.length > 0 ? filteredEnquiries : enquiries;
 
     const headers = [
       "ID",
@@ -247,7 +267,7 @@ export default function EnquiriesPage() {
       "District",
       "Message",
       "Created At",
-      "Status"
+      "Status",
     ];
 
     const rows = exportData.map((e) => [
@@ -336,12 +356,13 @@ export default function EnquiriesPage() {
     <div className="space-y-6">
       {toast && (
         <div
-          className={`fixed top-20 right-6 z-50 px-4 py-3 rounded-lg flex items-center gap-2 shadow-lg text-white ${toast.type === "success"
-            ? "bg-emerald-500"
-            : toast.type === "error"
-              ? "bg-red-500"
-              : "bg-blue-500"
-            }`}
+          className={`fixed top-20 right-6 z-50 px-4 py-3 rounded-lg flex items-center gap-2 shadow-lg text-white ${
+            toast.type === "success"
+              ? "bg-emerald-500"
+              : toast.type === "error"
+                ? "bg-red-500"
+                : "bg-blue-500"
+          }`}
         >
           {toast.type === "success" ? (
             <CheckCircle size={18} />
@@ -363,7 +384,6 @@ export default function EnquiriesPage() {
 
         {/* Action Buttons */}
         <div className="flex flex-wrap gap-3">
-
           <div className="relative flex-1 lg:w-64">
             <Search
               className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
@@ -377,7 +397,6 @@ export default function EnquiriesPage() {
               className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
             />
           </div>
-
 
           <button
             onClick={handleExportCSV}
@@ -427,7 +446,11 @@ export default function EnquiriesPage() {
           <span className="text-gray-900">
             {Math.min(endIndex, filteredEnquiries.length)}
           </span>{" "}
-          of <span className="text-gray-900 font-medium">{filteredEnquiries.length}</span> enquiries
+          of{" "}
+          <span className="text-gray-900 font-medium">
+            {filteredEnquiries.length}
+          </span>{" "}
+          enquiries
           {(fromDate || toDate) && (
             <span className="text-xs text-purple-600 ml-2 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">
               📅 Filtered
@@ -477,6 +500,25 @@ export default function EnquiriesPage() {
                 <X size={16} />
               </button>
             )}
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-gray-500">Action:</label>
+
+            <select
+              value={statusFilter}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+            >
+              <option value="all">All</option>
+              <option value="new">New</option>
+              <option value="open">Open</option>
+              <option value="inprogress">In Progress</option>
+              <option value="resolved">Resolved</option>
+              <option value="closed">Closed</option>
+            </select>
           </div>
 
           <div className="flex items-center gap-2">
@@ -543,7 +585,9 @@ export default function EnquiriesPage() {
                     className="hover:bg-gray-50 transition-colors"
                   >
                     <td className="px-4 py-4">
-                      <span className="text-sm text-gray-500">#{enquiry.id}</span>
+                      <span className="text-sm text-gray-500">
+                        #{enquiry.id}
+                      </span>
                     </td>
 
                     <td className="px-4 py-4">
@@ -614,11 +658,11 @@ export default function EnquiriesPage() {
 
                     <td className="px-4 py-4">
                       <span className="text-sm text-gray-600 max-w-xs truncate block">
-                        {enquiry.message ? (
-                          enquiry.message.length > 30
+                        {enquiry.message
+                          ? enquiry.message.length > 30
                             ? enquiry.message.substring(0, 30) + "..."
                             : enquiry.message
-                        ) : "—"}
+                          : "—"}
                       </span>
                     </td>
 
@@ -637,11 +681,16 @@ export default function EnquiriesPage() {
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-2">
                         {updatingId === enquiry.id ? (
-                          <Loader2 size={18} className="animate-spin text-purple-600" />
+                          <Loader2
+                            size={18}
+                            className="animate-spin text-purple-600"
+                          />
                         ) : (
                           <select
                             value={enquiry.status || "new"}
-                            onChange={(e) => handleStatusUpdate(enquiry.id, e.target.value)}
+                            onChange={(e) =>
+                              handleStatusUpdate(enquiry.id, e.target.value)
+                            }
                             className="bg-white border border-gray-300 hover:border-purple-500 rounded-lg text-xs py-1.5 px-2 font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500/20 cursor-pointer transition-all"
                           >
                             <option value="new">new</option>
@@ -666,7 +715,10 @@ export default function EnquiriesPage() {
               ) : (
                 <tr>
                   <td colSpan="7" className="px-6 py-12 text-center">
-                    <MessageSquare size={48} className="text-gray-300 mx-auto mb-3" />
+                    <MessageSquare
+                      size={48}
+                      className="text-gray-300 mx-auto mb-3"
+                    />
                     <p className="text-gray-500">No enquiries found</p>
                     <p className="text-sm text-gray-400 mt-1">
                       Try adjusting your search
@@ -682,7 +734,8 @@ export default function EnquiriesPage() {
         {filteredEnquiries.length > 0 && totalPages > 1 && (
           <div className="px-6 py-4 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-4">
             <p className="text-sm text-gray-500">
-              Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredEnquiries.length)} of{" "}
+              Showing {startIndex + 1} to{" "}
+              {Math.min(startIndex + itemsPerPage, filteredEnquiries.length)} of{" "}
               {filteredEnquiries.length} enquiries
             </p>
             <div className="flex gap-2">
@@ -707,10 +760,11 @@ export default function EnquiriesPage() {
                   <button
                     key={pageNum}
                     onClick={() => goToPage(pageNum)}
-                    className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${currentPage === pageNum
-                      ? "bg-purple-600 text-white"
-                      : "bg-white border border-gray-200 hover:bg-gray-50 text-gray-600"
-                      }`}
+                    className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                      currentPage === pageNum
+                        ? "bg-purple-600 text-white"
+                        : "bg-white border border-gray-200 hover:bg-gray-50 text-gray-600"
+                    }`}
                   >
                     {pageNum}
                   </button>
@@ -742,7 +796,9 @@ export default function EnquiriesPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
                 <p className="text-xs text-gray-500">Enquiry ID</p>
-                <p className="text-sm font-medium text-gray-900">#{selectedEnquiry.id}</p>
+                <p className="text-sm font-medium text-gray-900">
+                  #{selectedEnquiry.id}
+                </p>
                 <p className="text-xs text-gray-500 mt-2">Created At</p>
                 <p className="text-sm font-medium text-gray-900">
                   {formatDate(selectedEnquiry.created_at)}
@@ -848,7 +904,9 @@ export default function EnquiriesPage() {
                       </div>
                       <div>
                         <p className="text-xs text-gray-500">Status</p>
-                        <span className={`text-xs px-2 py-1 rounded-full ${getProductStatusBadge(selectedEnquiry.product_status)}`}>
+                        <span
+                          className={`text-xs px-2 py-1 rounded-full ${getProductStatusBadge(selectedEnquiry.product_status)}`}
+                        >
                           {selectedEnquiry.product_status || "—"}
                         </span>
                       </div>
@@ -858,41 +916,55 @@ export default function EnquiriesPage() {
                       {selectedEnquiry.variant && (
                         <div>
                           <p className="text-xs text-gray-500">Variant</p>
-                          <p className="text-sm text-gray-900">{selectedEnquiry.variant}</p>
+                          <p className="text-sm text-gray-900">
+                            {selectedEnquiry.variant}
+                          </p>
                         </div>
                       )}
                       {selectedEnquiry.size && (
                         <div>
                           <p className="text-xs text-gray-500">Size</p>
-                          <p className="text-sm text-gray-900">{selectedEnquiry.size}</p>
+                          <p className="text-sm text-gray-900">
+                            {selectedEnquiry.size}
+                          </p>
                         </div>
                       )}
                       {selectedEnquiry.color && (
                         <div>
                           <p className="text-xs text-gray-500">Color</p>
-                          <p className="text-sm text-gray-900">{selectedEnquiry.color}</p>
+                          <p className="text-sm text-gray-900">
+                            {selectedEnquiry.color}
+                          </p>
                         </div>
                       )}
                     </div>
 
-                    {(selectedEnquiry.gender || selectedEnquiry.material || selectedEnquiry.origin) && (
+                    {(selectedEnquiry.gender ||
+                      selectedEnquiry.material ||
+                      selectedEnquiry.origin) && (
                       <div className="grid grid-cols-3 gap-2">
                         {selectedEnquiry.gender && (
                           <div>
                             <p className="text-xs text-gray-500">Gender</p>
-                            <p className="text-sm text-gray-900">{selectedEnquiry.gender}</p>
+                            <p className="text-sm text-gray-900">
+                              {selectedEnquiry.gender}
+                            </p>
                           </div>
                         )}
                         {selectedEnquiry.material && (
                           <div>
                             <p className="text-xs text-gray-500">Material</p>
-                            <p className="text-sm text-gray-900">{selectedEnquiry.material}</p>
+                            <p className="text-sm text-gray-900">
+                              {selectedEnquiry.material}
+                            </p>
                           </div>
                         )}
                         {selectedEnquiry.origin && (
                           <div>
                             <p className="text-xs text-gray-500">Origin</p>
-                            <p className="text-sm text-gray-900">{selectedEnquiry.origin}</p>
+                            <p className="text-sm text-gray-900">
+                              {selectedEnquiry.origin}
+                            </p>
                           </div>
                         )}
                       </div>
