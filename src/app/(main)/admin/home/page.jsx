@@ -57,6 +57,8 @@ export default function HomePage() {
           throw new Error(data.message || "Failed to load dashboard");
         }
 
+        // console.log("data",data.data);
+
         setDashboard(data.data || {});
       } catch (err) {
         setError(err.message);
@@ -174,6 +176,13 @@ export default function HomePage() {
       icon: Building2,
       bgColor: "bg-yellow-100",
       iconColor: "text-yellow-600",
+    },
+    {
+      title: "Out Of Stock",
+      value: dashboard?.outOfStock || 0,
+      icon: Package,
+      bgColor: "bg-emerald-100",
+      iconColor: "text-emerald-600",
     },
 
     // {
