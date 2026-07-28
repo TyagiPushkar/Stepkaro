@@ -283,12 +283,12 @@ export default function SalesReport({
           <p className="text-2xl font-bold text-blue-600">{summary.totalCtn}</p>
           <p className="text-xs text-gray-500">Total CTN</p>
         </div> */}
-        <div className="bg-white border border-gray-200 rounded-xl p-4 text-center hover:shadow-md transition-shadow">
+        {/* <div className="bg-white border border-gray-200 rounded-xl p-4 text-center hover:shadow-md transition-shadow">
           <p className="text-2xl font-bold text-fuchsia-600">
             {formatCurrency(summary.totalCommission)}
           </p>
           <p className="text-xs text-gray-500">Total Commission</p>
-        </div>
+        </div> */}
         {/* <div className="bg-white border border-gray-200 rounded-xl p-4 text-center hover:shadow-md transition-shadow">
           <p className="text-2xl font-bold text-purple-600">
             {formatCurrency(summary.avgOrderValue)}

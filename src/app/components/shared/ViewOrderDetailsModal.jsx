@@ -11,16 +11,15 @@ import {
   MapPin,
   Phone,
   Mail,
-  BadgePercent,
-  Wallet,
   ShoppingBag,
   ChevronDown,
   ChevronUp,
   Loader2,
-  CreditCard,
-  ExternalLink,
   LocateIcon,
+  Download,
 } from "lucide-react";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const API_BASE = "https://namami-infotech.com/Stepkaro/src";
 const BASE_URL_IMAGE = "https://namami-infotech.com/Stepkaro/";
@@ -82,6 +81,232 @@ function formatCurrency(amount) {
   return `₹${Number(amount || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
 }
 
+function getDisplayName(item) {
+  return [item?.article_name, item?.variant, item?.color, item?.packing_type, item?.category_name]
+    .filter(Boolean)
+    .join(" | ") || "—";
+}
+
+function getCommissionType(item) {
+  const type =
+    item?.commission_type ||
+    item?.product?.commission_type ||
+    "percentage";
+  if (type === "per_piece_rate" || type === "per pairs rate") return "Per Pair Rate";
+  if (type === "percentage") return "Percentage";
+  return type;
+}
+
+function getCommissionOnPair(item) {
+  if (item?.commission_per_pair != null && item?.commission_per_pair !== "") {
+    return Number(item.commission_per_pair);
+  }
+  const type = item?.commission_type || item?.product?.commission_type || "percentage";
+  const commission = Number(item?.commission ?? item?.product?.commission ?? 0);
+  const price = Number(item?.price || 0);
+  if (type === "percentage") {
+    return (price * commission) / 100;
+  }
+  return commission;
+}
+
+function buildOrderPdf({ order, buyer, vendor, items }) {
+  const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const margin = 12;
+  let y = 12;
+
+  // Header
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(16);
+  doc.text("Order Details", margin, y);
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  doc.text(`Order #${order?.id || "—"}`, pageWidth - margin, y, { align: "right" });
+  y += 6;
+
+  doc.setFontSize(9);
+  doc.setTextColor(80);
+  const meta = [
+    `Status: ${order?.status || "—"}`,
+    `Date: ${order?.created_at || "—"}`,
+    `Payment: ${order?.payment_method || "COD"}`,
+    `Total Qty: ${order?.total_quantity || 0} ctn`,
+    `Total Amount: ${order?.total_amount}`,
+  ].join("  |  ");
+  doc.text(meta, margin, y);
+  doc.setTextColor(0);
+  y += 6;
+
+  doc.setDrawColor(200);
+  doc.line(margin, y, pageWidth - margin, y);
+  y += 6;
+
+  // Buyer (left) + Seller (right)
+  const colGap = 6;
+  const colWidth = (pageWidth - margin * 2 - colGap) / 2;
+  const leftX = margin;
+  const rightX = margin + colWidth + colGap;
+
+  const buyerRows = [
+    ["Shop Name", buyer?.shop_name || "—"],
+    ["Aadhar No.", buyer?.document_number || "—"],
+    ["Phone No.", buyer?.phone || "—"],
+    ["District", buyer?.district || "—"],
+    ["Address", buyer?.address || "—"],
+    ["Delivery Location", buyer?.delivery_location || "—"],
+    ["Transport Name", buyer?.logistic_partner_name || "—"],
+    ["Transport Phone", buyer?.logistic_contact_no || "—"],
+  ];
+
+  const sellerRows = [
+    ["Brand Name", vendor?.brand_name || "—"],
+    ["Business Name", vendor?.business_name || "—"],
+    ["Phone No.", vendor?.phone || "—"],
+    ["Address", vendor?.address || "—"],
+    ["Email", vendor?.email || "—"],
+    ["GST No.", vendor?.gst_number || "—"],
+  ];
+
+  autoTable(doc, {
+    startY: y,
+    margin: { left: leftX, right: pageWidth - (leftX + colWidth) },
+    tableWidth: colWidth,
+    head: [["Buyer Details", ""]],
+    body: buyerRows,
+    theme: "grid",
+    styles: { fontSize: 8, cellPadding: 2, valign: "middle" },
+    headStyles: {
+      fillColor: [79, 70, 229],
+      textColor: 255,
+      fontStyle: "bold",
+      fontSize: 9,
+    },
+    columnStyles: {
+      0: { fontStyle: "bold", cellWidth: colWidth * 0.38, textColor: [100, 100, 100] },
+      1: { cellWidth: colWidth * 0.62 },
+    },
+  });
+
+  const buyerEndY = doc.lastAutoTable.finalY;
+
+  autoTable(doc, {
+    startY: y,
+    margin: { left: rightX, right: margin },
+    tableWidth: colWidth,
+    head: [["Seller Details", ""]],
+    body: sellerRows,
+    theme: "grid",
+    styles: { fontSize: 8, cellPadding: 2, valign: "middle" },
+    headStyles: {
+      fillColor: [15, 118, 110],
+      textColor: 255,
+      fontStyle: "bold",
+      fontSize: 9,
+    },
+    columnStyles: {
+      0: { fontStyle: "bold", cellWidth: colWidth * 0.38, textColor: [100, 100, 100] },
+      1: { cellWidth: colWidth * 0.62 },
+    },
+  });
+
+  y = Math.max(buyerEndY, doc.lastAutoTable.finalY) + 8;
+
+  // Product details table
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.setTextColor(0);
+  doc.text(`Product Details (${items?.length || 0})`, margin, y);
+  y += 3;
+
+  const productBody = (items || []).map((item, index) => {
+    const commissionOnPair = getCommissionOnPair(item);
+    return [
+      String(index + 1),
+      getDisplayName(item),
+      String(item?.quantity ?? 0),
+      String(item?.pairs_per_ctn ?? 0),
+      String(item?.price ?? 0),
+      String(item?.total_price ?? 0),
+      getCommissionType(item),
+      String(commissionOnPair ?? 0),
+      item?.commission != null && item?.commission !== ""
+        ? getCommissionType(item) === "Percentage"
+          ? `${item.commission}%`
+          : formatCurrency(item.commission)
+        : item?.product?.commission != null
+          ? getCommissionType(item) === "Percentage"
+            ? `${item.product.commission}%`
+            : formatCurrency(item.product.commission)
+          : "—",
+    ];
+  });
+
+  autoTable(doc, {
+    startY: y,
+    margin: { left: margin, right: margin },
+    head: [[
+      "S.No",
+      "Display Name",
+      "Qty in Ctn",
+      "Pairs in Ctn",
+      "Price",
+      "Total Amount",
+      "Commission Type",
+      "Commission on Pair",
+      "Commission",
+    ]],
+    body: productBody.length
+      ? productBody
+      : [["—", "No products found", "—", "—", "—", "—", "—", "—", "—"]],
+    theme: "grid",
+    styles: { fontSize: 7.5, cellPadding: 2, valign: "middle", overflow: "linebreak" },
+    headStyles: {
+      fillColor: [30, 41, 59],
+      textColor: 255,
+      fontStyle: "bold",
+      fontSize: 7.5,
+      halign: "center",
+    },
+    columnStyles: {
+      0: { cellWidth: 12, halign: "center" },
+      1: { cellWidth: 70 },
+      2: { cellWidth: 18, halign: "center" },
+      3: { cellWidth: 20, halign: "center" },
+      4: { cellWidth: 22, halign: "right" },
+      5: { cellWidth: 24, halign: "right" },
+      6: { cellWidth: 28, halign: "center" },
+      7: { cellWidth: 28, halign: "right" },
+      8: { cellWidth: 22, halign: "center" },
+    },
+    didDrawPage: (data) => {
+      const pageCount = doc.internal.getNumberOfPages();
+      doc.setFontSize(8);
+      doc.setTextColor(120);
+      doc.text(
+        `Page ${data.pageNumber} of ${pageCount}`,
+        pageWidth / 2,
+        doc.internal.pageSize.getHeight() - 6,
+        { align: "center" },
+      );
+    },
+  });
+
+  // Totals footer
+  const totalsY = doc.lastAutoTable.finalY + 6;
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(9);
+  doc.setTextColor(0);
+  doc.text(
+    `Grand Total: ${String(order?.total_amount ?? 0)}   |   Total Cartons: ${order?.total_quantity || 0}`,
+    pageWidth - margin,
+    totalsY,
+    { align: "right" },
+  );
+
+  doc.save(`Order_${order?.id || "details"}.pdf`);
+}
+
 // Compact Micro Data Row Helper
 function InfoRow({ icon: Icon, label, value }) {
   if (!value || value === "—") return null;
@@ -126,6 +351,7 @@ export default function ViewOrderDetailsModal({
   const [loading, setLoading] = useState(false);
   const [orderData, setOrderData] = useState(null);
   const [expandedItems, setExpandedItems] = useState({});
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     if (!isOpen || !orderId) {
@@ -202,6 +428,18 @@ export default function ViewOrderDetailsModal({
 
   const toggleItem = (itemId) => {
     setExpandedItems((prev) => ({ ...prev, [itemId]: !prev[itemId] }));
+  };
+
+  const handleDownloadPdf = () => {
+    if (!orderData || downloading) return;
+    setDownloading(true);
+    try {
+      buildOrderPdf({ order, buyer, vendor, items });
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+    } finally {
+      setDownloading(false);
+    }
   };
 
   // Payment Receipt Verification URL Parser
@@ -378,6 +616,13 @@ export default function ViewOrderDetailsModal({
                             Price:{" "}
                             <span className="font-medium">
                               {formatCurrency(item.price)}
+                            </span>
+                          </span>
+                          <span className="text-slate-300">|</span>
+                          <span>
+                            pairs Ctn:{" "}
+                            <span className="font-medium">
+                              {item.pairs_per_ctn}
                             </span>
                           </span>
                           <span className="text-slate-300">|</span>
@@ -589,7 +834,19 @@ export default function ViewOrderDetailsModal({
         </div>
 
         {/* Global Action Footer */}
-        <div className="shrink-0 px-4 py-2.5 bg-white border-t border-slate-200/60 flex justify-end">
+        <div className="shrink-0 px-4 py-2.5 bg-white border-t border-slate-200/60 flex justify-end gap-2">
+          {/* <button
+            onClick={handleDownloadPdf}
+            disabled={downloading}
+            className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold transition-all bg-indigo-600 hover:bg-indigo-700 text-white border border-indigo-700 disabled:opacity-60"
+          >
+            {downloading ? (
+              <Loader2 size={13} className="animate-spin" />
+            ) : (
+              <Download size={13} />
+            )}
+            {downloading ? "Preparing PDF..." : "Download PDF"}
+          </button> */}
           <button
             onClick={onClose}
             className="px-4 py-1.5 rounded-lg text-xs font-bold transition-all bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200"
