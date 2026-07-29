@@ -2,8 +2,8 @@
 
 import {
   X,
-  Pencil,
   Package,
+  Loader2,
   Tag,
   Palette,
   Layers,
@@ -14,9 +14,14 @@ import {
   User,
   BadgePercent,
   ShoppingBag,
+  Grid,
   ChevronDown,
   ChevronUp,
-  Grid,
+  Ruler,
+  Scale,
+  Ship,
+  Info,
+  Layers2,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -56,6 +61,7 @@ export function normalizeProduct(product) {
     status: product.status || (isActive ? "active" : "inactive"),
     image: product.image,
     commission: product.commission,
+    commissionType: product.commission_type || "percentage",
     ownerName: product.owner_name || null,
     businessName: product.business_name || null,
     orders: product.orders ?? null,
@@ -69,80 +75,90 @@ function getImageUrl(image) {
   return `https://namami-infotech.com/Stepkaro/${image}`;
 }
 
-function DetailItem({ icon: Icon, label, value, theme }) {
-  const isAdmin = theme === "admin";
+function DetailCard({ icon: Icon, label, value, accent = "violet" }) {
+  const accents = {
+    violet: "text-violet-500 bg-violet-50 border-violet-100",
+    emerald: "text-emerald-500 bg-emerald-50 border-emerald-100",
+    blue: "text-blue-500 bg-blue-50 border-blue-100",
+    amber: "text-amber-500 bg-amber-50 border-amber-100",
+    purple: "text-purple-500 bg-purple-50 border-purple-100",
+  };
+  const accentClass = accents[accent] || accents.violet;
+
   return (
-    <div
-      className={`rounded-xl p-3.5 transition-colors ${
-        isAdmin
-          ? "bg-slate-800/60 border border-white/5 hover:border-teal-500/20"
-          : "bg-violet-50/80 border border-violet-100 hover:border-violet-200"
-      }`}
-    >
+    <div className="rounded-xl border border-slate-100 bg-white p-3.5 shadow-sm hover:shadow-md hover:border-slate-200 transition-all">
       <div className="flex items-center gap-2 mb-1.5">
-        <Icon
-          size={13}
-          className={isAdmin ? "text-teal-400" : "text-violet-500"}
-        />
-        <p
-          className={`text-xs font-medium uppercase tracking-wide ${
-            isAdmin ? "text-gray-500" : "text-violet-500"
-          }`}
-        >
+        <div className={`p-1.5 rounded-lg ${accentClass}`}>
+          <Icon size={13} />
+        </div>
+        <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
           {label}
-        </p>
+        </span>
       </div>
-      <p
-        className={`text-sm font-semibold break-words ${
-          isAdmin ? "text-white" : "text-gray-900"
-        }`}
-      >
+      <p className="text-sm font-semibold text-slate-800 break-words">
         {value ?? "—"}
       </p>
     </div>
   );
 }
 
-// Variants Table Component for View Modal
-function VariantsTable({ variants, theme }) {
+function StatusBadge({ status }) {
+  const STATUS_STYLES = {
+    active: "bg-emerald-100 text-emerald-700 border-emerald-200",
+    inactive: "bg-slate-100 text-slate-600 border-slate-200",
+    approve_request: "bg-amber-100 text-amber-700 border-amber-200",
+    reject: "bg-red-100 text-red-700 border-red-200",
+  };
+
+  const STATUS_LABELS = {
+    active: "Active",
+    inactive: "Inactive",
+    approve_request: "Pending Approval",
+    reject: "Rejected",
+  };
+
+  return (
+    <span
+      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
+        STATUS_STYLES[status] || STATUS_STYLES.inactive
+      }`}
+    >
+      {STATUS_LABELS[status] || status || "—"}
+    </span>
+  );
+}
+
+function VariantsTable({ variants }) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const isAdmin = theme === "admin";
 
   if (!variants?.length) {
     return (
-      <div
-        className={`text-sm ${isAdmin ? "text-gray-500" : "text-gray-400"} py-2`}
-      >
-        No variants available
-      </div>
+      <div className="text-sm text-gray-400 py-2">No variants available</div>
     );
   }
 
   const displayVariants = isExpanded ? variants : variants.slice(0, 3);
   const hasMore = variants.length > 3;
 
+  const formatPrice = (value) => {
+    const num = Number(value);
+    if (Number.isNaN(num)) return "—";
+    return `₹${num.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
+  };
+
   return (
     <div className="mt-4">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <Grid
-            size={16}
-            className={isAdmin ? "text-teal-400" : "text-violet-500"}
-          />
-          <h5
-            className={`font-semibold text-sm ${isAdmin ? "text-white" : "text-gray-900"}`}
-          >
+          <Grid size={16} className="text-violet-500" />
+          <h5 className="font-semibold text-sm text-gray-900">
             Variants ({variants.length})
           </h5>
         </div>
         {hasMore && (
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className={`flex items-center gap-1 text-xs font-medium transition-colors ${
-              isAdmin
-                ? "text-teal-400 hover:text-teal-300"
-                : "text-violet-600 hover:text-violet-800"
-            }`}
+            className="flex items-center gap-1 text-xs font-medium text-violet-600 hover:text-violet-800 transition-colors"
           >
             {isExpanded ? (
               <>
@@ -157,13 +173,9 @@ function VariantsTable({ variants, theme }) {
         )}
       </div>
 
-      <div
-        className={`overflow-x-auto rounded-xl border ${
-          isAdmin ? "border-white/10" : "border-violet-100"
-        }`}
-      >
+      <div className="overflow-x-auto rounded-xl border border-violet-100">
         <table className="w-full min-w-[600px] text-sm">
-          <thead className={isAdmin ? "bg-slate-800/60" : "bg-violet-50/60"}>
+          <thead className="bg-violet-50/60">
             <tr>
               {[
                 "Image",
@@ -176,94 +188,94 @@ function VariantsTable({ variants, theme }) {
               ].map((header) => (
                 <th
                   key={header}
-                  className={`px-3 py-2 text-left text-xs font-medium uppercase ${
-                    isAdmin ? "text-gray-400" : "text-violet-600"
-                  }`}
+                  className="px-3 py-2 text-left text-xs font-medium uppercase text-violet-600"
                 >
                   {header}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody
-            className={`divide-y ${isAdmin ? "divide-white/10" : "divide-violet-50"}`}
-          >
-            {displayVariants.map((variant) => (
-              <tr
-                key={variant.id}
-                className={
-                  isAdmin ? "hover:bg-slate-800/40" : "hover:bg-violet-50/50"
-                }
-              >
-                <td className="px-3 py-2">
-                  {/* FIXED: Changed double quotes to backticks for string interpolation */}
-                  <div
-                    className={`w-8 h-8 rounded border overflow-hidden flex-shrink-0 ${
-                      isAdmin ? "border-white/10" : "border-gray-200"
-                    }`}
-                  >
-                    <img
-                      src={getImageUrl(variant.image) || "/placeholder.png"}
-                      alt={variant.variant_size || "Variant"}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                      onError={(e) => {
-                        e.target.src =
-                          "https://placehold.co/40x40/f1f5f9/64748b?text=N/A";
-                      }}
-                    />
-                  </div>
-                </td>
-                <td
-                  className={`px-3 py-2 ${isAdmin ? "text-gray-300" : "text-gray-900"}`}
+          <tbody className="divide-y divide-violet-50">
+            {displayVariants.map((variant) => {
+              const discount =
+                variant.price &&
+                variant.selling_price &&
+                Number(variant.price) > Number(variant.selling_price)
+                  ? Math.round(
+                      ((Number(variant.price) - Number(variant.selling_price)) /
+                        Number(variant.price)) *
+                        100,
+                    )
+                  : null;
+
+              return (
+                <tr
+                  key={variant.id}
+                  className="hover:bg-violet-50/50 transition-colors"
                 >
-                  {variant.variant_size || variant.size || "-"}
-                </td>
-                <td
-                  className={`px-3 py-2 ${isAdmin ? "text-gray-300" : "text-gray-900"}`}
-                >
-                  {variant.color || "-"}
-                </td>
-                <td
-                  className={`px-3 py-2 ${isAdmin ? "text-gray-500" : "text-gray-400"} line-through`}
-                >
-                  ₹{variant.price || 0}
-                </td>
-                <td
-                  className={`px-3 py-2 font-medium ${isAdmin ? "text-emerald-400" : "text-emerald-600"}`}
-                >
-                  ₹{variant.selling_price || 0}
-                </td>
-                <td
-                  className={`px-3 py-2 ${isAdmin ? "text-gray-300" : "text-gray-900"}`}
-                >
-                  {variant.stock ?? 0}
-                </td>
-                <td className="px-3 py-2">
-                  <span
-                    className={`text-xs px-2 py-1 rounded-full ${
-                      variant.status === "active"
-                        ? isAdmin
-                          ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                          : "bg-emerald-100 text-emerald-700 border border-emerald-200"
-                        : isAdmin
-                          ? "bg-red-500/20 text-red-400 border border-red-500/30"
-                          : "bg-red-100 text-red-700 border border-red-200"
-                    }`}
-                  >
-                    {variant.status === "active" ? "Active" : "Inactive"}
-                  </span>
-                </td>
-              </tr>
-            ))}
+                  <td className="px-3 py-2">
+                    <div className="group relative w-8 h-8 rounded border border-gray-200 overflow-hidden flex-shrink-0 cursor-zoom-in">
+                      <img
+                        src={getImageUrl(variant.image) || "/placeholder.png"}
+                        alt={variant.variant_size || "Variant"}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                        onError={(e) => {
+                          e.target.src =
+                            "https://placehold.co/40x40/f1f5f9/64748b?text=N/A";
+                        }}
+                      />
+                      <div className="hidden group-hover:block fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[99999] pointer-events-none">
+                        <img
+                          src={getImageUrl(variant.image)}
+                          alt="Variant"
+                          className="w-[700px] max-h-[85vh] object-contain drop-shadow-2xl rounded-xl"
+                        />
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-3 py-2 text-gray-900">
+                    {variant.variant_size || variant.size || "-"}
+                  </td>
+                  <td className="px-3 py-2 text-gray-900">
+                    {variant.color || "-"}
+                  </td>
+                  <td className="px-3 py-2 text-gray-400 line-through">
+                    {formatPrice(variant.price)}
+                  </td>
+                  <td className="px-3 py-2">
+                    <div>
+                      <span className="font-semibold text-emerald-600">
+                        {formatPrice(variant.selling_price)}
+                      </span>
+                      {discount && (
+                        <span className="block text-[10px] text-red-500 font-medium">
+                          {discount}% off
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-3 py-2">
+                    <span
+                      className={`font-semibold ${
+                        variant.stock === 0 ? "text-red-600" : "text-gray-900"
+                      }`}
+                    >
+                      {variant.stock ?? 0}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2">
+                    <StatusBadge status={variant.status} />
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
 
       {hasMore && !isExpanded && (
-        <p
-          className={`text-xs mt-2 ${isAdmin ? "text-gray-500" : "text-gray-400"}`}
-        >
+        <p className="text-xs mt-2 text-gray-400">
           Showing 3 of {variants.length} variants
         </p>
       )}
@@ -275,364 +287,273 @@ export default function ViewProductModal({
   isOpen,
   onClose,
   product,
-  variant = "seller",
   onEdit,
   showEditButton = true,
 }) {
   if (!isOpen || !product) return null;
 
   const p = normalizeProduct(product);
-  console.log("Normalized Product:", p);
-  const isAdmin = variant === "admin";
   const imageUrl = getImageUrl(p.image);
 
-  const statusLabel =
-    p.status === "approve_request"
-      ? "Pending Approval"
-      : p.status === "reject"
-        ? "Rejected"
-        : p.isActive
-          ? "Active"
-          : "Inactive";
+  const formatPrice = (value) => {
+    const num = Number(value);
+    if (Number.isNaN(num)) return "—";
+    return `₹${num.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
+  };
 
-  const statusColor =
-    p.status === "approve_request"
-      ? isAdmin
-        ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
-        : "bg-amber-100 text-amber-700 border-amber-200"
-      : p.status === "reject"
-        ? isAdmin
-          ? "bg-red-500/20 text-red-400 border-red-500/30"
-          : "bg-red-100 text-red-700 border-red-200"
-        : p.isActive
-          ? isAdmin
-            ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
-            : "bg-emerald-100 text-emerald-700 border-emerald-200"
-          : isAdmin
-            ? "bg-gray-500/20 text-gray-400 border-gray-500/30"
-            : "bg-red-100 text-red-700 border-red-200";
+  const discountPercent =
+    p.mrp && p.sellingPrice && Number(p.mrp) > Number(p.sellingPrice)
+      ? Math.round(
+          ((Number(p.mrp) - Number(p.sellingPrice)) / Number(p.mrp)) * 100,
+        )
+      : null;
+
+  const commissionDisplay =
+    p.commissionType === "per_piece_rate"
+      ? `${formatPrice(p.commission)}`
+      : `${p.commission || 0}%`;
+
+  const commissionSub =
+    p.commissionType === "per_piece_rate" ? "Per piece rate" : "Percentage";
 
   const detailFields = [
-    { icon: Tag, label: "Category", value: p.category },
-    { icon: Package, label: "Brand", value: p.brand },
-    { icon: Hash, label: "Article", value: p.article },
-    { icon: Layers, label: "Size/Variant", value: p.size },
-    { icon: Palette, label: "Color", value: p.color },
-    { icon: Box, label: "Material", value: p.material },
-    { icon: Package, label: "Packing Type", value: p.packingType },
-    { icon: Box, label: "Pairs per CTN", value: p.pairsPerCTN },
-    { icon: MapPin, label: "Origin", value: p.origin },
-    { icon: User, label: "Gender", value: p.gender },
+    { icon: Tag, label: "Category", value: p.category, accent: "violet" },
+    { icon: Package, label: "Brand", value: p.brand, accent: "violet" },
+    { icon: Hash, label: "Article", value: p.article, accent: "violet" },
+    { icon: Ruler, label: "Size/Variant", value: p.size, accent: "blue" },
+    { icon: Palette, label: "Color", value: p.color, accent: "purple" },
+    { icon: Layers, label: "Material", value: p.material, accent: "blue" },
+    {
+      icon: Box,
+      label: "Packing Type",
+      value: p.packingType,
+      accent: "emerald",
+    },
+    {
+      icon: Scale,
+      label: "Pairs per CTN",
+      value: p.pairsPerCTN,
+      accent: "emerald",
+    },
+    { icon: Ship, label: "Origin", value: p.origin, accent: "amber" },
+    { icon: User, label: "Gender", value: p.gender, accent: "violet" },
   ];
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
-        className={`w-full max-w-4xl max-h-[92vh] overflow-hidden rounded-2xl shadow-2xl flex flex-col ${
-          isAdmin
-            ? "bg-slate-900 border border-white/10"
-            : "bg-white border border-violet-100"
-        }`}
+        className="bg-slate-50 rounded-2xl sm:rounded-3xl w-full max-w-5xl max-h-[96vh] overflow-hidden shadow-2xl flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div
-          className={`flex items-center justify-between px-6 py-4 border-b shrink-0 ${
-            isAdmin
-              ? "border-white/10 bg-slate-900/95"
-              : "border-violet-100 bg-white"
-          }`}
-        >
+        <div className="flex items-center justify-between px-5 sm:px-6 py-4 bg-white border-b border-slate-200 shrink-0">
           <div className="flex items-center gap-3 min-w-0">
-            <div
-              className={`p-2 rounded-xl ${
-                isAdmin ? "bg-teal-500/20" : "bg-violet-100"
-              }`}
-            >
-              <Package
-                size={20}
-                className={isAdmin ? "text-teal-400" : "text-violet-600"}
-              />
+            <div className="w-9 h-9 bg-gradient-to-br from-violet-600 to-indigo-600 rounded-xl flex items-center justify-center shrink-0">
+              <Package size={18} className="text-white" />
             </div>
             <div className="min-w-0">
-              <h2
-                className={`text-lg font-bold truncate ${
-                  isAdmin ? "text-white" : "text-gray-900"
-                }`}
-              >
-                Product Details
+              <h2 className="text-base sm:text-lg font-bold text-slate-900 truncate">
+                {p.name}
               </h2>
-              <p
-                className={`text-xs ${isAdmin ? "text-gray-500" : "text-gray-500"}`}
-              >
-                ID #{p.id}
+              <p className="text-xs text-slate-400 flex items-center gap-1.5">
+                <Hash size={11} />
+                Product ID {p.id}
               </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className={`p-2 rounded-xl transition-colors ${
-              isAdmin
-                ? "text-gray-400 hover:text-white hover:bg-white/10"
-                : "text-gray-400 hover:text-gray-700 hover:bg-gray-100"
-            }`}
-            aria-label="Close"
-          >
-            <X size={20} />
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <StatusBadge status={p.status} />
+            <button
+              onClick={onClose}
+              className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition"
+            >
+              <X size={18} />
+            </button>
+          </div>
         </div>
 
         {/* Body */}
-        <div className="overflow-y-auto flex-1">
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-0">
-            {/* Image panel */}
-            <div
-              className={`lg:col-span-2 p-6 flex flex-col items-center justify-center ${
-                isAdmin
-                  ? "bg-gradient-to-br from-slate-800 to-slate-900 border-b lg:border-b-0 lg:border-r border-white/10"
-                  : "bg-gradient-to-br from-violet-50 to-purple-50 border-b lg:border-b-0 lg:border-r border-violet-100"
-              }`}
-            >
-              <div
-                className={`relative w-full aspect-square max-w-[280px] rounded-2xl overflow-hidden shadow-lg ${
-                  isAdmin ? "ring-1 ring-white/10" : "ring-1 ring-violet-200"
-                }`}
-              >
-                {imageUrl ? (
-                  <img
-                    src={imageUrl}
-                    alt={p.name}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.target.src =
-                        "https://placehold.co/400x400/f1f5f9/64748b?text=No+Image";
-                    }}
-                  />
-                ) : (
-                  <div
-                    className={`w-full h-full flex flex-col items-center justify-center gap-2 ${
-                      isAdmin
-                        ? "bg-slate-800 text-gray-500"
-                        : "bg-violet-100 text-violet-400"
-                    }`}
-                  >
-                    <Package size={48} />
-                    <span className="text-sm">No image</span>
+        <div className="overflow-y-auto flex-1 p-4 sm:p-6 space-y-5">
+          <div className="grid lg:grid-cols-5 gap-5">
+            {/* Left — Image & pricing */}
+            <div className="lg:col-span-2 space-y-4">
+              <div className="group relative">
+                <div className="rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-sm">
+                  {imageUrl ? (
+                    <img
+                      src={imageUrl}
+                      alt={p.name}
+                      className="w-full aspect-square object-cover cursor-zoom-in"
+                      onError={(e) => {
+                        e.target.src =
+                          "https://placehold.co/600x600/f8fafc/94a3b8?text=No+Image";
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full aspect-square flex flex-col items-center justify-center bg-slate-100 text-slate-400">
+                      <Package size={48} />
+                      <span className="text-sm mt-2">No image</span>
+                    </div>
+                  )}
+                </div>
+
+                {imageUrl && (
+                  <div className="hidden group-hover:block fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[99999] pointer-events-none">
+                    <img
+                      src={imageUrl}
+                      alt={p.name}
+                      className="w-[700px] max-h-[85vh] object-contain drop-shadow-2xl rounded-xl"
+                    />
                   </div>
                 )}
               </div>
 
-              {/* Price card */}
-              <div
-                className={`mt-5 w-full max-w-[280px] rounded-xl p-4 ${
-                  isAdmin
-                    ? "bg-slate-800/80 border border-white/10"
-                    : "bg-white border border-violet-100 shadow-sm"
-                }`}
-              >
-                {p.mrp && p.sellingPrice && p.mrp !== p.sellingPrice ? (
-                  <div className="flex items-baseline gap-2">
-                    <span
-                      className={`text-sm line-through ${
-                        isAdmin ? "text-gray-500" : "text-gray-400"
-                      }`}
-                    >
-                      ₹{p.mrp}
-                    </span>
-                    <span
-                      className={`text-2xl font-bold ${
-                        isAdmin ? "text-emerald-400" : "text-teal-600"
-                      }`}
-                    >
-                      ₹{p.sellingPrice}
-                    </span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-1.5">
-                    <IndianRupee
-                      size={18}
-                      className={isAdmin ? "text-teal-400" : "text-teal-600"}
-                    />
-                    <span
-                      className={`text-2xl font-bold ${
-                        isAdmin ? "text-teal-400" : "text-teal-600"
-                      }`}
-                    >
-                      {p.price}
-                    </span>
-                  </div>
-                )}
-                <p
-                  className={`text-xs mt-1 ${isAdmin ? "text-gray-500" : "text-gray-500"}`}
-                >
-                  Stock:{" "}
-                  <span
-                    className={
-                      p.quantity === 0
-                        ? "text-red-400 font-semibold"
-                        : isAdmin
-                          ? "text-white font-semibold"
-                          : "text-gray-900 font-semibold"
-                    }
-                  >
-                    {p.quantity} units
-                  </span>
-                </p>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="rounded-xl border border-emerald-200 bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 p-2.5">
+                  <p className="text-[8px] font-semibold uppercase tracking-wide text-emerald-700/70">
+                    Selling Price
+                  </p>
+                  <p className="text-sm font-bold text-emerald-700">
+                    {formatPrice(p.sellingPrice)}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-amber-200 bg-gradient-to-br from-amber-500/10 to-amber-600/5 p-2.5">
+                  <p className="text-[8px] font-semibold uppercase tracking-wide text-amber-700/70">
+                    MRP
+                  </p>
+                  <p className="text-sm font-bold text-amber-700">
+                    {formatPrice(p.mrp)}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-blue-200 bg-gradient-to-br from-blue-500/10 to-blue-600/5 p-2.5">
+                  <p className="text-[8px] font-semibold uppercase tracking-wide text-blue-700/70">
+                    Stock
+                  </p>
+                  <p className="text-sm font-bold text-blue-700">
+                    {p.quantity ?? 0}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-purple-200 bg-gradient-to-br from-purple-500/10 to-purple-600/5 p-2.5">
+                  <p className="text-[8px] font-semibold uppercase tracking-wide text-purple-700/70">
+                    Commission
+                  </p>
+                  <p className="text-sm font-bold text-purple-700">
+                    {commissionDisplay}
+                  </p>
+                  <p className="text-[8px] opacity-60">{commissionSub}</p>
+                </div>
               </div>
+
+              {/* {discountPercent && (
+                <div className="rounded-lg bg-gradient-to-r from-red-50 to-orange-50 border border-red-100 px-3 py-1.5 text-center">
+                  <span className="text-xs font-bold text-red-600">
+                    {discountPercent}% OFF
+                  </span>
+                  <span className="text-[10px] text-red-400 ml-1.5">
+                    Save {formatPrice(Number(p.mrp) - Number(p.sellingPrice))}
+                  </span>
+                </div>
+              )} */}
+
+              {/* <div className="flex flex-wrap gap-1.5">
+                {p.brand && p.brand !== "—" && (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-medium bg-white border border-slate-200 text-slate-600 px-2 py-1 rounded-full">
+                    <Package size={10} />
+                    {p.brand}
+                  </span>
+                )}
+                {p.category && p.category !== "—" && (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-medium bg-white border border-slate-200 text-slate-600 px-2 py-1 rounded-full">
+                    <Box size={10} />
+                    {p.category}
+                  </span>
+                )}
+                {p.gender && p.gender !== "—" && (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-medium bg-white border border-slate-200 text-slate-600 px-2 py-1 rounded-full">
+                    <User size={10} />
+                    {p.gender}
+                  </span>
+                )}
+              </div> */}
             </div>
 
-            {/* Details panel */}
-            <div className="lg:col-span-3 p-6">
-              <div className="mb-5">
-                <h3
-                  className={`text-xl font-bold leading-snug ${
-                    isAdmin ? "text-white" : "text-gray-900"
-                  }`}
-                >
-                  {p.name}
-                </h3>
-                <div className="flex flex-wrap items-center gap-2 mt-3">
-                  <span
-                    className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold border ${statusColor}`}
-                  >
-                    {statusLabel}
-                  </span>
-                  {p.commission != null && p.commission !== "" && (
-                    <span
-                      className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold border ${
-                        isAdmin
-                          ? "bg-purple-500/20 text-purple-400 border-purple-500/30"
-                          : "bg-purple-100 text-purple-700 border-purple-200"
-                      }`}
-                    >
-                      <BadgePercent size={12} />
-                      {p.commission}% commission
-                    </span>
-                  )}
-                  {p.orders != null && (
-                    <span
-                      className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold border ${
-                        isAdmin
-                          ? "bg-blue-500/20 text-blue-400 border-blue-500/30"
-                          : "bg-blue-100 text-blue-700 border-blue-200"
-                      }`}
-                    >
-                      <ShoppingBag size={12} />
-                      {p.orders} orders
-                    </span>
-                  )}
-                </div>
+            {/* Right — Details */}
+            <div className="lg:col-span-3 space-y-3">
+              {/* Display Name */}
+              <div className="rounded-2xl bg-white border border-slate-200 p-4 shadow-sm">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400 mb-2">
+                  Display Name
+                </p>
+                <p className="text-sm font-medium text-gray-900 uppercase">
+                  {p.name} | {p.size} | {p.color} | {p.packingType} |{" "}
+                  {p.category}
+                </p>
               </div>
 
-              {/* Vendor info (admin) */}
-              {(p.ownerName || p.businessName) && (
-                <div
-                  className={`mb-5 rounded-xl p-4 ${
-                    isAdmin
-                      ? "bg-slate-800/60 border border-white/5"
-                      : "bg-violet-50 border border-violet-100"
-                  }`}
-                >
-                  <p
-                    className={`text-xs font-medium uppercase tracking-wide mb-2 ${
-                      isAdmin ? "text-gray-500" : "text-violet-500"
-                    }`}
-                  >
-                    Vendor
-                  </p>
-                  <p
-                    className={`text-sm font-semibold ${isAdmin ? "text-white" : "text-gray-900"}`}
-                  >
-                    {p.businessName || p.ownerName}
-                  </p>
-                  {p.businessName && p.ownerName && (
-                    <p
-                      className={`text-xs mt-0.5 ${isAdmin ? "text-gray-400" : "text-gray-500"}`}
-                    >
-                      {p.ownerName}
-                    </p>
-                  )}
-                </div>
-              )}
-
               {/* Description */}
-              {p.description && (
-                <div
-                  className={`mb-5 rounded-xl p-4 ${
-                    isAdmin
-                      ? "bg-slate-800/40 border border-white/5"
-                      : "bg-gray-50 border border-gray-100"
-                  }`}
-                >
-                  <p
-                    className={`text-xs font-medium uppercase tracking-wide mb-1.5 ${
-                      isAdmin ? "text-gray-500" : "text-gray-500"
-                    }`}
-                  >
+              {p.description && p.description !== "" && (
+                <div className="rounded-2xl bg-white border border-slate-200 p-4 shadow-sm">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400 mb-2">
                     Description
                   </p>
-                  <p
-                    className={`text-sm leading-relaxed ${
-                      isAdmin ? "text-gray-300" : "text-gray-700"
-                    }`}
-                  >
+                  <p className="text-sm text-gray-700 leading-relaxed">
                     {p.description}
                   </p>
                 </div>
               )}
 
-              {/* Detail grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {detailFields.map((field) => (
-                  <DetailItem
-                    key={field.label}
-                    icon={field.icon}
-                    label={field.label}
-                    value={field.value}
-                    theme={variant}
-                  />
-                ))}
+              {/* Specifications */}
+              <div className="rounded-2xl bg-white border border-slate-200 overflow-hidden shadow-sm">
+                <div className="px-4 py-3 border-b border-slate-100 flex items-center gap-2">
+                  <Info size={16} className="text-violet-600" />
+                  <h3 className="text-sm font-bold text-slate-800">
+                    Specifications
+                  </h3>
+                </div>
+                <div className="p-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {detailFields.map((field) => (
+                    <DetailCard
+                      key={field.label}
+                      icon={field.icon}
+                      label={field.label}
+                      value={field.value}
+                      accent={field.accent}
+                    />
+                  ))}
+                </div>
               </div>
-
-              {/* Variants Section */}
-              <VariantsTable variants={p.variants} theme={variant} />
             </div>
           </div>
+
+          {/* Variants */}
+          {p.variants && p.variants.length > 0 && (
+            <VariantsTable variants={p.variants} />
+          )}
         </div>
 
         {/* Footer actions */}
-        <div
-          className={`flex gap-3 px-6 py-4 border-t shrink-0 ${
-            isAdmin
-              ? "border-white/10 bg-slate-900/95"
-              : "border-violet-100 bg-white"
-          }`}
-        >
+        <div className="flex gap-3 px-5 sm:px-6 py-4 border-t border-slate-200 bg-white shrink-0">
           {showEditButton && onEdit && (
             <button
               onClick={() => {
                 onClose();
                 onEdit(product);
               }}
-              className={`flex-1 py-2.5 rounded-xl font-medium flex items-center justify-center gap-2 transition-colors ${
-                isAdmin
-                  ? "bg-teal-500 hover:bg-teal-600 text-white"
-                  : "bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white"
-              }`}
+              className="flex-1 py-2.5 rounded-xl font-medium bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white flex items-center justify-center gap-2 transition-colors"
             >
-              <Pencil size={16} />
+              <Package size={16} />
               Edit Product
             </button>
           )}
           <button
             onClick={onClose}
             className={`flex-1 py-2.5 rounded-xl font-medium transition-colors ${
-              isAdmin
-                ? "bg-slate-800 hover:bg-slate-700 text-gray-300 border border-white/10"
-                : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+              showEditButton
+                ? "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                : "bg-violet-600 hover:bg-violet-700 text-white"
             }`}
           >
             Close

@@ -48,7 +48,7 @@ export default function HomePage() {
               "Content-Type": "application/json",
               Authorization: token ? `Bearer ${token}` : "",
             },
-          }
+          },
         );
 
         const data = await res.json();
@@ -84,7 +84,7 @@ export default function HomePage() {
               "Content-Type": "application/json",
               Authorization: token ? `Bearer ${token}` : "",
             },
-          }
+          },
         );
 
         const resData = await response.json();
@@ -127,7 +127,6 @@ export default function HomePage() {
   // STATS FROM API
   // =========================
   const stats = [
-   
     {
       title: "New Orders",
       value: dashboard?.newOrders || 0,
@@ -351,10 +350,10 @@ export default function HomePage() {
                     Order ID
                   </th>
                   <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Customer
+                    Shop Name
                   </th>
                   <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Vendor
+                    Brand
                   </th>
                   <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Amount
@@ -381,16 +380,21 @@ export default function HomePage() {
                       return 1;
 
                     return 0;
-                  }).slice(0, 5).map((order) => (
-                    <tr key={order.order_id} className="hover:bg-gray-50 transition-colors">
+                  })
+                  .slice(0, 5)
+                  .map((order) => (
+                    <tr
+                      key={order.order_id}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
                       <td className="p-3 text-sm font-medium text-gray-900">
                         #{order.order_id}
                       </td>
                       <td className="p-3 text-sm text-gray-600">
-                        {order.customer || order.user_name || "Guest"}
+                        {order.shop_name || order.user_name || "Guest"}
                       </td>
                       <td className="p-3 text-sm text-gray-600">
-                        {order.customer || order.owner_name || "Guest"}
+                        {order.brand_name || order.owner_name || "Guest"}
                       </td>
                       <td className="p-3 text-sm font-medium text-gray-900">
                         ₹{order.amount || order.total_amount || 0}
@@ -398,7 +402,7 @@ export default function HomePage() {
                       <td className="p-3">
                         <span
                           className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                            order.status
+                            order.status,
                           )}`}
                         >
                           {order.status || "Pending"}

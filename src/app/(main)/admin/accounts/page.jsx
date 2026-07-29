@@ -20,6 +20,7 @@ import {
   Calendar,
   CreditCard,
   AlertCircle,
+  X,
 } from "lucide-react";
 
 const API_BASE = "https://namami-infotech.com/Stepkaro/src";
@@ -65,6 +66,11 @@ export default function AdminAccountsPage() {
     reject_reason: "",
     utr_no: "",
   });
+
+  // datefilter
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  // end of datefilter
   const token = useMemo(
     () =>
       typeof window !== "undefined"
@@ -80,6 +86,12 @@ export default function AdminAccountsPage() {
     }),
     [token],
   );
+
+  const clearFilters = () => {
+    setFromDate("");
+    setToDate("");
+    setCurrentPage(1);
+  };
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
@@ -103,7 +115,7 @@ export default function AdminAccountsPage() {
       const data = await response.json();
 
       if (data.success) {
-        console.log(data.data);
+        // console.log(data.data);
         setPayments(data.data || []);
       } else {
         throw new Error(data.message || "Failed to fetch payments");
@@ -223,16 +235,49 @@ export default function AdminAccountsPage() {
 
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
+
       list = list.filter(
         (p) =>
           p.vendor_id?.toString().includes(q) ||
           p.order_id?.toString().includes(q) ||
-          p.id?.toString().includes(q),
+          p.id?.toString().includes(q) ||
+          (p.brand_name && p.brand_name.toLowerCase().includes(q)) || // Handle null/undefined
+          (p.business_name && p.business_name.toLowerCase().includes(q)), // Handle null/undefined
       );
     }
 
+    if (fromDate) {
+      list = list.filter((p) => {
+        if (!p.order_date) return false;
+
+        const paymentDate = new Date(p.order_date);
+        const from = new Date(fromDate);
+
+        // Compare dates only (ignore time)
+        paymentDate.setHours(0, 0, 0, 0);
+        from.setHours(0, 0, 0, 0);
+
+        return paymentDate >= from;
+      });
+    }
+
+    if (toDate) {
+      list = list.filter((p) => {
+        if (!p.order_date) return false;
+
+        const paymentDate = new Date(p.order_date);
+        const to = new Date(toDate);
+
+        // Include the entire end date
+        paymentDate.setHours(23, 59, 59, 999);
+        to.setHours(23, 59, 59, 999);
+
+        return paymentDate <= to;
+      });
+    }
+
     return list;
-  }, [payments, statusFilter, searchQuery]);
+  }, [payments, statusFilter, searchQuery, fromDate, toDate]);
 
   const totalPages = Math.ceil(filteredPayments.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -392,7 +437,13 @@ export default function AdminAccountsPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `payments_${new Date().toISOString().split("T")[0]}.csv`;
+    // a.download = `payments_${new Date().toISOString().split("T")[0]}.csv`;
+    const fileName =
+      fromDate || toDate
+        ? `payments_${fromDate || "start"}_${toDate || "end"}.csv`
+        : `payments_${new Date().toISOString().split("T")[0]}.csv`;
+
+    a.download = fileName;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -548,13 +599,13 @@ export default function AdminAccountsPage() {
             setSearchQuery(e.target.value);
             setCurrentPage(1);
           }}
-          placeholder="Search by Payment ID, Order ID or Vendor ID..."
+          placeholder="Search by Brand, Payment ID, Order ID or Vendor ID..."
           className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
         />
       </div>
 
       {/* Status Filters */}
-      <div className="flex flex-wrap gap-3">
+      {/* <div className="flex flex-wrap gap-3">
         {filters.map((filter) => {
           const isActive = statusFilter === filter.value;
           return (
@@ -583,6 +634,77 @@ export default function AdminAccountsPage() {
             </button>
           );
         })}
+      </div> */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        {/* Left Side : Status */}
+        <div className="flex flex-wrap gap-3">
+          {filters.map((filter) => {
+            const isActive = statusFilter === filter.value;
+
+            return (
+              <button
+                key={filter.value}
+                onClick={() => {
+                  setStatusFilter(filter.value);
+                  setCurrentPage(1);
+                }}
+                className={`px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-all ${
+                  isActive
+                    ? "bg-purple-600 text-white shadow-md"
+                    : "bg-white text-gray-600 border border-gray-200 hover:border-purple-300"
+                }`}
+              >
+                {filter.label}
+
+                <span
+                  className={`px-2 py-0.5 rounded-full text-xs ${
+                    isActive
+                      ? "bg-purple-500/30 text-white"
+                      : "bg-gray-100 text-gray-600"
+                  }`}
+                >
+                  {filter.count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Right Side : Date Filter */}
+        <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-xl border border-gray-200">
+          <Calendar size={16} className="text-purple-600" />
+
+          <input
+            type="date"
+            value={fromDate}
+            onChange={(e) => {
+              setFromDate(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="border rounded-lg px-2 py-1 text-sm"
+          />
+
+          <span>-</span>
+
+          <input
+            type="date"
+            value={toDate}
+            onChange={(e) => {
+              setToDate(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="border rounded-lg px-2 py-1 text-sm"
+          />
+
+          {(fromDate || toDate) && (
+            <button
+              onClick={clearFilters}
+              className="text-red-500 hover:text-red-600"
+            >
+              <X size={16} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Payments Table */}
@@ -831,7 +953,7 @@ export default function AdminAccountsPage() {
 
       {/* Commission Report Tab */}
       {/* <div className="mt-6"> */}
-        {/* <div className="border-b border-gray-200">
+      {/* <div className="border-b border-gray-200">
           <nav className="flex gap-1" aria-label="Tabs">
             <button className="px-4 py-2 text-sm font-medium border-b-2 border-purple-600 text-purple-600">
               Payment Records
@@ -842,8 +964,8 @@ export default function AdminAccountsPage() {
           </nav>
         </div> */}
 
-        {/* Show Commission Report */}
-        {/* <div className="mt-4">
+      {/* Show Commission Report */}
+      {/* <div className="mt-4">
           <CommissionReport />
         </div> */}
       {/* </div> */}
