@@ -100,8 +100,7 @@ function getCommissionType(item) {
   const type =
     item?.commission_type || item?.product?.commission_type || "percentage";
 
-  const value =
-    item?.commission || item?.product?.commission || 0;
+  const value = item?.commission || item?.product?.commission || 0;
 
   if (type === "per_piece_rate" || type === "per pairs rate") {
     return `Per Pair Rate: RS. ${value}`;
@@ -139,13 +138,16 @@ function buildOrderPdf({ order, buyer, vendor, items }) {
   doc.setFont("helvetica", "bold");
   doc.setFontSize(16);
   doc.setTextColor(30, 41, 59); // Slate dark
-  doc.text("STEPKARO TECHNOLOGIES PRIVATE LIMITED", pageWidth / 2, y, { align: "center" });
+  doc.text("STEPKARO TECHNOLOGIES PRIVATE LIMITED", pageWidth / 2, y, {
+    align: "center",
+  });
   y += 5;
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8.5);
   doc.setTextColor(100);
-  const companyAddress = "KH NO. 680, Ground Floor, Duliya Colony, Alipur, North West Delhi - 110036";
+  const companyAddress =
+    "KH NO. 680, Ground Floor, Duliya Colony, Alipur, North West Delhi - 110036";
   doc.text(companyAddress, pageWidth / 2, y, { align: "center" });
   y += 7;
 
@@ -200,6 +202,7 @@ function buildOrderPdf({ order, buyer, vendor, items }) {
     ["Aadhar No.", buyer?.document_number || "—"],
     ["Phone No.", buyer?.phone || "—"],
     ["District", buyer?.district || "—"],
+    ["State", buyer?.state || "—"],
     ["Address", buyer?.address || "—"],
     ["Delivery Location", buyer?.delivery_location || "—"],
     ["Transport Name", buyer?.logistic_partner_name || "—"],
@@ -276,8 +279,32 @@ function buildOrderPdf({ order, buyer, vendor, items }) {
   doc.text(`Product Details (${items?.length || 0})`, margin, y);
   y += 3;
 
+  const totalAmount = (items || []).reduce((sum, item) => {
+    const price = Number(item?.price || 0);
+    const qty = Number(item?.quantity || 0);
+    const pairs = Number(item?.pairs_per_ctn || 0);
+
+    return sum + Number(item?.total_price ?? price * pairs * qty);
+  }, 0);
+
+  const totalSettlementAmount = (items || []).reduce((sum, item) => {
+    const commissionOnPair =
+      typeof getCommissionOnPair === "function"
+        ? Number(getCommissionOnPair(item))
+        : 0;
+
+    const price = Number(item?.price || 0);
+    const qty = Number(item?.quantity || 0);
+    const pairs = Number(item?.pairs_per_ctn || 0);
+
+    const settlementPerPair = price - commissionOnPair;
+
+    return sum + settlementPerPair * pairs * qty;
+  }, 0);
+
   const productBody = (items || []).map((item, index) => {
-    const commissionOnPair = typeof getCommissionOnPair === "function" ? getCommissionOnPair(item) : 0;
+    const commissionOnPair =
+      typeof getCommissionOnPair === "function" ? getCommissionOnPair(item) : 0;
     const price = Number(item?.price || 0);
     const pairsPerCtn = Number(item?.pairs_per_ctn || 0);
     const quantity = Number(item?.quantity || 0);
@@ -285,8 +312,12 @@ function buildOrderPdf({ order, buyer, vendor, items }) {
     const settlementPerPair = price - Number(commissionOnPair || 0);
     const settlementAmount = pairsPerCtn * settlementPerPair * quantity;
 
-    const displayName = typeof getDisplayName === "function" ? getDisplayName(item) : (item?.name || "—");
-    const commissionType = typeof getCommissionType === "function" ? getCommissionType(item) : "—";
+    const displayName =
+      typeof getDisplayName === "function"
+        ? getDisplayName(item)
+        : item?.name || "—";
+    const commissionType =
+      typeof getCommissionType === "function" ? getCommissionType(item) : "—";
 
     return [
       String(index + 1),
@@ -294,7 +325,7 @@ function buildOrderPdf({ order, buyer, vendor, items }) {
       String(quantity),
       String(pairsPerCtn),
       String(price),
-      String(item?.total_price ?? (price * pairsPerCtn * quantity)),
+      String(item?.total_price ?? price * pairsPerCtn * quantity),
       commissionType,
       String(commissionOnPair ?? 0),
       String(settlementPerPair.toFixed(2)),
@@ -302,10 +333,73 @@ function buildOrderPdf({ order, buyer, vendor, items }) {
     ];
   });
 
+  // autoTable(doc, {
+  //   startY: y,
+  //   margin: { left: margin, right: margin },
+  //   tableWidth: pageWidth - margin * 2, // Total printable width = 190mm
+  //   head: [
+  //     [
+  //       "S.N",
+  //       "Display Name",
+  //       "Qty\n(Ctn)",
+  //       "Pairs\n/Ctn",
+  //       "Price\n/App",
+  //       "Total\nAmt",
+  //       "Comm.\nType",
+  //       "Comm.\n/Pair",
+  //       "Settl.\n/Pair",
+  //       "Settl.\nAmt",
+  //     ],
+  //   ],
+  //   body: productBody.length
+  //     ? productBody
+  //     : [["—", "No products found", "—", "—", "—", "—", "—", "—", "—", "—"]],
+  //   theme: "grid",
+  //   styles: {
+  //     fontSize: 7,
+  //     cellPadding: 1.5,
+  //     valign: "middle",
+  //     overflow: "linebreak",
+  //   },
+  //   headStyles: {
+  //     fillColor: [30, 41, 59],
+  //     textColor: 255,
+  //     fontStyle: "bold",
+  //     fontSize: 7,
+  //     halign: "center",
+  //     valign: "middle",
+  //   },
+  //   // Total printable area width = 190mm
+  //   columnStyles: {
+  //     0: { cellWidth: 8, halign: "center" }, // S.No
+  //     1: { cellWidth: 42 }, // Display Name
+  //     2: { cellWidth: 12, halign: "center" }, // Qty in Ctn
+  //     3: { cellWidth: 12, halign: "center" }, // Pairs in Ctn
+  //     4: { cellWidth: 16, halign: "right" }, // Price
+  //     5: { cellWidth: 20, halign: "right" }, // Total Amount
+  //     6: { cellWidth: 20, halign: "center" }, // Comm Type
+  //     7: { cellWidth: 18, halign: "right" }, // Comm/Pair
+  //     8: { cellWidth: 20, halign: "right" }, // Settl/Pair
+  //     9: { cellWidth: 22, halign: "right" }, // Settl Amt
+  //   },
+  //   didDrawPage: (data) => {
+  //     const pageCount = doc.internal.getNumberOfPages();
+  //     doc.setFontSize(8);
+  //     doc.setTextColor(120);
+  //     doc.text(
+  //       `Page ${data.pageNumber} of ${pageCount}`,
+  //       pageWidth / 2,
+  //       doc.internal.pageSize.getHeight() - 6,
+  //       { align: "center" },
+  //     );
+  //   },
+  // });
+
   autoTable(doc, {
     startY: y,
     margin: { left: margin, right: margin },
-    tableWidth: pageWidth - margin * 2, // Total printable width = 190mm
+    tableWidth: pageWidth - margin * 2,
+
     head: [
       [
         "S.N",
@@ -320,16 +414,38 @@ function buildOrderPdf({ order, buyer, vendor, items }) {
         "Settl.\nAmt",
       ],
     ],
+
     body: productBody.length
       ? productBody
       : [["—", "No products found", "—", "—", "—", "—", "—", "—", "—", "—"]],
+
+    // ===== FOOTER ROW =====
+    foot: [
+      [
+        "",
+        "",
+        "",
+        "",
+        "TOTAL",
+        `RS. ${totalAmount.toFixed(2)}`,
+        "",
+        "",
+        "",
+        `RS. ${totalSettlementAmount.toFixed(2)}`,
+      ],
+    ],
+
+    showFoot: "lastPage",
+
     theme: "grid",
+
     styles: {
       fontSize: 7,
       cellPadding: 1.5,
       valign: "middle",
       overflow: "linebreak",
     },
+
     headStyles: {
       fillColor: [30, 41, 59],
       textColor: 255,
@@ -338,48 +454,51 @@ function buildOrderPdf({ order, buyer, vendor, items }) {
       halign: "center",
       valign: "middle",
     },
-    // Total printable area width = 190mm
-    columnStyles: {
-      0: { cellWidth: 8, halign: "center" },   // S.No
-      1: { cellWidth: 42 },                   // Display Name
-      2: { cellWidth: 12, halign: "center" },  // Qty in Ctn
-      3: { cellWidth: 12, halign: "center" },  // Pairs in Ctn
-      4: { cellWidth: 16, halign: "right" },   // Price
-      5: { cellWidth: 20, halign: "right" },   // Total Amount
-      6: { cellWidth: 20, halign: "center" },  // Comm Type
-      7: { cellWidth: 18, halign: "right" },   // Comm/Pair
-      8: { cellWidth: 20, halign: "right" },   // Settl/Pair
-      9: { cellWidth: 22, halign: "right" },   // Settl Amt
+
+    footStyles: {
+      fillColor: [235, 235, 235],
+      textColor: [0, 0, 0],
+      fontStyle: "bold",
+      fontSize: 8,
+      halign: "right",
     },
+
+    columnStyles: {
+      0: { cellWidth: 8, halign: "center" },
+      1: { cellWidth: 42 },
+      2: { cellWidth: 12, halign: "center" },
+      3: { cellWidth: 12, halign: "center" },
+      4: { cellWidth: 16, halign: "right" },
+      5: { cellWidth: 20, halign: "right" },
+      6: { cellWidth: 20, halign: "center" },
+      7: { cellWidth: 18, halign: "right" },
+      8: { cellWidth: 20, halign: "right" },
+      9: { cellWidth: 22, halign: "right" },
+    },
+
+    didParseCell: function (data) {
+      if (data.section === "foot") {
+        data.cell.styles.fontStyle = "bold";
+        data.cell.styles.fillColor = [220, 220, 220];
+      }
+    },
+
     didDrawPage: (data) => {
       const pageCount = doc.internal.getNumberOfPages();
+
       doc.setFontSize(8);
       doc.setTextColor(120);
+
       doc.text(
         `Page ${data.pageNumber} of ${pageCount}`,
         pageWidth / 2,
         doc.internal.pageSize.getHeight() - 6,
-        { align: "center" }
+        {
+          align: "center",
+        },
       );
     },
   });
-
-  // --- Grand Total Footer ---
-  const totalsY = doc.lastAutoTable.finalY + 8; // thoda gap badhaya
-doc.setFont("helvetica", "bold");
-doc.setFontSize(10);
-doc.setTextColor(30, 41, 59); // Dark slate blue color for professional look
-
-// Exact Right Side Alignment
-const rightMarginPos = pageWidth - margin;
-
-// doc.text(
-//   `Grand Total: ₹${String(order?.total_amount ?? 0)}`,
-//   rightMarginPos,
-//   totalsY,
-//   { align: "right" }
-// );
-
   doc.save(`Order_${order?.id || "details"}.pdf`);
 }
 
@@ -803,6 +922,7 @@ export default function ViewOrderDetailsModal({
                     label="District"
                     value={buyer?.district}
                   />
+                  <InfoRow icon={MapPin} label="State" value={buyer?.state} />
                   <InfoRow
                     icon={MapPin}
                     label="Address"

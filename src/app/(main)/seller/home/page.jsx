@@ -97,10 +97,11 @@ export default function SellerDashboardPage() {
           const ordersData = await ordersResponse.json();
 
           if (ordersData.success) {
+            console.log("Orders Data:", ordersData.data);
             const latestOrders = (ordersData.data || [])
               .slice(0, 5)
               .map((order) => ({
-                id: `#${order.id}`,
+                id: `#${order.order_id || order.id}`,
                 customer: order.city || order.customer_name || "Customer",
                 qty: `${order.total_quantity || 0} items`,
                 status: (order.status || "").toUpperCase(),
@@ -340,9 +341,10 @@ export default function SellerDashboardPage() {
                       <h3 className="font-semibold text-gray-900">
                         {order.id}
                       </h3>
-                      <p className="text-xs text-gray-500">
+                      {/* <p className="text-xs text-gray-500">
                         {order.customer} • {order.date}
-                      </p>
+                      </p> */}
+                      <p className="text-xs text-gray-500">{order.date}</p>
                     </div>
                   </div>
 
@@ -350,7 +352,7 @@ export default function SellerDashboardPage() {
                     <p className="text-sm font-semibold text-gray-900">
                       {order.amount}
                     </p>
-                    <p className="text-xs text-gray-500">{order.qty}</p>
+                    {/* <p className="text-xs text-gray-500">{order.qty}</p> */}
                   </div>
 
                   <span
@@ -401,7 +403,9 @@ export default function SellerDashboardPage() {
 
                   <div>
                     <h3 className="font-semibold text-gray-900">
-                      {product.article_name}
+                      {product.article_name} | {product.variant} |{" "}
+                      {product.color} | {product.packing_type} |{" "}
+                      {product.category_name}
                     </h3>
 
                     <p className="text-xs text-gray-500 mt-1">
