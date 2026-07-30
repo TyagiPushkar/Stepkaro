@@ -123,11 +123,10 @@ export default function ReportPage() {
         <nav className="flex gap-1 px-4" aria-label="Reports Tabs">
           <button
             onClick={() => setActiveTab("commission")}
-            className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
-              activeTab === "commission"
-                ? "border-purple-600 text-purple-600"
-                : "border-transparent text-gray-500 hover:text-gray-700"
-            }`}
+            className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab === "commission"
+              ? "border-purple-600 text-purple-600"
+              : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
           >
             <FileText size={18} />
             Commission Report
@@ -137,11 +136,10 @@ export default function ReportPage() {
           </button>
           <button
             onClick={() => setActiveTab("sales")}
-            className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
-              activeTab === "sales"
-                ? "border-purple-600 text-purple-600"
-                : "border-transparent text-gray-500 hover:text-gray-700"
-            }`}
+            className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab === "sales"
+              ? "border-purple-600 text-purple-600"
+              : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
           >
             <TrendingUp size={18} />
             Sales Report
@@ -155,9 +153,9 @@ export default function ReportPage() {
       {/* Report Content */}
       <div className="mt-4">
         {activeTab === "commission" ? (
-          <CommissionReport orders={orders} loading={loading} error={error} />
+          <CommissionReport orders={orders} loading={loading} error={error} role="admin" />
         ) : (
-          <SalesReport orders={orders} loading={loading} error={error} />
+          <SalesReport orders={orders} loading={loading} error={error} role="admin" />
         )}
       </div>
     </div>

@@ -23,6 +23,7 @@ export default function CommissionReport({
   orders = [],
   loading = false,
   error = null,
+  role = "admin",
 }) {
   console.log("CommissionReport - Orders received:", orders);
   console.log("CommissionReport - Orders count:", orders?.length);
@@ -544,11 +545,10 @@ export default function CommissionReport({
           </div>
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border transition-all ${
-              showFilters || isFilterActive()
-                ? "border-purple-300 bg-purple-50 text-purple-600"
-                : "border-gray-200 bg-white text-gray-600 hover:border-purple-300"
-            }`}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border transition-all ${showFilters || isFilterActive()
+              ? "border-purple-300 bg-purple-50 text-purple-600"
+              : "border-gray-200 bg-white text-gray-600 hover:border-purple-300"
+              }`}
           >
             <Filter size={18} />
             Filters
@@ -686,8 +686,8 @@ export default function CommissionReport({
                       <span className="text-xs text-gray-500">
                         {order.created_at
                           ? new Date(order.created_at).toLocaleDateString(
-                              "en-GB",
-                            )
+                            "en-GB",
+                          )
                           : "—"}
                       </span>
                     </div>
@@ -699,13 +699,12 @@ export default function CommissionReport({
                         {order.brand_name || "—"}
                       </span> */}
                       <span
-                        className={`text-xs px-2 py-1 rounded-full ${
-                          order.status === "new" || order.status === "paid"
-                            ? "bg-emerald-100 text-emerald-700"
-                            : order.status === "rejected"
-                              ? "bg-rose-100 text-rose-700"
-                              : "bg-yellow-100 text-yellow-700"
-                        }`}
+                        className={`text-xs px-2 py-1 rounded-full ${order.status === "new" || order.status === "paid"
+                          ? "bg-emerald-100 text-emerald-700"
+                          : order.status === "rejected"
+                            ? "bg-rose-100 text-rose-700"
+                            : "bg-yellow-100 text-yellow-700"
+                          }`}
                       >
                         {order.status || "Pending"}
                       </span>
@@ -724,15 +723,21 @@ export default function CommissionReport({
                         <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200">
                           S.No
                         </th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200">
-                          Buyer Name
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200">
-                          Brand Name
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200">
-                          Payment Mode
-                        </th>
+                        {role === "admin" && (
+                          <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                            Buyer Name
+                          </th>
+                        )}
+                        {role === "admin" && (
+                          <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                            Brand Name
+                          </th>
+                        )}
+                        {role === "admin" && (
+                          <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                            Payment Mode
+                          </th>
+                        )}
                         <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200">
                           Display Name
                         </th>
@@ -790,15 +795,21 @@ export default function CommissionReport({
                             <td className="px-4 py-3 text-sm text-gray-500 border-r border-gray-100">
                               {idx + 1}
                             </td>
-                            <td className="px-4 py-3 text-sm text-gray-900 border-r border-gray-100 max-w-xs truncate">
-                              {order.shop_name || "—"}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-gray-900 border-r border-gray-100 max-w-xs truncate">
-                              {order.brand_name || "—"}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-gray-900 border-r border-gray-100 max-w-xs truncate">
-                              {order.payment_method || "—"}
-                            </td>
+                            {role === "admin" && (
+                              <td className="px-4 py-3 text-sm text-gray-900 border-r border-gray-100 max-w-xs truncate">
+                                {order.shop_name || "—"}
+                              </td>
+                            )}
+                            {role === "admin" && (
+                              <td className="px-4 py-3 text-sm text-gray-900 border-r border-gray-100 max-w-xs truncate">
+                                {order.brand_name || "—"}
+                              </td>
+                            )}
+                            {role === "admin" && (
+                              <td className="px-4 py-3 text-sm text-gray-900 border-r border-gray-100 max-w-xs truncate">
+                                {order.payment_method || "—"}
+                              </td>
+                            )}
                             <td className="px-4 py-3 text-sm text-gray-900 border-r border-gray-100 max-w-xs truncate">
                               {displayName || "—"}
                             </td>
@@ -813,7 +824,7 @@ export default function CommissionReport({
                                 parseInt(item.pairs_per_ctn || 0)}
                             </td> */}
                             <td className="px-4 py-3 text-sm text-gray-600 border-r border-gray-100">
-                              {formatCurrency(item.price)}
+                              {formatCurrency(item.selling_price || item.price)}
                             </td>
                             <td className="px-4 py-3 text-sm text-gray-600 border-r border-gray-100">
                               {item.commission_type === "per_piece_rate"
@@ -825,7 +836,7 @@ export default function CommissionReport({
                             <td className="px-4 py-3 text-sm font-medium text-fuchsia-600 border-r border-gray-100">
                               {(() => {
                                 const qty = 1;
-                                const price = Number(item.price || 0);
+                                const price = Number(item.selling_price || item.price || 0);
                                 const commission = Number(item.commission || 0);
 
                                 const adminCommission =
@@ -841,7 +852,7 @@ export default function CommissionReport({
                             <td className="px-4 py-3 text-sm text-gray-600 border-r border-gray-100">
                               {(() => {
                                 const qty = 1;
-                                const price = Number(item.price || 0);
+                                const price = Number(item.selling_price || item.price || 0);
                                 const commission = Number(item.commission || 0);
 
                                 const totalAmount = price * qty;
@@ -865,7 +876,7 @@ export default function CommissionReport({
                                 const pairsPerCtn = Number(
                                   item.pairs_per_ctn || 0,
                                 );
-                                const price = Number(item.price || 0);
+                                const price = Number(item.selling_price || item.price || 0);
                                 const commission = Number(item.commission || 0);
 
                                 const totalPairs = qty * pairsPerCtn;
@@ -886,7 +897,7 @@ export default function CommissionReport({
                                 const pairsPerCtn = Number(
                                   item.pairs_per_ctn || 0,
                                 );
-                                const price = Number(item.price || 0);
+                                const price = Number(item.selling_price || item.price || 0);
                                 const commission = Number(item.commission || 0);
 
                                 const totalPairs = qty * pairsPerCtn;
@@ -911,7 +922,7 @@ export default function CommissionReport({
                                 const pairsPerCtn = Number(
                                   item.pairs_per_ctn || 0,
                                 );
-                                const price = Number(item.price || 0);
+                                const price = Number(item.selling_price || item.price || 0);
 
                                 const totalPrice = qty * pairsPerCtn * price;
 
@@ -936,13 +947,57 @@ export default function CommissionReport({
                         );
                       })}
                     </tbody>
-                    <tfoot className="bg-purple-50 border-t-2 border-purple-300">
+                    {role === "admin" && (
+                      <tfoot className="bg-purple-50 border-t-2 border-purple-300">
+                        <tr>
+                          {/* S.No, Buyer, Brand, Payment, Display Name */}
+                          <td
+                            colSpan={5}
+                            className="px-4 py-3 text-sm font-bold text-right text-gray-700"
+                          >
+                            Order Total:
+                          </td>
+
+                          {/* CTN Qty */}
+                          <td className="px-4 py-3 text-sm font-bold text-center text-blue-600">
+                            {order.totals.total_ctn}
+                          </td>
+
+                          {/* Pairs/CTN */}
+                          <td className="px-4 py-3"></td>
+
+                          {/* Price/Pair */}
+                          <td className="px-4 py-3"></td>
+
+                          {/* Commission Type */}
+                          <td className="px-4 py-3"></td>
+
+                          {/* Commission Per Pair */}
+                          <td className="px-4 py-3"></td>
+
+                          {/* Settlement Per Pair */}
+                          <td className="px-4 py-3"></td>
+
+                          {/* Total Commission */}
+                          <td className="px-4 py-3 text-sm font-bold text-emerald-600">
+                            {formatCurrency(order.admin_commission)}
+                          </td>
+
+                          {/* Net Payable */}
+                          <td className="px-4 py-3 text-sm font-bold text-fuchsia-600">
+                            {formatCurrency(order.vendor_amount)}
+                          </td>
+
+                          {/* Total Amount */}
+                          <td className="px-4 py-3 text-sm font-bold text-purple-600">
+                            {formatCurrency(order.total_amount)}
+                          </td>
+                        </tr>
+                      </tfoot>
+                    )}
+                    <tfoot>
                       <tr>
-                        {/* S.No, Buyer, Brand, Payment, Display Name */}
-                        <td
-                          colSpan={5}
-                          className="px-4 py-3 text-sm font-bold text-right text-gray-700"
-                        >
+                        <td colSpan={2} className="px-4 py-3 text-sm font-bold text-right text-gray-700">
                           Order Total:
                         </td>
 

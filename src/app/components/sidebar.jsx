@@ -70,6 +70,7 @@ const sellerNavItems = [
     href: "/seller/restricted-districts",
     icon: Crosshair,
   },
+  { name: "Report", href: "/seller/report", icon: Book },
   { name: "Payments", href: "/seller/payments", icon: IndianRupee },
   { name: "Account", href: "/seller/account", icon: User },
   // { name: "Logout", href: "/seller/logout", icon: IndianRupee },
@@ -128,9 +129,8 @@ export default function Sidebar() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-50 h-full w-72 bg-gradient-to-b from-purple-50 via-white to-orange-50 shadow-xl transform transition-transform duration-300 ease-in-out overflow-y-auto border-r border-gray-200 ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
-        }`}
+        className={`fixed top-0 left-0 z-50 h-full w-72 bg-gradient-to-b from-purple-50 via-white to-orange-50 shadow-xl transform transition-transform duration-300 ease-in-out overflow-y-auto border-r border-gray-200 ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+          }`}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
@@ -178,11 +178,10 @@ export default function Sidebar() {
                   href={item.href}
                   onClick={() => setSidebarOpen(false)}
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200
-                  ${
-                    isActive
+                  ${isActive
                       ? "bg-gradient-to-r from-purple-50 to-orange-50 text-purple-700 border border-purple-200 shadow-sm"
                       : "text-gray-600 hover:bg-gray-50 hover:text-purple-600"
-                  }`}
+                    }`}
                 >
                   <item.icon
                     size={18}
