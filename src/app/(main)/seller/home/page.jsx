@@ -100,14 +100,32 @@ export default function SellerDashboardPage() {
             console.log("Orders Data:", ordersData.data);
             const latestOrders = (ordersData.data || [])
               .slice(0, 5)
-              .map((order) => ({
-                id: `#${order.order_id || order.id}`,
-                customer: order.city || order.customer_name || "Customer",
-                qty: `${order.total_quantity || 0} items`,
-                status: (order.status || "").toUpperCase(),
-                amount: `₹${order.total_amount || 0}`,
-                date: order.created_at || "",
-              }));
+              // .map((order) => ({
+              //   id: `#${order.order_id || order.id}`,
+              //   customer: order.city || order.customer_name || "Customer",
+
+
+              //    qty: `${totalQty} ${totalQty === 1 ? "item" : "items"}`,
+              //   status: (order.status || "").toUpperCase(),
+              //   amount: `₹${order.total_amount || 0}`,
+              //   date: order.created_at || "",
+              // }));
+              .map((order) => {
+                // Calculate total quantity from items array
+                const totalQty = order.items
+                  ? order.items.reduce((sum, product) => sum + Number(product.quantity || 0), 0)
+                  : Number(order.total_quantity || 0);
+
+                return {
+                  id: `#${order.order_id || order.id}`,
+                  customer: order.city || order.customer_name || "Customer",
+                  qty: `${totalQty} ${totalQty === 1 ? "Ctn" : "Ctn"}`,
+                  status: (order.status || "").toUpperCase(),
+                  amount: `₹${order.total_amount || 0}`,
+                  date: order.created_at || "",
+                };
+              });
+
 
             setRecentOrders(latestOrders);
           }
@@ -128,10 +146,16 @@ export default function SellerDashboardPage() {
     //   color: "from-green-400 to-emerald-600",
     // },
     {
-      title: "Total Revenue",
-      value: `₹${dashboardData?.total_revenue || 0}`,
-      icon: Wallet,
-      color: "from-blue-400 to-sky-600",
+      title: "Pending Orders",
+      value: dashboardData?.pending_orders || 0,
+      icon: Clock3,
+      color: "from-yellow-400 to-orange-500",
+    },
+    {
+      title: "Total Orders",
+      value: dashboardData?.total_orders || 0,
+      icon: PackageCheck,
+      color: "from-sky-400 to-blue-600",
     },
     {
       title: "Total Products",
@@ -140,25 +164,24 @@ export default function SellerDashboardPage() {
       color: "from-purple-400 to-fuchsia-600",
     },
     {
-      title: "Pending Orders",
-      value: dashboardData?.pending_orders || 0,
-      icon: Clock3,
-      color: "from-yellow-400 to-orange-500",
-    },
-
-    {
       title: "Stock Out",
       value: dashboardData?.stock_out || 0,
       icon: AlertTriangle,
       color: "from-red-400 to-pink-500",
     },
-
+    // {
+    //   title: "Total Revenue",
+    //   value: `₹${dashboardData?.total_revenue || 0}`,
+    //   icon: Wallet,
+    //   color: "from-blue-400 to-sky-600",
+    // },
     {
-      title: "Total Orders",
-      value: dashboardData?.total_orders || 0,
-      icon: PackageCheck,
-      color: "from-sky-400 to-blue-600",
+      title: "Month Revenue",
+      value: `₹${dashboardData?.monthly_revenue || 0}`,
+      icon: Wallet,
+      color: "from-blue-400 to-sky-600",
     },
+
 
     // {
     //   title: "Commission Reports",
@@ -252,9 +275,8 @@ export default function SellerDashboardPage() {
 
           <button
             onClick={handleRefresh}
-            className={`rounded-xl border border-violet-200 bg-white px-4 py-2 text-sm font-medium text-violet-700 transition hover:bg-violet-50 flex items-center gap-2 ${
-              isRefreshing ? "animate-spin" : ""
-            }`}
+            className={`rounded-xl border border-violet-200 bg-white px-4 py-2 text-sm font-medium text-violet-700 transition hover:bg-violet-50 flex items-center gap-2 ${isRefreshing ? "animate-spin" : ""
+              }`}
           >
             <RefreshCw
               size={16}
@@ -344,7 +366,17 @@ export default function SellerDashboardPage() {
                       {/* <p className="text-xs text-gray-500">
                         {order.customer} • {order.date}
                       </p> */}
-                      <p className="text-xs text-gray-500">{order.date}</p>
+                      <p className="text-xs text-gray-500">
+                        {order.date
+                          ? new Date(order.date).toLocaleString("en-IN", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                          : "-"}
+                      </p>
                     </div>
                   </div>
 
@@ -352,7 +384,7 @@ export default function SellerDashboardPage() {
                     <p className="text-sm font-semibold text-gray-900">
                       {order.amount}
                     </p>
-                    {/* <p className="text-xs text-gray-500">{order.qty}</p> */}
+                    <p className="text-xs text-gray-500">{order.qty}</p>
                   </div>
 
                   <span
@@ -380,18 +412,19 @@ export default function SellerDashboardPage() {
             </div>
 
             {/* <button
-              onClick={handleManageProducts}
-              className="text-sm font-medium text-violet-600 hover:text-violet-800 flex items-center gap-1 transition"
-            >
-              Manage
-              <ChevronRight size={14} />
-            </button> */}
+      onClick={handleManageProducts}
+      className="text-sm font-medium text-violet-600 hover:text-violet-800 flex items-center gap-1 transition"
+    >
+      Manage
+      <ChevronRight size={14} />
+    </button> */}
           </div>
 
-          <div className="space-y-3">
+          {/* Added max-h-[400px] and overflow-y-auto for scrollability */}
+          <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1">
             {bestSelling?.map((product, index) => (
               <div
-                key={index}
+                key={product.id || index}
                 className="flex items-center justify-between rounded-xl border border-violet-100 p-4 transition-all hover:bg-violet-50"
               >
                 <div className="flex items-center gap-3">
@@ -409,7 +442,7 @@ export default function SellerDashboardPage() {
                     </h3>
 
                     <p className="text-xs text-gray-500 mt-1">
-                      {product.total_sold} sold
+                      {product.total_sold} Ctn Sold
                     </p>
                   </div>
                 </div>

@@ -13,15 +13,26 @@ import {
     RefreshCw,
     ChevronLeft,
     ChevronRight,
-    Filter,
+    Loader2,
     Calendar,
-    TrendingUp,
-    MessageCircle,
-    Printer,
-    DollarSign,
-    IndianRupee,
 } from "lucide-react";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
+import { OrderDetailsModal } from "@/app/components/shared/VendorOrderModel";
+import { generateVendorOrderPdf } from "@/app/utils/pdf";
 
+// -------------------- Helper Functions --------------------
+const getImageUrl = (image) => {
+    if (!image) return null;
+    if (image.startsWith("http://") || image.startsWith("https://")) return image;
+    return `https://namami-infotech.com/Stepkaro/${image}`;
+};
+
+const formatCurrency = (amount) => {
+    return `RS.${Number(amount || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
+};
+
+// -------------------- Status Config --------------------
 const statusConfig = {
     NEW: {
         label: "New",
@@ -55,12 +66,13 @@ const statusConfig = {
     },
 };
 
+// -------------------- Modal Component (reusable) --------------------
 const Modal = ({ isOpen, onClose, title, children, maxWidth = "max-w-4xl" }) => {
     if (!isOpen) return null;
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
             <div className={`bg-white rounded-2xl w-full ${maxWidth} max-h-[90vh] overflow-y-auto shadow-2xl`}>
-                <div className="flex justify-between items-center p-4 border-b">
+                <div className="flex justify-between items-center p-4 border-b sticky top-0 bg-white z-10">
                     <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
                     <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-600">
                         ✕
@@ -72,6 +84,7 @@ const Modal = ({ isOpen, onClose, title, children, maxWidth = "max-w-4xl" }) => 
     );
 };
 
+// -------------------- Main Component --------------------
 export default function SellerOrdersPage() {
     const router = useRouter();
     const [orders, setOrders] = useState([]);
@@ -87,11 +100,16 @@ export default function SellerOrdersPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [toast, setToast] = useState(null);
 
+    // State for vendor-specific details modal
+    const [orderDetails, setOrderDetails] = useState(null);
+    const [downloadingPdf, setDownloadingPdf] = useState(false);
+
     const showToast = (message, type = "success") => {
         setToast({ message, type });
         setTimeout(() => setToast(null), 3000);
     };
 
+    // -------------------- Fetch Orders --------------------
     useEffect(() => {
         fetchOrders();
     }, [selectedStatus]);
@@ -115,6 +133,7 @@ export default function SellerOrdersPage() {
             const result = await response.json();
 
             if (result.success) {
+                console.log(result.data);
                 const formattedOrders = result.data.map((item) => ({
                     id: item.order_id ? item.order_id.toString() : "0",
                     order_id: item.order_id,
@@ -151,51 +170,45 @@ export default function SellerOrdersPage() {
         }
     };
 
-    // Filter orders
-    const filteredOrders = useMemo(() => {
-        let filtered = orders;
+    // -------------------- Handlers --------------------
+    const handleViewDetails = (order) => {
+        setOrderDetails(order);   // Direct selected order store karo
+        setShowDetailsModal(true);
+    };
 
-        if (selectedStatus !== "All") {
-            filtered = filtered.filter((order) => order.status === selectedStatus);
+    const handleCloseDetails = () => {
+        setShowDetailsModal(false);
+        setOrderDetails(null);
+    };
+
+
+    const handleDownloadPdf = async (orderDetails) => {
+        if (!orderDetails) return;
+        console.log(orderDetails);
+        // setDownloading(true);
+        try {
+            // Determine if we have a flat order or { order, items }
+            let orderData, itemsData;
+            if (orderDetails.order && orderDetails.items) {
+                // Structure: { order, items }
+                orderData = orderDetails.order;
+                itemsData = orderDetails.items;
+            } else {
+                // Flat order object with productsList
+                orderData = orderDetails;
+                itemsData = orderDetails.productsList || [];
+            }
+            // Ensure itemsData is an array
+            if (!Array.isArray(itemsData)) itemsData = [];
+            await generateVendorOrderPdf({ order: orderData, items: itemsData });
+        } catch (error) {
+            console.error("PDF generation failed:", error);
+        } finally {
+            // setDownloading(false);
         }
-
-        if (searchQuery) {
-            const query = searchQuery.toLowerCase();
-            filtered = filtered.filter(
-                (order) =>
-                    order.id.toLowerCase().includes(query) ||
-                    order.customer.toLowerCase().includes(query) ||
-                    order.customerName.toLowerCase().includes(query) ||
-                    order.shippingAddress.toLowerCase().includes(query) ||
-                    order.shop_name?.toLowerCase().includes(query) ||
-                    order.brand_name?.toLowerCase().includes(query)
-            );
-        }
-
-        return filtered;
-    }, [selectedStatus, searchQuery, orders]);
-
-    // Pagination
-    const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const currentOrders = filteredOrders.slice(startIndex, endIndex);
-
-    const goToPage = (page) => {
-        setCurrentPage(Math.max(1, Math.min(page, totalPages)));
     };
 
-    const handleSearch = (e) => {
-        setSearchQuery(e.target.value);
-        setCurrentPage(1);
-    };
-
-    const handleStatusFilter = (status) => {
-        setSelectedStatus(status);
-        setCurrentPage(1);
-    };
-
-    // Order actions
+    // Order actions (accept, reject, dispatch, deliver)
     const handleAcceptOrder = (order) => {
         setSelectedOrder(order);
         setActionType("accept");
@@ -228,11 +241,20 @@ export default function SellerOrdersPage() {
             let newStatus = "";
 
             switch (actionType) {
-                case "accept": newStatus = "accepted"; break;
-                case "reject": newStatus = "rejected"; break;
-                case "dispatch": newStatus = "dispatched_to_wr"; break;
-                case "Dilivered": newStatus = "received_in_wr"; break;
-                default: return;
+                case "accept":
+                    newStatus = "accepted";
+                    break;
+                case "reject":
+                    newStatus = "rejected";
+                    break;
+                case "dispatch":
+                    newStatus = "dispatched_to_wr";
+                    break;
+                case "Dilivered":
+                    newStatus = "received_in_wr";
+                    break;
+                default:
+                    return;
             }
 
             const payload = {
@@ -273,30 +295,23 @@ export default function SellerOrdersPage() {
         }
     };
 
-    const handleViewDetails = (order) => {
-        setSelectedOrder(order);
-        setShowDetailsModal(true);
-    };
-
     const handleExportOrders = () => {
         const headers = [
             "Order ID",
             "Date",
-            "Tatal No. Of Ctn",
-            "Payment",
-            "Admin Commission",
+            "Total Ctn",
+            "Total Amount",
+            "Commission",
             "Settlement Amount",
-            "Amount",
             "Status",
         ];
         const csvData = orders.map((order) => [
             order.id,
             order.date,
             order.productsList?.reduce((sum, prod) => sum + Number(prod.quantity || 0), 0) || 0,
-            order.payment,
-            order.admin_commission,
-            order.settlement_amount,
             order.amount,
+            order.admin_commission,
+            order.vendor_amount,
             order.status,
         ]);
 
@@ -311,7 +326,50 @@ export default function SellerOrdersPage() {
         showToast("Orders exported successfully!");
     };
 
-    const totalRevenue = orders.reduce((sum, o) => sum + o.amount, 0);
+    // Filter and pagination
+    const filteredOrders = useMemo(() => {
+        let filtered = orders;
+
+        if (selectedStatus !== "All") {
+            filtered = filtered.filter((order) => order.status === selectedStatus);
+        }
+
+        if (searchQuery.trim()) {
+            const query = searchQuery.toLowerCase().trim();
+
+            filtered = filtered.filter((order) =>
+                order.id.toString().includes(query) ||
+                order.customer?.toLowerCase().includes(query) ||
+                order.customerName?.toLowerCase().includes(query) ||
+                order.shop_name?.toLowerCase().includes(query) ||
+                order.brand_name?.toLowerCase().includes(query) ||
+                order.created_at?.toLowerCase().includes(query) ||
+                order.date?.toLowerCase().includes(query) ||
+                String(order.amount).includes(query)
+            );
+        }
+
+        return filtered;
+    }, [orders, selectedStatus, searchQuery]);
+
+    const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const currentOrders = filteredOrders.slice(startIndex, endIndex);
+
+    const goToPage = (page) => {
+        setCurrentPage(Math.max(1, Math.min(page, totalPages)));
+    };
+
+    const handleSearch = (e) => {
+        setSearchQuery(e.target.value);
+        setCurrentPage(1);
+    };
+
+    const handleStatusFilter = (status) => {
+        setSelectedStatus(status);
+        setCurrentPage(1);
+    };
 
     const getActionButton = (order) => {
         switch (order.status) {
@@ -350,6 +408,7 @@ export default function SellerOrdersPage() {
         }
     };
 
+    // -------------------- Render --------------------
     return (
         <div className="min-h-screen bg-gray-50 p-6">
             {/* Toast Notification */}
@@ -393,10 +452,6 @@ export default function SellerOrdersPage() {
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                {/* <div className="bg-white border border-gray-200 rounded-xl p-4 hover:border-purple-300 transition-all">
-                    <p className="text-2xl font-bold text-emerald-600">₹{totalRevenue.toLocaleString()}</p>
-                    <p className="text-xs text-gray-500">Total Revenue</p>
-                </div> */}
                 <div className="bg-white border border-gray-200 rounded-xl p-4 hover:border-purple-300 transition-all">
                     <p className="text-2xl font-bold text-gray-900">{orders.length}</p>
                     <p className="text-xs text-gray-500">Total Orders</p>
@@ -407,12 +462,6 @@ export default function SellerOrdersPage() {
                     </p>
                     <p className="text-xs text-gray-500">Pending Orders</p>
                 </div>
-                {/* <div className="bg-white border border-gray-200 rounded-xl p-4 hover:border-purple-300 transition-all">
-                    <p className="text-2xl font-bold text-purple-600">
-                        {orders.filter((o) => o.status === "ACCEPTED").length}
-                    </p>
-                    <p className="text-xs text-gray-500">Accepted Orders</p>
-                </div> */}
             </div>
 
             {/* Filters */}
@@ -468,20 +517,19 @@ export default function SellerOrdersPage() {
                                     Date
                                 </th>
                                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Total no. of CTN
+                                    Total CTN
                                 </th>
                                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Payment
+                                    Total Amount
                                 </th>
                                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Admin Commission
+                                    Commission
                                 </th>
                                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Settlement Amount
                                 </th>
-
                                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Amount
+                                    Invoice
                                 </th>
                                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Status
@@ -524,27 +572,31 @@ export default function SellerOrdersPage() {
                                             </td>
 
                                             <td className="px-6 py-4">
-                                                <span className="text-sm text-gray-600">{order.productsList?.reduce((sum, prod) => sum + Number(prod.quantity || 0), 0) || 0} Qty</span>
+                                                <span className="text-sm text-gray-600">
+                                                    {order.productsList?.reduce((sum, prod) => sum + Number(prod.quantity || 0), 0) || 0} Qty
+                                                </span>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <span className="text-xs uppercase bg-gray-100 text-gray-600 px-2 py-1 rounded">
-                                                    {order.paymentMethod || "COD"}
+                                                <span className="text-sm font-semibold text-gray-900">
+                                                    ₹{order.amount.toLocaleString()}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4">
                                                 <span className="text-sm text-gray-600">{order.admin_commission || "N/A"}</span>
                                             </td>
-
                                             <td className="px-6 py-4">
                                                 <span className="text-sm text-gray-600">{order.vendor_amount || "N/A"}</span>
                                             </td>
 
-
-
                                             <td className="px-6 py-4">
-                                                <span className="text-sm font-semibold text-gray-900">
-                                                    ₹{order.amount.toLocaleString()}
-                                                </span>
+                                                <button
+                                                    onClick={() => handleDownloadPdf(order)}
+                                                    disabled={downloadingPdf}
+                                                    className="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors disabled:opacity-50"
+                                                    title="Download Invoice"
+                                                >
+                                                    {downloadingPdf ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
+                                                </button>
                                             </td>
 
                                             <td className="px-6 py-4">
@@ -643,107 +695,13 @@ export default function SellerOrdersPage() {
                 )}
             </div>
 
-            {/* Order Details Modal */}
-            <Modal isOpen={showDetailsModal} onClose={() => setShowDetailsModal(false)} title="Order Details">
-                {selectedOrder && (
-                    <div className="space-y-5">
-                        {/* Order Header */}
-                        <div className="bg-gradient-to-r from-purple-50 to-orange-50 border border-purple-100 rounded-xl p-5">
-                            <div className="flex justify-between items-start">
-                                <div>
-                                    <p className="text-sm font-semibold uppercase tracking-wider text-purple-500">Order Reference</p>
-                                    <p className="text-2xl font-bold text-purple-950 mt-0.5">#{selectedOrder.id}</p>
-                                </div>
-                                <span className={`rounded-full px-3.5 py-1 text-xs font-bold shadow-sm ${statusConfig[selectedOrder.status]?.color || "bg-gray-100 text-gray-700"}`}>
-                                    {selectedOrder.status}
-                                </span>
-                            </div>
-                            <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 mt-4 pt-3 border-t border-purple-200/50 text-xs text-gray-600">
-                                <p>
-                                    <span className="text-gray-400 font-medium">Payment Method:</span>{" "}
-                                    <span className="font-semibold text-gray-800">{selectedOrder.paymentMethod}</span>
-                                </p>
-                                <p className="text-right">
-                                    <span className="text-gray-400 font-medium">Order Date:</span>{" "}
-                                    <span className="font-semibold text-gray-800">{selectedOrder.date}</span>
-                                </p>
-                                <p>
-                                    <span className="text-gray-400 font-medium">Total Amount:</span>{" "}
-                                    <span className="font-bold text-emerald-600">₹{selectedOrder.amount.toLocaleString()}</span>
-                                </p>
-                                <p className="text-right">
-                                    <span className="text-gray-400 font-medium">Order Time:</span>{" "}
-                                    <span className="font-semibold text-gray-800">{selectedOrder.time}</span>
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* Product List */}
-                        <div className="space-y-4">
-                            <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wide flex items-center gap-2">
-                                <span className="w-1.5 h-3.5 bg-purple-600 rounded-full inline-block"></span>
-                                Ordered Items ({selectedOrder.productsList?.length || 0} items)
-                            </h3>
-
-                            <div className="border border-gray-200 rounded-xl overflow-hidden">
-                                <table className="w-full text-sm">
-                                    <thead className="bg-gray-50">
-                                        <tr>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Product</th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Variant</th>
-                                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">Qty</th>
-                                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">Price</th>
-                                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">Total</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-100">
-                                        {selectedOrder.productsList?.map((prod, idx) => (
-                                            <tr key={idx} className="hover:bg-gray-50">
-                                                <td className="px-4 py-3">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 shrink-0">
-                                                            <img
-                                                                src={prod.image ? `https://namami-infotech.com/Stepkaro/${prod.image}` : "https://placehold.co/100x100?text=📦"}
-                                                                alt={prod.article_name}
-                                                                className="w-full h-full object-cover"
-                                                                onError={(e) => { e.target.src = "https://placehold.co/100x100?text=📦"; }}
-                                                            />
-                                                        </div>
-                                                        <div>
-                                                            <p className="font-medium text-gray-900">{prod.article_name || "Unnamed"}</p>
-                                                            {prod.brand_name && <p className="text-xs text-purple-600">{prod.brand_name}</p>}
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="px-4 py-3 text-gray-600">{prod.variant || "—"}</td>
-                                                <td className="px-4 py-3 text-right text-gray-600">{prod.quantity || 0}</td>
-                                                <td className="px-4 py-3 text-right text-gray-600">₹{Number(prod.selling_price || prod.price || 0).toLocaleString()}</td>
-                                                <td className="px-4 py-3 text-right font-semibold text-emerald-600">₹{Number(prod.total_price || 0).toLocaleString()}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                    <tfoot className="bg-gray-50 border-t border-gray-200">
-                                        <tr>
-                                            <td colSpan="3" className="px-4 py-3 text-right font-semibold text-gray-700">Total:</td>
-                                            <td className="px-4 py-3 text-right font-semibold text-gray-700">{selectedOrder.productsList?.length || 0} items</td>
-                                            <td className="px-4 py-3 text-right font-bold text-emerald-600">₹{selectedOrder.amount.toLocaleString()}</td>
-                                        </tr>
-                                    </tfoot>
-                                </table>
-                            </div>
-                        </div>
-
-                        <div className="flex gap-3 pt-2">
-                            <button
-                                onClick={() => setShowDetailsModal(false)}
-                                className="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold transition-all text-sm"
-                            >
-                                Close
-                            </button>
-                        </div>
-                    </div>
-                )}
-            </Modal>
+            {/* ========== VENDOR DETAILS MODAL ========== */}
+            <OrderDetailsModal
+                isOpen={showDetailsModal}
+                onClose={handleCloseDetails}
+                orderDetails={orderDetails}
+                loading={false}
+            />
 
             {/* Action Confirmation Modal */}
             <Modal isOpen={showActionModal} onClose={() => setShowActionModal(false)} title="Confirm Action" maxWidth="max-w-md">

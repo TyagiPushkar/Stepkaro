@@ -27,6 +27,7 @@ export default function SalesReport({
   orders = [],
   loading = false,
   error = null,
+  role = "admin",
 }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -347,11 +348,10 @@ export default function SalesReport({
           {/* Filter Toggle Button */}
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border transition-all ${
-              showFilters || isFilterActive()
-                ? "border-purple-300 bg-purple-50 text-purple-600"
-                : "border-gray-200 bg-white text-gray-600 hover:border-purple-300"
-            }`}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border transition-all ${showFilters || isFilterActive()
+              ? "border-purple-300 bg-purple-50 text-purple-600"
+              : "border-gray-200 bg-white text-gray-600 hover:border-purple-300"
+              }`}
           >
             <Filter size={18} />
             Filters
@@ -508,30 +508,40 @@ export default function SalesReport({
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200">
                   Order Date
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200">
-                  Shop
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200">
-                  Brand
-                </th>
+                {role === "admin" && (
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                    Shop
+                  </th>
+                )}
+                {role === "admin" && (
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                    Brand
+                  </th>
+                )}
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200">
                   Total CTN
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200">
-                  Payment Mode
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200">
-                  Total Amount
-                </th>
+                {role === "admin" && (
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                    Payment Mode
+                  </th>
+                )}
+                {role === "admin" && (
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                    Total Amount
+                  </th>
+                )}
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200">
                   Commission
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-r border-gray-200">
                   Amount Payable
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                  Status
-                </th>
+                {role === "admin" && (
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    Status
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -552,46 +562,55 @@ export default function SalesReport({
                       <td className="px-4 py-3 text-sm text-gray-600 border-r border-gray-100">
                         {item.created_at
                           ? new Date(item.created_at).toLocaleDateString(
-                              "en-GB",
-                            )
+                            "en-GB",
+                          )
                           : "—"}
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-500 border-r border-gray-100">
-                        {item.shop_name || "—"}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-500 border-r border-gray-100">
-                        {item.brand_name || "—"}
-                      </td>
+                      {role === "admin" && (
+                        <td className="px-4 py-3 text-sm text-gray-500 border-r border-gray-100">
+                          {item.shop_name || "—"}
+                        </td>
+                      )}
+                      {role === "admin" && (
+                        <td className="px-4 py-3 text-sm text-gray-500 border-r border-gray-100">
+                          {item.brand_name || "—"}
+                        </td>
+                      )}
                       <td className="px-4 py-3 text-sm text-center text-gray-600 border-r border-gray-100">
                         {item.total_quantity || 0}
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-600 border-r border-gray-100">
-                        <span className="px-2 py-1 bg-gray-100 rounded-full text-xs">
-                          {item.payment_method || "—"}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-sm font-semibold text-emerald-600 border-r border-gray-100">
-                        {formatCurrency(item.total_amount)}
-                      </td>
+                      {role === "admin" && (
+                        <td className="px-4 py-3 text-sm text-gray-600 border-r border-gray-100">
+                          <span className="px-2 py-1 bg-gray-100 rounded-full text-xs">
+                            {item.payment_method || "—"}
+                          </span>
+                        </td>
+                      )}
+                      {role === "admin" && (
+                        <td className="px-4 py-3 text-sm font-semibold text-emerald-600 border-r border-gray-100">
+                          {formatCurrency(item.total_amount)}
+                        </td>
+                      )}
                       <td className="px-4 py-3 text-sm text-fuchsia-600 border-r border-gray-100">
                         {formatCurrency(item.admin_commission)}
                       </td>
                       <td className="px-4 py-3 text-sm font-semibold text-purple-600 border-r border-gray-100">
                         {formatCurrency(item.vendor_amount)}
                       </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`text-xs px-3 py-1 rounded-full ${
-                            item.status === "new" || item.status === "paid"
+                      {role === "admin" && (
+                        <td className="px-4 py-3">
+                          <span
+                            className={`text-xs px-3 py-1 rounded-full ${item.status === "new" || item.status === "paid"
                               ? "bg-emerald-100 text-emerald-700"
                               : item.status === "rejected"
                                 ? "bg-rose-100 text-rose-700"
                                 : "bg-yellow-100 text-yellow-700"
-                          }`}
-                        >
-                          {item.status || "Pending"}
-                        </span>
-                      </td>
+                              }`}
+                          >
+                            {item.status || "Pending"}
+                          </span>
+                        </td>
+                      )}
                     </tr>
                   );
                 })
