@@ -1410,6 +1410,9 @@ export default function SellerProductsPage() {
                   Commission per pair
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Settlement per pair
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Variants
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -1494,6 +1497,27 @@ export default function SellerProductsPage() {
                                   100
                                 ).toFixed(2)}`
                               : `₹${Number(product.commission || 0).toFixed(2)}`}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          {/* Settlement / Payout Amount */}
+                          <span className="text-sm font-semibold text-green-600">
+                            {(() => {
+                              const sellingPrice = Number(
+                                product.selling_price || 0,
+                              );
+
+                              const commission =
+                                product.commission_type === "percentage"
+                                  ? (sellingPrice *
+                                      Number(product.commission || 0)) /
+                                    100
+                                  : Number(product.commission || 0);
+
+                              const payout = sellingPrice - commission;
+
+                              return `₹${payout.toFixed(2)}`;
+                            })()}
                           </span>
                         </td>
 

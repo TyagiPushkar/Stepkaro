@@ -348,10 +348,11 @@ export default function SalesReport({
           {/* Filter Toggle Button */}
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border transition-all ${showFilters || isFilterActive()
-              ? "border-purple-300 bg-purple-50 text-purple-600"
-              : "border-gray-200 bg-white text-gray-600 hover:border-purple-300"
-              }`}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border transition-all ${
+              showFilters || isFilterActive()
+                ? "border-purple-300 bg-purple-50 text-purple-600"
+                : "border-gray-200 bg-white text-gray-600 hover:border-purple-300"
+            }`}
           >
             <Filter size={18} />
             Filters
@@ -562,8 +563,8 @@ export default function SalesReport({
                       <td className="px-4 py-3 text-sm text-gray-600 border-r border-gray-100">
                         {item.created_at
                           ? new Date(item.created_at).toLocaleDateString(
-                            "en-GB",
-                          )
+                              "en-GB",
+                            )
                           : "—"}
                       </td>
                       {role === "admin" && (
@@ -600,12 +601,13 @@ export default function SalesReport({
                       {role === "admin" && (
                         <td className="px-4 py-3">
                           <span
-                            className={`text-xs px-3 py-1 rounded-full ${item.status === "new" || item.status === "paid"
-                              ? "bg-emerald-100 text-emerald-700"
-                              : item.status === "rejected"
-                                ? "bg-rose-100 text-rose-700"
-                                : "bg-yellow-100 text-yellow-700"
-                              }`}
+                            className={`text-xs px-3 py-1 rounded-full ${
+                              item.status === "new" || item.status === "paid"
+                                ? "bg-emerald-100 text-emerald-700"
+                                : item.status === "rejected"
+                                  ? "bg-rose-100 text-rose-700"
+                                  : "bg-yellow-100 text-yellow-700"
+                            }`}
                           >
                             {item.status || "Pending"}
                           </span>
@@ -630,7 +632,8 @@ export default function SalesReport({
               )}
             </tbody>
             {/* Excel-style Footer with Totals */}
-            {filteredOrders.length > 0 && (
+
+            {role === "admin" && filteredOrders.length > 0 && (
               <tfoot className="bg-gray-100 border-t-2 border-gray-300">
                 <tr>
                   <td
