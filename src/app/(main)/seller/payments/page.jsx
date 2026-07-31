@@ -46,19 +46,19 @@ export default function SellerPaymentsPage() {
         await Promise.all([
           fetch(
             "https://namami-infotech.com/Stepkaro/src/vender/get_vendor_pending_payments.php",
-            { headers }
+            { headers },
           ),
           fetch(
             "https://namami-infotech.com/Stepkaro/src/vender/get_vendor_payment_history.php",
-            { headers }
+            { headers },
           ),
           fetch(
             "https://namami-infotech.com/Stepkaro/src/vender/get_commission_report.php",
-            { headers }
+            { headers },
           ),
           fetch(
             "https://namami-infotech.com/Stepkaro/src/vender/get_monthly_sales_report.php",
-            { headers }
+            { headers },
           ),
         ]);
 
@@ -161,7 +161,7 @@ export default function SellerPaymentsPage() {
       "Due Date": item.due_date || "-",
       Status: "Pending",
       "Settlement Date": item.payment_date || "-",
-      "Total Amount (₹)": item.total_amount || 0,
+      // "Total Amount (₹)": item.total_amount || 0,
       "UTR/Transaction ID": item.utr_no || "-",
     }));
     exportToExcel(exportData, "Pending_Payments_Report", "Pending Payments");
@@ -177,7 +177,7 @@ export default function SellerPaymentsPage() {
       "Due Date": item.due_date || "-",
       Status: item.payment_status || "Processing",
       "Settlement Date": item.payment_date || "-",
-      "Total Amount (₹)": item.total_amount || 0,
+      // "Total Amount (₹)": item.total_amount || 0,
       "UTR/Transaction ID": item.utr_no || "-",
     }));
     exportToExcel(exportData, "Payment_History_Report", "Payment History");
@@ -384,10 +384,8 @@ export default function SellerPaymentsPage() {
                 <th className="px-6 py-4 font-semibold">Due Date</th>
                 <th className="px-6 py-4 font-semibold">Status</th>
                 <th className="px-6 py-4 font-semibold">Settlement Date</th>
-                <th className="px-6 py-4 font-semibold">Total Amount</th>
-                <th className="px-6 py-4 font-semibold">
-                  UtR/Transaction ID
-                </th>
+                {/* <th className="px-6 py-4 font-semibold">Total Amount</th> */}
+                <th className="px-6 py-4 font-semibold">UtR/Transaction ID</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-violet-100 text-sm">
@@ -403,21 +401,21 @@ export default function SellerPaymentsPage() {
                     <td className="px-6 py-4 text-sm text-gray-600">
                       {item.order_date
                         ? item.order_date
-                          .split(" ")[0]
-                          .replace(/-/g, "/")
-                          .split("/")
-                          .reverse()
-                          .join("/")
+                            .split(" ")[0]
+                            .replace(/-/g, "/")
+                            .split("/")
+                            .reverse()
+                            .join("/")
                         : "-"}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
                       {item.created_at
                         ? item.created_at
-                          .split(" ")[0]
-                          .replace(/-/g, "/")
-                          .split("/")
-                          .reverse()
-                          .join("/")
+                            .split(" ")[0]
+                            .replace(/-/g, "/")
+                            .split("/")
+                            .reverse()
+                            .join("/")
                         : "-"}
                     </td>
                     <td className="px-6 py-4 text-sm font-semibold text-teal-600">
@@ -426,11 +424,11 @@ export default function SellerPaymentsPage() {
                     <td className="px-6 py-4 text-sm text-fuchsia-600">
                       {item.due_date
                         ? item.due_date
-                          .split(" ")[0]
-                          .replace(/-/g, "/")
-                          .split("/")
-                          .reverse()
-                          .join("/")
+                            .split(" ")[0]
+                            .replace(/-/g, "/")
+                            .split("/")
+                            .reverse()
+                            .join("/")
                         : "-"}
                     </td>
                     <td className="px-6 py-4">
@@ -442,19 +440,17 @@ export default function SellerPaymentsPage() {
                     <td className="px-6 py-4 text-sm text-fuchsia-600">
                       {item.payment_date
                         ? item.payment_date
-                          .split(" ")[0]
-                          .replace(/-/g, "/")
-                          .split("/")
-                          .reverse()
-                          .join("/")
+                            .split(" ")[0]
+                            .replace(/-/g, "/")
+                            .split("/")
+                            .reverse()
+                            .join("/")
                         : "-"}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-700 font-medium">
+                    {/* <td className="px-6 py-4 text-sm text-gray-700 font-medium">
                       ₹{item.total_amount?.toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4 text-sm">
-                      {item.utr_no || "-"}
-                    </td>
+                    </td> */}
+                    <td className="px-6 py-4 text-sm">{item.utr_no || "-"}</td>
                   </tr>
                 ))
               ) : (
@@ -477,8 +473,12 @@ export default function SellerPaymentsPage() {
       <div className="mt-8 rounded-2xl bg-white border border-violet-100 shadow-lg overflow-hidden">
         <div className="px-6 py-4 border-b border-violet-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">Payment History</h2>
-            <p className="text-sm text-gray-400 mt-0.5">Recent transactions and settlements</p>
+            <h2 className="text-xl font-semibold text-gray-900">
+              Payment History
+            </h2>
+            <p className="text-sm text-gray-400 mt-0.5">
+              Recent transactions and settlements
+            </p>
           </div>
 
           {/* Ek hi single line mein bina scroll ke layout */}
@@ -540,17 +540,15 @@ export default function SellerPaymentsPage() {
                 <th className="px-6 py-4 font-semibold">Due Date</th>
                 <th className="px-6 py-4 font-semibold">Status</th>
                 <th className="px-6 py-4 font-semibold">Settlement Date</th>
-                <th className="px-6 py-4 font-semibold">Total Amount</th>
-                <th className="px-6 py-4 font-semibold">
-                  UtR/Transaction ID
-                </th>
+                {/* <th className="px-6 py-4 font-semibold">Total Amount</th> */}
+                <th className="px-6 py-4 font-semibold">UtR/Transaction ID</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-violet-100">
               {filteredPaymentHistory.length > 0 ? (
                 filteredPaymentHistory.map((item) => {
                   const statusBadge = getPaymentStatusBadge(
-                    item.payment_status
+                    item.payment_status,
                   );
                   const StatusIcon = statusBadge.icon;
                   return (
@@ -564,21 +562,21 @@ export default function SellerPaymentsPage() {
                       <td className="px-6 py-4 text-sm text-gray-700">
                         {item.order_date
                           ? item.order_date
-                            .split(" ")[0]
-                            .replace(/-/g, "/")
-                            .split("/")
-                            .reverse()
-                            .join("/")
+                              .split(" ")[0]
+                              .replace(/-/g, "/")
+                              .split("/")
+                              .reverse()
+                              .join("/")
                           : "-"}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-700">
                         {item.created_at
                           ? item.created_at
-                            .split(" ")[0]
-                            .replace(/-/g, "/")
-                            .split("/")
-                            .reverse()
-                            .join("/")
+                              .split(" ")[0]
+                              .replace(/-/g, "/")
+                              .split("/")
+                              .reverse()
+                              .join("/")
                           : "-"}
                       </td>
                       <td className="px-6 py-4 text-sm font-semibold text-teal-600">
@@ -587,11 +585,11 @@ export default function SellerPaymentsPage() {
                       <td className="px-6 py-4 text-sm text-fuchsia-600">
                         {item.due_date
                           ? item.due_date
-                            .split(" ")[0]
-                            .replace(/-/g, "/")
-                            .split("/")
-                            .reverse()
-                            .join("/")
+                              .split(" ")[0]
+                              .replace(/-/g, "/")
+                              .split("/")
+                              .reverse()
+                              .join("/")
                           : "-"}
                       </td>
                       <td className="px-6 py-4">
@@ -605,16 +603,16 @@ export default function SellerPaymentsPage() {
                       <td className="px-6 py-4 text-sm text-gray-500">
                         {item.payment_date
                           ? item.payment_date
-                            .split(" ")[0]
-                            .replace(/-/g, "/")
-                            .split("/")
-                            .reverse()
-                            .join("/")
+                              .split(" ")[0]
+                              .replace(/-/g, "/")
+                              .split("/")
+                              .reverse()
+                              .join("/")
                           : "-"}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-700">
+                      {/* <td className="px-6 py-4 text-sm text-gray-700">
                         ₹{item.total_amount?.toLocaleString()}
-                      </td>
+                      </td> */}
                       <td className="px-6 py-4 text-sm text-gray-700">
                         {item.utr_no || "-"}
                       </td>

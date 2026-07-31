@@ -90,6 +90,7 @@ export default function HomePage() {
         const resData = await response.json();
 
         if (resData.success) {
+          // console.log("orders", resData.data);
           setOrders(resData.data || []);
         }
       } catch (err) {
@@ -350,6 +351,9 @@ export default function HomePage() {
                     Order ID
                   </th>
                   <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Order Date
+                  </th>
+                  <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Shop Name
                   </th>
                   <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -389,6 +393,16 @@ export default function HomePage() {
                     >
                       <td className="p-3 text-sm font-medium text-gray-900">
                         #{order.order_id}
+                      </td>
+                      <td className="p-3 text-sm font-medium text-gray-900">
+                        {new Date(order.created_at).toLocaleDateString(
+                          "en-GB",
+                          {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                          },
+                        )}
                       </td>
                       <td className="p-3 text-sm text-gray-600">
                         {order.shop_name || order.user_name || "Guest"}
