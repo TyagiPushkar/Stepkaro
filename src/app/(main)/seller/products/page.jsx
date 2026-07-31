@@ -144,20 +144,67 @@ const VariantsDetailTable = ({
                 </div>
               </td>
               <td className="px-3 py-2 font-medium text-emerald-600">
-                {editingVariantId === variant.id ? (
-                  <input
-                    type="number"
-                    value={editVariantSellingPrice}
-                    onChange={(e) => setEditVariantSellingPrice(e.target.value)}
-                    className="w-24 border rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-                    min="0"
-                    step="0.01"
-                  />
-                ) : (
-                  <span className="text-sm font-semibold text-gray-900">
-                    ₹{variant.selling_price}
-                  </span>
-                )}
+                <div
+                  className="flex items-center gap-2"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {editingVariantId === variant.id ? (
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="number"
+                        value={editVariantSellingPrice}
+                        onChange={(e) =>
+                          setEditVariantSellingPrice(e.target.value)
+                        }
+                        className="w-24 border rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        min="0"
+                        step="0.01"
+                      />
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onSaveVariantStock(productId, variant.id);
+                        }}
+                        className="p-1 bg-emerald-500 text-white rounded hover:bg-emerald-600"
+                        title="Save"
+                      >
+                        <Check size={14} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onCancelVariantEdit();
+                        }}
+                        className="p-1 bg-gray-400 text-white rounded hover:bg-gray-500"
+                        title="Cancel"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <span className="text-sm font-semibold text-gray-900">
+                        ₹{variant.selling_price}
+                      </span>
+                      <button
+                        type="button"
+                        className="p-1 text-gray-500 hover:text-purple-600 rounded focus:outline-none"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingVariantId(variant.id);
+                          setEditVariantStock(variant.stock ?? "");
+                          setEditVariantSellingPrice(
+                            variant.selling_price ?? "",
+                          ); // ADD THIS LINE
+                        }}
+                      >
+                        <Pencil size={16} />
+                      </button>
+                    </>
+                  )}
+                </div>
               </td>
               <td className="px-3 py-2 font-medium text-emerald-600">
                 <span className="text-sm font-semibold text-purple-600">
@@ -1713,23 +1760,50 @@ export default function SellerProductsPage() {
                         </td>
 
                         <td className="px-4 py-3">
-                          {/* <span className="text-sm font-semibold text-emerald-600">
-                            ₹{product.selling_price || 0}
-                          </span> */}
-                          {editingProductId === product.id ? (
-                            <input
-                              type="number"
-                              value={editSellingPrice}
-                              onChange={(e) =>
-                                setEditSellingPrice(e.target.value)
-                              }
-                              className="w-24 px-2 py-1 border rounded-lg text-sm"
-                            />
-                          ) : (
-                            <span className="text-sm font-semibold text-emerald-600">
-                              ₹{product.selling_price}
-                            </span>
-                          )}
+                          <div className="flex items-center gap-2">
+                            {editingProductId === product.id ? (
+                              <div className="flex items-center gap-1">
+                                <input
+                                  type="number"
+                                  value={editSellingPrice}
+                                  onChange={(e) =>
+                                    setEditSellingPrice(e.target.value)
+                                  }
+                                  className="w-24 px-2 py-1 border border-violet-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-violet-500"
+                                  min="0"
+                                  autoFocus
+                                />
+
+                                <button
+                                  onClick={() => saveProductStock(product.id)}
+                                  className="p-1 bg-emerald-500 text-white rounded hover:bg-emerald-600"
+                                  title="Save"
+                                >
+                                  <Check size={14} />
+                                </button>
+
+                                <button
+                                  onClick={cancelProductEdit}
+                                  className="p-1 bg-gray-400 text-white rounded hover:bg-gray-500"
+                                  title="Cancel"
+                                >
+                                  <X size={14} />
+                                </button>
+                              </div>
+                            ) : (
+                              <>
+                                <span className="text-sm font-semibold text-emerald-600">
+                                  ₹{product.selling_price || 0}
+                                </span>
+
+                                <Pencil
+                                  size={16}
+                                  className="cursor-pointer text-gray-500 hover:text-purple-600"
+                                  onClick={() => startProductStockEdit(product)}
+                                />
+                              </>
+                            )}
+                          </div>
                         </td>
 
                         <td className="px-4 py-3">
