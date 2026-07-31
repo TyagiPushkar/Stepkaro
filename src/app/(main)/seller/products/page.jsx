@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import ProductFormModal from "@/app/components/shared/ProductFormModel";
 import ViewProductModal from "@/app/components/shared/ViewProductModal";
+import BulkUploadModal from "@/app/components/shared/BulkUploadModel";
 
 const API_BASE = "https://namami-infotech.com/Stepkaro/src";
 const IMAGE_BASE = "https://namami-infotech.com";
@@ -57,6 +58,8 @@ const VariantsDetailTable = ({
   editingVariantId,
   editVariantStock,
   setEditVariantStock,
+  editVariantSellingPrice, // ADD THIS
+  setEditVariantSellingPrice,
   setEditingVariantId,
   onSaveVariantStock,
   onCancelVariantEdit,
@@ -85,6 +88,9 @@ const VariantsDetailTable = ({
             </th>
             <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">
               Commission Per Pair
+            </th>
+            <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">
+              Settlement Per Pair
             </th>
             <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">
               Stock
@@ -138,9 +144,20 @@ const VariantsDetailTable = ({
                 </div>
               </td>
               <td className="px-3 py-2 font-medium text-emerald-600">
-                <span className="text-sm font-semibold text-gray-900">
-                  ₹{variant.selling_price || 0}
-                </span>
+                {editingVariantId === variant.id ? (
+                  <input
+                    type="number"
+                    value={editVariantSellingPrice}
+                    onChange={(e) => setEditVariantSellingPrice(e.target.value)}
+                    className="w-24 border rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    min="0"
+                    step="0.01"
+                  />
+                ) : (
+                  <span className="text-sm font-semibold text-gray-900">
+                    ₹{variant.selling_price}
+                  </span>
+                )}
               </td>
               <td className="px-3 py-2 font-medium text-emerald-600">
                 <span className="text-sm font-semibold text-purple-600">
@@ -151,6 +168,23 @@ const VariantsDetailTable = ({
                         100
                       ).toFixed(2)}`
                     : `₹${Number(product.commission || 0).toFixed(2)}`}
+                </span>
+              </td>
+              <td className="px-4 py-3">
+                {/* Settlement / Payout Amount */}
+                <span className="text-sm font-semibold text-green-600">
+                  {(() => {
+                    const sellingPrice = Number(variant.selling_price || 0);
+
+                    const commission =
+                      product.commission_type === "percentage"
+                        ? (sellingPrice * Number(product.commission || 0)) / 100
+                        : Number(product.commission || 0);
+
+                    const payout = sellingPrice - commission;
+
+                    return `₹${payout.toFixed(2)}`;
+                  })()}
                 </span>
               </td>
               <td className="px-3 py-2 text-gray-900">
@@ -204,6 +238,9 @@ const VariantsDetailTable = ({
                           e.stopPropagation();
                           setEditingVariantId(variant.id);
                           setEditVariantStock(variant.stock ?? "");
+                          setEditVariantSellingPrice(
+                            variant.selling_price ?? "",
+                          ); // ADD THIS LINE
                         }}
                       >
                         <Pencil size={16} />
@@ -260,9 +297,17 @@ export default function SellerProductsPage() {
 
   const [editingProductId, setEditingProductId] = useState(null);
   const [editProductStock, setEditProductStock] = useState("");
+  const [editSellingPrice, setEditSellingPrice] = useState("");
 
   const [editingVariantId, setEditingVariantId] = useState(null);
   const [editVariantStock, setEditVariantStock] = useState("");
+  const [editVariantSellingPrice, setEditVariantSellingPrice] = useState("");
+
+  // bulk upload model
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
+  const handleBulkModel = () => {
+    setIsBulkModalOpen(true);
+  };
 
   const [isEditing, setIsEditing] = useState(false);
   const [editProduct, setEditProduct] = useState(null);
@@ -518,13 +563,73 @@ export default function SellerProductsPage() {
     setEditingProductId(product.id);
     setEditingVariantId(null);
     setEditProductStock(product.stock_quantity ?? "");
+    setEditSellingPrice(product.selling_price ?? "");
   }, []);
 
   const cancelProductEdit = useCallback(() => {
     setEditingProductId(null);
     setEditProductStock("");
+    setEditSellingPrice("");
   }, []);
 
+  // const saveProductStock = useCallback(
+  //   async (productId) => {
+  //     const newQuantity = parseInt(editProductStock, 10);
+  //     if (isNaN(newQuantity) || newQuantity < 0) {
+  //       showToast("Please enter a valid quantity", "error");
+  //       return;
+  //     }
+
+  //     const product = products.find((p) => p.id === productId);
+  //     if (!product) return;
+
+  //     setProducts((prev) =>
+  //       prev.map((p) =>
+  //         p.id === productId ? { ...p, stock_quantity: newQuantity } : p,
+  //       ),
+  //     );
+
+  //     try {
+  //       const token = getToken();
+  //       const response = await fetch(`${API_BASE}/stock/update_stock.php`, {
+  //         method: "POST",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //         body: JSON.stringify({
+  //           product_id: productId,
+  //           stock_quantity: newQuantity,
+  //           selling_price: Number(editSellingPrice),
+  //         }),
+  //       });
+  //       const result = await response.json();
+
+  //       if (!result.success) {
+  //         throw new Error(result.message || "Failed to update stock");
+  //       }
+  //       showToast("Stock updated successfully");
+  //       setProducts((prev) =>
+  //         prev.map((p) =>
+  //           p.id === productId
+  //             ? {
+  //                 ...p,
+  //                 stock_quantity: newQuantity,
+  //                 selling_price: Number(editSellingPrice),
+  //               }
+  //             : p,
+  //         ),
+  //       );
+  //       cancelProductEdit();
+  //     } catch (error) {
+  //       setProducts((prev) =>
+  //         prev.map((p) => (p.id === productId ? product : p)),
+  //       );
+  //       showToast(error.message || "Failed to update stock", "error");
+  //     }
+  //   },
+  //   [editProductStock, products, showToast, cancelProductEdit],
+  // );
   const saveProductStock = useCallback(
     async (productId) => {
       const newQuantity = parseInt(editProductStock, 10);
@@ -536,9 +641,19 @@ export default function SellerProductsPage() {
       const product = products.find((p) => p.id === productId);
       if (!product) return;
 
+      // Store original data for rollback
+      const originalProduct = { ...product };
+
+      // Update UI optimistically
       setProducts((prev) =>
         prev.map((p) =>
-          p.id === productId ? { ...p, stock_quantity: newQuantity } : p,
+          p.id === productId
+            ? {
+                ...p,
+                stock_quantity: newQuantity,
+                selling_price: Number(editSellingPrice) || p.selling_price,
+              }
+            : p,
         ),
       );
 
@@ -553,6 +668,7 @@ export default function SellerProductsPage() {
           body: JSON.stringify({
             product_id: productId,
             stock_quantity: newQuantity,
+            selling_price: Number(editSellingPrice) || product.selling_price, // FIX: Send selling price
           }),
         });
         const result = await response.json();
@@ -560,23 +676,102 @@ export default function SellerProductsPage() {
         if (!result.success) {
           throw new Error(result.message || "Failed to update stock");
         }
+
         showToast("Stock updated successfully");
         cancelProductEdit();
       } catch (error) {
+        // Rollback on error
         setProducts((prev) =>
-          prev.map((p) => (p.id === productId ? product : p)),
+          prev.map((p) => (p.id === productId ? originalProduct : p)),
         );
         showToast(error.message || "Failed to update stock", "error");
       }
     },
-    [editProductStock, products, showToast, cancelProductEdit],
+    [
+      editProductStock,
+      editSellingPrice,
+      products,
+      showToast,
+      cancelProductEdit,
+    ],
   );
 
   const cancelVariantEdit = useCallback(() => {
     setEditingVariantId(null);
     setEditVariantStock("");
+    setEditVariantSellingPrice("");
   }, []);
 
+  // const saveVariantStock = useCallback(
+  //   async (productId, variantId) => {
+  //     const newQuantity = parseInt(editVariantStock, 10);
+  //     if (isNaN(newQuantity) || newQuantity < 0) {
+  //       showToast("Please enter a valid quantity", "error");
+  //       return;
+  //     }
+
+  //     const product = products.find((p) => p.id === productId);
+  //     if (!product) return;
+
+  //     setProducts((prev) =>
+  //       prev.map((p) =>
+  //         p.id === productId
+  //           ? {
+  //               ...p,
+  //               variants: p.variants.map((v) =>
+  //                 v.id === variantId ? { ...v, stock: newQuantity } : v,
+  //               ),
+  //             }
+  //           : p,
+  //       ),
+  //     );
+
+  //     try {
+  //       const token = getToken();
+  //       const response = await fetch(`${API_BASE}/stock/update_stock.php`, {
+  //         method: "POST",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //         body: JSON.stringify({
+  //           product_id: productId,
+  //           multi_variants: [
+  //             {
+  //               variant_id: variantId,
+  //               stock: newQuantity,
+  //               selling_price: Number(editVariantSellingPrice),
+  //             },
+  //           ],
+  //         }),
+  //       });
+  //       const result = await response.json();
+
+  //       if (!result.success) {
+  //         throw new Error(result.message || "Failed to update variant stock");
+  //       }
+  //       showToast("Variant stock updated");
+  //       variants: p.variants.map((v) =>
+  //         v.id === variantId
+  //           ? {
+  //               ...v,
+  //               stock: newQuantity,
+  //               selling_price: Number(editVariantSellingPrice),
+  //             }
+  //           : v,
+  //       );
+  //       cancelVariantEdit();
+  //     } catch (error) {
+  //       setProducts((prev) =>
+  //         prev.map((p) =>
+  //           p.id === productId ? { ...p, variants: product.variants } : p,
+  //         ),
+  //       );
+  //       showToast(error.message || "Failed to update variant stock", "error");
+  //     }
+  //   },
+  //   [editVariantStock, products, showToast, cancelVariantEdit],
+  // );
   const saveVariantStock = useCallback(
     async (productId, variantId) => {
       const newQuantity = parseInt(editVariantStock, 10);
@@ -588,13 +783,25 @@ export default function SellerProductsPage() {
       const product = products.find((p) => p.id === productId);
       if (!product) return;
 
+      // Store original variant for rollback
+      const originalVariant = product.variants.find((v) => v.id === variantId);
+      if (!originalVariant) return;
+
+      // Update UI optimistically
       setProducts((prev) =>
         prev.map((p) =>
           p.id === productId
             ? {
                 ...p,
                 variants: p.variants.map((v) =>
-                  v.id === variantId ? { ...v, stock: newQuantity } : v,
+                  v.id === variantId
+                    ? {
+                        ...v,
+                        stock: newQuantity,
+                        selling_price:
+                          Number(editVariantSellingPrice) || v.selling_price, // FIX: Update selling price
+                      }
+                    : v,
                 ),
               }
             : p,
@@ -611,7 +818,15 @@ export default function SellerProductsPage() {
           },
           body: JSON.stringify({
             product_id: productId,
-            multi_variants: [{ variant_id: variantId, stock: newQuantity }],
+            multi_variants: [
+              {
+                variant_id: variantId,
+                stock: newQuantity,
+                selling_price:
+                  Number(editVariantSellingPrice) ||
+                  originalVariant.selling_price, // FIX: Send selling price
+              },
+            ],
           }),
         });
         const result = await response.json();
@@ -619,18 +834,33 @@ export default function SellerProductsPage() {
         if (!result.success) {
           throw new Error(result.message || "Failed to update variant stock");
         }
-        showToast("Variant stock updated");
+
+        showToast("Variant stock updated successfully");
         cancelVariantEdit();
       } catch (error) {
+        // Rollback on error
         setProducts((prev) =>
           prev.map((p) =>
-            p.id === productId ? { ...p, variants: product.variants } : p,
+            p.id === productId
+              ? {
+                  ...p,
+                  variants: p.variants.map((v) =>
+                    v.id === variantId ? originalVariant : v,
+                  ),
+                }
+              : p,
           ),
         );
         showToast(error.message || "Failed to update variant stock", "error");
       }
     },
-    [editVariantStock, products, showToast, cancelVariantEdit],
+    [
+      editVariantStock,
+      editVariantSellingPrice,
+      products,
+      showToast,
+      cancelVariantEdit,
+    ],
   );
 
   const handleViewProduct = useCallback((product) => {
@@ -1027,7 +1257,7 @@ export default function SellerProductsPage() {
       filteredProducts.length > 0 ? filteredProducts : products;
 
     const headers = [
-      "ID",
+      "ProductID",
       "Brand",
       "Category",
       "Gender",
@@ -1232,6 +1462,14 @@ export default function SellerProductsPage() {
               aria-label="Search products"
             />
           </div>
+
+          <button
+            onClick={handleBulkModel}
+            className="bg-gradient-to-r from-purple-600 to-orange-500 hover:shadow-lg text-white px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-all"
+          >
+            <Plus size={16} />
+            Upload Bulk
+          </button>
 
           <button
             onClick={handleAddProduct}
@@ -1475,9 +1713,23 @@ export default function SellerProductsPage() {
                         </td>
 
                         <td className="px-4 py-3">
-                          <span className="text-sm font-semibold text-emerald-600">
+                          {/* <span className="text-sm font-semibold text-emerald-600">
                             ₹{product.selling_price || 0}
-                          </span>
+                          </span> */}
+                          {editingProductId === product.id ? (
+                            <input
+                              type="number"
+                              value={editSellingPrice}
+                              onChange={(e) =>
+                                setEditSellingPrice(e.target.value)
+                              }
+                              className="w-24 px-2 py-1 border rounded-lg text-sm"
+                            />
+                          ) : (
+                            <span className="text-sm font-semibold text-emerald-600">
+                              ₹{product.selling_price}
+                            </span>
+                          )}
                         </td>
 
                         <td className="px-4 py-3">
@@ -1645,6 +1897,12 @@ export default function SellerProductsPage() {
                                 togglingVariantId={togglingVariantId}
                                 editingVariantId={editingVariantId}
                                 editVariantStock={editVariantStock}
+                                editVariantSellingPrice={
+                                  editVariantSellingPrice
+                                } // ADD THIS
+                                setEditVariantSellingPrice={
+                                  setEditVariantSellingPrice
+                                } // ADD THIS
                                 setEditVariantStock={setEditVariantStock}
                                 setEditingVariantId={setEditingVariantId}
                                 onSaveVariantStock={saveVariantStock}
@@ -1899,6 +2157,10 @@ export default function SellerProductsPage() {
         product={selectedProduct}
         variant="seller"
         onEdit={handleEditProduct}
+      />
+      <BulkUploadModal
+        isOpen={isBulkModalOpen}
+        onClose={() => setIsBulkModalOpen(false)}
       />
     </div>
   );
