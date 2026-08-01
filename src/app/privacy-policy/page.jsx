@@ -9,12 +9,12 @@ export default function PrivacyPolicyPage() {
             {/* Header with Back Button */}
             <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
                 <div className="max-w-4xl mx-auto px-4 py-4 flex items-center gap-4">
-                    <Link
+                    {/* <Link
                         href="/"
                         className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                     >
                         <ArrowLeft className="h-5 w-5 text-gray-600" />
-                    </Link>
+                    </Link> */}
                     <div>
                         <h1 className="text-xl font-bold text-gray-900">Privacy Policy</h1>
                         {/* <p className="text-sm text-gray-500">Stepkaro Seller App</p> */}
