@@ -41,11 +41,30 @@ export default function HomePage() {
           </h1>
 
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-600">
-            <a href="#" className="hover:text-orange-500 transition">Home</a>
-            <a href="#" className="hover:text-orange-500 transition">About</a>
-            <a href="#" className="hover:text-orange-500 transition">Vendors</a>
-            <a href="#" className="hover:text-orange-500 transition">Contact</a>
-            <a href="/privacy-policy" className="hover:text-orange-500 transition">Privacy Policy</a>
+            <a href="#" className="hover:text-orange-500 transition">
+              Home
+            </a>
+            <a href="#" className="hover:text-orange-500 transition">
+              About
+            </a>
+            <a href="#" className="hover:text-orange-500 transition">
+              Vendors
+            </a>
+            <a href="#" className="hover:text-orange-500 transition">
+              Contact
+            </a>
+            <a
+              href="/seller-privacy-policy"
+              className="hover:text-orange-500 transition"
+            >
+              Seller Privacy Policy
+            </a>
+            <a
+              href="/buyer-privacy-policy"
+              className="hover:text-orange-500 transition"
+            >
+              Buyer Privacy Policy
+            </a>
           </nav>
 
           <div className="flex gap-3">
@@ -55,7 +74,6 @@ export default function HomePage() {
             >
               Login
             </button>
-
           </div>
         </div>
       </header>
@@ -64,7 +82,6 @@ export default function HomePage() {
       <section className="relative overflow-hidden bg-gradient-to-br from-purple-50 via-white to-orange-50">
         <div className="max-w-7xl mx-auto px-6 py-20 lg:py-28">
           <div className="text-center max-w-4xl mx-auto">
-
             <div className="mt-8">
               <h1 className="text-5xl md:text-7xl font-bold text-gray-900 leading-tight">
                 Step<span className="text-purple-600">Karo</span>
@@ -74,9 +91,9 @@ export default function HomePage() {
               </p>
             </div>
 
-
             <p className="max-w-3xl mx-auto mt-6 text-lg text-gray-500 leading-relaxed">
-              Access factory prices, view live stock and place orders anytime – without middlemen.
+              Access factory prices, view live stock and place orders anytime –
+              without middlemen.
             </p>
 
             <div className="mt-10 flex flex-wrap justify-center gap-4">
@@ -102,8 +119,13 @@ export default function HomePage() {
                 { number: "1 Lakh+", label: "Products" },
                 { number: "Pan India", label: "Reach" },
               ].map((stat) => (
-                <div key={stat.label} className="rounded-2xl bg-white border border-gray-100 shadow-sm p-6 hover:shadow-md transition">
-                  <h3 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-orange-500 bg-clip-text text-transparent">{stat.number}</h3>
+                <div
+                  key={stat.label}
+                  className="rounded-2xl bg-white border border-gray-100 shadow-sm p-6 hover:shadow-md transition"
+                >
+                  <h3 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-orange-500 bg-clip-text text-transparent">
+                    {stat.number}
+                  </h3>
                   <p className="mt-2 text-sm text-gray-500">{stat.label}</p>
                 </div>
               ))}
@@ -116,24 +138,45 @@ export default function HomePage() {
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900">BENEFITS FOR WHOLESALERS</h2>
+            <h2 className="text-3xl font-bold text-gray-900">
+              BENEFITS FOR WHOLESALERS
+            </h2>
           </div>
 
           <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
             <div className="space-y-3 text-gray-700">
-              <p className="flex items-center gap-2 text-orange-600 font-medium">✓ Direct factory prices</p>
-              <p className="flex items-center gap-2 text-orange-600 font-medium">✓ No hidden margins</p>
-              <p className="flex items-center gap-2 text-orange-600 font-medium">✓ All designs, rates & live stock in one app</p>
-              <p className="flex items-center gap-2 text-orange-600 font-medium">✓ No need to wait for photos / rates</p>
-              <p className="flex items-center gap-2 text-orange-600 font-medium  ">✓ App-only offers for wholesalers</p>
+              <p className="flex items-center gap-2 text-orange-600 font-medium">
+                ✓ Direct factory prices
+              </p>
+              <p className="flex items-center gap-2 text-orange-600 font-medium">
+                ✓ No hidden margins
+              </p>
+              <p className="flex items-center gap-2 text-orange-600 font-medium">
+                ✓ All designs, rates & live stock in one app
+              </p>
+              <p className="flex items-center gap-2 text-orange-600 font-medium">
+                ✓ No need to wait for photos / rates
+              </p>
+              <p className="flex items-center gap-2 text-orange-600 font-medium  ">
+                ✓ App-only offers for wholesalers
+              </p>
             </div>
             <div className="space-y-3 text-gray-700">
-              <p className="flex items-center gap-2 text-orange-600 font-medium">✓ 24/7 ordering – anytime, anywhere</p>
-              <p className="flex items-center gap-2 text-orange-600 font-medium">✓ No calling – instant order confirmation</p>
-              <p className="flex items-center gap-2 text-orange-600 font-medium">✓ Transparent pricing always</p>
-              <p className="flex items-center gap-2 text-orange-600 font-medium">✓ Faster dispatch & reliable delivery</p>
-              <p className="flex items-center gap-2 text-orange-600 font-medium ">✓ Better margins, more profit</p>
-
+              <p className="flex items-center gap-2 text-orange-600 font-medium">
+                ✓ 24/7 ordering – anytime, anywhere
+              </p>
+              <p className="flex items-center gap-2 text-orange-600 font-medium">
+                ✓ No calling – instant order confirmation
+              </p>
+              <p className="flex items-center gap-2 text-orange-600 font-medium">
+                ✓ Transparent pricing always
+              </p>
+              <p className="flex items-center gap-2 text-orange-600 font-medium">
+                ✓ Faster dispatch & reliable delivery
+              </p>
+              <p className="flex items-center gap-2 text-orange-600 font-medium ">
+                ✓ Better margins, more profit
+              </p>
             </div>
           </div>
 
@@ -152,19 +195,31 @@ export default function HomePage() {
       <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900">BENEFITS FOR MANUFACTURERS</h2>
+            <h2 className="text-3xl font-bold text-gray-900">
+              BENEFITS FOR MANUFACTURERS
+            </h2>
           </div>
 
           <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
             <div className="space-y-3 text-gray-700">
-              <p className="flex items-center gap-2">✓ Receive orders from wholesalers across India</p>
-              <p className="flex items-center gap-2">✓ Sell Pan-India & expand beyond local market</p>
+              <p className="flex items-center gap-2">
+                ✓ Receive orders from wholesalers across India
+              </p>
+              <p className="flex items-center gap-2">
+                ✓ Sell Pan-India & expand beyond local market
+              </p>
               <p className="flex items-center gap-2">✓ Zero joining fees</p>
             </div>
             <div className="space-y-3 text-gray-700">
-              <p className="flex items-center gap-2">✓ Add unlimited products</p>
-              <p className="flex items-center gap-2">✓ Secure & fast payments</p>
-              <p className="flex items-center gap-2">✓ Dedicated seller support</p>
+              <p className="flex items-center gap-2">
+                ✓ Add unlimited products
+              </p>
+              <p className="flex items-center gap-2">
+                ✓ Secure & fast payments
+              </p>
+              <p className="flex items-center gap-2">
+                ✓ Dedicated seller support
+              </p>
             </div>
           </div>
 
@@ -183,29 +238,61 @@ export default function HomePage() {
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900">WHY CHOOSE STEPKARO?</h2>
+            <h2 className="text-3xl font-bold text-gray-900">
+              WHY CHOOSE STEPKARO?
+            </h2>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { title: "DIRECT FACTORY ACCESS", desc: "Connect directly with verified manufacturers" },
-              { title: "VERIFIED MANUFACTURERS", desc: "Every partner is thoroughly verified" },
-              { title: "TRANSPARENT PRICING", desc: "No hidden margins, clear factory prices" },
-              { title: "LIVE STOCK & NEW DESIGNS", desc: "Real-time inventory updates" },
+              {
+                title: "DIRECT FACTORY ACCESS",
+                desc: "Connect directly with verified manufacturers",
+              },
+              {
+                title: "VERIFIED MANUFACTURERS",
+                desc: "Every partner is thoroughly verified",
+              },
+              {
+                title: "TRANSPARENT PRICING",
+                desc: "No hidden margins, clear factory prices",
+              },
+              {
+                title: "LIVE STOCK & NEW DESIGNS",
+                desc: "Real-time inventory updates",
+              },
               { title: "24/7 ORDERING", desc: "Order anytime, anywhere" },
-              { title: "FAST DISPATCH & RELIABLE DELIVERY", desc: "Quick shipping across India" },
-              { title: "PAY LESS, EARN MORE", desc: "Better margins for wholesalers" },
+              {
+                title: "FAST DISPATCH & RELIABLE DELIVERY",
+                desc: "Quick shipping across India",
+              },
+              {
+                title: "PAY LESS, EARN MORE",
+                desc: "Better margins for wholesalers",
+              },
             ].map((item) => (
               <div
                 key={item.title}
                 className="rounded-2xl bg-gradient-to-br from-purple-50 to-orange-50 p-6 shadow-sm border border-orange-100 hover:shadow-md transition"
               >
                 <div className="w-12 h-12 bg-gradient-to-r from-purple-600 to-orange-500 rounded-xl flex items-center justify-center mb-4">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  <svg
+                    className="w-6 h-6 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
                 </div>
-                <h3 className="text-sm font-bold text-gray-800">{item.title}</h3>
+                <h3 className="text-sm font-bold text-gray-800">
+                  {item.title}
+                </h3>
                 <p className="mt-2 text-xs text-gray-500">{item.desc}</p>
               </div>
             ))}
@@ -232,7 +319,9 @@ export default function HomePage() {
                 <div className="w-14 h-14 mx-auto rounded-full bg-gradient-to-r from-purple-600 to-orange-500 text-white flex items-center justify-center text-xl font-bold mb-3">
                   {item.step}
                 </div>
-                <p className="text-xs font-medium text-gray-700">{item.title}</p>
+                <p className="text-xs font-medium text-gray-700">
+                  {item.title}
+                </p>
               </div>
             ))}
           </div>
@@ -244,7 +333,9 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid lg:grid-cols-2 gap-8">
             <div className="rounded-2xl bg-gray-100 p-8">
-              <h3 className="text-2xl font-bold text-red-500 mb-6">TRADITIONAL SOURCING</h3>
+              <h3 className="text-2xl font-bold text-red-500 mb-6">
+                TRADITIONAL SOURCING
+              </h3>
               <div className="space-y-3 text-gray-600">
                 <p>❌ Multiple Middlemen</p>
                 <p>❌ Price Negotiation</p>
@@ -254,7 +345,9 @@ export default function HomePage() {
               </div>
             </div>
             <div className="rounded-2xl bg-gradient-to-br from-purple-50 to-orange-50 p-8">
-              <h3 className="text-2xl font-bold text-purple-600 mb-6">WITH STEPKARO</h3>
+              <h3 className="text-2xl font-bold text-purple-600 mb-6">
+                WITH STEPKARO
+              </h3>
               <div className="space-y-3 text-gray-600">
                 <p>✅ Direct Factory Access</p>
                 <p>✅ Transparent Factory Prices</p>
@@ -271,11 +364,23 @@ export default function HomePage() {
       <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900">WHAT YOU CAN SELL / SOURCE</h2>
+            <h2 className="text-3xl font-bold text-gray-900">
+              WHAT YOU CAN SELL / SOURCE
+            </h2>
           </div>
           <div className="flex flex-wrap justify-center gap-3">
-            {["EVA Footwear", "PU Footwear", "PVC Footwear", "Kids Sandals", "Gents Slippers & Hawai", "Ladies Fashion Slippers"].map((cat) => (
-              <span key={cat} className="px-6 py-3 rounded-full bg-white border border-orange-200 text-gray-700 font-medium hover:bg-orange-50 hover:border-orange-300 transition">
+            {[
+              "EVA Footwear",
+              "PU Footwear",
+              "PVC Footwear",
+              "Kids Sandals",
+              "Gents Slippers & Hawai",
+              "Ladies Fashion Slippers",
+            ].map((cat) => (
+              <span
+                key={cat}
+                className="px-6 py-3 rounded-full bg-white border border-orange-200 text-gray-700 font-medium hover:bg-orange-50 hover:border-orange-300 transition"
+              >
                 {cat}
               </span>
             ))}
@@ -286,7 +391,9 @@ export default function HomePage() {
       {/* App Download */}
       <section className="py-20 bg-gradient-to-r from-purple-600 to-orange-500">
         <div className="max-w-7xl mx-auto px-6 text-center">
-          <h2 className="text-4xl font-bold text-white">DOWNLOAD STEPKARO – PAY LESS, EARN MORE.</h2>
+          <h2 className="text-4xl font-bold text-white">
+            DOWNLOAD STEPKARO – PAY LESS, EARN MORE.
+          </h2>
           <div className="mt-8 flex flex-wrap justify-center gap-4">
             <button className="px-8 py-3 rounded-xl bg-black text-white font-semibold hover:bg-gray-900 transition flex items-center gap-2">
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -301,7 +408,9 @@ export default function HomePage() {
               Download on the App Store
             </button>
           </div>
-          <p className="mt-6 text-white/80 text-sm font-medium">INDIA'S FASTEST GROWING FOOTWEAR B2B PLATFORM</p>
+          <p className="mt-6 text-white/80 text-sm font-medium">
+            INDIA'S FASTEST GROWING FOOTWEAR B2B PLATFORM
+          </p>
         </div>
       </section>
 
@@ -318,10 +427,11 @@ export default function HomePage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-6 py-3 text-sm font-medium rounded-t-lg transition ${activeTab === tab.id
-                  ? "bg-white text-orange-600 border-b-2 border-orange-500"
-                  : "text-gray-500 hover:text-orange-500"
-                  }`}
+                className={`px-6 py-3 text-sm font-medium rounded-t-lg transition ${
+                  activeTab === tab.id
+                    ? "bg-white text-orange-600 border-b-2 border-orange-500"
+                    : "text-gray-500 hover:text-orange-500"
+                }`}
               >
                 {tab.label}
               </button>
@@ -331,21 +441,46 @@ export default function HomePage() {
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
             {activeTab === "contact" && (
               <div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">Contact Us</h3>
+                <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                  Contact Us
+                </h3>
                 <p className="text-gray-600 mb-6">
-                  Stepkaro Technologies Pvt. Ltd.<br />
+                  Stepkaro Technologies Pvt. Ltd.
+                  <br />
                   Connecting Footwear Wholesalers Directly with Manufacturers.
                 </p>
                 <div className="space-y-3 text-gray-600">
-                  <p><strong className="text-orange-600">Email:</strong> support@stepkaro.com</p>
-                  <p><strong className="text-orange-600">Website:</strong> <a href="https://www.stepkaro.in" target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:underline">www.stepkaro.in</a></p>
-                  <p><strong className="text-orange-600">Phone:</strong>+91 92170 56915</p>
-                  <p><strong className="text-orange-600">Business Hours:</strong> Monday to Friday, 10:00 AM – 6:00 PM</p>
+                  <p>
+                    <strong className="text-orange-600">Email:</strong>{" "}
+                    support@stepkaro.com
+                  </p>
+                  <p>
+                    <strong className="text-orange-600">Website:</strong>{" "}
+                    <a
+                      href="https://www.stepkaro.in"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-orange-600 hover:underline"
+                    >
+                      www.stepkaro.in
+                    </a>
+                  </p>
+                  <p>
+                    <strong className="text-orange-600">Phone:</strong>+91 92170
+                    56915
+                  </p>
+                  <p>
+                    <strong className="text-orange-600">Business Hours:</strong>{" "}
+                    Monday to Friday, 10:00 AM – 6:00 PM
+                  </p>
                 </div>
                 <div className="mt-6 p-4 bg-orange-50 rounded-xl">
                   <p className="text-gray-700">
-                    <strong>Support:</strong> For account assistance, onboarding, business inquiries, or partnership opportunities, please contact our support team.
-                    We are committed to helping wholesalers discover manufacturers and helping manufacturers grow their business across India.
+                    <strong>Support:</strong> For account assistance,
+                    onboarding, business inquiries, or partnership
+                    opportunities, please contact our support team. We are
+                    committed to helping wholesalers discover manufacturers and
+                    helping manufacturers grow their business across India.
                   </p>
                 </div>
               </div>
@@ -353,41 +488,133 @@ export default function HomePage() {
 
             {activeTab === "refund" && (
               <div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">Refund Policy</h3>
-                <p className="text-sm text-gray-500 mb-6">Last Updated: June 2026</p>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                  Refund Policy
+                </h3>
+                <p className="text-sm text-gray-500 mb-6">
+                  Last Updated: June 2026
+                </p>
                 <div className="space-y-4 text-gray-600">
-                  <p><strong className="text-orange-600">Platform Services:</strong> Any subscription fees, promotional services, listing fees, or paid services offered by Stepkaro may be subject to separate refund terms communicated at the time of purchase.</p>
-                  <p><strong className="text-orange-600">Transactions Between Users:</strong> Stepkaro is not responsible for product purchases, payments, deliveries, returns, or disputes between wholesalers and manufacturers.</p>
-                  <p><strong className="text-orange-600">Refund Eligibility:</strong> Refund requests for platform services, if applicable, will be reviewed on a case-by-case basis.</p>
-                  <p><strong className="text-orange-600">Non-Refundable Situations:</strong> Refunds will generally not be provided for: Completed promotional services, Successfully activated subscriptions, User account violations, Incorrect information submitted by users.</p>
-                  <p><strong className="text-orange-600">Contact for Refund Requests:</strong> Email: support@stepkaro.com</p>
-                  <p className="text-sm text-gray-500 mt-4">Stepkaro reserves the right to make the final decision regarding refund requests.</p>
+                  <p>
+                    <strong className="text-orange-600">
+                      Platform Services:
+                    </strong>{" "}
+                    Any subscription fees, promotional services, listing fees,
+                    or paid services offered by Stepkaro may be subject to
+                    separate refund terms communicated at the time of purchase.
+                  </p>
+                  <p>
+                    <strong className="text-orange-600">
+                      Transactions Between Users:
+                    </strong>{" "}
+                    Stepkaro is not responsible for product purchases, payments,
+                    deliveries, returns, or disputes between wholesalers and
+                    manufacturers.
+                  </p>
+                  <p>
+                    <strong className="text-orange-600">
+                      Refund Eligibility:
+                    </strong>{" "}
+                    Refund requests for platform services, if applicable, will
+                    be reviewed on a case-by-case basis.
+                  </p>
+                  <p>
+                    <strong className="text-orange-600">
+                      Non-Refundable Situations:
+                    </strong>{" "}
+                    Refunds will generally not be provided for: Completed
+                    promotional services, Successfully activated subscriptions,
+                    User account violations, Incorrect information submitted by
+                    users.
+                  </p>
+                  <p>
+                    <strong className="text-orange-600">
+                      Contact for Refund Requests:
+                    </strong>{" "}
+                    Email: support@stepkaro.com
+                  </p>
+                  <p className="text-sm text-gray-500 mt-4">
+                    Stepkaro reserves the right to make the final decision
+                    regarding refund requests.
+                  </p>
                 </div>
               </div>
             )}
 
             {activeTab === "terms" && (
               <div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">Terms & Conditions</h3>
-                <p className="text-sm text-gray-500 mb-6">Last Updated: June 2026</p>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                  Terms & Conditions
+                </h3>
+                <p className="text-sm text-gray-500 mb-6">
+                  Last Updated: June 2026
+                </p>
                 <div className="space-y-3 text-gray-600">
-                  <p><strong className="text-orange-600">Platform Purpose:</strong> Stepkaro is a B2B footwear platform designed to connect footwear wholesalers directly with manufacturers.</p>
-                  <p><strong className="text-orange-600">User Eligibility:</strong> Users must be legally authorized businesses, manufacturers, wholesalers, distributors, or related footwear trade entities.</p>
-                  <p><strong className="text-orange-600">Account Responsibility:</strong> Users are responsible for maintaining the confidentiality of their account credentials.</p>
-                  <p><strong className="text-orange-600">Business Transactions:</strong> Stepkaro acts as a technology platform facilitating business connections.</p>
-                  <p><strong className="text-orange-600">Contact:</strong> For support: support@stepkaro.com</p>
+                  <p>
+                    <strong className="text-orange-600">
+                      Platform Purpose:
+                    </strong>{" "}
+                    Stepkaro is a B2B footwear platform designed to connect
+                    footwear wholesalers directly with manufacturers.
+                  </p>
+                  <p>
+                    <strong className="text-orange-600">
+                      User Eligibility:
+                    </strong>{" "}
+                    Users must be legally authorized businesses, manufacturers,
+                    wholesalers, distributors, or related footwear trade
+                    entities.
+                  </p>
+                  <p>
+                    <strong className="text-orange-600">
+                      Account Responsibility:
+                    </strong>{" "}
+                    Users are responsible for maintaining the confidentiality of
+                    their account credentials.
+                  </p>
+                  <p>
+                    <strong className="text-orange-600">
+                      Business Transactions:
+                    </strong>{" "}
+                    Stepkaro acts as a technology platform facilitating business
+                    connections.
+                  </p>
+                  <p>
+                    <strong className="text-orange-600">Contact:</strong> For
+                    support: support@stepkaro.com
+                  </p>
                 </div>
               </div>
             )}
 
             {activeTab === "privacy" && (
               <div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">Privacy Policy</h3>
-                <p className="text-gray-600 mb-4">Stepkaro respects your privacy and is committed to protecting your information.</p>
+                <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                  Privacy Policy
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  Stepkaro respects your privacy and is committed to protecting
+                  your information.
+                </p>
                 <div className="space-y-3 text-gray-600">
-                  <p><strong className="text-orange-600">Information We Collect:</strong> Name, Mobile Number, Email, Business Name, GST Details, City, State, Business Category.</p>
-                  <p><strong className="text-orange-600">How We Use Your Information:</strong> To create accounts, connect users, improve services, provide support, send updates.</p>
-                  <p><strong className="text-orange-600">Contact:</strong> support@stepkaro.com</p>
+                  <p>
+                    <strong className="text-orange-600">
+                      Information We Collect:
+                    </strong>{" "}
+                    Name, Mobile Number, Email, Business Name, GST Details,
+                    City, State, Business Category.
+                  </p>
+                  <p>
+                    <strong className="text-orange-600">
+                      How We Use Your Information:
+                    </strong>{" "}
+                    To create accounts, connect users, improve services, provide
+                    support, send updates.
+                  </p>
+                  <p>
+                    <strong className="text-orange-600">Contact:</strong>{" "}
+                    support@stepkaro.com
+                  </p>
                 </div>
               </div>
             )}
@@ -399,9 +626,12 @@ export default function HomePage() {
       <section className="py-20">
         <div className="max-w-5xl mx-auto px-6">
           <div className="rounded-3xl bg-gradient-to-r from-purple-600 to-orange-500 p-14 text-center shadow-xl">
-            <h2 className="text-4xl font-bold text-white">Ready to Grow with StepKaro?</h2>
+            <h2 className="text-4xl font-bold text-white">
+              Ready to Grow with StepKaro?
+            </h2>
             <p className="mt-4 text-white/90 text-lg">
-              Join India's growing product sourcing ecosystem and connect with businesses across the country.
+              Join India's growing product sourcing ecosystem and connect with
+              businesses across the country.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-4">
               <button
@@ -425,14 +655,41 @@ export default function HomePage() {
       <footer className="border-t border-gray-100 bg-gray-50 py-12">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
           <div>
-            <h3 className="text-2xl font-bold text-gray-900">Step<span className="bg-gradient-to-r from-purple-600 to-orange-500 bg-clip-text text-transparent">Karo</span></h3>
-            <p className="mt-1 text-sm text-gray-500">India's Fastest Growing Footwear B2B Platform</p>
+            <h3 className="text-2xl font-bold text-gray-900">
+              Step
+              <span className="bg-gradient-to-r from-purple-600 to-orange-500 bg-clip-text text-transparent">
+                Karo
+              </span>
+            </h3>
+            <p className="mt-1 text-sm text-gray-500">
+              India's Fastest Growing Footwear B2B Platform
+            </p>
           </div>
           <div className="flex gap-6 text-sm text-gray-500">
-            <button onClick={() => setActiveTab("privacy")} className="hover:text-orange-500 transition">Privacy Policy</button>
-            <button onClick={() => setActiveTab("terms")} className="hover:text-orange-500 transition">Terms & Conditions</button>
-            <button onClick={() => setActiveTab("refund")} className="hover:text-orange-500 transition">Refund Policy</button>
-            <button onClick={() => setActiveTab("contact")} className="hover:text-orange-500 transition">Contact Us</button>
+            <button
+              onClick={() => setActiveTab("privacy")}
+              className="hover:text-orange-500 transition"
+            >
+              Privacy Policy
+            </button>
+            <button
+              onClick={() => setActiveTab("terms")}
+              className="hover:text-orange-500 transition"
+            >
+              Terms & Conditions
+            </button>
+            <button
+              onClick={() => setActiveTab("refund")}
+              className="hover:text-orange-500 transition"
+            >
+              Refund Policy
+            </button>
+            <button
+              onClick={() => setActiveTab("contact")}
+              className="hover:text-orange-500 transition"
+            >
+              Contact Us
+            </button>
           </div>
         </div>
       </footer>
