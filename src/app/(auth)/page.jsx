@@ -49,7 +49,7 @@ export default function HomePage() {
           >
             <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-amber-400 bg-purple-900 flex items-center justify-center shadow-md">
               <Image
-                src="/logo.jpeg"
+                src="/logo1.png"
                 alt="Stepkaro Logo"
                 fill
                 className="object-cover"
@@ -91,7 +91,7 @@ export default function HomePage() {
           </nav>
 
           {/* CTA Download App Button & Mobile Menu Button */}
-          <div className="flex items-center gap-3">
+          {/* <div className="flex items-center gap-3 sm:gap-3">
             <button
               onClick={handleLogin}
               className="px-5 py-2.5 rounded-full bg-[#ff6b00] hover:bg-orange-600 text-white font-bold text-sm transition shadow-md shadow-orange-500/30 flex items-center gap-2 active:scale-95"
@@ -106,6 +106,30 @@ export default function HomePage() {
               aria-label="Toggle menu"
             >
               <Bars3Icon className="w-6 h-6" />
+            </button>
+          </div> */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            <button
+              onClick={handleLogin}
+              className="flex items-center gap-1 sm:gap-2
+               px-3 py-2 sm:px-5 sm:py-2.5
+               rounded-full
+               bg-[#ff6b00] hover:bg-orange-600
+               text-white font-semibold sm:font-bold
+               text-xs sm:text-sm
+               transition shadow-md shadow-orange-500/30
+               active:scale-95"
+            >
+              <ArrowDownTrayIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+              <span>Download App</span>
+            </button>
+
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden p-2 rounded-lg bg-purple-900/60 text-slate-200 hover:text-white"
+              aria-label="Toggle menu"
+            >
+              <Bars3Icon className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
           </div>
         </div>
@@ -176,14 +200,16 @@ export default function HomePage() {
           <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-center">
             {/* Hero Left Content */}
             <div className="lg:col-span-6 space-y-6 text-center lg:text-left">
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1] text-white uppercase">
-                CONNECT DIRECTLY <br />
-                WITH FOOTWEAR <br />
-                <span className="text-[#ff6b00] font-black text-4xl sm:text-5xl md:text-6xl lg:text-7xl drop-shadow-md">
-                  FACTORIES
+              <h1 className="text-3xl sm:text-3xl md:text-5xl lg:text-5xl font-extrabold uppercase leading-tight tracking-tight text-white">
+                Stepkaro Directly Connects{" "}
+                <span className="text-[#ff6b00] text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black drop-shadow-md">
+                  Wholesalers
                 </span>{" "}
-                <br />
-                ACROSS INDIA
+                With Footwear{" "}
+                <span className="text-[#ff6b00] text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black drop-shadow-md">
+                  Factories
+                </span>{" "}
+                {/* Across India */}
               </h1>
 
               <p className="text-slate-300 text-sm sm:text-base md:text-lg max-w-xl mx-auto lg:mx-0 leading-relaxed font-normal">
@@ -707,7 +733,7 @@ export default function HomePage() {
             <div className="flex justify-center items-center gap-2">
               <div className="relative w-8 h-8 rounded-full overflow-hidden border border-amber-400">
                 <Image
-                  src="/logo.jpeg"
+                  src="/logo1.png"
                   alt="Stepkaro Logo"
                   fill
                   className="object-cover"
