@@ -47,7 +47,7 @@ export default function HomePage() {
             className="flex items-center gap-3 cursor-pointer group"
             onClick={() => router.push("/")}
           >
-            <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-amber-400 bg-purple-900 flex items-center justify-center shadow-md">
+            <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-white bg-purple-900 flex items-center justify-center shadow-md">
               <Image
                 src="/logo1.png"
                 alt="Stepkaro Logo"
@@ -731,7 +731,7 @@ export default function HomePage() {
           {/* Middle Column */}
           <div className="text-center space-y-2">
             <div className="flex justify-center items-center gap-2">
-              <div className="relative w-8 h-8 rounded-full overflow-hidden border border-amber-400">
+              <div className="relative w-12 h-12 rounded-full overflow-hidden border border-white">
                 <Image
                   src="/logo1.png"
                   alt="Stepkaro Logo"
@@ -761,9 +761,9 @@ export default function HomePage() {
             </p>
             <p className="font-medium flex items-center justify-center md:justify-end gap-2 hover:text-amber-400 cursor-pointer">
               <GlobeAsiaAustraliaIcon className="w-4 h-4 text-amber-400" />
-              <span>www.stepkaro.com</span>
+              <span>www.stepkaro.in</span>
             </p>
-            <p className="text-slate-400 font-medium">support@stepkaro.com</p>
+            <p className="text-slate-400 font-medium">info@stepkaro.in</p>
           </div>
         </div>
 
