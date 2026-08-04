@@ -96,19 +96,19 @@ export default function Login() {
         {/* Brand Section - Left Side */}
         <div className="flex-1 text-center lg:text-left space-y-6">
           <div className="inline-flex items-center gap-3 bg-purple-50 rounded-2xl px-4 py-2 lg:mx-0 mx-auto border border-purple-100">
-            <div className="w-3 h-3 bg-purple-500 rounded-full animate-pulse" />
-            <span className="text-purple-600 text-sm font-medium">
-              Secure Admin Login
+            <div className="w-3 h-3 bg-[#170a3b] rounded-full animate-pulse" />
+            <span className="text-[#170a3b] text-sm font-medium">
+              Secure Login
             </span>
           </div>
 
-          <h1 className="text-5xl lg:text-6xl font-bold text-gray-900">
-            Step<span className="text-purple-600">Karo</span>
+          <h1 className="text-5xl lg:text-6xl font-bold text-[#170a3b]">
+            Step<span className="text-[#ff6b00]">Karo</span>
           </h1>
 
           <p className="text-gray-600 text-lg max-w-md lg:mx-0 mx-auto">
-            Manage your marketplace, track orders, and grow your business with
-            powerful analytics.
+            Log in to manage your factory catalog, fulfill bulk wholesale
+            orders, and scale your footwear business seamlessly.
           </p>
 
           {/* Feature badges */}
@@ -209,7 +209,7 @@ export default function Login() {
                 </a>
               </div>
 
-              <div className="flex justify-center">
+              {/* <div className="flex justify-center">
                 <ReCAPTCHA
                   sitekey="6LflhNgsAAAAAPAp5TS5W-QxR2feOSikw3gGVKfR"
                   onChange={(token) => {
@@ -217,7 +217,7 @@ export default function Login() {
                     setCaptchaToken(token);
                   }}
                 />
-              </div>
+              </div> */}
 
               <button
                 type="submit"
@@ -234,8 +234,6 @@ export default function Login() {
                 )}
               </button>
             </form>
-
-          
           </div>
         </div>
       </div>
