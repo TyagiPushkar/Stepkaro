@@ -82,7 +82,7 @@ export default function HomePage() {
             <a href="#why-choose" className="hover:text-[#ff6b00] transition">
               Features
             </a>
-            <a href="#support" className="hover:text-[#ff6b00] transition">
+            <a href="/contactus" className="hover:text-[#ff6b00] transition">
               Contact Us
             </a>
             <a href="/login" className="hover:text-[#ff6b00] transition">
@@ -168,7 +168,7 @@ export default function HomePage() {
               Features
             </a>
             <a
-              href="#support"
+              href="/contactus"
               className="block py-1 text-slate-200 hover:text-[#ff6b00]"
             >
               Contact Us
@@ -783,15 +783,15 @@ export default function HomePage() {
                 Buyer Privacy Policy
               </a>
               <span>|</span>
-              <a href="#" className="hover:underline">
+              <a href="/termconditions" className="hover:underline">
                 Terms & Conditions
               </a>
               <span>|</span>
-              <a href="#" className="hover:underline">
+              <a href="/refundpolicy" className="hover:underline">
                 Refund Policy
               </a>
               <span>|</span>
-              <a href="#" className="hover:underline">
+              <a href="/contactus" className="hover:underline">
                 Contact Us
               </a>
             </div>

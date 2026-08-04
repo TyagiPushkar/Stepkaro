@@ -3,28 +3,27 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
+  RotateCcw,
   Shield,
   Mail,
   Phone,
   Building2,
   Calendar,
-  Lock,
-  UserCheck,
-  Eye,
-  CreditCard,
-  Bell,
-  Cookie,
-  AlertTriangle,
-  HelpCircle,
-  ArrowRight,
+  AlertCircle,
+  XCircle,
   CheckCircle2,
   FileText,
+  HelpCircle,
+  ArrowRight,
+  ShieldAlert,
 } from "lucide-react";
 import { ArrowDownTrayIcon, Bars3Icon } from "@heroicons/react/24/solid";
 
-export default function SellerPrivacyPolicyPage() {
+export default function RefundPolicyPage() {
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
@@ -114,23 +113,23 @@ export default function SellerPrivacyPolicyPage() {
           )}
         </header>
 
-        {/* Hero Section Banner */}
+        {/* Hero Section Banner - Compact Padding */}
         <section className="bg-gradient-to-r from-[#170a3b] via-purple-900 to-[#170a3b] text-white py-6 px-4 md:px-6 border-b border-purple-800/40 relative overflow-hidden">
           <div className="max-w-[1500px] mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative z-10">
             <div>
               <div className="flex items-center gap-2 mb-1.5">
                 <span className="px-2.5 py-0.5 bg-[#ff6b00]/20 text-[#ff6b00] border border-[#ff6b00]/40 rounded-full text-[10px] font-bold tracking-wide uppercase flex items-center gap-1">
-                  <Shield className="w-3 h-3" /> Seller Protection Policy
+                  <RotateCcw className="w-3 h-3" /> Official Policy
                 </span>
                 <span className="text-[11px] text-purple-200 flex items-center gap-1 bg-white/10 px-2.5 py-0.5 rounded-full border border-white/10">
-                  <Building2 className="w-3 h-3 text-amber-300" /> Stepkaro Seller App
+                  <Calendar className="w-3 h-3 text-amber-300" /> Updated: August 2026
                 </span>
               </div>
               <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">
-                Seller Privacy Policy
+                Refund Policy
               </h1>
               <p className="text-purple-200 text-xs md:text-sm mt-1 max-w-2xl">
-                How Stepkaro collects, uses, stores, and protects business information for manufacturers, suppliers, and registered sellers.
+                Clear and transparent policy details governing Stepkaro platform services and user transaction guidelines.
               </p>
             </div>
 
@@ -144,188 +143,165 @@ export default function SellerPrivacyPolicyPage() {
           </div>
         </section>
 
-        {/* Main Content Area - Wide Container */}
+        {/* Main Content Area - Reduced Padding & Spacing */}
         <main className="max-w-[1500px] mx-auto px-4 md:px-6 py-6">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
             {/* Main Content Column (8/12) */}
             <div className="lg:col-span-12 space-y-4">
-              {/* Overview */}
-              <div className="bg-white rounded-xl p-4 md:p-5 shadow-xs border border-slate-200 hover:border-purple-300 transition">
-                <div className="flex items-center gap-3 mb-2.5">
-                  <div className="w-9 h-9 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center font-bold">
-                    <Shield className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h2 className="text-base font-bold text-slate-900">Overview</h2>
-                    <p className="text-[10px] text-slate-500">Stepkaro Seller Privacy Commitment</p>
-                  </div>
-                </div>
-                <p className="text-slate-700 text-sm leading-relaxed mb-3">
-                  Stepkaro (“we”, “our”, or “us”) operates the Stepkaro Seller App (“App”). This Privacy Policy explains how we collect, use, store, and protect information when manufacturers, suppliers, and sellers use our App.
-                </p>
-                <div className="p-3 bg-purple-50 rounded-lg border border-purple-100 flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-purple-700 shrink-0" />
-                  <p className="text-xs text-purple-900 font-medium">
-                    By using the Stepkaro Seller App, you agree to the collection and use of information in accordance with this Privacy Policy.
-                  </p>
-                </div>
-              </div>
-
-              {/* 1. Information We Collect */}
+              {/* Platform Overview */}
               <div className="bg-white rounded-xl p-4 md:p-5 shadow-xs border border-slate-200 hover:border-orange-300 transition">
                 <div className="flex items-center gap-3 mb-2.5">
                   <div className="w-9 h-9 rounded-lg bg-orange-100 text-[#ff6b00] flex items-center justify-center font-bold">
-                    <UserCheck className="w-4 h-4" />
+                    <Building2 className="w-4 h-4" />
                   </div>
                   <div>
-                    <h2 className="text-base font-bold text-slate-900">1. Information We Collect</h2>
-                    <p className="text-[10px] text-slate-500">Data gathered during seller registration & listing</p>
+                    <h2 className="text-base font-bold text-slate-900">Platform Overview</h2>
+                    <p className="text-[10px] text-slate-500">Stepkaro B2B Technology Platform</p>
                   </div>
                 </div>
+                <p className="text-slate-700 text-sm leading-relaxed">
+                  Stepkaro is a technology platform that facilitates direct connections between footwear wholesalers and manufacturers across India.
+                </p>
+              </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
-                  <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
-                    <h3 className="font-bold text-slate-800 text-xs mb-1.5 text-[#ff6b00]">Business Information</h3>
-                    <ul className="text-xs text-slate-600 space-y-1 font-medium">
-                      <li>• Business & Brand Name</li>
-                      <li>• Owner Name & Phone</li>
-                      <li>• Factory / Shop Address</li>
-                      <li>• Contact Email</li>
-                    </ul>
+              {/* 1. Platform Services */}
+              <div className="bg-white rounded-xl p-4 md:p-5 shadow-xs border border-slate-200 hover:border-purple-300 transition">
+                <div className="flex items-center gap-3 mb-2.5">
+                  <div className="w-9 h-9 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center font-bold">
+                    <FileText className="w-4 h-4" />
                   </div>
-
-                  <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
-                    <h3 className="font-bold text-slate-800 text-xs mb-1.5 text-purple-700">Business Verification</h3>
-                    <ul className="text-xs text-slate-600 space-y-1 font-medium">
-                      <li>• GST & PAN Number</li>
-                      <li>• Aadhaar Verification</li>
-                      <li>• Bank Account / UPI Details</li>
-                    </ul>
-                  </div>
-
-                  <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
-                    <h3 className="font-bold text-slate-800 text-xs mb-1.5 text-blue-600">Product & Sales Data</h3>
-                    <ul className="text-xs text-slate-600 space-y-1 font-medium">
-                      <li>• Product catalog & images</li>
-                      <li>• Pricing & stock counts</li>
-                      <li>• Order settlement history</li>
-                    </ul>
+                  <div>
+                    <h2 className="text-base font-bold text-slate-900">1. Platform Services</h2>
+                    <p className="text-[10px] text-slate-500">Paid Services & Subscriptions</p>
                   </div>
                 </div>
+                <p className="text-slate-700 text-sm leading-relaxed">
+                  Any subscription fees, promotional services, listing fees, or paid services offered by Stepkaro may be subject to separate refund terms communicated at the time of purchase.
+                </p>
+              </div>
 
-                <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                  <p className="text-xs text-slate-700">
-                    <span className="font-bold text-slate-900">Purpose of Collection:</span> Collected to verify seller identity, approve accounts, display products, process orders, maintain tax records, and prevent fraud.
+              {/* 2. Transactions Between Users */}
+              <div className="bg-white rounded-xl p-4 md:p-5 shadow-xs border border-slate-200 hover:border-amber-300 transition">
+                <div className="flex items-center gap-3 mb-2.5">
+                  <div className="w-9 h-9 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center font-bold">
+                    <ShieldAlert className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-bold text-slate-900">2. Transactions Between Users</h2>
+                    <p className="text-[10px] text-slate-500">Wholesaler & Manufacturer Trade Disclaimer</p>
+                  </div>
+                </div>
+                <p className="text-slate-700 text-sm leading-relaxed mb-3">
+                  Stepkaro acts exclusively as an intermediary digital connection platform.
+                </p>
+                <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 flex items-start gap-2.5">
+                  <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                  <p className="text-xs font-semibold text-amber-900 leading-relaxed">
+                    Stepkaro is not responsible for product purchases, payments, deliveries, returns, or disputes arising between wholesalers and manufacturers.
                   </p>
                 </div>
               </div>
 
-              {/* 2. Use of Information */}
+              {/* 3. Refund Eligibility */}
               <div className="bg-white rounded-xl p-4 md:p-5 shadow-xs border border-slate-200 hover:border-emerald-300 transition">
                 <div className="flex items-center gap-3 mb-2.5">
                   <div className="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold">
-                    <Eye className="w-4 h-4" />
+                    <CheckCircle2 className="w-4 h-4" />
                   </div>
                   <div>
-                    <h2 className="text-base font-bold text-slate-900">2. Use of Information</h2>
-                    <p className="text-[10px] text-slate-500">Operational & catalog management purposes</p>
+                    <h2 className="text-base font-bold text-slate-900">3. Refund Eligibility</h2>
+                    <p className="text-[10px] text-slate-500">Case-by-Case Review Process</p>
                   </div>
                 </div>
+                <p className="text-slate-700 text-sm leading-relaxed">
+                  Refund requests for platform services, if applicable, will be reviewed on a case-by-case basis by Stepkaro management.
+                </p>
+              </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
+              {/* 4. Non-Refundable Situations */}
+              <div className="bg-white rounded-xl p-4 md:p-5 shadow-xs border border-slate-200 hover:border-red-300 transition">
+                <div className="flex items-center gap-3 mb-2.5">
+                  <div className="w-9 h-9 rounded-lg bg-red-100 text-red-600 flex items-center justify-center font-bold">
+                    <XCircle className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-bold text-slate-900">4. Non-Refundable Situations</h2>
+                    <p className="text-[10px] text-slate-500">Exclusions from Refund Coverage</p>
+                  </div>
+                </div>
+                <p className="text-slate-700 text-xs mb-3 font-medium">
+                  Refunds will generally not be provided for:
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   {[
-                    "Seller registration & authentication",
-                    "Identity and business GST verification",
-                    "Product listing & catalog management",
-                    "Order processing & fulfillment",
-                    "Direct payment settlements to bank accounts",
-                    "GST invoicing & taxation compliance",
-                  ].map((item, i) => (
-                    <div key={i} className="flex items-center gap-2 p-2.5 bg-slate-50 rounded-lg text-xs font-semibold text-slate-800 border border-slate-150">
-                      <span className="text-emerald-500 font-bold">✓</span>
-                      <span>{item}</span>
+                    "Completed promotional services",
+                    "Successfully activated subscriptions",
+                    "User account violations",
+                    "Incorrect information submitted by users",
+                  ].map((item, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-2.5 p-3 bg-slate-50 rounded-lg border border-slate-200"
+                    >
+                      <XCircle className="w-4 h-4 text-red-500 shrink-0" />
+                      <span className="text-xs font-semibold text-slate-800">{item}</span>
                     </div>
                   ))}
                 </div>
-
-                <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-200">
-                  <p className="text-xs text-emerald-900 font-bold">
-                    ⚠️ We do not sell, rent, or trade your personal or business information to third parties.
-                  </p>
-                </div>
               </div>
 
-              {/* 3. Data Sharing & Security */}
-              <div className="bg-white rounded-xl p-4 md:p-5 shadow-xs border border-slate-200 hover:border-blue-300 transition">
-                <div className="flex items-center gap-3 mb-2.5">
-                  <div className="w-9 h-9 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center font-bold">
-                    <Lock className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h2 className="text-base font-bold text-slate-900">3. Data Sharing & Security</h2>
-                    <p className="text-[10px] text-slate-500">Third-party access & safeguards</p>
-                  </div>
-                </div>
-                <p className="text-xs text-slate-700 leading-relaxed mb-3">
-                  We take reasonable administrative, technical, and physical measures to protect seller information against unauthorized access, misuse, alteration, or disclosure.
+              {/* Final Decision Rights */}
+              <div className="bg-purple-900 text-white rounded-xl p-4 border border-purple-800 shadow-xs flex items-center gap-3">
+                <AlertCircle className="w-5 h-5 text-[#ff6b00] shrink-0" />
+                <p className="text-xs font-semibold leading-relaxed">
+                  Stepkaro reserves the right to make the final decision regarding all refund requests.
                 </p>
-                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <p className="text-xs text-blue-900 font-semibold">
-                    🔒 Third-party logistics partners, payment processors, and banking partners receive only necessary information strictly required for order fulfillment and settlements.
-                  </p>
-                </div>
               </div>
             </div>
 
             {/* Sidebar Column (4/12) */}
             {/* <div className="lg:col-span-4 space-y-4">
-             
+          
               <div className="bg-gradient-to-br from-[#170a3b] to-purple-900 text-white rounded-xl p-5 shadow-sm border border-purple-800">
                 <div className="w-9 h-9 rounded-lg bg-[#ff6b00] flex items-center justify-center text-white font-bold mb-3 shadow-xs">
                   <Mail className="w-4 h-4" />
                 </div>
-                <h3 className="text-base font-bold mb-1">Seller Privacy Support</h3>
+                <h3 className="text-base font-bold mb-1">Refund Queries</h3>
                 <p className="text-purple-200 text-[11px] leading-relaxed mb-4">
-                  For seller privacy questions or account data updates:
+                  For refund-related queries, contact our support team:
                 </p>
 
                 <div className="space-y-2.5">
-                  <a
-                    href="mailto:stepkaroapp@gmail.com"
-                    className="flex items-center gap-2.5 p-2.5 bg-white/10 hover:bg-white/20 rounded-lg border border-white/15 transition"
-                  >
-                    <Mail className="w-4 h-4 text-[#ff6b00]" />
-                    <div>
-                      <p className="text-[9px] text-purple-300 font-semibold uppercase">Seller Email</p>
-                      <p className="text-xs font-bold text-white">stepkaroapp@gmail.com</p>
-                    </div>
-                  </a>
-
                   <a
                     href="mailto:info@stepkaro.in"
                     className="flex items-center gap-2.5 p-2.5 bg-white/10 hover:bg-white/20 rounded-lg border border-white/15 transition"
                   >
                     <Mail className="w-4 h-4 text-[#ff6b00]" />
                     <div>
-                      <p className="text-[9px] text-purple-300 font-semibold uppercase">General Support</p>
+                      <p className="text-[9px] text-purple-300 font-semibold uppercase">Email</p>
                       <p className="text-xs font-bold text-white">info@stepkaro.in</p>
+                    </div>
+                  </a>
+
+                  <a
+                    href="tel:+919217056915"
+                    className="flex items-center gap-2.5 p-2.5 bg-white/10 hover:bg-white/20 rounded-lg border border-white/15 transition"
+                  >
+                    <Phone className="w-4 h-4 text-[#ff6b00]" />
+                    <div>
+                      <p className="text-[9px] text-purple-300 font-semibold uppercase">Phone</p>
+                      <p className="text-xs font-bold text-white">+91 9217056915</p>
                     </div>
                   </a>
                 </div>
               </div>
 
+    
               <div className="bg-white rounded-xl p-4 shadow-xs border border-slate-200">
                 <h3 className="text-xs font-bold text-slate-900 mb-3 flex items-center gap-2">
                   <HelpCircle className="w-4 h-4 text-[#ff6b00]" /> Other Platform Policies
                 </h3>
                 <div className="space-y-1.5 text-xs font-semibold">
-                  <Link
-                    href="/buyer-privacy-policy"
-                    className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 hover:bg-orange-50 text-slate-700 hover:text-[#ff6b00] border border-slate-200 transition"
-                  >
-                    <span>Buyer Privacy Policy</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
                   <Link
                     href="/termconditions"
                     className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 hover:bg-orange-50 text-slate-700 hover:text-[#ff6b00] border border-slate-200 transition"
@@ -334,10 +310,17 @@ export default function SellerPrivacyPolicyPage() {
                     <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                   <Link
-                    href="/refundpolicy"
+                    href="/buyer-privacy-policy"
                     className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 hover:bg-orange-50 text-slate-700 hover:text-[#ff6b00] border border-slate-200 transition"
                   >
-                    <span>Refund Policy</span>
+                    <span>Buyer Privacy Policy</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                  <Link
+                    href="/seller-privacy-policy"
+                    className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 hover:bg-orange-50 text-slate-700 hover:text-[#ff6b00] border border-slate-200 transition"
+                  >
+                    <span>Seller Privacy Policy</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                 </div>

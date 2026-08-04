@@ -14,6 +14,11 @@ const geistMono = Geist_Mono({
 export const metadata = {
   title: "Stepkaro",
   description: "Stepkaro - India's Fastest Growing Footwear B2B Platform",
+  icons: {
+    icon: "/logo1-circle.png",
+    shortcut: "/logo1-circle.png",
+    apple: "/logo1-circle.png",
+  },
 };
 
 export default function RootLayout({ children }) {
