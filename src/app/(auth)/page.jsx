@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useRouter } from "next/navigation";
@@ -29,13 +28,13 @@ import {
   ShoppingBagIcon,
   ArrowRightIcon,
 } from "@heroicons/react/24/solid";
-
+import { ArrowRightIcon as ArrowRightOutlineIcon } from "@heroicons/react/24/outline";
 export default function HomePage() {
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const handleJoinAsWholesaler = () => router.push("/register/wholesaler");
-  const handleJoinAsManufacturer = () => router.push("/register/manufacturer");
+  const handleJoinAsWholesaler = () => router.push("/wholesellerform");
+  const handleJoinAsManufacturer = () => router.push("/manufactureform");
   const handleLogin = () => router.push("/login");
 
   return (
@@ -86,6 +85,9 @@ export default function HomePage() {
             <a href="#support" className="hover:text-[#ff6b00] transition">
               Contact Us
             </a>
+            <a href="/login" className="hover:text-[#ff6b00] transition">
+              Login
+            </a>
           </nav>
 
           {/* CTA Download App Button & Mobile Menu Button */}
@@ -111,23 +113,47 @@ export default function HomePage() {
         {/* Mobile Dropdown Nav */}
         {mobileMenuOpen && (
           <div className="lg:hidden bg-[#170a3b] border-t border-purple-900/60 px-6 py-4 space-y-3 text-sm font-semibold">
-            <a href="#" className="block py-1 text-slate-200 hover:text-[#ff6b00]">
+            <a
+              href="#"
+              className="block py-1 text-slate-200 hover:text-[#ff6b00]"
+            >
               Home
             </a>
-            <a href="#how-it-works" className="block py-1 text-slate-200 hover:text-[#ff6b00]">
+            <a
+              href="#how-it-works"
+              className="block py-1 text-slate-200 hover:text-[#ff6b00]"
+            >
               How It Works
             </a>
-            <a href="#benefits" className="block py-1 text-slate-200 hover:text-[#ff6b00]">
+            <a
+              href="#benefits"
+              className="block py-1 text-slate-200 hover:text-[#ff6b00]"
+            >
               For Wholesalers
             </a>
-            <a href="#benefits" className="block py-1 text-slate-200 hover:text-[#ff6b00]">
+            <a
+              href="#benefits"
+              className="block py-1 text-slate-200 hover:text-[#ff6b00]"
+            >
               For Manufacturers
             </a>
-            <a href="#why-choose" className="block py-1 text-slate-200 hover:text-[#ff6b00]">
+            <a
+              href="#why-choose"
+              className="block py-1 text-slate-200 hover:text-[#ff6b00]"
+            >
               Features
             </a>
-            <a href="#support" className="block py-1 text-slate-200 hover:text-[#ff6b00]">
+            <a
+              href="#support"
+              className="block py-1 text-slate-200 hover:text-[#ff6b00]"
+            >
               Contact Us
+            </a>
+            <a
+              href="/login"
+              className="block py-1 text-slate-200 hover:text-[#ff6b00]"
+            >
+              Login
             </a>
           </div>
         )}
@@ -194,9 +220,9 @@ export default function HomePage() {
 
             {/* Hero Right Mockup Image */}
             <div className="lg:col-span-6 flex justify-center items-center">
-              <div className="relative w-full max-w-lg lg:max-w-none h-[320px] sm:h-[400px] md:h-[480px] lg:h-[500px]">
+              <div className="relative w-full max-w-lg lg:max-w-none h-[400px] sm:h-[400px] md:h-[480px] lg:h-[500px]">
                 <Image
-                  src="/hero_banner.png"
+                  src="/mobile_image.png"
                   alt="Stepkaro Mobile App Display"
                   fill
                   priority
@@ -276,7 +302,10 @@ export default function HomePage() {
       </section>
 
       {/* Benefits Section */}
-      <section id="benefits" className="py-14 md:py-20 px-4 md:px-8 max-w-[1500px] mx-auto">
+      <section
+        id="benefits"
+        className="pt-14 pb-8 md:pt-20 md:pb-10 px-4 md:px-8 max-w-[1500px] mx-auto"
+      >
         <div className="grid lg:grid-cols-2 gap-8">
           {/* Benefits for Wholesalers */}
           <div className="bg-[#170a3b] text-white rounded-3xl p-6 sm:p-8 border border-purple-900/60 shadow-2xl relative overflow-hidden flex flex-col justify-between">
@@ -353,7 +382,10 @@ export default function HomePage() {
       </section>
 
       {/* Why Choose Stepkaro? Section */}
-      <section id="why-choose" className="py-12 md:py-16 px-4 md:px-8 max-w-[1500px] mx-auto">
+      <section
+        id="why-choose"
+        className="py-8 md:py-6 px-4 md:px-8 max-w-[1500px] mx-auto"
+      >
         <h2 className="text-2xl md:text-3xl font-extrabold text-center uppercase tracking-tight text-slate-900 mb-10">
           WHY CHOOSE <span className="text-[#170a3b]">STEPKARO?</span>
         </h2>
@@ -384,7 +416,10 @@ export default function HomePage() {
       </section>
 
       {/* How It Works Section */}
-      <section id="how-it-works" className="py-4 px-4 md:px-8 max-w-[1500px] mx-auto">
+      <section
+        id="how-it-works"
+        className="py-4 px-4 md:px-8 max-w-[1500px] mx-auto"
+      >
         <div className="bg-white rounded-3xl border border-gray-200/90 shadow-xl p-4 sm:p-5 text-center">
           <h2 className="text-lg sm:text-xl font-black uppercase tracking-wider text-[#170a3b] mb-4">
             HOW IT WORKS
@@ -392,24 +427,50 @@ export default function HomePage() {
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-11 gap-3 items-center justify-items-center">
             {[
-              { step: "1", title: "Register Your Business", icon: UserPlusIcon },
+              {
+                step: "1",
+                title: "Register Your Business",
+                icon: UserPlusIcon,
+              },
               { isArrow: true },
-              { step: "2", title: "Create Your Profile", icon: BuildingStorefrontIcon },
+              {
+                step: "2",
+                title: "Create Your Profile",
+                icon: BuildingStorefrontIcon,
+              },
               { isArrow: true },
-              { step: "3", title: "Browse Factories & Products", icon: ShoppingBagIcon },
+              {
+                step: "3",
+                title: "Browse Factories & Products",
+                icon: ShoppingBagIcon,
+              },
               { isArrow: true },
-              { step: "4", title: "Place Order Anytime", icon: ShoppingCartIcon },
+              {
+                step: "4",
+                title: "Place Order Anytime",
+                icon: ShoppingCartIcon,
+              },
               { isArrow: true },
               { step: "5", title: "Get Fast Delivery", icon: TruckIcon },
               { isArrow: true },
-              { step: "6", title: "Grow Your Business", icon: ArrowTrendingUpIcon },
+              {
+                step: "6",
+                title: "Grow Your Business",
+                icon: ArrowTrendingUpIcon,
+              },
             ].map((item, index) =>
               item.isArrow ? (
-                <div key={`arrow-${index}`} className="hidden lg:flex items-center justify-center -mt-4">
+                <div
+                  key={`arrow-${index}`}
+                  className="hidden lg:flex items-center justify-center -mt-4"
+                >
                   <ArrowRightIcon className="w-5 h-5 text-[#ff6b00] stroke-[3]" />
                 </div>
               ) : (
-                <div key={item.step} className="flex flex-col items-center text-center group w-full">
+                <div
+                  key={item.step}
+                  className="flex flex-col items-center text-center group w-full"
+                >
                   <div className="w-14 h-14 rounded-full bg-[#170a3b] text-white flex items-center justify-center mb-1.5 shadow-md transition group-hover:scale-105">
                     <item.icon className="w-7 h-7 text-white" />
                   </div>
@@ -420,7 +481,7 @@ export default function HomePage() {
                     {item.title}
                   </p>
                 </div>
-              )
+              ),
             )}
           </div>
         </div>
@@ -460,7 +521,9 @@ export default function HomePage() {
               <div className="pt-2">
                 <div className="w-20 h-20 rounded-full border-4 border-[#ff6b00] bg-purple-950/80 flex flex-col items-center justify-center text-[#ff6b00] font-black shadow-lg shadow-orange-600/30 relative">
                   <span className="text-xl leading-none font-black">24/7</span>
-                  <span className="text-[8px] uppercase tracking-wider text-white font-bold mt-0.5">Service</span>
+                  <span className="text-[8px] uppercase tracking-wider text-white font-bold mt-0.5">
+                    Service
+                  </span>
                 </div>
               </div>
             </div>
@@ -492,7 +555,9 @@ export default function HomePage() {
           <div className="lg:col-span-6 bg-white rounded-3xl border border-gray-200/90 shadow-xl overflow-hidden flex flex-col justify-between relative">
             {/* Header */}
             <div className="grid grid-cols-2 bg-[#170a3b] text-white text-xs sm:text-sm font-black uppercase tracking-wider py-4 text-center border-b border-purple-900">
-              <div className="text-slate-200 border-r-2 border-purple-700/80">TRADITIONAL SOURCING</div>
+              <div className="text-slate-200 border-r-2 border-purple-700/80">
+                TRADITIONAL SOURCING
+              </div>
               <div className="text-[#ff6b00]">WITH STEPKARO</div>
             </div>
 
@@ -505,12 +570,21 @@ export default function HomePage() {
 
               {[
                 { trad: "Multiple Middlemen", step: "Direct Factory Access" },
-                { trad: "Price Negotiation", step: "Transparent Factory Prices" },
+                {
+                  trad: "Price Negotiation",
+                  step: "Transparent Factory Prices",
+                },
                 { trad: "Waiting for Photos", step: "Instant Catalog Access" },
                 { trad: "Calling for Orders", step: "24/7 App Ordering" },
-                { trad: "Limited Suppliers", step: "Multiple Factories in One App" },
+                {
+                  trad: "Limited Suppliers",
+                  step: "Multiple Factories in One App",
+                },
               ].map((row, idx) => (
-                <div key={idx} className="grid grid-cols-2 py-3.5 px-4 text-center items-center">
+                <div
+                  key={idx}
+                  className="grid grid-cols-2 py-3.5 px-4 text-center items-center"
+                >
                   <div className="text-slate-800 font-bold pr-6 border-r-2 border-slate-300/80">
                     {row.trad}
                   </div>
@@ -578,10 +652,22 @@ export default function HomePage() {
                 className="bg-black hover:bg-slate-900 border border-slate-700/80 px-4 py-2 rounded-xl flex items-center gap-3 shadow-lg transition active:scale-95 text-left"
               >
                 <svg className="w-6 h-6 flex-shrink-0" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M3.6 2.4C3.2 2.8 3 3.4 3 4.2v15.6c0 .8.2 1.4.6 1.8l.1.1 8.7-8.7v-.2L3.7 2.3l-.1.1z"/>
-                  <path fill="#34A853" d="M15.4 15.9l-3-3v-.2l3-3 3.4 2c1 .6 1 1.5 0 2.1l-3.4 2.1z"/>
-                  <path fill="#EA4335" d="M3.7 21.7c.3.3.8.4 1.4.1l10.3-5.9-3-3-8.7 8.8z"/>
-                  <path fill="#FBBC05" d="M3.7 2.3l8.7 8.7 3-3L5.1 2.1c-.6-.3-1.1-.2-1.4.2z"/>
+                  <path
+                    fill="#4285F4"
+                    d="M3.6 2.4C3.2 2.8 3 3.4 3 4.2v15.6c0 .8.2 1.4.6 1.8l.1.1 8.7-8.7v-.2L3.7 2.3l-.1.1z"
+                  />
+                  <path
+                    fill="#34A853"
+                    d="M15.4 15.9l-3-3v-.2l3-3 3.4 2c1 .6 1 1.5 0 2.1l-3.4 2.1z"
+                  />
+                  <path
+                    fill="#EA4335"
+                    d="M3.7 21.7c.3.3.8.4 1.4.1l10.3-5.9-3-3-8.7 8.8z"
+                  />
+                  <path
+                    fill="#FBBC05"
+                    d="M3.7 2.3l8.7 8.7 3-3L5.1 2.1c-.6-.3-1.1-.2-1.4.2z"
+                  />
                 </svg>
                 <div>
                   <span className="text-[9px] uppercase tracking-wider text-slate-300 font-semibold block leading-tight">
@@ -598,8 +684,11 @@ export default function HomePage() {
                 onClick={handleLogin}
                 className="bg-black hover:bg-slate-900 border border-slate-700/80 px-4 py-2 rounded-xl flex items-center gap-3 shadow-lg transition active:scale-95 text-left"
               >
-                <svg className="w-6 h-6 flex-shrink-0 fill-current text-white" viewBox="0 0 24 24">
-                  <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.84c.67-.82 1.13-1.96.99-3.1-.98.04-2.18.66-2.88 1.47-.63.73-1.18 1.9-1.03 3.02 1.1.09 2.24-.56 2.92-1.39z"/>
+                <svg
+                  className="w-6 h-6 flex-shrink-0 fill-current text-white"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.84c.67-.82 1.13-1.96.99-3.1-.98.04-2.18.66-2.88 1.47-.63.73-1.18 1.9-1.03 3.02 1.1.09 2.24-.56 2.92-1.39z" />
                 </svg>
                 <div>
                   <span className="text-[9px] tracking-wider text-slate-300 font-semibold block leading-tight">
@@ -652,13 +741,20 @@ export default function HomePage() {
           </div>
         </div>
 
+        {/* form of manufuring and wholeseller */}
+        {/* <div className=""></div> */}
+
         {/* Orange Bottom Bar */}
         <div className="bg-[#ff6b00] py-3.5 px-4 md:px-8 text-white text-xs font-semibold">
           <div className="max-w-[1500px] mx-auto flex flex-col sm:flex-row justify-between items-center gap-3 text-center sm:text-left">
             <p>© 2026 Stepkaro Technologies Pvt. Ltd. All Rights Reserved.</p>
             <div className="flex flex-wrap gap-4 text-white font-bold">
-              <a href="#" className="hover:underline">
-                Privacy Policy
+              <a href="/seller-privacy-policy" className="hover:underline">
+                Seller Privacy Policy
+              </a>
+              <span>|</span>
+              <a href="/buyer-privacy-policy" className="hover:underline">
+                Buyer Privacy Policy
               </a>
               <span>|</span>
               <a href="#" className="hover:underline">
