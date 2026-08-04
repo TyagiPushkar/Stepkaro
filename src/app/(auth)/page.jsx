@@ -1,701 +1,4 @@
-// "use client";
 
-// import { useRouter } from "next/navigation";
-// import { useState } from "react";
-
-// export default function HomePage() {
-//   const router = useRouter();
-//   const [activeTab, setActiveTab] = useState("contact");
-
-//   const handleJoinAsWholesaler = () => {
-//     router.push("/register/wholesaler");
-//   };
-
-//   const handleJoinAsManufacturer = () => {
-//     router.push("/register/manufacturer");
-//   };
-
-//   const handleLogin = () => {
-//     router.push("/login");
-//   };
-
-//   const handleJoinNow = () => {
-//     router.push("/register/wholesaler");
-//   };
-
-//   const handleExploreMarketplace = () => {
-//     router.push("/marketplace");
-//   };
-
-//   const handleBecomeVendor = () => {
-//     router.push("/add-vendor");
-//   };
-
-//   return (
-//     <div className="min-h-screen bg-white">
-//       {/* Navbar - Purple + Orange theme */}
-//       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-orange-100">
-//         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-//           <h1 className="text-2xl font-bold">
-//             Step<span className="text-purple-600">Karo</span>
-//           </h1>
-
-//           <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-600">
-//             <a href="#" className="hover:text-orange-500 transition">
-//               Home
-//             </a>
-//             <a href="#" className="hover:text-orange-500 transition">
-//               About
-//             </a>
-//             <a href="#" className="hover:text-orange-500 transition">
-//               Vendors
-//             </a>
-//             <a href="#" className="hover:text-orange-500 transition">
-//               Contact
-//             </a>
-//             <a
-//               href="/seller-privacy-policy"
-//               className="hover:text-orange-500 transition"
-//             >
-//               Seller Privacy Policy
-//             </a>
-//             <a
-//               href="/buyer-privacy-policy"
-//               className="hover:text-orange-500 transition"
-//             >
-//               Buyer Privacy Policy
-//             </a>
-//           </nav>
-
-//           <div className="flex gap-3">
-//             <button
-//               onClick={handleLogin}
-//               className="px-5 py-2 rounded-full border border-gray-200  bg-gradient-to-r from-purple-600 to-orange-500 text-white font-semibold text-sm font-medium hover:bg-gray-50 transition"
-//             >
-//               Login
-//             </button>
-//           </div>
-//         </div>
-//       </header>
-
-//       {/* Hero Section - Main Headline from Reference */}
-//       <section className="relative overflow-hidden bg-gradient-to-br from-purple-50 via-white to-orange-50">
-//         <div className="max-w-7xl mx-auto px-6 py-20 lg:py-28">
-//           <div className="text-center max-w-4xl mx-auto">
-//             <div className="mt-8">
-//               <h1 className="text-5xl md:text-7xl font-bold text-gray-900 leading-tight">
-//                 Step<span className="text-purple-600">Karo</span>
-//               </h1>
-//               <p className="text-xl md:text-2xl text-gray-700 mt-4 max-w-2xl mx-auto">
-//                 helps footwear wholesalers discover manufacturers directly
-//               </p>
-//             </div>
-
-//             <p className="max-w-3xl mx-auto mt-6 text-lg text-gray-500 leading-relaxed">
-//               Access factory prices, view live stock and place orders anytime –
-//               without middlemen.
-//             </p>
-
-//             <div className="mt-10 flex flex-wrap justify-center gap-4">
-//               {/* <button
-//                 onClick={handleExploreMarketplace}
-//                 className="px-8 py-4 rounded-2xl bg-gradient-to-r from-purple-600 to-orange-500 hover:shadow-xl text-white font-semibold transition shadow-lg"
-//               >
-//                 Explore Marketplace
-//               </button> */}
-//               <button
-//                 onClick={handleBecomeVendor}
-//                 className="px-8 py-4 rounded-2xl border   bg-gradient-to-r from-purple-600 to-orange-500 text-white font-semibold hover:bg-orange-50 transition"
-//               >
-//                 Become a Vendor
-//               </button>
-//             </div>
-
-//             {/* Stats */}
-//             <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-6">
-//               {[
-//                 { number: "1000+", label: "Manufacturers" },
-//                 { number: "5000+", label: "Wholesalers" },
-//                 { number: "1 Lakh+", label: "Products" },
-//                 { number: "Pan India", label: "Reach" },
-//               ].map((stat) => (
-//                 <div
-//                   key={stat.label}
-//                   className="rounded-2xl bg-white border border-gray-100 shadow-sm p-6 hover:shadow-md transition"
-//                 >
-//                   <h3 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-orange-500 bg-clip-text text-transparent">
-//                     {stat.number}
-//                   </h3>
-//                   <p className="mt-2 text-sm text-gray-500">{stat.label}</p>
-//                 </div>
-//               ))}
-//             </div>
-//           </div>
-//         </div>
-//       </section>
-
-//       {/* Benefits for Wholesalers - Full content from reference */}
-//       <section className="py-20 bg-white">
-//         <div className="max-w-7xl mx-auto px-6">
-//           <div className="text-center mb-12">
-//             <h2 className="text-3xl font-bold text-gray-900">
-//               BENEFITS FOR WHOLESALERS
-//             </h2>
-//           </div>
-
-//           <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-//             <div className="space-y-3 text-gray-700">
-//               <p className="flex items-center gap-2 text-orange-600 font-medium">
-//                 ✓ Direct factory prices
-//               </p>
-//               <p className="flex items-center gap-2 text-orange-600 font-medium">
-//                 ✓ No hidden margins
-//               </p>
-//               <p className="flex items-center gap-2 text-orange-600 font-medium">
-//                 ✓ All designs, rates & live stock in one app
-//               </p>
-//               <p className="flex items-center gap-2 text-orange-600 font-medium">
-//                 ✓ No need to wait for photos / rates
-//               </p>
-//               <p className="flex items-center gap-2 text-orange-600 font-medium  ">
-//                 ✓ App-only offers for wholesalers
-//               </p>
-//             </div>
-//             <div className="space-y-3 text-gray-700">
-//               <p className="flex items-center gap-2 text-orange-600 font-medium">
-//                 ✓ 24/7 ordering – anytime, anywhere
-//               </p>
-//               <p className="flex items-center gap-2 text-orange-600 font-medium">
-//                 ✓ No calling – instant order confirmation
-//               </p>
-//               <p className="flex items-center gap-2 text-orange-600 font-medium">
-//                 ✓ Transparent pricing always
-//               </p>
-//               <p className="flex items-center gap-2 text-orange-600 font-medium">
-//                 ✓ Faster dispatch & reliable delivery
-//               </p>
-//               <p className="flex items-center gap-2 text-orange-600 font-medium ">
-//                 ✓ Better margins, more profit
-//               </p>
-//             </div>
-//           </div>
-
-//           <div className="text-center mt-12">
-//             {/* <button
-//               onClick={handleJoinAsWholesaler}
-//               className="px-8 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-orange-500 text-white font-semibold hover:shadow-lg transition"
-//             >
-//               Join as Wholesaler →
-//             </button> */}
-//           </div>
-//         </div>
-//       </section>
-
-//       {/* Benefits for Manufacturers */}
-//       <section className="py-20 bg-gray-50">
-//         <div className="max-w-7xl mx-auto px-6">
-//           <div className="text-center mb-12">
-//             <h2 className="text-3xl font-bold text-gray-900">
-//               BENEFITS FOR MANUFACTURERS
-//             </h2>
-//           </div>
-
-//           <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-//             <div className="space-y-3 text-gray-700">
-//               <p className="flex items-center gap-2">
-//                 ✓ Receive orders from wholesalers across India
-//               </p>
-//               <p className="flex items-center gap-2">
-//                 ✓ Sell Pan-India & expand beyond local market
-//               </p>
-//               <p className="flex items-center gap-2">✓ Zero joining fees</p>
-//             </div>
-//             <div className="space-y-3 text-gray-700">
-//               <p className="flex items-center gap-2">
-//                 ✓ Add unlimited products
-//               </p>
-//               <p className="flex items-center gap-2">
-//                 ✓ Secure & fast payments
-//               </p>
-//               <p className="flex items-center gap-2">
-//                 ✓ Dedicated seller support
-//               </p>
-//             </div>
-//           </div>
-
-//           {/* <div className="text-center mt-12">
-//             <button
-//               onClick={handleJoinAsManufacturer}
-//               className="px-8 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-orange-500 text-white font-semibold hover:shadow-lg transition"
-//             >
-//               Join as Manufacturer →
-//             </button>
-//           </div> */}
-//         </div>
-//       </section>
-
-//       {/* Why Choose StepKaro - Complete 7 points from reference */}
-//       <section className="py-20 bg-white">
-//         <div className="max-w-7xl mx-auto px-6">
-//           <div className="text-center mb-12">
-//             <h2 className="text-3xl font-bold text-gray-900">
-//               WHY CHOOSE STEPKARO?
-//             </h2>
-//           </div>
-
-//           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-//             {[
-//               {
-//                 title: "DIRECT FACTORY ACCESS",
-//                 desc: "Connect directly with verified manufacturers",
-//               },
-//               {
-//                 title: "VERIFIED MANUFACTURERS",
-//                 desc: "Every partner is thoroughly verified",
-//               },
-//               {
-//                 title: "TRANSPARENT PRICING",
-//                 desc: "No hidden margins, clear factory prices",
-//               },
-//               {
-//                 title: "LIVE STOCK & NEW DESIGNS",
-//                 desc: "Real-time inventory updates",
-//               },
-//               { title: "24/7 ORDERING", desc: "Order anytime, anywhere" },
-//               {
-//                 title: "FAST DISPATCH & RELIABLE DELIVERY",
-//                 desc: "Quick shipping across India",
-//               },
-//               {
-//                 title: "PAY LESS, EARN MORE",
-//                 desc: "Better margins for wholesalers",
-//               },
-//             ].map((item) => (
-//               <div
-//                 key={item.title}
-//                 className="rounded-2xl bg-gradient-to-br from-purple-50 to-orange-50 p-6 shadow-sm border border-orange-100 hover:shadow-md transition"
-//               >
-//                 <div className="w-12 h-12 bg-gradient-to-r from-purple-600 to-orange-500 rounded-xl flex items-center justify-center mb-4">
-//                   <svg
-//                     className="w-6 h-6 text-white"
-//                     fill="none"
-//                     stroke="currentColor"
-//                     viewBox="0 0 24 24"
-//                   >
-//                     <path
-//                       strokeLinecap="round"
-//                       strokeLinejoin="round"
-//                       strokeWidth={2}
-//                       d="M5 13l4 4L19 7"
-//                     />
-//                   </svg>
-//                 </div>
-//                 <h3 className="text-sm font-bold text-gray-800">
-//                   {item.title}
-//                 </h3>
-//                 <p className="mt-2 text-xs text-gray-500">{item.desc}</p>
-//               </div>
-//             ))}
-//           </div>
-//         </div>
-//       </section>
-
-//       {/* How It Works - 6 steps */}
-//       <section className="py-20 bg-gray-50">
-//         <div className="max-w-7xl mx-auto px-6">
-//           <div className="text-center mb-12">
-//             <h2 className="text-3xl font-bold text-gray-900">HOW IT WORKS</h2>
-//           </div>
-//           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-//             {[
-//               { step: "1", title: "Register Your Business" },
-//               { step: "2", title: "Create Your Profile" },
-//               { step: "3", title: "Browse Factories & Products" },
-//               { step: "4", title: "Place Order Anytime" },
-//               { step: "5", title: "Get Fast Delivery" },
-//               { step: "6", title: "Grow Your Business" },
-//             ].map((item) => (
-//               <div key={item.step} className="text-center">
-//                 <div className="w-14 h-14 mx-auto rounded-full bg-gradient-to-r from-purple-600 to-orange-500 text-white flex items-center justify-center text-xl font-bold mb-3">
-//                   {item.step}
-//                 </div>
-//                 <p className="text-xs font-medium text-gray-700">
-//                   {item.title}
-//                 </p>
-//               </div>
-//             ))}
-//           </div>
-//         </div>
-//       </section>
-
-//       {/* Comparison: Traditional vs StepKaro */}
-//       <section className="py-20 bg-white">
-//         <div className="max-w-7xl mx-auto px-6">
-//           <div className="grid lg:grid-cols-2 gap-8">
-//             <div className="rounded-2xl bg-gray-100 p-8">
-//               <h3 className="text-2xl font-bold text-red-500 mb-6">
-//                 TRADITIONAL SOURCING
-//               </h3>
-//               <div className="space-y-3 text-gray-600">
-//                 <p>❌ Multiple Middlemen</p>
-//                 <p>❌ Price Negotiation</p>
-//                 <p>❌ Waiting for Photos</p>
-//                 <p>❌ Calling for Orders</p>
-//                 <p>❌ Limited Suppliers</p>
-//               </div>
-//             </div>
-//             <div className="rounded-2xl bg-gradient-to-br from-purple-50 to-orange-50 p-8">
-//               <h3 className="text-2xl font-bold text-purple-600 mb-6">
-//                 WITH STEPKARO
-//               </h3>
-//               <div className="space-y-3 text-gray-600">
-//                 <p>✅ Direct Factory Access</p>
-//                 <p>✅ Transparent Factory Prices</p>
-//                 <p>✅ Instant Catalog Access</p>
-//                 <p>✅ 24/7 App Ordering</p>
-//                 <p>✅ Multiple Factories in One App</p>
-//               </div>
-//             </div>
-//           </div>
-//         </div>
-//       </section>
-
-//       {/* Product Categories */}
-//       <section className="py-20 bg-gray-50">
-//         <div className="max-w-7xl mx-auto px-6">
-//           <div className="text-center mb-12">
-//             <h2 className="text-3xl font-bold text-gray-900">
-//               WHAT YOU CAN SELL / SOURCE
-//             </h2>
-//           </div>
-//           <div className="flex flex-wrap justify-center gap-3">
-//             {[
-//               "EVA Footwear",
-//               "PU Footwear",
-//               "PVC Footwear",
-//               "Kids Sandals",
-//               "Gents Slippers & Hawai",
-//               "Ladies Fashion Slippers",
-//             ].map((cat) => (
-//               <span
-//                 key={cat}
-//                 className="px-6 py-3 rounded-full bg-white border border-orange-200 text-gray-700 font-medium hover:bg-orange-50 hover:border-orange-300 transition"
-//               >
-//                 {cat}
-//               </span>
-//             ))}
-//           </div>
-//         </div>
-//       </section>
-
-//       {/* App Download */}
-//       <section className="py-20 bg-gradient-to-r from-purple-600 to-orange-500">
-//         <div className="max-w-7xl mx-auto px-6 text-center">
-//           <h2 className="text-4xl font-bold text-white">
-//             DOWNLOAD STEPKARO – PAY LESS, EARN MORE.
-//           </h2>
-//           <div className="mt-8 flex flex-wrap justify-center gap-4">
-//             <button className="px-8 py-3 rounded-xl bg-black text-white font-semibold hover:bg-gray-900 transition flex items-center gap-2">
-//               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-//                 <path d="M17.523 12.095c.02 1.813 1.592 2.415 1.61 2.424-.013.043-.252.862-.83 1.707-.5.732-.998 1.462-1.8 1.477-.786.015-1.038-.466-1.936-.466-.898 0-1.179.452-1.923.481-.804.03-1.416-.793-1.92-1.523-1.045-1.525-1.845-4.31-.772-6.191.532-.937 1.484-1.53 2.517-1.545.785-.015 1.527.528 2.007.528.48 0 1.38-.652 2.326-.556.396.016 1.507.16 2.22 1.2-.058.036-1.326.774-1.312 2.31zm-2.825-5.869c.434-.526.726-1.257.646-1.985-.625.025-1.382.417-1.831.942-.403.466-.755 1.212-.66 1.927.698.054 1.411-.355 1.845-.884z" />
-//               </svg>
-//               GET IT ON Google Play
-//             </button>
-//             <button className="px-8 py-3 rounded-xl bg-black text-white font-semibold hover:bg-gray-900 transition flex items-center gap-2">
-//               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-//                 <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.86 3.29.86.78 0 2.26-1.06 3.81-.9.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.02.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
-//               </svg>
-//               Download on the App Store
-//             </button>
-//           </div>
-//           <p className="mt-6 text-white/80 text-sm font-medium">
-//             INDIA'S FASTEST GROWING FOOTWEAR B2B PLATFORM
-//           </p>
-//         </div>
-//       </section>
-
-//       {/* Legal Tabs - Contact, Refund, Terms, Privacy */}
-//       <section className="py-20 bg-gray-50">
-//         <div className="max-w-4xl mx-auto px-6">
-//           <div className="flex flex-wrap justify-center gap-2 mb-8 border-b border-gray-200">
-//             {[
-//               { id: "contact", label: "Contact Us" },
-//               { id: "refund", label: "Refund Policy" },
-//               { id: "terms", label: "Terms & Conditions" },
-//               { id: "privacy", label: "Privacy Policy" },
-//             ].map((tab) => (
-//               <button
-//                 key={tab.id}
-//                 onClick={() => setActiveTab(tab.id)}
-//                 className={`px-6 py-3 text-sm font-medium rounded-t-lg transition ${
-//                   activeTab === tab.id
-//                     ? "bg-white text-orange-600 border-b-2 border-orange-500"
-//                     : "text-gray-500 hover:text-orange-500"
-//                 }`}
-//               >
-//                 {tab.label}
-//               </button>
-//             ))}
-//           </div>
-
-//           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-//             {activeTab === "contact" && (
-//               <div>
-//                 <h3 className="text-2xl font-bold text-gray-900 mb-4">
-//                   Contact Us
-//                 </h3>
-//                 <p className="text-gray-600 mb-6">
-//                   Stepkaro Technologies Pvt. Ltd.
-//                   <br />
-//                   Connecting Footwear Wholesalers Directly with Manufacturers.
-//                 </p>
-//                 <div className="space-y-3 text-gray-600">
-//                   <p>
-//                     <strong className="text-orange-600">Email:</strong>{" "}
-//                     support@stepkaro.com
-//                   </p>
-//                   <p>
-//                     <strong className="text-orange-600">Website:</strong>{" "}
-//                     <a
-//                       href="https://www.stepkaro.in"
-//                       target="_blank"
-//                       rel="noopener noreferrer"
-//                       className="text-orange-600 hover:underline"
-//                     >
-//                       www.stepkaro.in
-//                     </a>
-//                   </p>
-//                   <p>
-//                     <strong className="text-orange-600">Phone:</strong>+91 92170
-//                     56915
-//                   </p>
-//                   <p>
-//                     <strong className="text-orange-600">Business Hours:</strong>{" "}
-//                     Monday to Friday, 10:00 AM – 6:00 PM
-//                   </p>
-//                 </div>
-//                 <div className="mt-6 p-4 bg-orange-50 rounded-xl">
-//                   <p className="text-gray-700">
-//                     <strong>Support:</strong> For account assistance,
-//                     onboarding, business inquiries, or partnership
-//                     opportunities, please contact our support team. We are
-//                     committed to helping wholesalers discover manufacturers and
-//                     helping manufacturers grow their business across India.
-//                   </p>
-//                 </div>
-//               </div>
-//             )}
-
-//             {activeTab === "refund" && (
-//               <div>
-//                 <h3 className="text-2xl font-bold text-gray-900 mb-2">
-//                   Refund Policy
-//                 </h3>
-//                 <p className="text-sm text-gray-500 mb-6">
-//                   Last Updated: June 2026
-//                 </p>
-//                 <div className="space-y-4 text-gray-600">
-//                   <p>
-//                     <strong className="text-orange-600">
-//                       Platform Services:
-//                     </strong>{" "}
-//                     Any subscription fees, promotional services, listing fees,
-//                     or paid services offered by Stepkaro may be subject to
-//                     separate refund terms communicated at the time of purchase.
-//                   </p>
-//                   <p>
-//                     <strong className="text-orange-600">
-//                       Transactions Between Users:
-//                     </strong>{" "}
-//                     Stepkaro is not responsible for product purchases, payments,
-//                     deliveries, returns, or disputes between wholesalers and
-//                     manufacturers.
-//                   </p>
-//                   <p>
-//                     <strong className="text-orange-600">
-//                       Refund Eligibility:
-//                     </strong>{" "}
-//                     Refund requests for platform services, if applicable, will
-//                     be reviewed on a case-by-case basis.
-//                   </p>
-//                   <p>
-//                     <strong className="text-orange-600">
-//                       Non-Refundable Situations:
-//                     </strong>{" "}
-//                     Refunds will generally not be provided for: Completed
-//                     promotional services, Successfully activated subscriptions,
-//                     User account violations, Incorrect information submitted by
-//                     users.
-//                   </p>
-//                   <p>
-//                     <strong className="text-orange-600">
-//                       Contact for Refund Requests:
-//                     </strong>{" "}
-//                     Email: support@stepkaro.com
-//                   </p>
-//                   <p className="text-sm text-gray-500 mt-4">
-//                     Stepkaro reserves the right to make the final decision
-//                     regarding refund requests.
-//                   </p>
-//                 </div>
-//               </div>
-//             )}
-
-//             {activeTab === "terms" && (
-//               <div>
-//                 <h3 className="text-2xl font-bold text-gray-900 mb-2">
-//                   Terms & Conditions
-//                 </h3>
-//                 <p className="text-sm text-gray-500 mb-6">
-//                   Last Updated: June 2026
-//                 </p>
-//                 <div className="space-y-3 text-gray-600">
-//                   <p>
-//                     <strong className="text-orange-600">
-//                       Platform Purpose:
-//                     </strong>{" "}
-//                     Stepkaro is a B2B footwear platform designed to connect
-//                     footwear wholesalers directly with manufacturers.
-//                   </p>
-//                   <p>
-//                     <strong className="text-orange-600">
-//                       User Eligibility:
-//                     </strong>{" "}
-//                     Users must be legally authorized businesses, manufacturers,
-//                     wholesalers, distributors, or related footwear trade
-//                     entities.
-//                   </p>
-//                   <p>
-//                     <strong className="text-orange-600">
-//                       Account Responsibility:
-//                     </strong>{" "}
-//                     Users are responsible for maintaining the confidentiality of
-//                     their account credentials.
-//                   </p>
-//                   <p>
-//                     <strong className="text-orange-600">
-//                       Business Transactions:
-//                     </strong>{" "}
-//                     Stepkaro acts as a technology platform facilitating business
-//                     connections.
-//                   </p>
-//                   <p>
-//                     <strong className="text-orange-600">Contact:</strong> For
-//                     support: support@stepkaro.com
-//                   </p>
-//                 </div>
-//               </div>
-//             )}
-
-//             {activeTab === "privacy" && (
-//               <div>
-//                 <h3 className="text-2xl font-bold text-gray-900 mb-4">
-//                   Privacy Policy
-//                 </h3>
-//                 <p className="text-gray-600 mb-4">
-//                   Stepkaro respects your privacy and is committed to protecting
-//                   your information.
-//                 </p>
-//                 <div className="space-y-3 text-gray-600">
-//                   <p>
-//                     <strong className="text-orange-600">
-//                       Information We Collect:
-//                     </strong>{" "}
-//                     Name, Mobile Number, Email, Business Name, GST Details,
-//                     City, State, Business Category.
-//                   </p>
-//                   <p>
-//                     <strong className="text-orange-600">
-//                       How We Use Your Information:
-//                     </strong>{" "}
-//                     To create accounts, connect users, improve services, provide
-//                     support, send updates.
-//                   </p>
-//                   <p>
-//                     <strong className="text-orange-600">Contact:</strong>{" "}
-//                     support@stepkaro.com
-//                   </p>
-//                 </div>
-//               </div>
-//             )}
-//           </div>
-//         </div>
-//       </section>
-
-//       {/* Final CTA */}
-//       <section className="py-20">
-//         <div className="max-w-5xl mx-auto px-6">
-//           <div className="rounded-3xl bg-gradient-to-r from-purple-600 to-orange-500 p-14 text-center shadow-xl">
-//             <h2 className="text-4xl font-bold text-white">
-//               Ready to Grow with StepKaro?
-//             </h2>
-//             <p className="mt-4 text-white/90 text-lg">
-//               Join India's growing product sourcing ecosystem and connect with
-//               businesses across the country.
-//             </p>
-//             <div className="mt-8 flex flex-wrap justify-center gap-4">
-//               <button
-//                 onClick={handleJoinAsManufacturer}
-//                 className="px-8 py-3 rounded-xl bg-white text-purple-600 font-semibold hover:bg-gray-100 transition"
-//               >
-//                 Join as Manufacturer
-//               </button>
-//               <button
-//                 onClick={handleJoinAsWholesaler}
-//                 className="px-8 py-3 rounded-xl bg-purple-700 text-white font-semibold hover:bg-purple-800 transition"
-//               >
-//                 Join as Wholesaler
-//               </button>
-//             </div>
-//           </div>
-//         </div>
-//       </section>
-
-//       {/* Footer */}
-//       <footer className="border-t border-gray-100 bg-gray-50 py-12">
-//         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
-//           <div>
-//             <h3 className="text-2xl font-bold text-gray-900">
-//               Step
-//               <span className="bg-gradient-to-r from-purple-600 to-orange-500 bg-clip-text text-transparent">
-//                 Karo
-//               </span>
-//             </h3>
-//             <p className="mt-1 text-sm text-gray-500">
-//               India's Fastest Growing Footwear B2B Platform
-//             </p>
-//           </div>
-//           <div className="flex gap-6 text-sm text-gray-500">
-//             <button
-//               onClick={() => setActiveTab("privacy")}
-//               className="hover:text-orange-500 transition"
-//             >
-//               Privacy Policy
-//             </button>
-//             <button
-//               onClick={() => setActiveTab("terms")}
-//               className="hover:text-orange-500 transition"
-//             >
-//               Terms & Conditions
-//             </button>
-//             <button
-//               onClick={() => setActiveTab("refund")}
-//               className="hover:text-orange-500 transition"
-//             >
-//               Refund Policy
-//             </button>
-//             <button
-//               onClick={() => setActiveTab("contact")}
-//               className="hover:text-orange-500 transition"
-//             >
-//               Contact Us
-//             </button>
-//           </div>
-//         </div>
-//       </footer>
-//     </div>
-//   );
-// }
 "use client";
 
 import { useRouter } from "next/navigation";
@@ -720,244 +23,342 @@ import {
   MagnifyingGlassIcon,
   CheckIcon,
   XMarkIcon,
+  ArrowDownTrayIcon,
+  Bars3Icon,
+  BuildingStorefrontIcon,
+  ShoppingBagIcon,
+  ArrowRightIcon,
 } from "@heroicons/react/24/solid";
 
 export default function HomePage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState("contact");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleJoinAsWholesaler = () => router.push("/register/wholesaler");
   const handleJoinAsManufacturer = () => router.push("/register/manufacturer");
   const handleLogin = () => router.push("/login");
-  const handleJoinNow = () => router.push("/register/wholesaler");
-  const handleExploreMarketplace = () => router.push("/marketplace");
 
   return (
-    <div className="min-h-screen bg-[#F6F6F6] text-white font-sans">
+    <div className="min-h-screen bg-[#f4f5f8] text-slate-900 font-sans antialiased selection:bg-orange-500 selection:text-white">
       {/* Header / Navbar */}
-      <header className="sticky top-0 z-50 bg-[#1A0744] backdrop-blur-md border-b border-slate-800">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+      <header className="sticky top-0 z-50 bg-[#170a3b] text-white border-b border-purple-950/60 shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 md:px-8 h-20 flex items-center justify-between">
+          {/* Brand Logo */}
           <div
-            className="flex items-center gap-2 cursor-pointer"
+            className="flex items-center gap-3 cursor-pointer group"
             onClick={() => router.push("/")}
           >
-            <div className="bg-indigo-600 p-2 rounded-lg">
-              <BuildingOffice2Icon className="w-6 h-6 text-white" />
+            <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-amber-400 bg-purple-900 flex items-center justify-center shadow-md">
+              <Image
+                src="/logo.jpeg"
+                alt="Stepkaro Logo"
+                fill
+                className="object-cover"
+              />
             </div>
             <div>
-              <h1 className="text-xl font-bold tracking-tight text-white leading-none">
-                Step<span className="text-amber-500">karo</span>
+              <h1 className="text-2xl font-black tracking-tight text-white leading-none">
+                Step<span className="text-[#ff6b00]">karo</span>
               </h1>
-              <p className="text-[10px] text-slate-400">
+              <p className="text-[10px] text-slate-300 font-medium tracking-wide">
                 Factories at Your Doorstep
               </p>
             </div>
           </div>
 
-          <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-300">
-            <a href="#" className="hover:text-amber-400 transition">
+          {/* Desktop Navigation Links */}
+          <nav className="hidden lg:flex items-center gap-7 text-sm font-semibold text-slate-200">
+            <a href="#" className="hover:text-[#ff6b00] transition">
               Home
             </a>
-            <a href="#" className="hover:text-amber-400 transition">
+            <a href="#how-it-works" className="hover:text-[#ff6b00] transition">
               How It Works
             </a>
-            <a href="#" className="hover:text-amber-400 transition">
+            <a href="#benefits" className="hover:text-[#ff6b00] transition">
               For Wholesalers
             </a>
-            <a href="#" className="hover:text-amber-400 transition">
+            <a href="#benefits" className="hover:text-[#ff6b00] transition">
               For Manufacturers
             </a>
-            <a href="#" className="hover:text-amber-400 transition">
+            <a href="#why-choose" className="hover:text-[#ff6b00] transition">
               Features
             </a>
-            <a href="#" className="hover:text-amber-400 transition">
+            <a href="#support" className="hover:text-[#ff6b00] transition">
               Contact Us
             </a>
           </nav>
 
-          <button
-            onClick={handleLogin}
-            className="px-5 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold text-sm hover:opacity-90 transition shadow-md shadow-orange-500/20"
-          >
-            Download App
-          </button>
+          {/* CTA Download App Button & Mobile Menu Button */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleLogin}
+              className="px-5 py-2.5 rounded-full bg-[#ff6b00] hover:bg-orange-600 text-white font-bold text-sm transition shadow-md shadow-orange-500/30 flex items-center gap-2 active:scale-95"
+            >
+              <ArrowDownTrayIcon className="w-4 h-4 text-white" />
+              <span>Download App</span>
+            </button>
+
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden p-2 rounded-lg bg-purple-900/60 text-slate-200 hover:text-white"
+              aria-label="Toggle menu"
+            >
+              <Bars3Icon className="w-6 h-6" />
+            </button>
+          </div>
         </div>
+
+        {/* Mobile Dropdown Nav */}
+        {mobileMenuOpen && (
+          <div className="lg:hidden bg-[#170a3b] border-t border-purple-900/60 px-6 py-4 space-y-3 text-sm font-semibold">
+            <a href="#" className="block py-1 text-slate-200 hover:text-[#ff6b00]">
+              Home
+            </a>
+            <a href="#how-it-works" className="block py-1 text-slate-200 hover:text-[#ff6b00]">
+              How It Works
+            </a>
+            <a href="#benefits" className="block py-1 text-slate-200 hover:text-[#ff6b00]">
+              For Wholesalers
+            </a>
+            <a href="#benefits" className="block py-1 text-slate-200 hover:text-[#ff6b00]">
+              For Manufacturers
+            </a>
+            <a href="#why-choose" className="block py-1 text-slate-200 hover:text-[#ff6b00]">
+              Features
+            </a>
+            <a href="#support" className="block py-1 text-slate-200 hover:text-[#ff6b00]">
+              Contact Us
+            </a>
+          </div>
+        )}
       </header>
 
       {/* Hero Section */}
-      <section className="relative bg-[#1A0744] ">
-        {/* <div className="grid lg:grid-cols-2 gap-12 items-center"> */}
-        {/* <div>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white uppercase tracking-tight leading-tight">
-              Connect Directly <br /> With Footwear <br />
-              <span className="text-amber-500">Factories</span> <br />
-              Across India
-            </h1>
-            <p className="mt-6 text-slate-300 text-base leading-relaxed max-w-xl">
-              Stepkaro helps footwear wholesalers discover manufacturers
-              directly, access factory prices, view live stock and place orders
-              anytime – without middlemen.
-            </p>
-
-            <div className="mt-8 flex flex-wrap gap-4">
-              <button
-                onClick={handleLogin}
-                className="px-6 py-3 rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 font-bold text-sm text-white hover:shadow-lg transition flex items-center gap-2"
-              >
-                <span>↓</span> Download App
-              </button>
-              <button
-                onClick={handleJoinAsManufacturer}
-                className="px-6 py-3 rounded-lg bg-indigo-950/80 border border-indigo-700 font-semibold text-sm text-white hover:bg-indigo-900 transition"
-              >
-                Join as Manufacturer
-              </button>
-              <button
-                onClick={handleJoinAsWholesaler}
-                className="px-6 py-3 rounded-lg bg-indigo-950/80 border border-indigo-700 font-semibold text-sm text-white hover:bg-indigo-900 transition"
-              >
-                Join as Wholesaler
-              </button>
-            </div>
-          </div> */}
-
-        {/* <section className="relative bg-[#1A0744]"> */}
-        <div className="relative w-full h-[500px] overflow-hidden">
-          <Image
-            src="/hero_banner.png"
-            alt="Stepkaro App Screen"
-            fill
-            priority
-            className="object-cover"
-          />
+      <section
+        className="relative bg-[#170a3b] text-white pt-10 pb-24 md:pb-32 overflow-hidden"
+        style={{
+          borderBottomLeftRadius: "35% 70px",
+          borderBottomRightRadius: "35% 70px",
+        }}
+      >
+        {/* Background Accent Wave */}
+        <div className="absolute right-0 top-0 w-1/2 h-full opacity-15 pointer-events-none hidden md:block">
+          <div className="w-[600px] h-[600px] bg-gradient-to-br from-orange-500 to-amber-600 rounded-full blur-3xl transform translate-x-1/3 -translate-y-1/4"></div>
         </div>
-        {/* </section> */}
 
-        {/* Right Hero App Banner Mockup */}
-        {/* <div className="relative flex justify-center ">
-          <div className="relative w-full h-[500px] px-6 py-6">
-            <Image
-              src="/hero_banner.png"
-              alt="Stepkaro App Screen"
-              fill
-              className=" object-cover"
-              priority
-            />
-          </div> */}
-        {/* </div> */}
-        {/* </div> */}
+        <div className="max-w-7xl mx-auto px-4 md:px-8 relative z-10">
+          <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+            {/* Hero Left Content */}
+            <div className="lg:col-span-6 space-y-6 text-center lg:text-left">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1] text-white uppercase">
+                CONNECT DIRECTLY <br />
+                WITH FOOTWEAR <br />
+                <span className="text-[#ff6b00] font-black text-4xl sm:text-5xl md:text-6xl lg:text-7xl drop-shadow-md">
+                  FACTORIES
+                </span>{" "}
+                <br />
+                ACROSS INDIA
+              </h1>
 
-        {/* Stats Strip */}
-        <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4 bg-slate-800/80 border border-slate-700 rounded-2xl p-6">
-          <div className="flex items-center gap-3">
-            <BuildingOffice2Icon className="w-8 h-8 text-amber-500 flex-shrink-0" />
-            <div>
-              <h3 className="text-xl font-bold text-white">1000+</h3>
-              <p className="text-xs text-slate-400">Manufacturers</p>
+              <p className="text-slate-300 text-sm sm:text-base md:text-lg max-w-xl mx-auto lg:mx-0 leading-relaxed font-normal">
+                Stepkaro helps footwear wholesalers discover manufacturers
+                directly, access factory prices, view live stock and place
+                orders anytime – without middlemen.
+              </p>
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3.5 pt-2">
+                <button
+                  onClick={handleLogin}
+                  className="px-6 py-3.5 rounded-xl bg-[#ff6b00] hover:bg-orange-600 text-white font-bold text-sm shadow-xl shadow-orange-600/30 transition flex items-center gap-2.5 active:scale-95"
+                >
+                  <ArrowDownTrayIcon className="w-5 h-5 text-white" />
+                  <span>Download App</span>
+                </button>
+
+                <button
+                  onClick={handleJoinAsManufacturer}
+                  className="px-5 py-3.5 rounded-xl bg-[#231054] border border-slate-400/40 hover:border-white text-white font-bold text-sm transition shadow-md active:scale-95"
+                >
+                  Join as Manufacturer
+                </button>
+
+                <button
+                  onClick={handleJoinAsWholesaler}
+                  className="px-5 py-3.5 rounded-xl bg-[#231054] border border-slate-400/40 hover:border-white text-white font-bold text-sm transition shadow-md active:scale-95"
+                >
+                  Join as Wholesaler
+                </button>
+              </div>
+            </div>
+
+            {/* Hero Right Mockup Image */}
+            <div className="lg:col-span-6 flex justify-center items-center">
+              <div className="relative w-full max-w-lg lg:max-w-none h-[320px] sm:h-[400px] md:h-[480px] lg:h-[500px]">
+                <Image
+                  src="/hero_banner.png"
+                  alt="Stepkaro Mobile App Display"
+                  fill
+                  priority
+                  className="object-contain drop-shadow-2xl"
+                />
+              </div>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <UserGroupIcon className="w-8 h-8 text-amber-500 flex-shrink-0" />
-            <div>
-              <h3 className="text-xl font-bold text-white">5000+</h3>
-              <p className="text-xs text-slate-400">Wholesalers</p>
+        </div>
+      </section>
+
+      {/* Floating Stats Strip */}
+      <section className="-mt-14 md:-mt-20 relative z-30 max-w-[1500px] mx-auto px-4 md:px-8">
+        <div className="bg-white rounded-xl md:rounded-2xl shadow-xl border border-gray-200/80 p-5 md:py-6 md:px-10">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 items-center divide-y md:divide-y-0 md:divide-x divide-gray-100">
+            {/* Stat 1 */}
+            <div className="flex items-center gap-3.5 pt-3 md:pt-0 md:pl-2">
+              <div className="w-12 h-12 rounded-xl bg-purple-100 text-[#170a3b] flex items-center justify-center flex-shrink-0">
+                <BuildingOffice2Icon className="w-7 h-7 text-[#170a3b]" />
+              </div>
+              <div>
+                <h3 className="text-xl md:text-2xl font-black text-slate-900 leading-none">
+                  1000+
+                </h3>
+                <p className="text-xs font-bold text-slate-500 mt-1 uppercase tracking-wide">
+                  Manufacturers
+                </p>
+              </div>
             </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <CubeIcon className="w-8 h-8 text-amber-500 flex-shrink-0" />
-            <div>
-              <h3 className="text-xl font-bold text-white">1 Lakh+</h3>
-              <p className="text-xs text-slate-400">Products</p>
+
+            {/* Stat 2 */}
+            <div className="flex items-center gap-3.5 pt-3 md:pt-0 md:pl-6">
+              <div className="w-12 h-12 rounded-xl bg-orange-100 text-[#ff6b00] flex items-center justify-center flex-shrink-0">
+                <UserGroupIcon className="w-7 h-7 text-[#ff6b00]" />
+              </div>
+              <div>
+                <h3 className="text-xl md:text-2xl font-black text-slate-900 leading-none">
+                  5000+
+                </h3>
+                <p className="text-xs font-bold text-slate-500 mt-1 uppercase tracking-wide">
+                  Wholesalers
+                </p>
+              </div>
             </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <GlobeAsiaAustraliaIcon className="w-8 h-8 text-amber-500 flex-shrink-0" />
-            <div>
-              <h3 className="text-xl font-bold text-white">Pan India</h3>
-              <p className="text-xs text-slate-400">Reach</p>
+
+            {/* Stat 3 */}
+            <div className="flex items-center gap-3.5 pt-3 md:pt-0 md:pl-6">
+              <div className="w-12 h-12 rounded-xl bg-orange-100 text-[#ff6b00] flex items-center justify-center flex-shrink-0">
+                <CubeIcon className="w-7 h-7 text-[#ff6b00]" />
+              </div>
+              <div>
+                <h3 className="text-xl md:text-2xl font-black text-slate-900 leading-none">
+                  1 Lakh+
+                </h3>
+                <p className="text-xs font-bold text-slate-500 mt-1 uppercase tracking-wide">
+                  Products
+                </p>
+              </div>
+            </div>
+
+            {/* Stat 4 */}
+            <div className="flex items-center gap-3.5 pt-3 md:pt-0 md:pl-6">
+              <div className="w-12 h-12 rounded-xl bg-purple-100 text-[#170a3b] flex items-center justify-center flex-shrink-0">
+                <GlobeAsiaAustraliaIcon className="w-7 h-7 text-[#170a3b]" />
+              </div>
+              <div>
+                <h3 className="text-xl md:text-2xl font-black text-slate-900 leading-none">
+                  Pan India
+                </h3>
+                <p className="text-xs font-bold text-slate-500 mt-1 uppercase tracking-wide">
+                  Reach
+                </p>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Benefits Section */}
-      <section className="py-12 px-6 max-w-7xl mx-auto">
+      <section id="benefits" className="py-14 md:py-20 px-4 md:px-8 max-w-[1500px] mx-auto">
         <div className="grid lg:grid-cols-2 gap-8">
-          {/* Wholesaler Box */}
-          <div className="bg-gradient-to-br from-indigo-950 to-slate-900 border border-indigo-900/60 rounded-3xl p-8 relative overflow-hidden">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-amber-400 uppercase tracking-wide">
-                Benefits For Wholesalers
-              </h2>
-              <div className="w-12 h-12 bg-amber-500/20 rounded-2xl flex items-center justify-center">
-                <ShoppingCartIcon className="w-6 h-6 text-amber-400" />
-              </div>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-3">
-              {[
-                "Direct factory prices",
-                "No hidden margins",
-                "All designs, rates & live stock in one app",
-                "No need to wait for photos / rates",
-                "24/7 ordering – anytime, anywhere",
-                "No calling – instant order confirmation",
-                "Transparent pricing always",
-                "Faster dispatch & reliable delivery",
-                "Better margins, more profit",
-                "App-only offers for wholesalers",
-              ].map((item, i) => (
-                <div
-                  key={i}
-                  className="flex items-start gap-2 text-xs text-slate-200"
-                >
-                  <CheckCircleIcon className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
-                  <span>{item}</span>
+          {/* Benefits for Wholesalers */}
+          <div className="bg-[#170a3b] text-white rounded-3xl p-6 sm:p-8 border border-purple-900/60 shadow-2xl relative overflow-hidden flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-8 pb-4 border-b border-purple-800/50">
+                <h2 className="text-xl sm:text-2xl font-black tracking-wide uppercase">
+                  BENEFITS FOR{" "}
+                  <span className="text-[#ff6b00]">WHOLESALERS</span>
+                </h2>
+                <div className="w-14 h-14 bg-[#ff6b00] rounded-full flex items-center justify-center flex-shrink-0 shadow-lg shadow-orange-600/30">
+                  <ShoppingCartIcon className="w-7 h-7 text-white" />
                 </div>
-              ))}
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-3.5">
+                {[
+                  "Direct factory prices",
+                  "24/7 ordering – anytime, anywhere",
+                  "No hidden margins",
+                  "No calling – instant order confirmation",
+                  "All designs, rates & live stock in one app",
+                  "Transparent pricing always",
+                  "No need to wait for photos / rates",
+                  "Faster dispatch & reliable delivery",
+                  "Better margins, more profit",
+                  "App-only offers for wholesalers",
+                ].map((item, i) => (
+                  <div
+                    key={i}
+                    className="flex items-start gap-2.5 text-xs sm:text-sm text-slate-100 font-medium"
+                  >
+                    <CheckCircleIcon className="w-5 h-5 text-[#ff6b00] flex-shrink-0 mt-0.5" />
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
-          {/* Manufacturer Box */}
-          <div className="bg-gradient-to-br from-indigo-950 to-slate-900 border border-indigo-900/60 rounded-3xl p-8 relative overflow-hidden">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-amber-400 uppercase tracking-wide">
-                Benefits For Manufacturers
-              </h2>
-              <div className="w-12 h-12 bg-amber-500/20 rounded-2xl flex items-center justify-center">
-                <BuildingOffice2Icon className="w-6 h-6 text-amber-400" />
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              {[
-                "Receive orders from wholesalers across India",
-                "Sell Pan-India & expand beyond local market",
-                "Zero joining fees",
-                "Add unlimited products",
-                "Secure & fast payments",
-                "Dedicated seller support",
-              ].map((item, i) => (
-                <div
-                  key={i}
-                  className="flex items-start gap-2 text-xs text-slate-200"
-                >
-                  <CheckCircleIcon className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
-                  <span>{item}</span>
+          {/* Benefits for Manufacturers */}
+          <div className="bg-[#170a3b] text-white rounded-3xl p-6 sm:p-8 border border-purple-900/60 shadow-2xl relative overflow-hidden flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-8 pb-4 border-b border-purple-800/50">
+                <h2 className="text-xl sm:text-2xl font-black tracking-wide uppercase">
+                  BENEFITS FOR{" "}
+                  <span className="text-[#ff6b00]">MANUFACTURERS</span>
+                </h2>
+                <div className="w-14 h-14 bg-[#ff6b00] rounded-full flex items-center justify-center flex-shrink-0 shadow-lg shadow-orange-600/30">
+                  <BuildingOffice2Icon className="w-7 h-7 text-white" />
                 </div>
-              ))}
+              </div>
+
+              <div className="space-y-4">
+                {[
+                  "Receive orders from wholesalers across India",
+                  "Sell Pan-India & expand beyond local market",
+                  "Zero joining fees",
+                  "Add unlimited products",
+                  "Secure & fast payments",
+                  "Dedicated seller support",
+                ].map((item, i) => (
+                  <div
+                    key={i}
+                    className="flex items-start gap-3 text-xs sm:text-sm text-slate-100 font-medium"
+                  >
+                    <CheckCircleIcon className="w-5 h-5 text-[#ff6b00] flex-shrink-0 mt-0.5" />
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Why Choose Stepkaro */}
-      <section className="py-12 px-6 max-w-7xl mx-auto">
-        <h2 className="text-2xl md:text-3xl font-extrabold text-center uppercase tracking-tight mb-10">
-          Why Choose <span className="text-amber-500">Stepkaro?</span>
+      {/* Why Choose Stepkaro? Section */}
+      <section id="why-choose" className="py-12 md:py-16 px-4 md:px-8 max-w-[1500px] mx-auto">
+        <h2 className="text-2xl md:text-3xl font-extrabold text-center uppercase tracking-tight text-slate-900 mb-10">
+          WHY CHOOSE <span className="text-[#170a3b]">STEPKARO?</span>
         </h2>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4">
           {[
             { title: "DIRECT FACTORY ACCESS", icon: BuildingOffice2Icon },
             { title: "VERIFIED MANUFACTURERS", icon: ShieldCheckIcon },
@@ -969,10 +370,12 @@ export default function HomePage() {
           ].map((item, idx) => (
             <div
               key={idx}
-              className="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4 text-center flex flex-col items-center justify-center"
+              className="bg-white border border-gray-200/90 rounded-2xl p-4 text-center flex flex-col items-center justify-center shadow-sm hover:shadow-md transition"
             >
-              <item.icon className="w-8 h-8 text-amber-500 mb-2" />
-              <h3 className="text-[11px] font-bold text-slate-200 uppercase leading-tight">
+              <div className="w-12 h-12 rounded-xl bg-purple-50 text-[#170a3b] flex items-center justify-center mb-3">
+                <item.icon className="w-7 h-7 text-[#170a3b]" />
+              </div>
+              <h3 className="text-[11px] sm:text-xs font-bold text-slate-800 uppercase leading-tight">
                 {item.title}
               </h3>
             </div>
@@ -980,110 +383,138 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* How It Works */}
-      <section className="py-12 px-6 max-w-7xl mx-auto">
-        <h2 className="text-2xl md:text-3xl font-extrabold text-center uppercase tracking-tight mb-10">
-          How It <span className="text-amber-500">Works</span>
-        </h2>
+      {/* How It Works Section */}
+      <section id="how-it-works" className="py-4 px-4 md:px-8 max-w-[1500px] mx-auto">
+        <div className="bg-white rounded-3xl border border-gray-200/90 shadow-xl p-4 sm:p-5 text-center">
+          <h2 className="text-lg sm:text-xl font-black uppercase tracking-wider text-[#170a3b] mb-4">
+            HOW IT WORKS
+          </h2>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 text-center">
-          {[
-            { step: "1", title: "Register Your Business", icon: UserPlusIcon },
-            { step: "2", title: "Create Your Profile", icon: UserIcon },
-            {
-              step: "3",
-              title: "Browse Factories & Products",
-              icon: MagnifyingGlassIcon,
-            },
-            { step: "4", title: "Place Order Anytime", icon: ShoppingCartIcon },
-            { step: "5", title: "Get Fast Delivery", icon: TruckIcon },
-            {
-              step: "6",
-              title: "Grow Your Business",
-              icon: ArrowTrendingUpIcon,
-            },
-          ].map((item) => (
-            <div
-              key={item.step}
-              className="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-4 flex flex-col items-center"
-            >
-              <div className="w-10 h-10 rounded-full bg-indigo-900/80 border border-indigo-700 text-amber-400 font-bold flex items-center justify-center mb-2 text-sm">
-                {item.step}
-              </div>
-              <p className="text-xs font-semibold text-slate-300">
-                {item.title}
-              </p>
-            </div>
-          ))}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-11 gap-3 items-center justify-items-center">
+            {[
+              { step: "1", title: "Register Your Business", icon: UserPlusIcon },
+              { isArrow: true },
+              { step: "2", title: "Create Your Profile", icon: BuildingStorefrontIcon },
+              { isArrow: true },
+              { step: "3", title: "Browse Factories & Products", icon: ShoppingBagIcon },
+              { isArrow: true },
+              { step: "4", title: "Place Order Anytime", icon: ShoppingCartIcon },
+              { isArrow: true },
+              { step: "5", title: "Get Fast Delivery", icon: TruckIcon },
+              { isArrow: true },
+              { step: "6", title: "Grow Your Business", icon: ArrowTrendingUpIcon },
+            ].map((item, index) =>
+              item.isArrow ? (
+                <div key={`arrow-${index}`} className="hidden lg:flex items-center justify-center -mt-4">
+                  <ArrowRightIcon className="w-5 h-5 text-[#ff6b00] stroke-[3]" />
+                </div>
+              ) : (
+                <div key={item.step} className="flex flex-col items-center text-center group w-full">
+                  <div className="w-14 h-14 rounded-full bg-[#170a3b] text-white flex items-center justify-center mb-1.5 shadow-md transition group-hover:scale-105">
+                    <item.icon className="w-7 h-7 text-white" />
+                  </div>
+                  <span className="text-xs font-black text-slate-800 block mb-0.5">
+                    {item.step}
+                  </span>
+                  <p className="text-[11px] sm:text-xs font-bold text-slate-800 leading-tight max-w-[120px] mx-auto">
+                    {item.title}
+                  </p>
+                </div>
+              )
+            )}
+          </div>
         </div>
       </section>
 
       {/* Why Wait / Comparison Section */}
-      <section className="py-12 px-6 max-w-7xl mx-auto">
-        <div className="grid lg:grid-cols-12 gap-6 items-stretch">
-          {/* Why Wait Box */}
-          <div className="lg:col-span-5 bg-gradient-to-br from-indigo-950 to-slate-900 border border-indigo-900 rounded-2xl p-6 flex flex-col justify-between">
-            <div>
-              <h3 className="text-xl font-extrabold uppercase text-white tracking-wide">
-                WHY WAIT?
-              </h3>
-              <p className="text-amber-500 font-bold text-lg">
-                PLACE ORDERS 24/7
-              </p>
+      <section className="py-12 md:py-16 px-4 md:px-8 max-w-[1500px] mx-auto">
+        <div className="grid lg:grid-cols-12 gap-8 items-stretch">
+          {/* Left Card: WHY WAIT? PLACE ORDERS 24/7 */}
+          <div className="lg:col-span-6 bg-[#170a3b] text-white rounded-3xl p-6 sm:p-8 border border-purple-900/60 shadow-xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="space-y-4 max-w-sm">
+              <div>
+                <h3 className="text-2xl sm:text-3xl font-black uppercase tracking-wide text-white">
+                  WHY WAIT?
+                </h3>
+                <p className="text-[#ff6b00] font-black text-xl sm:text-2xl mt-0.5">
+                  PLACE ORDERS 24/7
+                </p>
+              </div>
 
-              <div className="mt-4 space-y-2 text-xs text-slate-300">
-                <p className="flex items-center gap-2">
-                  <CheckIcon className="w-4 h-4 text-amber-500" /> No calling
+              <div className="space-y-2.5 text-xs sm:text-sm text-slate-200 font-semibold pt-1">
+                <p className="flex items-center gap-2.5">
+                  <CheckIcon className="w-5 h-5 text-[#ff6b00] flex-shrink-0" />
+                  <span>No calling</span>
                 </p>
-                <p className="flex items-center gap-2">
-                  <CheckIcon className="w-4 h-4 text-amber-500" /> No waiting
+                <p className="flex items-center gap-2.5">
+                  <CheckIcon className="w-5 h-5 text-[#ff6b00] flex-shrink-0" />
+                  <span>No waiting</span>
                 </p>
-                <p className="flex items-center gap-2">
-                  <CheckIcon className="w-4 h-4 text-amber-500" /> Instant order
-                  confirmation
+                <p className="flex items-center gap-2.5">
+                  <CheckIcon className="w-5 h-5 text-[#ff6b00] flex-shrink-0" />
+                  <span>Instant order confirmation</span>
                 </p>
+              </div>
+
+              {/* Circular 24/7 Badge */}
+              <div className="pt-2">
+                <div className="w-20 h-20 rounded-full border-4 border-[#ff6b00] bg-purple-950/80 flex flex-col items-center justify-center text-[#ff6b00] font-black shadow-lg shadow-orange-600/30 relative">
+                  <span className="text-xl leading-none font-black">24/7</span>
+                  <span className="text-[8px] uppercase tracking-wider text-white font-bold mt-0.5">Service</span>
+                </div>
               </div>
             </div>
 
-            <div className="mt-6 flex justify-center">
-              <Image
-                src="/stepkaro1.jpeg"
-                alt="Order Confirmed Mockup"
-                width={200}
-                height={200}
-                className="rounded-xl object-contain"
-              />
+            {/* Right Phone Mockup */}
+            <div className="relative w-48 sm:w-56 h-64 sm:h-72 bg-slate-900 rounded-[32px] border-4 border-slate-700 shadow-2xl overflow-hidden p-2.5 flex flex-col justify-between items-center flex-shrink-0 mt-4 md:mt-0">
+              {/* Phone Notch */}
+              <div className="w-16 h-3 bg-slate-800 rounded-b-xl mx-auto absolute top-0 left-1/2 -translate-x-1/2 z-10"></div>
+
+              {/* Screen Content */}
+              <div className="w-full h-full bg-white rounded-2xl p-4 pt-6 flex flex-col items-center justify-center text-center shadow-inner text-slate-900">
+                <div className="w-12 h-12 bg-emerald-500 text-white rounded-full flex items-center justify-center mb-2.5 shadow-md">
+                  <CheckIcon className="w-7 h-7 stroke-[3]" />
+                </div>
+                <h4 className="text-xs sm:text-sm font-extrabold text-slate-900 leading-tight">
+                  Order Confirmed
+                </h4>
+                <p className="text-[10px] text-slate-500 font-semibold mt-1 max-w-[130px] leading-tight">
+                  Your order has been placed successfully!
+                </p>
+                <button className="mt-4 px-3.5 py-1.5 bg-[#ff6b00] hover:bg-orange-600 text-white text-[9px] font-black rounded-lg shadow-md uppercase tracking-wider">
+                  Continue Shopping
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* Comparison Table */}
-          <div className="lg:col-span-7 bg-slate-800/60 border border-slate-700 rounded-2xl overflow-hidden flex flex-col">
-            <div className="grid grid-cols-2 text-center text-xs font-bold uppercase tracking-wider bg-slate-800 border-b border-slate-700 py-3">
-              <div className="text-slate-400">Traditional Sourcing</div>
-              <div className="text-amber-500">With Stepkaro</div>
+          {/* Right Card: Traditional vs Stepkaro */}
+          <div className="lg:col-span-6 bg-white rounded-3xl border border-gray-200/90 shadow-xl overflow-hidden flex flex-col justify-between relative">
+            {/* Header */}
+            <div className="grid grid-cols-2 bg-[#170a3b] text-white text-xs sm:text-sm font-black uppercase tracking-wider py-4 text-center border-b border-purple-900">
+              <div className="text-slate-200 border-r-2 border-purple-700/80">TRADITIONAL SOURCING</div>
+              <div className="text-[#ff6b00]">WITH STEPKARO</div>
             </div>
 
-            <div className="divide-y divide-slate-700/60 text-xs flex-1">
+            {/* Rows Container */}
+            <div className="divide-y divide-gray-200 text-xs sm:text-sm font-bold flex-1 flex flex-col justify-around py-2 relative">
+              {/* Overlapping VS Badge */}
+              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-11 h-11 bg-[#ff6b00] text-white font-black rounded-full flex items-center justify-center text-sm shadow-xl border-4 border-white z-20">
+                VS
+              </div>
+
               {[
                 { trad: "Multiple Middlemen", step: "Direct Factory Access" },
-                {
-                  trad: "Price Negotiation",
-                  step: "Transparent Factory Prices",
-                },
+                { trad: "Price Negotiation", step: "Transparent Factory Prices" },
                 { trad: "Waiting for Photos", step: "Instant Catalog Access" },
                 { trad: "Calling for Orders", step: "24/7 App Ordering" },
-                {
-                  trad: "Limited Suppliers",
-                  step: "Multiple Factories in One App",
-                },
+                { trad: "Limited Suppliers", step: "Multiple Factories in One App" },
               ].map((row, idx) => (
-                <div key={idx} className="grid grid-cols-2 p-3 text-center">
-                  <div className="text-slate-400 flex items-center justify-center gap-1">
-                    <XMarkIcon className="w-4 h-4 text-rose-500 inline" />{" "}
+                <div key={idx} className="grid grid-cols-2 py-3.5 px-4 text-center items-center">
+                  <div className="text-slate-800 font-bold pr-6 border-r-2 border-slate-300/80">
                     {row.trad}
                   </div>
-                  <div className="text-slate-200 font-semibold flex items-center justify-center gap-1">
-                    <CheckIcon className="w-4 h-4 text-emerald-400 inline" />{" "}
+                  <div className="text-[#ff6b00] font-black pl-6">
                     {row.step}
                   </div>
                 </div>
@@ -1093,90 +524,155 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Product Categories */}
-      <section className="py-12 px-6 max-w-7xl mx-auto text-center">
-        <h2 className="text-2xl md:text-3xl font-extrabold uppercase tracking-tight mb-8">
-          What You Can <span className="text-amber-500">Sell / Source</span>
-        </h2>
+      {/* What You Can Sell / Source Section */}
+      <section className="py-3 px-4 md:px-8 max-w-[1500px] mx-auto">
+        <div className="bg-white rounded-3xl border border-gray-200/90 shadow-xl p-3 sm:p-4 text-center">
+          <h2 className="text-base sm:text-lg font-black uppercase tracking-wider text-[#170a3b] mb-3">
+            WHAT YOU CAN SELL / SOURCE
+          </h2>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          {[
-            { name: "EVA Footwear", img: "/eva.png" },
-            { name: "PU Footwear", img: "/pu.png" },
-            { name: "PVC Footwear", img: "/pvc.png" },
-            { name: "Kids Sandals", img: "/kids.png" },
-            { name: "Gents Slippers & Hawai", img: "/gents.png" },
-            { name: "Ladies Fashion Slippers", img: "/ladies.png" },
-          ].map((cat, idx) => (
-            <div
-              key={idx}
-              className="bg-slate-800/60 border border-slate-700/60 rounded-xl p-3 flex flex-col items-center"
-            >
-              <div className="w-full h-24 relative mb-2 bg-slate-900 rounded-lg overflow-hidden flex items-center justify-center">
-                <Image
-                  src={cat.img}
-                  alt={cat.name}
-                  width={100}
-                  height={80}
-                  className="object-contain max-h-20"
-                />
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 divide-y sm:divide-y-0 sm:divide-x divide-gray-100 items-center justify-center">
+            {[
+              { name: "EVA Footwear", img: "/eva.png" },
+              { name: "PU Footwear", img: "/pu.png" },
+              { name: "PVC Footwear", img: "/pvc.png" },
+              { name: "Kids Sandals", img: "/kids.png" },
+              { name: "Gents Slippers & Hawai", img: "/gents.png" },
+              { name: "Ladies Fashion Slippers", img: "/ladies.png" },
+            ].map((cat, idx) => (
+              <div
+                key={idx}
+                className="py-1.5 px-2 flex flex-col items-center justify-between group cursor-pointer"
+              >
+                <div className="w-24 h-16 sm:w-28 sm:h-18 rounded-[50%] bg-gradient-to-b from-gray-50 to-white border border-gray-200/80 shadow-sm flex items-center justify-center p-1.5 mb-1.5 transition group-hover:scale-105 group-hover:shadow-md">
+                  <Image
+                    src={cat.img}
+                    alt={cat.name}
+                    width={100}
+                    height={60}
+                    className="object-contain max-h-12"
+                  />
+                </div>
+                <p className="text-[11px] sm:text-xs font-bold text-slate-800 leading-tight max-w-[110px]">
+                  {cat.name}
+                </p>
               </div>
-              <p className="text-xs font-bold text-slate-200">{cat.name}</p>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* Footer Banner CTA */}
-      <footer className="bg-slate-950 border-t border-slate-800 pt-10 pb-6 px-6">
-        <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-8 items-center border-b border-slate-800 pb-8">
-          <div>
-            <h3 className="text-lg font-black text-white uppercase">
-              Download Stepkaro – <br />
-              <span className="text-amber-500">Pay Less, Earn More.</span>
+      {/* Footer Banner CTA & Footer */}
+      <footer id="support" className="bg-[#150934] text-white pt-12">
+        <div className="max-w-[1500px] mx-auto px-4 md:px-8 grid md:grid-cols-3 gap-8 items-center pb-12 border-b border-purple-900/50">
+          {/* Left Column */}
+          <div className="text-center md:text-left space-y-4">
+            <h3 className="text-xl sm:text-2xl font-black uppercase text-white leading-tight">
+              DOWNLOAD STEPKARO – <br />
+              <span className="text-[#ff6b00]">PAY LESS, EARN MORE.</span>
             </h3>
-            <div className="mt-4 flex gap-3">
-              <button className="bg-slate-900 border border-slate-700 px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-2">
-                Get it on Google Play
+            <div className="flex flex-wrap justify-center md:justify-start gap-3 pt-2">
+              {/* Google Play Store Badge Button */}
+              <button
+                onClick={handleLogin}
+                className="bg-black hover:bg-slate-900 border border-slate-700/80 px-4 py-2 rounded-xl flex items-center gap-3 shadow-lg transition active:scale-95 text-left"
+              >
+                <svg className="w-6 h-6 flex-shrink-0" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M3.6 2.4C3.2 2.8 3 3.4 3 4.2v15.6c0 .8.2 1.4.6 1.8l.1.1 8.7-8.7v-.2L3.7 2.3l-.1.1z"/>
+                  <path fill="#34A853" d="M15.4 15.9l-3-3v-.2l3-3 3.4 2c1 .6 1 1.5 0 2.1l-3.4 2.1z"/>
+                  <path fill="#EA4335" d="M3.7 21.7c.3.3.8.4 1.4.1l10.3-5.9-3-3-8.7 8.8z"/>
+                  <path fill="#FBBC05" d="M3.7 2.3l8.7 8.7 3-3L5.1 2.1c-.6-.3-1.1-.2-1.4.2z"/>
+                </svg>
+                <div>
+                  <span className="text-[9px] uppercase tracking-wider text-slate-300 font-semibold block leading-tight">
+                    GET IT ON
+                  </span>
+                  <span className="text-xs sm:text-sm font-extrabold text-white leading-none block">
+                    Google Play
+                  </span>
+                </div>
               </button>
-              <button className="bg-slate-900 border border-slate-700 px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-2">
-                Download on App Store
+
+              {/* Apple App Store Badge Button */}
+              <button
+                onClick={handleLogin}
+                className="bg-black hover:bg-slate-900 border border-slate-700/80 px-4 py-2 rounded-xl flex items-center gap-3 shadow-lg transition active:scale-95 text-left"
+              >
+                <svg className="w-6 h-6 flex-shrink-0 fill-current text-white" viewBox="0 0 24 24">
+                  <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.84c.67-.82 1.13-1.96.99-3.1-.98.04-2.18.66-2.88 1.47-.63.73-1.18 1.9-1.03 3.02 1.1.09 2.24-.56 2.92-1.39z"/>
+                </svg>
+                <div>
+                  <span className="text-[9px] tracking-wider text-slate-300 font-semibold block leading-tight">
+                    Download on the
+                  </span>
+                  <span className="text-xs sm:text-sm font-extrabold text-white leading-none block">
+                    App Store
+                  </span>
+                </div>
               </button>
             </div>
           </div>
 
-          <div className="text-center">
-            <h4 className="text-xl font-bold tracking-tight text-white">
-              Step<span className="text-amber-500">karo</span>
-            </h4>
-            <p className="text-[10px] text-slate-400 uppercase tracking-widest mt-1">
+          {/* Middle Column */}
+          <div className="text-center space-y-2">
+            <div className="flex justify-center items-center gap-2">
+              <div className="relative w-8 h-8 rounded-full overflow-hidden border border-amber-400">
+                <Image
+                  src="/logo.jpeg"
+                  alt="Stepkaro Logo"
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              <h4 className="text-2xl font-black tracking-tight text-white">
+                Step<span className="text-[#ff6b00]">karo</span>
+              </h4>
+            </div>
+            <p className="text-[11px] text-slate-300 font-bold uppercase tracking-widest">
               India's Fastest Growing Footwear B2B Platform
             </p>
           </div>
 
-          <div className="text-right text-xs text-slate-300 space-y-1">
-            <p className="font-bold text-amber-500 uppercase">For Support</p>
-            <p>+91 92170 56915</p>
-            <p>www.stepkaro.in</p>
-            <p>support@stepkaro.com</p>
+          {/* Right Column */}
+          <div className="text-center md:text-right text-xs text-slate-200 space-y-2">
+            <p className="font-extrabold text-[#ff6b00] uppercase text-sm tracking-wide">
+              FOR SUPPORT
+            </p>
+            <p className="font-bold flex items-center justify-center md:justify-end gap-2 text-sm text-slate-100">
+              <span className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+                <PhoneIcon className="w-3.5 h-3.5" />
+              </span>
+              <span>+91 92170 56915</span>
+            </p>
+            <p className="font-medium flex items-center justify-center md:justify-end gap-2 hover:text-amber-400 cursor-pointer">
+              <GlobeAsiaAustraliaIcon className="w-4 h-4 text-amber-400" />
+              <span>www.stepkaro.com</span>
+            </p>
+            <p className="text-slate-400 font-medium">support@stepkaro.com</p>
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto mt-6 flex flex-wrap justify-between items-center text-[11px] text-slate-500">
-          <p>© 2026 Stepkaro Technologies Pvt. Ltd. All Rights Reserved.</p>
-          <div className="flex gap-4">
-            <a href="#" className="hover:text-slate-300">
-              Privacy Policy
-            </a>
-            <a href="#" className="hover:text-slate-300">
-              Terms & Conditions
-            </a>
-            <a href="#" className="hover:text-slate-300">
-              Refund Policy
-            </a>
-            <a href="#" className="hover:text-slate-300">
-              Contact Us
-            </a>
+        {/* Orange Bottom Bar */}
+        <div className="bg-[#ff6b00] py-3.5 px-4 md:px-8 text-white text-xs font-semibold">
+          <div className="max-w-[1500px] mx-auto flex flex-col sm:flex-row justify-between items-center gap-3 text-center sm:text-left">
+            <p>© 2026 Stepkaro Technologies Pvt. Ltd. All Rights Reserved.</p>
+            <div className="flex flex-wrap gap-4 text-white font-bold">
+              <a href="#" className="hover:underline">
+                Privacy Policy
+              </a>
+              <span>|</span>
+              <a href="#" className="hover:underline">
+                Terms & Conditions
+              </a>
+              <span>|</span>
+              <a href="#" className="hover:underline">
+                Refund Policy
+              </a>
+              <span>|</span>
+              <a href="#" className="hover:underline">
+                Contact Us
+              </a>
+            </div>
           </div>
         </div>
       </footer>
