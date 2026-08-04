@@ -147,7 +147,7 @@ export default function TermsAndConditionsPage() {
         <main className="max-w-[1500px] mx-auto px-4 md:px-6 py-6">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
             {/* Main Content Column (8/12) */}
-            <div className="lg:col-span-12 space-y-4">
+            <div className="lg:col-span-8 space-y-4">
               {/* Introduction Banner */}
               <div className="bg-purple-900 text-white rounded-xl p-4 shadow-xs border border-purple-800 flex items-center gap-3">
                 <ShieldCheck className="w-6 h-6 text-[#ff6b00] shrink-0" />
@@ -321,7 +321,7 @@ export default function TermsAndConditionsPage() {
             </div>
 
             {/* Sidebar Column (4/12) */}
-            {/* <div className="lg:col-span-4 space-y-4">
+            <div className="lg:col-span-4 space-y-4">
            
               <div className="bg-gradient-to-br from-[#170a3b] to-purple-900 text-white rounded-xl p-5 shadow-sm border border-purple-800">
                 <div className="w-9 h-9 rounded-lg bg-[#ff6b00] flex items-center justify-center text-white font-bold mb-3 shadow-xs">
@@ -386,7 +386,7 @@ export default function TermsAndConditionsPage() {
                   </Link>
                 </div>
               </div>
-            </div> */}
+            </div>
           </div>
         </main>
       </div>
