@@ -1262,12 +1262,12 @@ export default function SellerPage() {
                           >
                             Accept
                           </button>
-                          <button
+                          {/* <button
                             onClick={() => updateUserStatus(user, "inactive")}
                             className="px-3 py-1 text-xs rounded-lg bg-red-500 text-white hover:bg-red-600 transition"
                           >
                             Reject
-                          </button>
+                          </button> */}
                         </div>
                       ) : (
                         <div className="flex items-center gap-2">
