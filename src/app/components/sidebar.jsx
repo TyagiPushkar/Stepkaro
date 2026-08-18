@@ -27,6 +27,7 @@ import {
   Crosshair,
   BookAIcon,
   Book,
+  PlayCircle,
 } from "lucide-react";
 
 import { useEffect, useState } from "react";
@@ -49,6 +50,7 @@ const adminNavItems = [
   { name: "Users", href: "/admin/users", icon: Users },
   { name: "Sellers", href: "/admin/vendors", icon: Store },
   { name: "Report", href: "/admin/report", icon: Book },
+  { name: "Videos", href: "/admin/videos", icon: PlayCircle },
   // { name: "Coupons", href: "/admin/coupons", icon: Ticket },
   { name: "Enquiry", href: "/admin/enquiry", icon: MessageSquare },
   // { name: "Collections", href: "/admin/collections", icon: Layers },
