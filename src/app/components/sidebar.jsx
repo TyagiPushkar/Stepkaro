@@ -137,28 +137,28 @@ export default function Sidebar() {
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="p-6 border-b border-gray-200">
-            <Link href="/home" className="flex items-center gap-3">
-              <div className="relative w-10 h-10 bg-gradient-to-br from-purple-100 to-orange-100 rounded-lg backdrop-blur-sm flex items-center justify-center border border-gray-200">
-                <Image
-                  src="/logo.jpeg"
-                  alt="Logo"
-                  width={40}
-                  height={40}
-                  className="rounded-lg object-contain"
-                />
-              </div>
+            {/* <Link href="/home" className="flex items-center gap-3"> */}
+            <div className="relative w-10 h-10 bg-gradient-to-br from-purple-100 to-orange-100 rounded-lg backdrop-blur-sm flex items-center justify-center border border-gray-200">
+              <Image
+                src="/logo.jpeg"
+                alt="Logo"
+                width={40}
+                height={40}
+                className="rounded-lg object-contain"
+              />
+            </div>
 
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">
-                  Step
-                  <span className="text-purple-600">Karo</span>
-                </h1>
+            <div>
+              <h1 className="text-xl font-bold text-gray-900">
+                Step
+                <span className="text-purple-600">Karo</span>
+              </h1>
 
-                <p className="text-xs text-gray-500 mt-0.5">
-                  {role === "seller" ? "Seller Dashboard" : "Admin Dashboard"}
-                </p>
-              </div>
-            </Link>
+              <p className="text-xs text-gray-500 mt-0.5">
+                {role === "seller" ? "Seller Dashboard" : "Admin Dashboard"}
+              </p>
+            </div>
+            {/* </Link> */}
           </div>
 
           {/* Close Button */}
