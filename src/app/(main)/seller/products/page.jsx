@@ -210,10 +210,10 @@ const VariantsDetailTable = ({
                 <span className="text-sm font-semibold text-purple-600">
                   {product.commission_type === "percentage"
                     ? `₹${(
-                        (Number(variant.selling_price) *
-                          Number(product.commission)) /
-                        100
-                      ).toFixed(2)}`
+                      (Number(variant.selling_price) *
+                        Number(product.commission)) /
+                      100
+                    ).toFixed(2)}`
                     : `₹${Number(product.commission || 0).toFixed(2)}`}
                 </span>
               </td>
@@ -305,15 +305,13 @@ const VariantsDetailTable = ({
                     e.stopPropagation();
                     onToggleVariantStatus(productId, variant.id);
                   }}
-                  className={`relative w-10 h-5 rounded-full transition-colors cursor-pointer flex-shrink-0 disabled:opacity-60 ${
-                    variant.status === "active" ? "bg-green-500" : "bg-red-500"
-                  }`}
+                  className={`relative w-10 h-5 rounded-full transition-colors cursor-pointer flex-shrink-0 disabled:opacity-60 ${variant.status === "active" ? "bg-green-500" : "bg-red-500"
+                    }`}
                   aria-label="Toggle variant status"
                 >
                   <div
-                    className={`absolute w-4 h-4 bg-white rounded-full top-0.5 transition-all duration-300 shadow-sm ${
-                      variant.status === "active" ? "left-5" : "left-0.5"
-                    }`}
+                    className={`absolute w-4 h-4 bg-white rounded-full top-0.5 transition-all duration-300 shadow-sm ${variant.status === "active" ? "left-5" : "left-0.5"
+                      }`}
                   />
                 </button>
               </td>
@@ -584,11 +582,11 @@ export default function SellerProductsPage() {
             prev.map((p) =>
               p.id === productId
                 ? {
-                    ...p,
-                    variants: p.variants.map((v) =>
-                      v.id === variantId ? { ...v, status: newStatus } : v,
-                    ),
-                  }
+                  ...p,
+                  variants: p.variants.map((v) =>
+                    v.id === variantId ? { ...v, status: newStatus } : v,
+                  ),
+                }
                 : p,
             ),
           );
@@ -696,27 +694,36 @@ export default function SellerProductsPage() {
         prev.map((p) =>
           p.id === productId
             ? {
-                ...p,
-                stock_quantity: newQuantity,
-                selling_price: Number(editSellingPrice) || p.selling_price,
-              }
+              ...p,
+              stock_quantity: newQuantity,
+              selling_price: Number(editSellingPrice) || p.selling_price,
+            }
             : p,
         ),
       );
 
       try {
         const token = getToken();
+        const payload = {
+          product_id: productId,
+          stock_quantity: newQuantity,
+          selling_price: Number(editSellingPrice) || product.selling_price,
+        };
+
+        if (product.variants && product.variants.length > 0) {
+          payload.multi_variants = product.variants.map(v => ({
+            variant_id: v.id,
+            stock: v.stock
+          }));
+        }
+
         const response = await fetch(`${API_BASE}/stock/update_stock.php`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            product_id: productId,
-            stock_quantity: newQuantity,
-            selling_price: Number(editSellingPrice) || product.selling_price, // FIX: Send selling price
-          }),
+          body: JSON.stringify(payload),
         });
         const result = await response.json();
 
@@ -839,42 +846,50 @@ export default function SellerProductsPage() {
         prev.map((p) =>
           p.id === productId
             ? {
-                ...p,
-                variants: p.variants.map((v) =>
-                  v.id === variantId
-                    ? {
-                        ...v,
-                        stock: newQuantity,
-                        selling_price:
-                          Number(editVariantSellingPrice) || v.selling_price, // FIX: Update selling price
-                      }
-                    : v,
-                ),
-              }
+              ...p,
+              variants: p.variants.map((v) =>
+                v.id === variantId
+                  ? {
+                    ...v,
+                    stock: newQuantity,
+                    selling_price:
+                      Number(editVariantSellingPrice) || v.selling_price, // FIX: Update selling price
+                  }
+                  : v,
+              ),
+            }
             : p,
         ),
       );
 
       try {
         const token = getToken();
+
+        const payload = {
+          product_id: productId,
+          stock_quantity: product.stock_quantity || product.quantity || 0,
+          multi_variants: product.variants.map((v) => {
+            if (v.id === variantId) {
+              return {
+                variant_id: v.id,
+                stock: newQuantity,
+                selling_price: Number(editVariantSellingPrice) || originalVariant.selling_price,
+              };
+            }
+            return {
+              variant_id: v.id,
+              stock: v.stock
+            };
+          })
+        };
+
         const response = await fetch(`${API_BASE}/stock/update_stock.php`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            product_id: productId,
-            multi_variants: [
-              {
-                variant_id: variantId,
-                stock: newQuantity,
-                selling_price:
-                  Number(editVariantSellingPrice) ||
-                  originalVariant.selling_price, // FIX: Send selling price
-              },
-            ],
-          }),
+          body: JSON.stringify(payload),
         });
         const result = await response.json();
 
@@ -890,11 +905,11 @@ export default function SellerProductsPage() {
           prev.map((p) =>
             p.id === productId
               ? {
-                  ...p,
-                  variants: p.variants.map((v) =>
-                    v.id === variantId ? originalVariant : v,
-                  ),
-                }
+                ...p,
+                variants: p.variants.map((v) =>
+                  v.id === variantId ? originalVariant : v,
+                ),
+              }
               : p,
           ),
         );
@@ -1440,15 +1455,13 @@ export default function SellerProductsPage() {
     return (
       <button
         onClick={() => toggleStatus(product.id)}
-        className={`relative w-10 h-5 rounded-full transition-colors cursor-pointer flex-shrink-0 ${
-          product.status === "active" ? "bg-green-500" : "bg-red-500"
-        }`}
+        className={`relative w-10 h-5 rounded-full transition-colors cursor-pointer flex-shrink-0 ${product.status === "active" ? "bg-green-500" : "bg-red-500"
+          }`}
         aria-label="Toggle product status"
       >
         <div
-          className={`absolute w-4 h-4 bg-white rounded-full top-0.5 transition-all duration-300 shadow-sm ${
-            product.status === "active" ? "left-5" : "left-0.5"
-          }`}
+          className={`absolute w-4 h-4 bg-white rounded-full top-0.5 transition-all duration-300 shadow-sm ${product.status === "active" ? "left-5" : "left-0.5"
+            }`}
         />
       </button>
     );
@@ -1469,13 +1482,12 @@ export default function SellerProductsPage() {
     <div className="space-y-6">
       {toast && (
         <div
-          className={`fixed top-20 right-6 z-50 px-4 py-3 rounded-lg flex items-center gap-2 shadow-lg text-white ${
-            toast.type === "success"
-              ? "bg-emerald-500"
-              : toast.type === "error"
-                ? "bg-red-500"
-                : "bg-blue-500"
-          }`}
+          className={`fixed top-20 right-6 z-50 px-4 py-3 rounded-lg flex items-center gap-2 shadow-lg text-white ${toast.type === "success"
+            ? "bg-emerald-500"
+            : toast.type === "error"
+              ? "bg-red-500"
+              : "bg-blue-500"
+            }`}
         >
           {toast.type === "success" ? (
             <CheckCircle size={18} />
@@ -1571,22 +1583,20 @@ export default function SellerProductsPage() {
             <button
               key={filter.value}
               onClick={() => handleFilterChange(filter.value)}
-              className={`px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-all duration-200 whitespace-nowrap border ${
-                isActive
-                  ? colorMap[filter.color] ||
-                    "bg-purple-600 text-white border-purple-600"
-                  : inactiveColorMap[filter.color] ||
-                    "bg-white text-gray-600 border-gray-200 hover:border-purple-300"
-              }`}
+              className={`px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition-all duration-200 whitespace-nowrap border ${isActive
+                ? colorMap[filter.color] ||
+                "bg-purple-600 text-white border-purple-600"
+                : inactiveColorMap[filter.color] ||
+                "bg-white text-gray-600 border-gray-200 hover:border-purple-300"
+                }`}
             >
               <Icon size={16} />
               {filter.label}
               <span
-                className={`px-2 py-0.5 rounded-full text-xs ${
-                  isActive
-                    ? "bg-white/20 text-white"
-                    : "bg-gray-100 text-gray-600"
-                }`}
+                className={`px-2 py-0.5 rounded-full text-xs ${isActive
+                  ? "bg-white/20 text-white"
+                  : "bg-gray-100 text-gray-600"
+                  }`}
               >
                 {filter.count}
               </span>
@@ -1818,10 +1828,10 @@ export default function SellerProductsPage() {
                           <span className="text-sm font-semibold text-purple-600">
                             {product.commission_type === "percentage"
                               ? `₹${(
-                                  (Number(product.selling_price) *
-                                    Number(product.commission)) /
-                                  100
-                                ).toFixed(2)}`
+                                (Number(product.selling_price) *
+                                  Number(product.commission)) /
+                                100
+                              ).toFixed(2)}`
                               : `₹${Number(product.commission || 0).toFixed(2)}`}
                           </span>
                         </td>
@@ -1836,8 +1846,8 @@ export default function SellerProductsPage() {
                               const commission =
                                 product.commission_type === "percentage"
                                   ? (sellingPrice *
-                                      Number(product.commission || 0)) /
-                                    100
+                                    Number(product.commission || 0)) /
+                                  100
                                   : Number(product.commission || 0);
 
                               const payout = sellingPrice - commission;
@@ -1855,11 +1865,10 @@ export default function SellerProductsPage() {
                               onClick={(e) =>
                                 toggleVariantsPanel(e, product.id)
                               }
-                              className={`text-sm font-semibold cursor-pointer hover:underline ${
-                                isVariantsExpanded
-                                  ? "text-blue-800"
-                                  : "text-blue-600"
-                              }`}
+                              className={`text-sm font-semibold cursor-pointer hover:underline ${isVariantsExpanded
+                                ? "text-blue-800"
+                                : "text-blue-600"
+                                }`}
                             >
                               {variantCount}{" "}
                               {variantCount === 1 ? "Variant" : "Variants"}
@@ -1903,11 +1912,10 @@ export default function SellerProductsPage() {
                             ) : (
                               <>
                                 <span
-                                  className={`text-sm font-medium ${
-                                    Number(product.stock_quantity) === 0
-                                      ? "text-red-600"
-                                      : "text-gray-900"
-                                  }`}
+                                  className={`text-sm font-medium ${Number(product.stock_quantity) === 0
+                                    ? "text-red-600"
+                                    : "text-gray-900"
+                                    }`}
                                 >
                                   {product.stock_quantity}
                                 </span>
@@ -2078,11 +2086,10 @@ export default function SellerProductsPage() {
                             type="button"
                             data-variants-toggle
                             onClick={(e) => toggleVariantsPanel(e, product.id)}
-                            className={`ml-1 text-sm font-semibold cursor-pointer hover:underline ${
-                              isVariantsExpanded
-                                ? "text-blue-800"
-                                : "text-blue-600"
-                            }`}
+                            className={`ml-1 text-sm font-semibold cursor-pointer hover:underline ${isVariantsExpanded
+                              ? "text-blue-800"
+                              : "text-blue-600"
+                              }`}
                           >
                             {variantCount}
                           </button>
@@ -2181,11 +2188,10 @@ export default function SellerProductsPage() {
               <button
                 key={page}
                 onClick={() => goToPage(page)}
-                className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                  currentPage === page
-                    ? "bg-purple-600 text-white"
-                    : "bg-white border border-gray-200 hover:bg-gray-50 text-gray-600"
-                }`}
+                className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${currentPage === page
+                  ? "bg-purple-600 text-white"
+                  : "bg-white border border-gray-200 hover:bg-gray-50 text-gray-600"
+                  }`}
               >
                 {page}
               </button>
