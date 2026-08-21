@@ -244,12 +244,13 @@ export default function SellerPage() {
       count: users.filter((u) => u.status === "inactive").length,
       color: "red",
     },
-    // {
-    //   label: "Rejected",
-    //   value: "reject",
-    //   count: users.filter((u) => u.status === "reject").length,
-    //   color: "red",
-    // },
+    {
+      label: "Rejected",
+      value: "reject",
+      //count: users.filter((u) => u.status === "rejected").length,
+      count: users.filter((u) => u.status === "rejected" || u.status === "reject").length,
+      color: "red",
+    },
   ];
 
   // Filter users
@@ -258,8 +259,13 @@ export default function SellerPage() {
 
     if (selectedFilter !== "all") {
       filtered = filtered.filter(
-        (u) => u.role === selectedFilter || u.status === selectedFilter,
+        (u) =>
+          u.role === selectedFilter ||
+          u.status === selectedFilter ||
+          (selectedFilter === "reject" && u.status === "rejected"),
       );
+      //(u) => u.role === selectedFilter || u.status === selectedFilter,
+      //);
     }
 
     if (searchQuery) {
@@ -401,6 +407,54 @@ export default function SellerPage() {
       alert(errorMsg);
     }
   };
+
+  const rejectVendor = async (user) => {
+    try {
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        alert("Session expired. Please login again.");
+        return;
+      }
+      const payload = {
+        id: user.id || user.vendor_id || user.buyer_id,
+        role: user.role || user.type || "seller", // 'seller' / 'vendor' or 'buyer'
+        status: "rejected",
+        description: "Rejected by admin",
+      };
+      const url =
+        "https://namami-infotech.com/Stepkaro/src/super_admin/reject_seller_buyer.php";
+      const response = await axios.post(url, payload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const result = response.data;
+      if (result.success) {
+        alert(result.message || "Record rejected successfully!");
+        setUsers((prev) =>
+          prev.map((u) =>
+            u.id === user.id && u.type === user.type
+              ? {
+                ...u,
+                status: "rejected",
+              }
+              : u,
+          ),
+        );
+        showToast("User rejected successfully");
+      } else {
+        alert(result.message || "Failed to process rejection request.");
+      }
+    } catch (error) {
+      console.error("Axios rejection failure:", error);
+      const errorMsg =
+        error.response?.data?.message || "Network communication error.";
+      alert(errorMsg);
+    }
+  };
+  const rejectvednor = rejectVendor;
+
+
 
   // Delete user
   const handleDeleteUser = () => {
@@ -1262,13 +1316,18 @@ export default function SellerPage() {
                           >
                             Accept
                           </button>
-                          {/* <button
-                            onClick={() => updateUserStatus(user, "inactive")}
+                          <button
+                            onClick={() => rejectVendor(user)}
                             className="px-3 py-1 text-xs rounded-lg bg-red-500 text-white hover:bg-red-600 transition"
                           >
                             Reject
-                          </button> */}
+                          </button>
                         </div>
+                      ) : user.status === "rejected" ? (
+                        // 2. Rejected Status: Only Static Badge (No Actions Allowed)
+                        <span className="text-xs px-2.5 py-1 rounded-full font-medium bg-red-100 text-red-700 border border-red-200 inline-block">
+                          Rejected
+                        </span>
                       ) : (
                         <div className="flex items-center gap-2">
                           <button
