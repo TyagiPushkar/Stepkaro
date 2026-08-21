@@ -238,12 +238,12 @@ export default function UsersPage() {
       count: users.filter((u) => u.status === "inactive").length,
       color: "red",
     },
-    // {
-    //   label: "Rejected",
-    //   value: "reject",
-    //   count: users.filter((u) => u.status === "reject").length,
-    //   color: "red",
-    // },
+    {
+      label: "Rejected",
+      value: "reject",
+      count: users.filter((u) => u.status === "rejected" || u.status === "reject").length,
+      color: "red",
+    },
   ];
 
   // Filter users
@@ -252,7 +252,10 @@ export default function UsersPage() {
 
     if (selectedFilter !== "all") {
       filtered = filtered.filter(
-        (u) => u.role === selectedFilter || u.status === selectedFilter,
+        (u) =>
+          u.role === selectedFilter ||
+          u.status === selectedFilter ||
+          (selectedFilter === "reject" && u.status === "rejected"),
       );
     }
 
@@ -382,6 +385,68 @@ export default function UsersPage() {
       alert(errorMsg);
     }
   };
+  const rejectUser = async (user) => {
+    try {
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        alert("Session expired. Please login again.");
+        return;
+      }
+
+      if (!user || !user.id) {
+        alert("No active user selected for rejection context.");
+        return;
+      }
+
+      const currentRole = user.role === "seller" ? "seller" : "buyer";
+
+      const payload = {
+        id: Number(user.id),
+        role: currentRole,
+        status: "rejected",
+        description: "",
+      };
+
+      console.log("Submitting Admin Rejection Payload via Axios:", payload);
+
+      const url =
+        "https://namami-infotech.com/Stepkaro/src/super_admin/reject_seller_buyer.php";
+
+      const response = await axios.post(url, payload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const result = response.data;
+
+      if (result.success) {
+        alert(result.message || "Record rejected successfully!");
+
+        setUsers((prev) =>
+          prev.map((u) =>
+            u.id === user.id && u.type === user.type
+              ? {
+                ...u,
+                status: "rejected",
+              }
+              : u,
+          ),
+        );
+
+        showToast("User rejected successfully");
+      } else {
+        alert(result.message || "Failed to process rejection request.");
+      }
+    } catch (error) {
+      console.error("Axios rejection failure:", error);
+      const errorMsg =
+        error.response?.data?.message || "Network communication error.";
+      alert(errorMsg);
+    }
+  };
+
+  const rejectvednor = rejectUser;
 
   // add wallets and updated walltest...
   // Delete user
@@ -1119,43 +1184,50 @@ export default function UsersPage() {
                           >
                             Accept
                           </button>
-                          {/* <button
-                            onClick={() => updateUserStatus(user, "inactive")}
+                          <button
+                            onClick={() => rejectUser(user)}
                             className="px-3 py-1 text-xs rounded-lg bg-red-500 text-white hover:bg-red-600 transition"
                           >
                             Reject
-                          </button> */}
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() =>
-                              updateUserStatus(
-                                user,
-                                user.status === "active"
-                                  ? "inactive"
-                                  : "active",
-                              )
-                            }
-                            className={`relative h-6 w-12 rounded-full transition ${user.status === "active"
-                              ? "bg-emerald-500"
-                              : "bg-gray-300"
-                              }`}
-                          >
-                            <span
-                              className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition ${user.status === "active" ? "left-6" : "left-0.5"
-                                }`}
-                            />
                           </button>
-                          <span
-                            className={`text-xs px-2 py-0.5 rounded-full ${getStatusBadge(
-                              user.status,
-                            )}`}
-                          >
-                            {user.status}
-                          </span>
                         </div>
-                      )}
+                      ) : user.status === "rejected" ? (
+                        // 2. Rejected Status: Only Static Badge (No Actions Allowed)
+                        <span className="text-xs px-2.5 py-1 rounded-full font-medium bg-red-100 text-red-700 border border-red-200 inline-block">
+                          Rejected
+                        </span>
+                      )
+
+                        : (
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() =>
+                                updateUserStatus(
+                                  user,
+                                  user.status === "active"
+                                    ? "inactive"
+                                    : "active",
+                                )
+                              }
+                              className={`relative h-6 w-12 rounded-full transition ${user.status === "active"
+                                ? "bg-emerald-500"
+                                : "bg-gray-300"
+                                }`}
+                            >
+                              <span
+                                className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition ${user.status === "active" ? "left-6" : "left-0.5"
+                                  }`}
+                              />
+                            </button>
+                            <span
+                              className={`text-xs px-2 py-0.5 rounded-full ${getStatusBadge(
+                                user.status,
+                              )}`}
+                            >
+                              {user.status}
+                            </span>
+                          </div>
+                        )}
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex gap-2">

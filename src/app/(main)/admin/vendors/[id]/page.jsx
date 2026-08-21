@@ -87,6 +87,11 @@ const normalizeVendor = (item) => ({
   wallet_value: item.minimum_order_value || 0,
   business_name: item.business_name || item.brand_name || "",
   brand_name: item.brand_name || "",
+  brand_image: item.brand_image
+    ? item.brand_image.startsWith("http")
+      ? item.brand_image
+      : `https://namami-infotech.com/Stepkaro/${item.brand_image.replace(/^\/+/, "")}`
+    : "",
   settlement_date: item.due_days || "",
   gst_number: item.gst_number || "",
   pan_number: item.pan_number || "",
@@ -217,6 +222,7 @@ export default function VendorDetailsPage() {
           business_name: normalizedVendor.business_name || "",
           settlement_date: normalizedVendor.settlement_date || "",
           brand_name: normalizedVendor.brand_name || "",
+          brand_image: normalizedVendor.brand_image || "",
           minimum_card_value: normalizedVendor.wallet_value || 0,
           gst_number: normalizedVendor.gst_number || "",
           pan_number: normalizedVendor.pan_number || "",
@@ -273,64 +279,6 @@ export default function VendorDetailsPage() {
     fetchBankDetails();
   }, [vendorId, token]);
 
-  // Fetch Wallet & Order History
-  // useEffect(() => {
-  //   if (!vendor?.id) return;
-
-  //   const fetchWalletHistory = async () => {
-  //     setWalletLoading(true);
-  //     try {
-  //       const res = await fetch(`${WALLET_API}?user_id=${vendor.id}`);
-  //       const data = await res.json();
-  //       const history = Array.isArray(data?.data)
-  //         ? data.data
-  //         : Array.isArray(data)
-  //           ? data
-  //           : [];
-  //       setWalletHistory(history.map(normalizeWalletItem));
-  //     } catch (error) {
-  //       console.error(error);
-  //       setWalletHistory([]);
-  //     } finally {
-  //       setWalletLoading(false);
-  //     }
-  //   };
-
-  //   const fetchOrderHistory = async () => {
-  //     setOrderLoading(true);
-  //     try {
-  //       const res = await fetch(ORDER_API);
-  //       const data = await res.json();
-  //       const orders = Array.isArray(data?.data)
-  //         ? data.data
-  //         : Array.isArray(data)
-  //           ? data
-  //           : [];
-  //       const filtered = orders.filter((order) =>
-  //         [
-  //           order.buyer_id,
-  //           order.seller_id,
-  //           order.user_id,
-  //           order.vendor_id,
-  //           order.customer_id,
-  //         ]
-  //           .map((value) => String(value || ""))
-  //           .includes(String(vendor.id)),
-  //       );
-  //       setOrderHistory(filtered);
-  //     } catch (error) {
-  //       console.error(error);
-  //       setOrderHistory([]);
-  //     } finally {
-  //       setOrderLoading(false);
-  //     }
-  //   };
-
-  //   fetchWalletHistory();
-  //   fetchOrderHistory();
-  // }, [vendor]);
-
-  // FIX: Separate fetchCoupons function that sets coupons state
   const fetchCoupons = useCallback(async () => {
     if (!vendor?.id && !vendorId) return;
 
@@ -349,7 +297,6 @@ export default function VendorDetailsPage() {
           ? response.data.data
           : [];
 
-        // Filter coupons for this vendor
         const filtered = couponData.filter((coupon) => {
           const ids = [
             coupon.vendor_id,
@@ -363,7 +310,6 @@ export default function VendorDetailsPage() {
             .includes(String(vendor?.id || vendorId));
         });
 
-        // Set coupons with filtered or all data
         setCoupons(filtered.length ? filtered : couponData);
         console.log("Set coupons:", filtered.length ? filtered : couponData);
       } else {
@@ -377,7 +323,6 @@ export default function VendorDetailsPage() {
     }
   }, [token, vendor?.id, vendorId]);
 
-  // Fetch coupons when vendor is loaded
   useEffect(() => {
     if (!vendor?.id && !vendorId) return;
 
@@ -436,7 +381,6 @@ export default function VendorDetailsPage() {
     };
   }, [token, vendor?.id, vendorId]);
 
-  // Coupon CRUD Operations
   const handleToggleCouponStatus = async (id) => {
     try {
       await axios.post(
@@ -450,7 +394,6 @@ export default function VendorDetailsPage() {
         },
       );
 
-      // Optimistically update UI
       setCoupons((prev) =>
         prev.map((c) =>
           c.id === id ? { ...c, status: c.status === 1 ? 0 : 1 } : c,
@@ -514,7 +457,7 @@ export default function VendorDetailsPage() {
           "success",
         );
         setIsCouponModalOpen(false);
-        fetchCoupons(); // Refresh coupons
+        fetchCoupons();
       } else {
         showToast(response.data.message || "Failed to save coupon", "error");
       }
@@ -559,16 +502,13 @@ export default function VendorDetailsPage() {
 
     setSaving(true);
     try {
-      // 1. Form-Data Object banana padega kyuki API images aur text dono leti hai
       const formData = new FormData();
 
-      // 2. Target Vendor ID extract karna
       const targetVendorId = editData.id || vendor.id || vendor.vendor_id;
       if (targetVendorId) {
         formData.append("id", targetVendorId);
       }
 
-      // 3. Saare text fields ko append karne ka logic
       formData.append(
         "business_name",
         editData.business_name || vendor.business_name || "",
@@ -609,7 +549,10 @@ export default function VendorDetailsPage() {
         "",
       );
 
-      // 4. File Input Checks
+      // File Input Checks
+      if (editData.brand_image instanceof File) {
+        formData.append("brand_image", editData.brand_image);
+      }
       if (editData.gst_image instanceof File) {
         formData.append("gst_image", editData.gst_image);
       }
@@ -617,20 +560,6 @@ export default function VendorDetailsPage() {
         formData.append("tmc_image", editData.tmc_image);
       }
 
-      // 🔥 Console Par Form-Data Detail Mein Check Karna
-      // console.log("--- Sending Vendor Update Data via Axios ---");
-      // for (let [key, value] of formData.entries()) {
-      //   if (value instanceof File) {
-      //     console.log(
-      //       `${key}: File -> Name: ${value.name}, Size: ${(value.size / 1024 / 1024).toFixed(2)} MB`,
-      //     );
-      //   } else {
-      //     console.log(`${key}: ${value}`);
-      //   }
-      // }
-      // console.log("----------------------------------");
-
-      // 5. Axios Request with Token & URL Parameter
       const response = await axios.post(
         `${VENDOR_UPDATE_API}?id=${targetVendorId}`,
         formData,
@@ -641,26 +570,31 @@ export default function VendorDetailsPage() {
         },
       );
 
-      // Axios mein response ka data direct 'response.data' mein milta hai
       const result = response.data;
 
       if (result.success) {
-        // 6. API response aane par local UI state ko refresh karna
+        const updatedBrandImg = result.brand_image
+          ? (result.brand_image.startsWith("http")
+              ? result.brand_image
+              : `https://namami-infotech.com/Stepkaro/${result.brand_image.replace(/^\/+/, "")}`)
+          : editData.brand_image_preview || current?.brand_image;
+
         setVendor((current) =>
           current
             ? {
-              ...current,
-              ...editData,
-              owner_name:
-                editData.name || editData.owner_name || current.owner_name,
-              business_name: editData.business_name || current.business_name,
-              brand_name: editData.brand_name || current.brand_name,
-              email: editData.email || current.email,
-              phone: editData.phone || current.phone,
-              status: editData.status || current.status,
-              gst_image: result.gst_image,
-              tmc_image: result.tmc_image,
-            }
+                ...current,
+                ...editData,
+                owner_name:
+                  editData.name || editData.owner_name || current.owner_name,
+                business_name: editData.business_name || current.business_name,
+                brand_name: editData.brand_name || current.brand_name,
+                brand_image: updatedBrandImg || current.brand_image,
+                email: editData.email || current.email,
+                phone: editData.phone || current.phone,
+                status: editData.status || current.status,
+                gst_image: result.gst_image || current.gst_image,
+                tmc_image: result.tmc_image || current.tmc_image,
+              }
             : current,
         );
 
@@ -674,7 +608,6 @@ export default function VendorDetailsPage() {
     } catch (error) {
       console.error("Error updating vendor:", error);
 
-      // Axios error handling (agar server se 400/500 code aaye toh message extract karna)
       const errorMsg =
         error.response?.data?.message ||
         "Something went wrong while connecting to the server.";
@@ -684,7 +617,6 @@ export default function VendorDetailsPage() {
     }
   };
 
-  // Filtered Coupons
   const filteredCoupons = useMemo(() => {
     if (!coupons || coupons.length === 0) return [];
 
@@ -704,7 +636,6 @@ export default function VendorDetailsPage() {
     });
   }, [coupons, couponSearchQuery, couponTypeFilter]);
 
-  // Fix summary cards - use coupons.length instead of couponHistory
   const summaryCards = useMemo(
     () => [
       {
@@ -715,7 +646,6 @@ export default function VendorDetailsPage() {
       },
       {
         label: "TotalOrders",
-        // value: orderHistory.length,
         value: vendor?.no_of_order_recived,
         icon: ClipboardList,
         tone: "from-sky-500 to-cyan-500",
@@ -727,13 +657,12 @@ export default function VendorDetailsPage() {
         tone: "from-emerald-500 to-teal-500",
       },
     ],
-    [coupons.length, orderHistory.length, vendor?.wallet_value],
+    [coupons.length, vendor?.no_of_order_recived, vendor?.wallet_value],
   );
 
   const tabs = [
     { id: "overview", label: "Overview", icon: Store },
     { id: "edit", label: "Edit", icon: User },
-    // { id: "orders", label: "Orders", icon: ClipboardList },
     { id: "coupons", label: "Coupons", icon: Tag },
     {
       id: "Restricted Districts",
@@ -773,7 +702,6 @@ export default function VendorDetailsPage() {
   return (
     <div className="min-h-screen bg-slate-50 p-2 md:p-0">
       <div className="mx-auto max-w-7xl space-y-5">
-        {/* Toast Notification */}
         {toast && (
           <div
             className={`fixed bottom-4 right-4 z-50 rounded-xl px-4 py-3 text-sm font-medium shadow-lg ${toast.type === "error"
@@ -791,32 +719,48 @@ export default function VendorDetailsPage() {
             <div className="flex items-start gap-4">
               <Link
                 href="/admin/vendors"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:bg-slate-100"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:bg-slate-100 mt-1"
               >
                 <ArrowLeft className="h-5 w-5" />
               </Link>
-              <div className="space-y-2">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-violet-700">
-                    {vendor.brand_name || "Brand"}
-                  </span>
-                  <span
-                    className={`rounded-full px-3 py-1 text-xs font-semibold ${getStatusBadgeClasses(vendor.status)}`}
-                  >
-                    {String(vendor.status || "pending").toUpperCase()}
-                  </span>
-                </div>
-                <div>
-                  <h1 className="text-2xl font-semibold text-slate-900">
-                    {vendor.business_name || vendor.name || "Vendor"}
-                  </h1>
-                  <p className="text-sm text-slate-500 flex flex-wrap gap-2">
-                    <span>{vendor.name}</span>
-                    <span>•</span>
-                    <span>{vendor.phone}</span>
-                    <span>•</span>
-                    <span>ID: #{vendor.id}</span>
-                  </p>
+              <div className="flex items-center gap-4">
+                {vendor.brand_image ? (
+                  <img
+                    src={vendor.brand_image}
+                    alt={vendor.brand_name || "Brand"}
+                    className="h-16 w-16 rounded-2xl border border-slate-200 object-contain shadow-sm bg-white p-1"
+                    onError={(e) => {
+                      e.target.style.display = "none";
+                    }}
+                  />
+                ) : (
+                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-slate-200 bg-violet-50 text-2xl">
+                    🏪
+                  </div>
+                )}
+                <div className="space-y-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-violet-700">
+                      {vendor.brand_name || "Brand"}
+                    </span>
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-semibold ${getStatusBadgeClasses(vendor.status)}`}
+                    >
+                      {String(vendor.status || "pending").toUpperCase()}
+                    </span>
+                  </div>
+                  <div>
+                    <h1 className="text-2xl font-semibold text-slate-900">
+                      {vendor.business_name || vendor.name || "Vendor"}
+                    </h1>
+                    <p className="text-sm text-slate-500 flex flex-wrap gap-2">
+                      <span>{vendor.name}</span>
+                      <span>•</span>
+                      <span>{vendor.phone}</span>
+                      <span>•</span>
+                      <span>ID: #{vendor.id}</span>
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -886,17 +830,24 @@ export default function VendorDetailsPage() {
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-sm font-semibold text-violet-700">
-                    {/* Business overview */}
                     Brand Name
                   </p>
                   <h2 className="mt-1 text-xl font-semibold text-slate-900">
-                    {/* {vendor.business_name || vendor.name} */}
-                    {vendor.brand_name}
+                    {vendor.brand_name || "—"}
                   </h2>
                 </div>
-                {/* <div className="rounded-2xl bg-slate-100 p-3 text-2xl">
-                  {vendor.avatar}
-                </div> */}
+                {vendor.brand_image && (
+                  <div className="h-16 w-16 overflow-hidden rounded-2xl border border-slate-200 bg-white p-1 shadow-sm">
+                    <img
+                      src={vendor.brand_image}
+                      alt={vendor.brand_name || "Brand"}
+                      className="h-full w-full object-contain rounded-xl"
+                      onError={(e) => {
+                        e.target.style.display = "none";
+                      }}
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -906,13 +857,8 @@ export default function VendorDetailsPage() {
                   </p>
                   <div className="mt-3 space-y-2 text-sm text-slate-600">
                     <div className="flex items-center gap-2">
-                      {/* < className="h-4 w-4 text-violet-600" />{" "} */}
                       {vendor.business_name || "—"}
                     </div>
-                    {/* <div className="flex items-center gap-2">
-                      <Phone className="h-4 w-4 text-violet-600" />{" "}
-                      {vendor. || "—"}
-                    </div> */}
                   </div>
                 </div>
                 <div className="rounded-2xl bg-slate-50 p-4">
@@ -930,7 +876,7 @@ export default function VendorDetailsPage() {
                     </div>
                   </div>
                 </div>
-                <div className="rounded-2xl bg-slate-50 p-4">
+                <div className="rounded-2xl bg-slate-50 p-4 sm:col-span-2">
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
                     Address
                   </p>
@@ -944,19 +890,6 @@ export default function VendorDetailsPage() {
                     </div>
                   </div>
                 </div>
-                {/* <div className="rounded-2xl bg-slate-50 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-                    city and state
-                  </p>
-                  <div className="mt-3 space-y-2 text-sm text-slate-600">
-                    <div className="flex items-start gap-2">
-                      <MapPin className="mt-0.5 h-4 w-4 text-violet-600" />
-                      <span>
-                        {vendor.city} {vendor.state} {vendor.pincode}
-                      </span>
-                    </div>
-                  </div>
-                </div> */}
               </div>
             </div>
 
@@ -1043,19 +976,51 @@ export default function VendorDetailsPage() {
               <div className="flex items-center justify-between mb-5">
                 <div>
                   <h2 className="text-lg font-semibold text-slate-900">
-                    Documents
+                    Documents & Brand Media
                   </h2>
                   <p className="text-sm text-slate-500">
-                    Uploaded vendor documents
+                    Uploaded vendor documents and brand logo
                   </p>
                 </div>
               </div>
 
-              <div className="grid gap-6 sm:grid-cols-2">
-                {/* GST */}
-                <div className="rounded-2xl border border-slate-200 overflow-hidden">
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {/* Brand Image */}
+                <div className="rounded-2xl border border-slate-200 overflow-hidden flex flex-col justify-between">
                   <div className="bg-slate-50 px-4 py-3 border-b">
-                    <h3 className="font-medium">GST Certificate</h3>
+                    <h3 className="font-medium text-slate-900">Brand Logo / Image</h3>
+                  </div>
+
+                  {vendor.brand_image ? (
+                    <>
+                      <img
+                        src={vendor.brand_image}
+                        className="h-52 w-full object-contain bg-white p-3"
+                        alt={vendor.brand_name || "Brand Logo"}
+                      />
+
+                      <div className="p-4 border-t border-slate-100">
+                        <a
+                          href={vendor.brand_image}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex justify-center rounded-xl bg-violet-600 py-2.5 text-white font-medium hover:bg-violet-700 transition text-sm"
+                        >
+                          View Brand Image
+                        </a>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex h-52 items-center justify-center text-slate-400">
+                      No Brand Image uploaded
+                    </div>
+                  )}
+                </div>
+
+                {/* GST */}
+                <div className="rounded-2xl border border-slate-200 overflow-hidden flex flex-col justify-between">
+                  <div className="bg-slate-50 px-4 py-3 border-b">
+                    <h3 className="font-medium text-slate-900">GST Certificate</h3>
                   </div>
 
                   {vendor.gst_image ? (
@@ -1063,14 +1028,15 @@ export default function VendorDetailsPage() {
                       <img
                         src={`https://namami-infotech.com/Stepkaro/${vendor.gst_image}`}
                         className="h-52 w-full object-contain bg-white p-3"
-                        alt=""
+                        alt="GST Certificate"
                       />
 
-                      <div className="p-4">
+                      <div className="p-4 border-t border-slate-100">
                         <a
                           href={`https://namami-infotech.com/Stepkaro/${vendor.gst_image}`}
                           target="_blank"
-                          className="flex justify-center rounded-xl bg-violet-600 py-2.5 text-white font-medium hover:bg-violet-700"
+                          rel="noopener noreferrer"
+                          className="flex justify-center rounded-xl bg-violet-600 py-2.5 text-white font-medium hover:bg-violet-700 transition text-sm"
                         >
                           View GST Certificate
                         </a>
@@ -1084,9 +1050,9 @@ export default function VendorDetailsPage() {
                 </div>
 
                 {/* TMC */}
-                <div className="rounded-2xl border border-slate-200 overflow-hidden">
+                <div className="rounded-2xl border border-slate-200 overflow-hidden flex flex-col justify-between">
                   <div className="bg-slate-50 px-4 py-3 border-b">
-                    <h3 className="font-medium">TMC Document</h3>
+                    <h3 className="font-medium text-slate-900">TMC Document</h3>
                   </div>
 
                   {vendor.tmc_image ? (
@@ -1094,14 +1060,15 @@ export default function VendorDetailsPage() {
                       <img
                         src={`https://namami-infotech.com/Stepkaro/${vendor.tmc_image}`}
                         className="h-52 w-full object-contain bg-white p-3"
-                        alt=""
+                        alt="TMC Document"
                       />
 
-                      <div className="p-4">
+                      <div className="p-4 border-t border-slate-100">
                         <a
                           href={`https://namami-infotech.com/Stepkaro/${vendor.tmc_image}`}
                           target="_blank"
-                          className="flex justify-center rounded-xl bg-violet-600 py-2.5 text-white font-medium hover:bg-violet-700"
+                          rel="noopener noreferrer"
+                          className="flex justify-center rounded-xl bg-violet-600 py-2.5 text-white font-medium hover:bg-violet-700 transition text-sm"
                         >
                           View TMC Document
                         </a>
@@ -1159,6 +1126,22 @@ export default function VendorDetailsPage() {
                 />
               </label>
               <label className="space-y-2 text-sm text-slate-600">
+                <span className="font-medium text-slate-700">
+                  Brand name
+                </span>
+                <input
+                  value={editData.brand_name || ""}
+                  onChange={(event) =>
+                    setEditData((current) => ({
+                      ...current,
+                      brand_name: event.target.value,
+                    }))
+                  }
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2 outline-none ring-0 focus:border-violet-500"
+                  placeholder="Enter brand name"
+                />
+              </label>
+              <label className="space-y-2 text-sm text-slate-600">
                 <span className="font-medium text-slate-700">Email</span>
                 <input
                   type="email"
@@ -1172,19 +1155,6 @@ export default function VendorDetailsPage() {
                   className="w-full rounded-xl border border-slate-200 px-3 py-2 outline-none ring-0 focus:border-violet-500"
                 />
               </label>
-              {/* <label className="space-y-2 text-sm text-slate-600">
-                <span className="font-medium text-slate-700">Phone</span>
-                <input
-                  value={editData.phone || ""}
-                  onChange={(event) =>
-                    setEditData((current) => ({
-                      ...current,
-                      phone: event.target.value,
-                    }))
-                  }
-                  className="w-full rounded-xl border border-slate-200 px-3 py-2 outline-none ring-0 focus:border-violet-500"
-                />
-              </label> */}
               <label className="space-y-2 text-sm text-slate-600">
                 <span className="font-medium text-slate-700">Status</span>
                 <select
@@ -1197,10 +1167,8 @@ export default function VendorDetailsPage() {
                   }
                   className="w-full rounded-xl border border-slate-200 px-3 py-2 outline-none ring-0 focus:border-violet-500"
                 >
-                  {/* <option value="pending">Pending</option> */}
                   <option value="active">Active</option>
                   <option value="inactive">Inactive</option>
-                  {/* <option value="reject">Rejected</option> */}
                 </select>
               </label>
               <label className="space-y-2 text-sm text-slate-600">
@@ -1229,48 +1197,9 @@ export default function VendorDetailsPage() {
                   className="w-full rounded-xl border border-slate-200 px-3 py-2 outline-none ring-0 focus:border-violet-500"
                 />
               </label>
-              {/* <label className="space-y-2 text-sm text-slate-600">
-                <span className="font-medium text-slate-700">CITY</span>
-                <input
-                  value={editData.city || ""}
-                  onChange={(event) =>
-                    setEditData((current) => ({
-                      ...current,
-                      city: event.target.value,
-                    }))
-                  }
-                  className="w-full rounded-xl border border-slate-200 px-3 py-2 outline-none ring-0 focus:border-violet-500"
-                />
-              </label>
-              <label className="space-y-2 text-sm text-slate-600">
-                <span className="font-medium text-slate-700">STATE</span>
-                <input
-                  value={editData.state || ""}
-                  onChange={(event) =>
-                    setEditData((current) => ({
-                      ...current,
-                      state: event.target.value,
-                    }))
-                  }
-                  className="w-full rounded-xl border border-slate-200 px-3 py-2 outline-none ring-0 focus:border-violet-500"
-                />
-              </label> */}
-              {/* <label className="space-y-2 text-sm text-slate-600">
-                <span className="font-medium text-slate-700">COUNTRY</span>
-                <input
-                  value={editData.country || ""}
-                  onChange={(event) =>
-                    setEditData((current) => ({
-                      ...current,
-                      country: event.target.value,
-                    }))
-                  }
-                  className="w-full rounded-xl border border-slate-200 px-3 py-2 outline-none ring-0 focus:border-violet-500"
-                />
-              </label> */}
               <label className="space-y-2 text-sm text-slate-600">
                 <span className="font-medium text-slate-700">
-                  Settelement Days
+                  Settlement Days
                 </span>
                 <input
                   value={editData.settlement_date || ""}
@@ -1312,7 +1241,52 @@ export default function VendorDetailsPage() {
                   className="w-full rounded-xl border border-slate-200 px-3 py-2 outline-none ring-0 focus:border-violet-500"
                 />
               </label>
-              <div className="grid gap-5 md:grid-cols-2">
+
+              {/* Uploads Section */}
+              <div className="grid gap-5 md:grid-cols-3 md:col-span-2 border-t border-slate-200 pt-4 mt-2">
+                {/* Brand Image Upload */}
+                <label className="space-y-2 text-sm text-slate-600">
+                  <span className="font-medium text-slate-700">
+                    Brand Logo / Image
+                  </span>
+
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setEditData((prev) => ({
+                          ...prev,
+                          brand_image: file,
+                          brand_image_preview: URL.createObjectURL(file),
+                        }));
+                      }
+                    }}
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2 file:mr-3 file:rounded-lg file:border-0 file:bg-violet-600 file:px-4 file:py-2 file:text-white hover:file:bg-violet-700 text-xs"
+                  />
+
+                  {editData.brand_image_preview ? (
+                    <div className="flex items-center gap-2 pt-1">
+                      <img
+                        src={editData.brand_image_preview}
+                        alt="Preview"
+                        className="h-10 w-10 rounded-lg border object-contain bg-white p-1"
+                      />
+                      <span className="text-xs text-emerald-600 font-medium">New image selected</span>
+                    </div>
+                  ) : vendor.brand_image ? (
+                    <a
+                      href={vendor.brand_image}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-violet-600 hover:underline block pt-1"
+                    >
+                      View Current Brand Image
+                    </a>
+                  ) : null}
+                </label>
+
                 {/* GST Image */}
                 <label className="space-y-2 text-sm text-slate-600">
                   <span className="font-medium text-slate-700">
@@ -1325,10 +1299,10 @@ export default function VendorDetailsPage() {
                     onChange={(e) =>
                       setEditData((prev) => ({
                         ...prev,
-                        gst_image: e.target.files[0],
+                        gst_image: e.target.files?.[0],
                       }))
                     }
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2 file:mr-3 file:rounded-lg file:border-0 file:bg-violet-600 file:px-4 file:py-2 file:text-white hover:file:bg-violet-700"
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2 file:mr-3 file:rounded-lg file:border-0 file:bg-violet-600 file:px-4 file:py-2 file:text-white hover:file:bg-violet-700 text-xs"
                   />
 
                   {vendor.gst_image && (
@@ -1336,7 +1310,7 @@ export default function VendorDetailsPage() {
                       href={`https://namami-infotech.com/Stepkaro/${vendor.gst_image}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm text-violet-600 hover:underline"
+                      className="text-xs text-violet-600 hover:underline block pt-1"
                     >
                       View Current GST
                     </a>
@@ -1355,10 +1329,10 @@ export default function VendorDetailsPage() {
                     onChange={(e) =>
                       setEditData((prev) => ({
                         ...prev,
-                        tmc_image: e.target.files[0],
+                        tmc_image: e.target.files?.[0],
                       }))
                     }
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2 file:mr-3 file:rounded-lg file:border-0 file:bg-violet-600 file:px-4 file:py-2 file:text-white hover:file:bg-violet-700"
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2 file:mr-3 file:rounded-lg file:border-0 file:bg-violet-600 file:px-4 file:py-2 file:text-white hover:file:bg-violet-700 text-xs"
                   />
 
                   {vendor.tmc_image && (
@@ -1366,13 +1340,14 @@ export default function VendorDetailsPage() {
                       href={`https://namami-infotech.com/Stepkaro/${vendor.tmc_image}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm text-violet-600 hover:underline"
+                      className="text-xs text-violet-600 hover:underline block pt-1"
                     >
                       View Current TMC
                     </a>
                   )}
                 </label>
               </div>
+
               <div className="md:col-span-2 flex items-center justify-end">
                 <button
                   type="submit"
@@ -1391,246 +1366,422 @@ export default function VendorDetailsPage() {
           </div>
         )}
 
-        {activeTab === "orders" && (
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="flex items-center gap-2">
-              <ClipboardList className="h-5 w-5 text-violet-600" />
-              <h2 className="text-lg font-semibold text-slate-900">
-                Recent orders
-              </h2>
-            </div>
-            {orderLoading ? (
-              <div className="mt-6 flex items-center gap-2 text-sm text-slate-500">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Loading orders…
-              </div>
-            ) : orderHistory.length === 0 ? (
-              <div className="mt-6 rounded-2xl border border-dashed border-slate-200 p-6 text-sm text-slate-500">
-                No orders found for this vendor yet.
-              </div>
-            ) : (
-              <div className="mt-6 space-y-3">
-                {orderHistory.map((order, index) => (
-                  <div
-                    key={order.id || index}
-                    className="rounded-2xl border border-slate-200 p-4"
-                  >
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                      <div>
-                        <p className="font-medium text-slate-900">
-                          Order #{order.id || "—"}
-                        </p>
-                        <p className="text-sm text-slate-500">
-                          {order.order_date || order.created_at || "—"}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-                          {order.status || "Pending"}
-                        </span>
-                        <span className="text-sm font-semibold text-slate-900">
-                          {formatCurrency(
-                            order.total_amount || order.amount || 0,
-                          )}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
         {activeTab === "coupons" && (
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div className="flex items-center gap-2">
-                <Tag className="h-5 w-5 text-violet-600" />
-                <h2 className="text-lg font-semibold text-slate-900">
+          <div className="space-y-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-xl font-bold text-slate-900">
                   Vendor Coupons
                 </h2>
-                <span className="text-sm text-slate-500">
-                  ({coupons.length} total)
-                </span>
+                <p className="text-sm text-slate-500">
+                  Manage promotional coupons and discounts for this vendor
+                </p>
               </div>
+
               <button
-                onClick={() => openCouponModal(null)}
-                className="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-700 transition"
+                type="button"
+                onClick={() => openCouponModal()}
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-violet-700"
               >
                 <Plus className="h-4 w-4" />
                 Create Coupon
               </button>
             </div>
 
-            {/* Coupon Search & Filter */}
-            <div className="mt-4 flex flex-col sm:flex-row gap-3">
+            {/* Filter Bar */}
+            <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
               <div className="relative flex-1">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
-                  placeholder="Search coupons..."
                   value={couponSearchQuery}
                   onChange={(e) => setCouponSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
+                  placeholder="Search coupons by code or type..."
+                  className="w-full rounded-xl border border-slate-200 pl-9 pr-4 py-2 text-sm outline-none focus:border-violet-500"
                 />
               </div>
-              <select
-                value={couponTypeFilter}
-                onChange={(e) => setCouponTypeFilter(e.target.value)}
-                className="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
-              >
-                <option value="all">All Types</option>
-                <option value="code">Coupon Code</option>
-                <option value="order_value">Order Value Threshold</option>
-              </select>
-              <button
-                onClick={fetchCoupons}
-                className="p-2.5 text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition"
-              >
-                <RefreshCw
-                  className={`h-5 w-5 ${couponLoading ? "animate-spin" : ""}`}
-                />
-              </button>
+
+              <div className="flex items-center gap-3">
+                <select
+                  value={couponTypeFilter}
+                  onChange={(e) => setCouponTypeFilter(e.target.value)}
+                  className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-violet-500"
+                >
+                  <option value="all">All Types</option>
+                  <option value="code">Coupon Code</option>
+                  <option value="auto">Auto Apply</option>
+                </select>
+
+                <button
+                  type="button"
+                  onClick={fetchCoupons}
+                  className="rounded-xl border border-slate-200 p-2 text-slate-600 hover:bg-slate-50"
+                  title="Refresh Coupons"
+                >
+                  <RefreshCw
+                    className={`h-4 w-4 ${couponLoading ? "animate-spin" : ""}`}
+                  />
+                </button>
+              </div>
             </div>
 
-            {/* Coupons Grid */}
-            {couponLoading && coupons.length === 0 ? (
-              <div className="mt-6 flex flex-col items-center justify-center p-12 bg-slate-50 rounded-2xl border border-slate-200">
-                <Loader2 className="h-8 w-8 text-violet-600 animate-spin mb-2" />
-                <p className="text-sm text-slate-500">Loading coupons...</p>
+            {/* Coupons Table */}
+            {couponLoading ? (
+              <div className="flex justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-violet-600" />
               </div>
             ) : filteredCoupons.length === 0 ? (
-              <div className="mt-6 flex flex-col items-center justify-center p-12 bg-slate-50 rounded-2xl border border-slate-200 text-center">
-                <Tag className="h-12 w-12 text-slate-300 mb-3" />
-                <p className="font-semibold text-slate-700">No coupons found</p>
-                <p className="text-sm text-slate-400 mt-1">
-                  {coupons.length === 0
-                    ? "No coupons available for this vendor"
-                    : "Try adjusting your search filters"}
+              <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-12 text-center">
+                <Tag className="mx-auto h-12 w-12 text-slate-300" />
+                <h3 className="mt-3 text-base font-semibold text-slate-900">
+                  No coupons found
+                </h3>
+                <p className="mt-1 text-sm text-slate-500">
+                  {couponSearchQuery || couponTypeFilter !== "all"
+                    ? "Try adjusting your search or filter options"
+                    : "Get started by creating a new coupon for this vendor"}
                 </p>
+                <button
+                  type="button"
+                  onClick={() => openCouponModal()}
+                  className="mt-4 inline-flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-700"
+                >
+                  <Plus className="h-4 w-4" />
+                  Create First Coupon
+                </button>
               </div>
             ) : (
-              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                {filteredCoupons.map((coupon) => (
-                  <div
-                    key={coupon.id}
-                    className={`bg-white rounded-2xl border transition-all p-5 shadow-sm hover:shadow-md relative overflow-hidden flex flex-col justify-between ${coupon.status === 0
-                      ? "border-slate-200 opacity-75"
-                      : "border-violet-100"
-                      }`}
-                  >
-                    {/* Decorative Side Tag Ribbon */}
-                    <div
-                      className={`absolute top-0 left-0 w-1.5 h-full ${coupon.coupon_type === "code"
-                        ? "bg-violet-500"
-                        : "bg-amber-500"
-                        }`}
-                    />
-
-                    <div>
-                      <div className="flex justify-between items-start gap-2 mb-3">
-                        <div>
-                          <span
-                            className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${coupon.coupon_type === "code"
-                              ? "bg-violet-50 text-violet-700"
-                              : "bg-amber-50 text-amber-700"
-                              }`}
-                          >
-                            {coupon.coupon_type === "code" ? (
-                              <Tag className="h-3 w-3" />
-                            ) : (
-                              <Percent className="h-3 w-3" />
-                            )}
-                            {coupon.coupon_type === "code"
-                              ? "Promo Code"
-                              : "Auto Order Discount"}
-                          </span>
-                          <h3 className="text-lg font-bold text-slate-900 mt-2">
-                            {coupon.coupon_type === "code" ? (
-                              <code className="bg-slate-100 px-2 py-0.5 rounded text-violet-600 font-mono tracking-wider">
-                                {coupon.coupon_code}
-                              </code>
-                            ) : (
-                              "Cart Bulk Discount"
-                            )}
-                          </h3>
-                        </div>
-
-                        {/* Status Toggle */}
-                        <button
-                          onClick={() => handleToggleCouponStatus(coupon.id)}
-                          className={`text-2xl transition focus:outline-none ${coupon.status === 1
-                            ? "text-emerald-500"
-                            : "text-slate-300"
-                            }`}
-                          title={
-                            coupon.status === 1 ? "Deactivate" : "Activate"
-                          }
+              <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm text-slate-600">
+                    <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+                      <tr>
+                        <th className="px-6 py-4 font-semibold">Type</th>
+                        <th className="px-6 py-4 font-semibold">Code / Name</th>
+                        <th className="px-6 py-4 font-semibold">Discount</th>
+                        <th className="px-6 py-4 font-semibold">
+                          Min. Order / Limit
+                        </th>
+                        <th className="px-6 py-4 font-semibold">Validity</th>
+                        <th className="px-6 py-4 font-semibold">Status</th>
+                        <th className="px-6 py-4 font-semibold text-right">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {filteredCoupons.map((coupon) => (
+                        <tr
+                          key={coupon.id}
+                          className="hover:bg-slate-50/50 transition"
                         >
-                          {coupon.status === 1 ? (
-                            <ToggleRight className="h-9 w-9" />
-                          ) : (
-                            <ToggleLeft className="h-9 w-9" />
-                          )}
+                          <td className="px-6 py-4">
+                            <span
+                              className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${coupon.coupon_type === "code"
+                                ? "bg-purple-100 text-purple-700"
+                                : "bg-blue-100 text-blue-700"
+                                }`}
+                            >
+                              {coupon.coupon_type === "code"
+                                ? "Coupon Code"
+                                : "Auto Apply"}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 font-medium text-slate-900">
+                            {coupon.coupon_code || "AUTO_DISCOUNT"}
+                          </td>
+                          <td className="px-6 py-4 font-semibold text-slate-900">
+                            {coupon.discount_type === "percentage"
+                              ? `${coupon.discount_value}% OFF`
+                              : formatCurrency(coupon.discount_value)}
+                          </td>
+                          <td className="px-6 py-4">
+                            <div>
+                              <p className="text-slate-900 font-medium">
+                                Min: {formatCurrency(coupon.min_order_amount)}
+                              </p>
+                              <p className="text-xs text-slate-500">
+                                Limit: {coupon.per_user_limit} per user
+                              </p>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-xs text-slate-500">
+                            {coupon.coupon_type === "code" ? (
+                              <div>
+                                <p>
+                                  Start: {coupon.start_date?.split(" ")[0] || "-"}
+                                </p>
+                                <p>
+                                  End: {coupon.end_date?.split(" ")[0] || "-"}
+                                </p>
+                              </div>
+                            ) : (
+                              <span>Always Active</span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4">
+                            <button
+                              type="button"
+                              onClick={() => handleToggleCouponStatus(coupon.id)}
+                              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition ${coupon.status === 1
+                                ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
+                                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                                }`}
+                            >
+                              {coupon.status === 1 ? (
+                                <>
+                                  <ToggleRight className="h-4 w-4 text-emerald-600" />
+                                  Active
+                                </>
+                              ) : (
+                                <>
+                                  <ToggleLeft className="h-4 w-4 text-slate-400" />
+                                  Inactive
+                                </>
+                              )}
+                            </button>
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <button
+                              type="button"
+                              onClick={() => openCouponModal(coupon)}
+                              className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-violet-600 transition"
+                              title="Edit Coupon"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Coupon Modal */}
+            {isCouponModalOpen && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+                <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-xl space-y-5">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                    <h3 className="text-lg font-bold text-slate-900">
+                      {editingCoupon ? "Edit Coupon" : "Create New Coupon"}
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => setIsCouponModalOpen(false)}
+                      className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleCouponSubmit} className="space-y-4">
+                    {/* Coupon Type */}
+                    <div>
+                      <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider block mb-2">
+                        Coupon Type
+                      </label>
+                      <div className="grid grid-cols-2 gap-3">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setCouponFormData((prev) => ({
+                              ...prev,
+                              coupon_type: "code",
+                            }))
+                          }
+                          className={`rounded-xl border p-3 text-center text-sm font-medium transition ${couponFormData.coupon_type === "code"
+                            ? "border-violet-600 bg-violet-50 text-violet-700"
+                            : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                            }`}
+                        >
+                          Coupon Code
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setCouponFormData((prev) => ({
+                              ...prev,
+                              coupon_type: "auto",
+                            }))
+                          }
+                          className={`rounded-xl border p-3 text-center text-sm font-medium transition ${couponFormData.coupon_type === "auto"
+                            ? "border-violet-600 bg-violet-50 text-violet-700"
+                            : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                            }`}
+                        >
+                          Auto Apply
                         </button>
                       </div>
-
-                      {/* Pricing Matrix */}
-                      <div className="grid grid-cols-2 gap-4 bg-slate-50 rounded-xl p-3 my-3 text-sm">
-                        <div>
-                          <span className="block text-xs text-slate-400">
-                            Discount Value
-                          </span>
-                          <span className="font-bold text-slate-800 text-base">
-                            {coupon.discount_type === "percentage"
-                              ? `${coupon.discount_value}% Off`
-                              : `₹${coupon.discount_value}`}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="block text-xs text-slate-400">
-                            Min. Order Limit
-                          </span>
-                          <span className="font-semibold text-slate-700">
-                            ₹{coupon.min_order_amount}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Validity Info */}
-                      {coupon.coupon_type === "code" && coupon.start_date ? (
-                        <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-2">
-                          <Calendar className="h-3.5 w-3.5" />
-                          <span>
-                            Valid: {coupon.start_date.split(" ")[0]} to{" "}
-                            {coupon.end_date?.split(" ")[0]}
-                          </span>
-                        </div>
-                      ) : (
-                        <div className="text-xs text-emerald-600 font-medium mt-2">
-                          Always active upon threshold validation
-                        </div>
-                      )}
                     </div>
 
-                    <div className="flex justify-between items-center border-t border-slate-100 pt-4 mt-4">
-                      <div className="text-xs text-slate-400">
-                        Used:{" "}
-                        <span className="font-semibold text-slate-700">
-                          {coupon.used_count || 0}
-                        </span>{" "}
-                        times
+                    {/* Coupon Code (Only for 'code' type) */}
+                    {couponFormData.coupon_type === "code" && (
+                      <div>
+                        <label className="text-xs font-semibold text-slate-700 block mb-1">
+                          Coupon Code *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={couponFormData.coupon_code}
+                          onChange={(e) =>
+                            setCouponFormData((prev) => ({
+                              ...prev,
+                              coupon_code: e.target.value.toUpperCase(),
+                            }))
+                          }
+                          placeholder="e.g. SUMMER50"
+                          className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm outline-none focus:border-violet-500 font-mono"
+                        />
                       </div>
+                    )}
+
+                    {/* Discount Type & Value */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-xs font-semibold text-slate-700 block mb-1">
+                          Discount Type
+                        </label>
+                        <select
+                          value={couponFormData.discount_type}
+                          onChange={(e) =>
+                            setCouponFormData((prev) => ({
+                              ...prev,
+                              discount_type: e.target.value,
+                            }))
+                          }
+                          className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm outline-none focus:border-violet-500"
+                        >
+                          <option value="fixed">Fixed Amount (₹)</option>
+                          <option value="percentage">Percentage (%)</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-semibold text-slate-700 block mb-1">
+                          Discount Value *
+                        </label>
+                        <input
+                          type="number"
+                          required
+                          min="0"
+                          step="0.01"
+                          value={couponFormData.discount_value}
+                          onChange={(e) =>
+                            setCouponFormData((prev) => ({
+                              ...prev,
+                              discount_value: e.target.value,
+                            }))
+                          }
+                          placeholder={
+                            couponFormData.discount_type === "fixed"
+                              ? "₹100"
+                              : "10%"
+                          }
+                          className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm outline-none focus:border-violet-500"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Min Order & Per User Limit */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-xs font-semibold text-slate-700 block mb-1">
+                          Min. Order Amount (₹)
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={couponFormData.min_order_amount}
+                          onChange={(e) =>
+                            setCouponFormData((prev) => ({
+                              ...prev,
+                              min_order_amount: e.target.value,
+                            }))
+                          }
+                          placeholder="0 for no minimum"
+                          className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm outline-none focus:border-violet-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-semibold text-slate-700 block mb-1">
+                          Per User Limit
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={couponFormData.per_user_limit}
+                          onChange={(e) =>
+                            setCouponFormData((prev) => ({
+                              ...prev,
+                              per_user_limit: e.target.value,
+                            }))
+                          }
+                          placeholder="0 for unlimited"
+                          className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm outline-none focus:border-violet-500"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Dates (Only for 'code' type) */}
+                    {couponFormData.coupon_type === "code" && (
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-xs font-semibold text-slate-700 block mb-1">
+                            Start Date
+                          </label>
+                          <input
+                            type="date"
+                            value={couponFormData.start_date}
+                            onChange={(e) =>
+                              setCouponFormData((prev) => ({
+                                ...prev,
+                                start_date: e.target.value,
+                              }))
+                            }
+                            className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm outline-none focus:border-violet-500"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-xs font-semibold text-slate-700 block mb-1">
+                            End Date
+                          </label>
+                          <input
+                            type="date"
+                            value={couponFormData.end_date}
+                            onChange={(e) =>
+                              setCouponFormData((prev) => ({
+                                ...prev,
+                                end_date: e.target.value,
+                              }))
+                            }
+                            className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm outline-none focus:border-violet-500"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
                       <button
-                        onClick={() => openCouponModal(coupon)}
-                        className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 text-violet-600 hover:bg-violet-50 border border-violet-100 rounded-lg transition"
+                        type="button"
+                        onClick={() => setIsCouponModalOpen(false)}
+                        className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
                       >
-                        <Pencil className="h-3 w-3" /> Edit Offer
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="rounded-xl bg-violet-600 px-5 py-2 text-sm font-medium text-white hover:bg-violet-700 shadow-sm"
+                      >
+                        {editingCoupon ? "Update Coupon" : "Save Coupon"}
                       </button>
                     </div>
-                  </div>
-                ))}
+                  </form>
+                </div>
               </div>
             )}
           </div>
@@ -1639,269 +1790,12 @@ export default function VendorDetailsPage() {
         {activeTab === "Restricted Districts" && (
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
             <RestrictedDistrictsManager
-              vendorId={vendor?.user_id}
-              vendorName={vendor?.business_name || vendor?.name}
-              onUpdate={(updatedDistricts) => {
-                // Optional callback when districts are updated
-                console.log("Updated restricted districts:", updatedDistricts);
-              }}
+              vendorId={vendorId}
+              vendorName={vendor.brand_name || vendor.business_name}
             />
           </div>
         )}
       </div>
-
-      {/* Coupon Modal */}
-      {isCouponModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100 flex flex-col">
-            {/* Modal Header */}
-            <div className="p-5 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-10">
-              <div>
-                <h2 className="text-lg font-bold text-slate-900">
-                  {editingCoupon
-                    ? "Edit Coupon Parameters"
-                    : "Create New Campaign"}
-                </h2>
-                <p className="text-xs text-slate-400">
-                  Configure parameters for this vendor
-                </p>
-              </div>
-              <button
-                onClick={() => setIsCouponModalOpen(false)}
-                className="p-1.5 text-slate-400 hover:bg-slate-100 rounded-lg transition"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            {/* Modal Form */}
-            <form
-              onSubmit={handleCouponSubmit}
-              className="p-6 space-y-4 flex-1"
-            >
-              {/* Type Selection Tabs */}
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
-                  Campaign Type
-                </label>
-                <div className="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-xl">
-                  <button
-                    type="button"
-                    disabled={!!editingCoupon}
-                    onClick={() =>
-                      setCouponFormData({
-                        ...couponFormData,
-                        coupon_type: "code",
-                      })
-                    }
-                    className={`py-2 text-sm font-medium rounded-lg transition ${couponFormData.coupon_type === "code"
-                      ? "bg-white text-violet-600 shadow-sm"
-                      : "text-slate-600 hover:text-slate-900 disabled:opacity-50"
-                      }`}
-                  >
-                    Promo Code Entry
-                  </button>
-                  <button
-                    type="button"
-                    disabled={!!editingCoupon}
-                    onClick={() =>
-                      setCouponFormData({
-                        ...couponFormData,
-                        coupon_type: "order_value",
-                      })
-                    }
-                    className={`py-2 text-sm font-medium rounded-lg transition ${couponFormData.coupon_type === "order_value"
-                      ? "bg-white text-amber-600 shadow-sm"
-                      : "text-slate-600 hover:text-slate-900 disabled:opacity-50"
-                      }`}
-                  >
-                    Order Value Automatic
-                  </button>
-                </div>
-              </div>
-
-              {/* Conditional Promo Code Row */}
-              {couponFormData.coupon_type === "code" && (
-                <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">
-                    Coupon Text Code *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. FESTIVE50, MONSOON20"
-                    value={couponFormData.coupon_code}
-                    onChange={(e) =>
-                      setCouponFormData({
-                        ...couponFormData,
-                        coupon_code: e.target.value.toUpperCase(),
-                      })
-                    }
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-mono tracking-wider focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
-                  />
-                </div>
-              )}
-
-              {/* Discount Mechanics Split Row */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">
-                    Value Metric
-                  </label>
-                  <select
-                    value={couponFormData.discount_type}
-                    onChange={(e) =>
-                      setCouponFormData({
-                        ...couponFormData,
-                        discount_type: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
-                  >
-                    <option value="fixed">Fixed Currency Amount (₹)</option>
-                    <option value="percentage">Percentage Scale (%)</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">
-                    Discount Magnitude *
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    min="1"
-                    placeholder={
-                      couponFormData.discount_type === "percentage"
-                        ? "10"
-                        : "500"
-                    }
-                    value={couponFormData.discount_value}
-                    onChange={(e) =>
-                      setCouponFormData({
-                        ...couponFormData,
-                        discount_value: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
-                  />
-                </div>
-              </div>
-
-              {/* Threshold Adjustments Row */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">
-                    Minimum Cart Amount (₹) *
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    min="0"
-                    placeholder="30000"
-                    value={couponFormData.min_order_amount}
-                    onChange={(e) =>
-                      setCouponFormData({
-                        ...couponFormData,
-                        min_order_amount: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
-                  />
-                </div>
-                {/* <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">
-                    Per User Cap Limit
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    placeholder="1 (0 for unlimited)"
-                    value={couponFormData.per_user_limit}
-                    onChange={(e) =>
-                      setCouponFormData({
-                        ...couponFormData,
-                        per_user_limit: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
-                  />
-                </div> */}
-                {couponFormData.coupon_type === "code" && (
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-600 mb-1">
-                      Per User Cap Limit
-                    </label>
-                    <input
-                      type="number"
-                      value={1} // Piche se kuch bhi aaye, hamesha 1 dikhega
-                      readOnly // Isse user isko edit nahi kar payega
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none text-slate-500 cursor-not-allowed"
-                    // bg-slate-50 aur cursor-not-allowed se ye visually bhi disabled/readonly lagega
-                    />
-                  </div>
-                )}
-              </div>
-
-              {/* Timeline Bounds Row (Only if Promo Code Type) */}
-              {couponFormData.coupon_type === "code" && (
-                <div className="grid grid-cols-2 gap-4 pt-1">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-600 mb-1">
-                      Start Active Period
-                    </label>
-                    <input
-                      type="date"
-                      required
-                      value={couponFormData.start_date}
-                      onChange={(e) =>
-                        setCouponFormData({
-                          ...couponFormData,
-                          start_date: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-600 mb-1">
-                      End Expiry Period
-                    </label>
-                    <input
-                      type="date"
-                      required
-                      value={couponFormData.end_date}
-                      onChange={(e) =>
-                        setCouponFormData({
-                          ...couponFormData,
-                          end_date: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Form Action Controls Footer */}
-              <div className="border-t border-slate-100 pt-5 mt-6 flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsCouponModalOpen(false)}
-                  className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 text-sm font-semibold text-white bg-violet-600 hover:bg-violet-700 rounded-xl shadow-sm transition"
-                >
-                  {editingCoupon ? "Save Modifications" : "Deploy Promotion"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
