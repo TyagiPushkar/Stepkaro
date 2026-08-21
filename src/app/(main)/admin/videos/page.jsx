@@ -98,14 +98,14 @@ export default function VideosPage() {
 
     const handleAddVideo = async (e) => {
         e.preventDefault();
-        if (!formData.title || !formData.video_link) {
-            alert("Title and video link are required.");
+        if (!formData.video_link) {
+            alert("Video link is required.");
             return;
         }
         try {
             const token = localStorage.getItem("access_token");
             const payload = {
-                title: formData.title,
+                title: formData.title || "Promotional Video",
                 video_link: formData.video_link,
                 sort_order: formData.sort_order || 0,
             };
