@@ -773,46 +773,133 @@ export default function UsersPage() {
     description: "",
   });
 
+  const handleCloseWalletModal = () => {
+    setOpenWalletModal(false);
+    setWalletForm({
+      amount: "",
+      description: "",
+    });
+  };
+
+  // const handleWalletSubmit = async () => {
+  //   // 1. Validation checks
+  //   if (!selectedUser || !selectedUser.id) {
+  //     showToast("No user selected!", "error");
+  //     return;
+  //   }
+  //   const amount = parseFloat(walletForm.amount);
+  //   if (amount === 0) {
+  //     const confirmReset = window.confirm(
+  //       `Are you sure you want to set ₹0 wallet balance for ${selectedUser.name}?\n\nThis will reset their wallet to zero.`,
+  //     );
+
+  //     if (!confirmReset) {
+  //       return; // User cancelled
+  //     }
+  //   } else if (amount < 0) {
+  //     showToast("Amount cannot be negative.", "error");
+  //     return;
+  //   }
+
+  //   // if (!walletForm.amount || parseFloat(walletForm.amount) <= 0) {
+  //   //   showToast("Please enter a valid amount greater than 0.", "error");
+  //   //   return;
+  //   // }
+
+  //   // Fixed syntax: added assignment operator and optional chaining to prevent crashes
+  //   const currentRole = selectedUser?.role;
+
+  //   // 2. API Request and State Updates
+  //   try {
+  //     // Added the missing try block keyword here
+  //     const payload = {
+  //       buyer_id: selectedUser.id,
+  //       amount: walletForm.amount,
+  //       role: "buyer",
+  //       description: walletForm.description,
+  //     };
+
+  //     console.log("payload =====>>>>>",payload);
+
+  //     const url =
+  //       "https://namami-infotech.com/Stepkaro/src/super_admin/set_wallet_user.php";
+
+  //     const response = await axios.post(url, payload, {
+  //       headers: {
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //     });
+
+  //     const result = response.data;
+
+  //     if (result.success) {
+  //       setUsers((prev) =>
+  //         prev.map((u) =>
+  //           u.id === selectedUser.id && u.type === selectedUser.type
+  //             ? {
+  //               ...u,
+  //               wallet_value:
+  //                 currentRole === "buyer"
+  //                   ? selectedUser.wallet_value
+  //                   : u.wallet_value,
+  //             }
+  //             : u,
+  //         ),
+  //       );
+
+  //       showToast("User approved successfully");
+  //       setOpenWalletModal(false);
+
+  //       setWalletForm({
+  //         amount: "",
+  //         description: "",
+  //       });
+  //     } else {
+  //       alert(result.message || "Failed to process approval request.");
+  //     }
+  //   } catch (error) {
+  //     // Aligns correctly with the added try block
+  //     console.error("Axios request failure:", error);
+  //     const errorMsg =
+  //       error.response?.data?.message || "Network communication error.";
+  //     alert(errorMsg);
+  //   }
+  // };
+
   const handleWalletSubmit = async () => {
     // 1. Validation checks
     if (!selectedUser || !selectedUser.id) {
       showToast("No user selected!", "error");
       return;
     }
+
     const amount = parseFloat(walletForm.amount);
+    
+    if (isNaN(amount)) {
+      showToast("Please enter a valid amount.", "error");
+      return;
+    }
+
     if (amount === 0) {
       const confirmReset = window.confirm(
-        `Are you sure you want to set ₹0 wallet balance for ${selectedUser.name}?\n\nThis will reset their wallet to zero.`,
+        `Are you sure you want to set ₹0 wallet balance for ${selectedUser.shop_name || selectedUser.name}?\n\nThis will reset their wallet to zero.`
       );
-
-      if (!confirmReset) {
-        return; // User cancelled
-      }
+      if (!confirmReset) return;
     } else if (amount < 0) {
       showToast("Amount cannot be negative.", "error");
       return;
     }
 
-    // if (!walletForm.amount || parseFloat(walletForm.amount) <= 0) {
-    //   showToast("Please enter a valid amount greater than 0.", "error");
-    //   return;
-    // }
-
-    // Fixed syntax: added assignment operator and optional chaining to prevent crashes
-    const currentRole = selectedUser?.role;
-
-    // 2. API Request and State Updates
+    // 2. API Request and UI State Update
     try {
-      // Added the missing try block keyword here
       const payload = {
         buyer_id: selectedUser.id,
-        amount: walletForm.amount,
-        role: "buyer",
+        amount: amount,
+        role: selectedUser.role || "buyer",
         description: walletForm.description,
       };
 
-      const url =
-        "https://namami-infotech.com/Stepkaro/src/super_admin/approve_seller_buyer.php";
+      const url = "https://namami-infotech.com/Stepkaro/src/super_admin/set_wallet_user.php";
 
       const response = await axios.post(url, payload, {
         headers: {
@@ -823,32 +910,48 @@ export default function UsersPage() {
       const result = response.data;
 
       if (result.success) {
+        const backendWallet = result.wallet_value !== undefined ? parseFloat(result.wallet_value) : null;
+
+        // Direct Instant UI Update in state
         setUsers((prev) =>
-          prev.map((u) =>
-            u.id === selectedUser.id && u.type === selectedUser.type
-              ? {
+          prev.map((u) => {
+            if (u.id === selectedUser.id) {
+              const currentWallet = parseFloat(u.wallet ?? u.wallet_value ?? 0) || 0;
+              const newWalletValue = backendWallet !== null 
+                ? backendWallet 
+                : (amount === 0 ? 0 : currentWallet + amount);
+
+              return {
                 ...u,
-                wallet_value:
-                  currentRole === "buyer"
-                    ? selectedUser.wallet_value
-                    : u.wallet_value,
-              }
-              : u,
-          ),
+                wallet: newWalletValue,
+                wallet_value: newWalletValue,
+              };
+            }
+            return u;
+          })
         );
 
-        showToast("User approved successfully");
-        setOpenWalletModal(false);
+        if (selectedUser) {
+          setSelectedUser((prev) => {
+            if (!prev) return null;
+            const currentWallet = parseFloat(prev.wallet ?? prev.wallet_value ?? 0) || 0;
+            const newWalletValue = backendWallet !== null 
+              ? backendWallet 
+              : (amount === 0 ? 0 : currentWallet + amount);
+            return {
+              ...prev,
+              wallet: newWalletValue,
+              wallet_value: newWalletValue,
+            };
+          });
+        }
 
-        setWalletForm({
-          amount: "",
-          description: "",
-        });
+        showToast("Wallet value updated successfully!");
+        handleCloseWalletModal();
       } else {
-        alert(result.message || "Failed to process approval request.");
+        alert(result.message || "Failed to process wallet request.");
       }
     } catch (error) {
-      // Aligns correctly with the added try block
       console.error("Axios request failure:", error);
       const errorMsg =
         error.response?.data?.message || "Network communication error.";
@@ -1160,15 +1263,19 @@ export default function UsersPage() {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <p className="text-sm font-medium text-gray-700">
-                          ₹{user.wallet || 0}
+                          ₹{user.wallet ?? user.wallet_value ?? 0}
                         </p>
 
                         <button
                           onClick={() => {
                             setSelectedUser(user);
+                            setWalletForm({
+                              amount: "",
+                              description: "",
+                            });
                             setOpenWalletModal(true);
                           }}
-                          className="text-green-600 cursor-pointer"
+                          className="text-green-600 cursor-pointer hover:text-green-700 transition-colors"
                           title="Add Wallet Amount"
                         >
                           <Plus size={18} />
@@ -1754,11 +1861,11 @@ export default function UsersPage() {
                   {selectedUser.createdAt?.split(" ")[0] || "—"}
                 </p>
               </div>
-              {selectedUser.wallet_value && (
+              {(selectedUser.wallet !== undefined || selectedUser.wallet_value !== undefined) && (
                 <div>
                   <p className="text-xs text-gray-500">Wallet Value</p>
-                  <p className="text-sm text-gray-900">
-                    ₹{selectedUser.wallet_value}
+                  <p className="text-sm font-semibold text-gray-900">
+                    ₹{selectedUser.wallet ?? selectedUser.wallet_value ?? 0}
                   </p>
                 </div>
               )}
@@ -1970,7 +2077,7 @@ export default function UsersPage() {
               <h2 className="text-xl font-semibold">Add Wallet Balance</h2>
 
               <button
-                onClick={() => setOpenWalletModal(false)}
+                onClick={handleCloseWalletModal}
                 className="text-gray-500 hover:text-red-500 text-xl"
               >
                 ✕
@@ -2017,15 +2124,15 @@ export default function UsersPage() {
 
             <div className="flex justify-end gap-3 mt-6">
               <button
-                onClick={() => setOpenWalletModal(false)}
-                className="px-5 py-2 rounded-lg border"
+                onClick={handleCloseWalletModal}
+                className="px-5 py-2 rounded-lg border hover:bg-gray-50 transition-colors"
               >
                 Cancel
               </button>
 
               <button
                 onClick={handleWalletSubmit}
-                className="px-5 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white"
+                className="px-5 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white transition-colors"
               >
                 Add Amount
               </button>
