@@ -63,7 +63,7 @@ export default function Qrbankpage() {
       );
 
       const resData = await response.json();
-      console.log("Fetched Orders:", resData);
+      // console.log("Fetched Orders:", resData);
 
       if (resData.success) {
         setOrders(resData.data || []);
