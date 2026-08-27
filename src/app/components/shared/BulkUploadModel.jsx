@@ -121,7 +121,7 @@ const BulkUploadModal = ({ isOpen, onClose }) => {
 
         <div className="p-6 space-y-5">
           {/* Sample Download Box */}
-          {/* <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-200/80">
+          <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-200/80">
             <div className="flex items-center gap-3">
               <div
                 className={`p-2.5 rounded-lg ${activeTab === "products" ? "bg-indigo-50 text-indigo-600" : "bg-teal-50 text-teal-600"}`}
@@ -151,7 +151,7 @@ const BulkUploadModal = ({ isOpen, onClose }) => {
             >
               <Download size={13} /> Download
             </a>
-          </div> */}
+          </div>
 
           {/* Form Upload */}
           <form onSubmit={handleSubmit} className="space-y-4">
