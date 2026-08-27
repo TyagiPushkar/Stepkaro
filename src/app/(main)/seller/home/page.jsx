@@ -265,13 +265,13 @@ export default function SellerDashboardPage() {
         </div>
 
         <div className="flex gap-3">
-          <button
+          {/* <button
             onClick={handleExportReport}
             className="rounded-xl border border-violet-200 bg-white px-4 py-2 text-sm font-medium text-violet-700 transition hover:bg-violet-50 flex items-center gap-2"
           >
             <Download size={16} />
             Export
-          </button>
+          </button> */}
 
           <button
             onClick={handleRefresh}
