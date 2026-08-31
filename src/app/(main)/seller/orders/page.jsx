@@ -58,6 +58,19 @@ const statusConfig = {
         icon: CheckCircle2,
         nextAction: null,
     },
+    BOOKED_TO_TP: {
+        label: "Received in Warehouse",
+        color: "bg-green-100 text-green-700",
+        icon: CheckCircle2,
+        nextAction: null,
+    },
+
+    SHIPPED: {
+        label: "Received in Warehouse",
+        color: "bg-green-100 text-green-700",
+        icon: CheckCircle2,
+        nextAction: null,
+    },
     REJECTED: {
         label: "Rejected",
         color: "bg-red-100 text-red-700",
@@ -552,7 +565,7 @@ export default function SellerOrdersPage() {
                         <tbody className="divide-y divide-gray-100">
                             {currentOrders.length > 0 ? (
                                 currentOrders.map((order) => {
-                                    const statusInfo = statusConfig[order.status] || statusConfig.NEW;
+                                    const statusInfo = statusConfig[order.status] || statusConfig.RECEIVED_IN_WR;
                                     const StatusIcon = statusInfo.icon;
                                     const dateTimeParts = order.created_at ? order.created_at.split(" ") : ["N/A", ""];
                                     const orderDate = dateTimeParts[0];
@@ -605,7 +618,7 @@ export default function SellerOrdersPage() {
                                                     {statusInfo.label}
                                                 </span>
                                             </td>
-
+                                             {/* if reject the order then show the reject reason and rejected by */}
                                             {selectedStatus === "REJECTED" && (
                                                 <>
                                                     <td className="px-6 py-4">
