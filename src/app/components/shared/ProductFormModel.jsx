@@ -1273,6 +1273,9 @@ export default function ProductFormModal({
 
   if (!isOpen) return null;
 
+  const canEditImages =
+    !isEditing || newProduct.status === "approve_request";
+
   const isPriceInvalid =
     newProduct.selling_price &&
     newProduct.price &&
@@ -1513,7 +1516,7 @@ export default function ProductFormModal({
               }}
               id="product-image-input"
               compact={false}
-              disabled={isEditing}
+              disabled={!canEditImages}
             />
 
             {/* MAIN FIELDS - Compact Grid */}
@@ -1839,7 +1842,7 @@ export default function ProductFormModal({
                           onImageChange={handleVariantImageChange}
                           id={`variant-image-${currentVariant.id}`}
                           compact={true}
-                          disabled={!!editingVariantId && typeof currentVariant.image === "string"}
+                          disabled={!canEditImages}
                         />
 
                         <div className="grid grid-cols-3 gap-2">
