@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import {
   Upload,
-  Download,
   PackagePlus,
   Boxes,
   CheckCircle2,
@@ -9,17 +8,258 @@ import {
   X,
   FileSpreadsheet,
   RefreshCw,
+  Download,
 } from "lucide-react";
+import * as XLSX from "xlsx";
 
+const API_BASE = "https://namami-infotech.com/Stepkaro/src";
+
+const getToken = () =>
+  typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+
+// ─── Static product template rows ────────────────────────────────────────────
+const PRODUCT_TEMPLATE_ROWS = [
+  {
+    "PRODUCT ID": "",
+    BRAND: "VIMPIX",
+    CATEGORY: "KIDS CLOGS",
+    GENDER: "KIDS",
+    ARTICLE: "MANGO",
+    SIZE: "11X1",
+    COLOR: "BLACK",
+    "pairs_per_ctn": 120,
+    "packing type": "LOOSE",
+    MRP: 499,
+    "SELLING PRICE": 95,
+    STOCK: 5,
+    STATUS: "ACTIVE",
+    SOLE: "EVA",
+    UPPER: "EVA",
+    ORIGIN: "MADE IN INDIA",
+  },
+  {
+    "PRODUCT ID": "",
+    BRAND: "",
+    CATEGORY: "",
+    GENDER: "",
+    ARTICLE: "",
+    SIZE: "2X5",
+    COLOR: "RED",
+    "pairs_per_ctn": 96,
+    "packing type": "LOOSE",
+    MRP: 599,
+    "SELLING PRICE": 105,
+    STOCK: 5,
+    STATUS: "",
+    SOLE: "",
+    UPPER: "",
+    ORIGIN: "",
+  },
+  {
+    "PRODUCT ID": "",
+    BRAND: "VIMPIX",
+    CATEGORY: "GENTS CLOGS",
+    GENDER: "GENTS",
+    ARTICLE: "FOOTBALL",
+    SIZE: "6X9",
+    COLOR: "BLUE",
+    "pairs_per_ctn": 72,
+    "packing type": "LOOSE",
+    MRP: 299,
+    "SELLING PRICE": 100,
+    STOCK: 3,
+    STATUS: "INACTIVE",
+    SOLE: "EVA",
+    UPPER: "EVA",
+    ORIGIN: "MADE IN CHINA",
+  },
+  {
+    "PRODUCT ID": "",
+    BRAND: "",
+    CATEGORY: "",
+    GENDER: "",
+    ARTICLE: "",
+    SIZE: "7X10",
+    COLOR: "GREEN",
+    "pairs_per_ctn": 60,
+    "packing type": "LOOSE",
+    MRP: 399,
+    "SELLING PRICE": 110,
+    STOCK: 2,
+    STATUS: "",
+    SOLE: "",
+    UPPER: "",
+    ORIGIN: "",
+  },
+];
+
+// ─── Static stock template rows ───────────────────────────────────────────────
+const STOCK_TEMPLATE_ROWS = [
+  {
+    "PRODUCT ID": 1,
+    BRAND: "VIMPIX",
+    CATEGORY: "KIDS CLOGS",
+    GENDER: "KIDS",
+    ARTICLE: "MANGO",
+    SIZE: "11X1",
+    COLOR: "BLACK",
+    "pairs_per_ctn": 120,
+    "packing type": "LOOSE",
+    MRP: 499,
+    "SELLING PRICE": 95,
+    STOCK: 5,
+    // "NEW STOCK": 50,
+    STATUS: "ACTIVE",
+    SOLE: "EVA",
+    UPPER: "EVA",
+    ORIGIN: "MADE IN INDIA",
+  },
+  {
+    "PRODUCT ID": "",
+    BRAND: "",
+    CATEGORY: "",
+    GENDER: "",
+    ARTICLE: "",
+    SIZE: "2X5",
+    COLOR: "RED",
+    "pairs_per_ctn": 96,
+    "packing type": "LOOSE",
+    MRP: 599,
+    "SELLING PRICE": 105,
+    STOCK: 5,
+    // "NEW STOCK": 30,
+    STATUS: "",
+    SOLE: "",
+    UPPER: "",
+    ORIGIN: "",
+  },
+  {
+    "PRODUCT ID": 2,
+    BRAND: "VIMPIX",
+    CATEGORY: "GENTS CLOGS",
+    GENDER: "GENTS",
+    ARTICLE: "FOOTBALL",
+    SIZE: "6X9",
+    COLOR: "BLUE",
+    "pairs_per_ctn": 72,
+    "packing type": "LOOSE",
+    MRP: 299,
+    "SELLING PRICE": 100,
+    STOCK: 3,
+    // "NEW STOCK": 20,
+    STATUS: "INACTIVE",
+    SOLE: "EVA",
+    UPPER: "EVA",
+    ORIGIN: "MADE IN CHINA",
+  },
+  {
+    "PRODUCT ID": "",
+    BRAND: "",
+    CATEGORY: "",
+    GENDER: "",
+    ARTICLE: "",
+    SIZE: "7X10",
+    COLOR: "GREEN",
+    "pairs_per_ctn": 60,
+    "packing type": "LOOSE",
+    MRP: 399,
+    "SELLING PRICE": 110,
+    STOCK: 2,
+   // "NEW STOCK": 15,
+    STATUS: "",
+    SOLE: "",
+    UPPER: "",
+    ORIGIN: "",
+  },
+];
+
+// ─── Fetch live filters and build Filters sheet data ─────────────────────────
+async function fetchFilterSheetRows() {
+  try {
+    const token = getToken();
+    const res = await fetch(`${API_BASE}/product/get_product_filters_new.php`, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const json = await res.json();
+    if (!json.success) return null;
+
+    const d = json.data || {};
+    const columns = {
+      BRANDS: d.brands || [],
+      CATEGORIES: d.categories || [],
+      GENDER: d.gender || [],
+      COLORS: d.colors || [],
+      "SOLE MATERIALS": d.materials || [],
+      "UPPER MATERIALS": d.upper_materials || [],
+      "PACKING TYPE": d.packingTypes || [],
+    };
+
+    const maxLen = Math.max(...Object.values(columns).map((v) => v.length));
+    const rows = [];
+
+    // Header row
+    const headerRow = {};
+    Object.keys(columns).forEach((k) => (headerRow[k] = k));
+    rows.push(headerRow);
+
+    // Data rows
+    for (let i = 0; i < maxLen; i++) {
+      const row = {};
+      Object.entries(columns).forEach(([k, vals]) => {
+        row[k] = vals[i] !== undefined ? vals[i] : "";
+      });
+      rows.push(row);
+    }
+
+    return rows;
+  } catch (e) {
+    console.error("Failed to fetch filters:", e);
+    return null;
+  }
+}
+
+// ─── Download handler ─────────────────────────────────────────────────────────
+async function downloadSample(type, setDownloading) {
+  setDownloading(true);
+  try {
+    const wb = XLSX.utils.book_new();
+
+    if (type === "products") {
+      // Sheet 1: Product template
+      const wsProduct = XLSX.utils.json_to_sheet(PRODUCT_TEMPLATE_ROWS);
+      XLSX.utils.book_append_sheet(wb, wsProduct, "Product_Bulk_Upload");
+
+      // Sheet 2: Live Filters from API
+      const filterRows = await fetchFilterSheetRows();
+      if (filterRows) {
+        const wsFilters = XLSX.utils.json_to_sheet(filterRows, {
+          skipHeader: true,
+        });
+        XLSX.utils.book_append_sheet(wb, wsFilters, "Refrence_sheet");
+      }
+
+      XLSX.writeFile(wb, "sample_bulk_product_upload.xlsx");
+    } else {
+      // Stock template — no filters needed
+      const wsStock = XLSX.utils.json_to_sheet(STOCK_TEMPLATE_ROWS);
+      XLSX.utils.book_append_sheet(wb, wsStock, "Stock_Bulk_Upload");
+      XLSX.writeFile(wb, "sample_bulk_stock_upload.xlsx");
+    }
+  } catch (e) {
+    console.error("Download failed:", e);
+  } finally {
+    setDownloading(false);
+  }
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
 const BulkUploadModal = ({ isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState("products"); // 'products' | 'stock'
   const [selectedFile, setSelectedFile] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [result, setResult] = useState(null);
-
-  const getToken = () =>
-    typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
-  const token = getToken();
 
   if (!isOpen) return null;
 
@@ -46,21 +286,18 @@ const BulkUploadModal = ({ isOpen, onClose }) => {
     const formData = new FormData();
     formData.append("file", selectedFile);
 
-    // Dynamic Endpoints for both forms
     const endpoint =
       activeTab === "products"
-        ? "https://namami-infotech.com/Stepkaro/src/product/vendor_addbulk_product.php"
-        : "https://namami-infotech.com/Stepkaro/src/product/vendor_updatebulk_stock.php";
+        ? `${API_BASE}/product/vendor_addbulk_product.php`
+        : `${API_BASE}/product/vendor_updatebulk_stock.php`;
 
     try {
+      const token = getToken();
       const response = await fetch(endpoint, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
-
       const data = await response.json();
       setResult(data);
     } catch (err) {
@@ -76,6 +313,7 @@ const BulkUploadModal = ({ isOpen, onClose }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
       <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full overflow-hidden border border-slate-100 transition-all">
+
         {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
           <div>
@@ -124,7 +362,11 @@ const BulkUploadModal = ({ isOpen, onClose }) => {
           <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-200/80">
             <div className="flex items-center gap-3">
               <div
-                className={`p-2.5 rounded-lg ${activeTab === "products" ? "bg-indigo-50 text-indigo-600" : "bg-teal-50 text-teal-600"}`}
+                className={`p-2.5 rounded-lg ${
+                  activeTab === "products"
+                    ? "bg-indigo-50 text-indigo-600"
+                    : "bg-teal-50 text-teal-600"
+                }`}
               >
                 <FileSpreadsheet size={22} />
               </div>
@@ -135,22 +377,31 @@ const BulkUploadModal = ({ isOpen, onClose }) => {
                     : "Stock Update Template"}
                 </h4>
                 <p className="text-[11px] text-slate-500">
-                  Download structured sample Excel file
+                  {activeTab === "products"
+                    ? "Includes live Filters sheet from server"
+                    : "Download structured sample Excel file"}
                 </p>
               </div>
             </div>
 
-            <a
-              href={
+            {/* Download Button */}
+            <button
+              type="button"
+              disabled={downloading}
+              onClick={() => downloadSample(activeTab, setDownloading)}
+              className={`flex items-center gap-1.5 text-[11px] font-semibold px-3 py-1.5 rounded-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${
                 activeTab === "products"
-                  ? "/samples/sample_bulk_product_upload.xlsx"
-                  : "/samples/sample_bulk_stock_upload.xlsx"
-              }
-              download
-              className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium rounded-lg flex items-center gap-1.5 transition-colors shadow-sm"
+                  ? "text-indigo-600 bg-indigo-50 hover:bg-indigo-100"
+                  : "text-teal-600 bg-teal-50 hover:bg-teal-100"
+              }`}
             >
-              <Download size={13} /> Download
-            </a>
+              {downloading ? (
+                <RefreshCw size={12} className="animate-spin" />
+              ) : (
+                <Download size={12} />
+              )}
+              {downloading ? "Fetching..." : "Download Template"}
+            </button>
           </div>
 
           {/* Form Upload */}
@@ -162,7 +413,6 @@ const BulkUploadModal = ({ isOpen, onClose }) => {
                 onChange={handleFileChange}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
               />
-
               <div className="flex flex-col items-center">
                 <div className="p-3 rounded-full bg-slate-100 text-slate-500 group-hover:scale-110 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-all mb-2">
                   <Upload size={22} />
