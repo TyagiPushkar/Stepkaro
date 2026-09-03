@@ -23,6 +23,7 @@ import {
   Pencil,
   Check,
 } from "lucide-react";
+import * as XLSX from "xlsx";
 import ProductFormModal from "@/app/components/shared/ProductFormModel";
 import ViewProductModal from "@/app/components/shared/ViewProductModal";
 import BulkUploadModal from "@/app/components/shared/BulkUploadModel";
@@ -1389,28 +1390,37 @@ export default function SellerProductsPage() {
       }
     });
 
-    const formatCSVCell = (cell) => {
-      if (cell === null || cell === undefined) return '""';
-      const cellString = String(cell);
-      return `"${cellString.replace(/"/g, '""')}"`;
-    };
+    // CSV export (kept for reference)
+    // const formatCSVCell = (cell) => {
+    //   if (cell === null || cell === undefined) return '""';
+    //   const cellString = String(cell);
+    //   return `"${cellString.replace(/"/g, '""')}"`;
+    // };
+    //
+    // const csvContent = [
+    //   headers.map(formatCSVCell).join(","),
+    //   ...rows.map((row) => row.map(formatCSVCell).join(",")),
+    // ].join("\n");
+    //
+    // const blob = new Blob(["\uFEFF" + csvContent], {
+    //   type: "text/csv;charset=utf-8;",
+    // });
+    // const url = URL.createObjectURL(blob);
+    // const link = document.createElement("a");
+    // link.href = url;
+    // link.download = `seller_products_${new Date().toISOString().split("T")[0]}.csv`;
+    // document.body.appendChild(link);
+    // link.click();
+    // document.body.removeChild(link);
+    // URL.revokeObjectURL(url);
 
-    const csvContent = [
-      headers.map(formatCSVCell).join(","),
-      ...rows.map((row) => row.map(formatCSVCell).join(",")),
-    ].join("\n");
-
-    const blob = new Blob(["\uFEFF" + csvContent], {
-      type: "text/csv;charset=utf-8;",
-    });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `seller_products_${new Date().toISOString().split("T")[0]}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Products");
+    XLSX.writeFile(
+      workbook,
+      `seller_products_${new Date().toISOString().split("T")[0]}.xlsx`,
+    );
 
     showToast(`Exported ${exportData.length} products successfully`);
   }, [products, filteredProducts, showToast]);
